@@ -10,14 +10,14 @@ enum AppWissen {
     static let bereiche: [Bereich: String] = [
         .heute: "Heute: die eine Aufgabe, die jetzt dran ist, dann Wichtig, Weitere, Geschafft, fällige Habits, Termine und die nächsten Ziele. Unten der Tagesabschluss.",
         .kalender: "Kalender: Wochenleiste, Termine aus Google/Apple neben deinen Aufgaben mit Uhrzeit, Aufgaben ohne Uhrzeit, Eingang für Ideen ohne Datum.",
-        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Prozent, Auf Kurs, Frist, Meilensteine) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
+        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Kopfkarte „x von y auf Kurs“, je Ziel Prozent, Auf Kurs, Frist; Ziel-Seite mit Satz „so wird gerechnet“, Meilensteinen, Aufgaben, Habits, Terminen, Einsatz und Fakten-Zeilen zum Bearbeiten) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
         .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
     ]
 
     /// Fenster (Sheets) und was man dort tut – Schlüssel = Präfix der `Navigation.Blatt`-id
     static let fenster: [String: String] = [
-        "neu": "+ Neu: Aufgabe, Habit oder Ziel anlegen.",
+        "neu": "+ Neu: Aufgabe, Habit oder Ziel anlegen. Beim Ziel schlägt die App Meilenstein-Vorlagen aus dem Titel vor (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte).",
         "info": "(i): kurze Erklärung der Seite.",
         "einstellungen": "Daten & Kalender: Beispielkalender ein/aus, Speicherort, Demo-Daten neu laden.",
         "aufgabe": "Aufgabe: Titel, erledigt, wichtig, Datum, Wiederholung, Ziel, Notizen, löschen oder Serie beenden.",
@@ -30,7 +30,7 @@ enum AppWissen {
         "habitzuziel": "Habit zum Ziel: bestehenden oder neuen Habit verbinden; zählt in die Prozente (Anzahl oder Wochen) oder nur als Einsatz.",
         "aufgabezuziel": "Aufgaben zum Ziel: bestehende Aufgaben einem Ziel und Meilenstein zuordnen.",
         "terminzuziel": "Termine zum Ziel: eine Termin-Serie zuordnen; zählt in Zahl (je 1) oder Zeit (Dauer) oder nur als Einsatz.",
-        "zielbearbeiten": "Ziel bearbeiten: Titel, Warum, Bereich, Datum, Farbe, löschen (Aufgaben und Habits bleiben).",
+        "zielbearbeiten": "Ziel bearbeiten (ändern): eine Fakten-Zeile der Ziel-Seite antippen – Titel, Bis wann, Bereich, Warum, Aussehen (Farbe, Symbol).",
         "habitmenge": "Menge eintragen: wie viel vom Habit heute geschafft ist (z. B. 12 von 20 Minuten) – große Zahl, Schnellwahl halb/ganz.",
         "pro": "Kompass Pro: unbegrenzte Lotse-Fragen und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
     ]
@@ -75,7 +75,7 @@ enum AppWissen {
         let id = UUID()
         let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge)]
+                                          .terminZuZiel(id), .zielBearbeiten(id, .titel), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge)]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

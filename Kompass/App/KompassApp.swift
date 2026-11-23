@@ -61,6 +61,11 @@ enum NeuArt: String, Hashable, Identifiable {
     var id: String { rawValue }
 }
 
+/// Welche Zeile der Ziel-Seite bearbeitet wird
+enum ZielFeld: String, Hashable, CaseIterable {
+    case titel, faellig, bereich, warum, aussehen
+}
+
 /// Welche Zeile der Habit-Seite bearbeitet wird (je Zeile ein Editor, wie bei einer Gapless-Transaktion)
 enum HabitFeld: String, Hashable, CaseIterable {
     case titel, menge, rhythmus, erinnerung, ziel, aussehen
@@ -110,7 +115,8 @@ final class Navigation {
         case habitZuZiel(UUID)
         case aufgabeZuZiel(UUID)
         case terminZuZiel(UUID)
-        case zielBearbeiten(UUID)
+        /// Eine Zeile der Ziel-Seite bearbeiten
+        case zielBearbeiten(UUID, ZielFeld)
         case pro
         /// Menge eines Habits für einen Tag eintragen (Tag als Text, damit der Fall Hashable bleibt)
         case habitMenge(UUID, tag: String)
@@ -130,7 +136,7 @@ final class Navigation {
             case .habitZuZiel(let z): "habitzuziel-\(z)"
             case .aufgabeZuZiel(let z): "aufgabezuziel-\(z)"
             case .terminZuZiel(let z): "terminzuziel-\(z)"
-            case .zielBearbeiten(let z): "zielbearbeiten-\(z)"
+            case .zielBearbeiten(let z, let f): "zielbearbeiten-\(z)-\(f.rawValue)"
             case .pro: "pro"
             case .habitMenge(let h, let t): "habitmenge-\(h)-\(t)"
             case .habitBearbeiten(let h, let f): "habitbearbeiten-\(h)-\(f.rawValue)"

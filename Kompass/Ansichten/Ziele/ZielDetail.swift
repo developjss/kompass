@@ -6,6 +6,8 @@ struct ZielDetail: View {
     var id: UUID
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @Environment(\.dismiss) private var dismiss
+    @State private var loeschenFragen = false
 
     var body: some View {
         let z = speicher.zustand
@@ -31,15 +33,38 @@ struct ZielDetail: View {
                     .buttonStyle(.plain)
                     .accessibilityHint("Zeigt, wie gerechnet wird")
 
-                    if !g.warum.isEmpty {
-                        Text(g.warum).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).padding(.top, 12)
+                    // Ein Satz, wie gerechnet wird (Zahlen aus der Rechnung) – (i) zeigt die Einzelheiten
+                    Button { nav.blatt = .rechnung(g.id) } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: "function").font(.footnote.weight(.bold)).foregroundStyle(Farbe.akzent)
+                            Text(Fortschritt.satz(g, in: z, heute: T)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                                .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 12)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Zeigt, wie gerechnet wird")
 
                     MeilensteinListe(ziel: g)
                     ZielAufgaben(ziel: g)
                     ZielHabits(ziel: g)
                     ZielTermine(ziel: g)
                     ZielEinsatz(ziel: g)
+
+                    AbschnittKopf(titel: "Fakten")
+                    GruppierteListe {
+                        FaktZeile("Titel", wert: g.titel) { nav.blatt = .zielBearbeiten(g.id, .titel) }
+                        FaktZeile("Bis wann", wert: g.faellig.datum().formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE")))) { nav.blatt = .zielBearbeiten(g.id, .faellig) }
+                        FaktZeile("Bereich", wert: g.bereich) { nav.blatt = .zielBearbeiten(g.id, .bereich) }
+                        FaktZeile("Warum", wert: g.warum.isEmpty ? "–" : g.warum) { nav.blatt = .zielBearbeiten(g.id, .warum) }
+                        FaktZeile(titel: "Aussehen", wert: {
+                            HStack(spacing: 8) {
+                                Image(systemName: g.symbol).font(.footnote.weight(.semibold)).foregroundStyle(Color(hex: g.farbe))
+                                Circle().fill(Color(hex: g.farbe)).frame(width: 16, height: 16)
+                            }
+                        }) { nav.blatt = .zielBearbeiten(g.id, .aussehen) }
+                    }
 
                     Button(g.status == .erreicht ? "Wieder aktiv setzen" : "Als erreicht markieren") {
                         speicher.aendern { s in
@@ -49,6 +74,11 @@ struct ZielDetail: View {
                     .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
                     .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
                     .padding(.top, Mass.abschnitt)
+
+                    Button("Ziel löschen", role: .destructive) { loeschenFragen = true }
+                        .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
+                        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+                        .padding(.top, 12)
                 }
                 .padding(Mass.rand)
                 .padding(.bottom, 24)
@@ -58,11 +88,13 @@ struct ZielDetail: View {
             .background(Farbe.grund.ignoresSafeArea())
             .navigationTitle(g.titel)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Bearbeiten") { nav.blatt = .zielBearbeiten(g.id) }
+            .confirmationDialog("Ziel wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
+                Button("Löschen", role: .destructive) {
+                    let zid = g.id
+                    speicher.aendern { $0.zielLoeschen(zid) }
+                    dismiss()
                 }
-            }
+            } message: { Text("Aufgaben, Habits und Termine bleiben erhalten.") }
         } else {
             ContentUnavailableView("Ziel nicht gefunden", systemImage: "target", description: Text("Es wurde vielleicht gelöscht."))
         }
@@ -133,25 +165,22 @@ private struct MeilensteinZeile: View {
             }
             .padding(.leading, 4)
             Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: schritt.id) } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(schritt.titel).font(.zeile).foregroundStyle(Farbe.text)
-                        if st.gewicht > 1 {
-                            Text("×\(st.gewicht)").font(.klein).foregroundStyle(Farbe.zweitrangig)
-                                .accessibilityLabel(st.gewicht == 3 ? "zählt dreifach" : "zählt doppelt")
-                        }
-                        Spacer()
-                        Text(Zahl.prozent(st.anteil)).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig).monospacedDigit()
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(schritt.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(2)
+                        Text(unterzeile(st)).font(.unterzeile).foregroundStyle(st.hinweis == nil ? Farbe.zweitrangig : Farbe.warnung).lineLimit(1)
                     }
-                    Text(unterzeile(st)).font(.unterzeile).foregroundStyle(st.hinweis == nil ? Farbe.zweitrangig : Farbe.warnung)
-                    Balken(anteil: st.anteil, farbe: c, spur: Farbe.linie, hoehe: 4)
+                    Spacer(minLength: 8)
+                    Text(Zahl.prozent(st.anteil)).font(.kompass(.subheadline, .bold)).foregroundStyle(st.anteil >= 1 ? Farbe.freude : Farbe.zweitrangig).monospacedDigit()
+                    Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityHint("Bearbeiten")
             .padding(.trailing, 16)
         }
-        .padding(.vertical, 10)
+        .frame(minHeight: Mass.zeile)
         .contextMenu {
             Button("Bearbeiten", systemImage: "pencil") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: schritt.id) }
             Button(schritt.geschafft ? "Wieder öffnen" : "Abhaken", systemImage: "checkmark") {
@@ -165,9 +194,11 @@ private struct MeilensteinZeile: View {
 
     private func unterzeile(_ st: Fortschritt.SchrittStand) -> String {
         if let h = st.hinweis { return h }
+        var teile = [st.text]
         let erreicht = Fortschritt.erreichteSchwellen(schritt, in: speicher.zustand, heute: speicher.heute).count
-        if let n = schritt.schwellen?.count, n > 0 { return "\(st.text) · \(erreicht) von \(n) Zwischenständen" }
-        return st.text
+        if let n = schritt.schwellen?.count, n > 0 { teile.append("\(erreicht) von \(n) Zwischenständen") }
+        if st.gewicht > 1 { teile.append(st.gewicht == 3 ? "zählt dreifach" : "zählt doppelt") }
+        return teile.joined(separator: " · ")
     }
 }
 

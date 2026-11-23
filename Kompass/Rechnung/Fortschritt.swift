@@ -124,6 +124,29 @@ enum Fortschritt {
         return summeGewicht > 0 ? summe / summeGewicht : 0
     }
 
+    /// Ein Satz „so wird gerechnet“ für die Ziel-Seite (Zahlen aus `ziel`/`stand`, kein Rechnen im Text).
+    /// „32 % = Durchschnitt von 4 Meilensteinen · am meisten fehlt bei „Halbmarathon laufen“.“
+    static func satz(_ g: Ziel, in z: Zustand, heute: Tag) -> String {
+        if g.status == .erreicht { return "Erreicht – zählt als 100 %." }
+        guard !g.schritte.isEmpty else { return "0 % – noch kein Meilenstein. Leg einen an, dann zählt er." }
+        let p = Zahl.prozent(ziel(g, in: z, heute: heute))
+        let n = g.schritte.count
+        let gewichtet = g.schritte.contains { gewicht($0) > 1 }
+        var t = n == 1 ? "\(p) = Stand des einen Meilensteins" : "\(p) = \(gewichtet ? "gewichteter " : "")Durchschnitt von \(n) Meilensteinen"
+        if let fehlt = g.schritte.max(by: { fehlend($0, in: g, z: z, heute: heute) < fehlend($1, in: g, z: z, heute: heute) }),
+           fehlend(fehlt, in: g, z: z, heute: heute) > 0.0001, n > 1 {
+            t += " · am meisten fehlt bei „\(fehlt.titel)“"
+        }
+        return t + "."
+    }
+
+    /// Fehlende Prozentpunkte eines Meilensteins am Ziel (Gewicht × (1 − Stand) ÷ Σ Gewicht).
+    static func fehlend(_ s: Schritt, in g: Ziel, z: Zustand, heute: Tag) -> Double {
+        let summe = g.schritte.reduce(0) { $0 + Double(gewicht($1)) }
+        guard summe > 0 else { return 0 }
+        return Double(gewicht(s)) * (1 - stand(s, in: z, heute: heute).anteil) / summe
+    }
+
     /// Wie viele Prozentpunkte ein Meilenstein zum Ziel beiträgt (für „So wird gerechnet“).
     static func beitrag(_ s: Schritt, in g: Ziel, z: Zustand, heute: Tag) -> Double {
         let summe = g.schritte.reduce(0) { $0 + Double(gewicht($1)) }
