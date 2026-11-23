@@ -1,8 +1,10 @@
 import Foundation
 
-/// Steuerung des Lotsen: Frage annehmen → Sprachmodell (falls da) oder Regeln → Werkzeug ausführen → Antwort speichern → Lernen.
+/// Steuerung des Assistenten: Frage annehmen → Claude mit Werkzeugschleife (falls Server da) oder Regeln → Antwort speichern → Lernen.
 @MainActor
 enum Lotse {
+    /// Höchstens so viele Werkzeugrunden je Frage (der Server erzwingt danach eine Textantwort)
+    static let maxSchritte = 6
 
     /// Beantwortet eine Frage und hängt Frage und Antwort an den Chat. Gibt die Antwort zurück.
     @discardableResult
@@ -13,35 +15,52 @@ enum Lotse {
         speicher.aendern { $0.chat.append(ChatNachricht(rolle: .nutzer, text: text, zeit: jetzt)) }
 
         var antwort: LotseAntwort
-        var aufruf = Verstehen.erkennen(text, zustand: speicher.zustand, heute: speicher.heute)
 
-        // Stufe 0: Trifft eine Regel, kostet die Antwort nichts – der Server wird nur bei freien Formulierungen gefragt.
-        // Beratungsfragen („was soll ich zuerst …“) gehen mit Server an Stufe 2, ohne Server an die lokale Empfehlung.
-        var einleitung: String?
-        if aufruf == nil || aufruf?.name == .empfehlen, let modell {
+        // Mit Server: Claude beantwortet jede Frage. Braucht es Daten oder soll etwas geändert werden, ruft es Werkzeuge;
+        // die App führt sie aus (sie rechnet) und schickt die Ergebnisse zurück – bis Claude mit Text antwortet.
+        if let modell {
+            var anfrage = SprachmodellAnfrage(wissen: AppWissen.text(), kurzstand: kurzstand(speicher), werkzeuge: Werkzeuge.alle,
+                                              verlauf: speicher.zustand.chat.suffix(13).dropLast().map { ($0.rolle, $0.text) }, frage: text)
+            var aktion: ChatNachricht.Aktion?
+            var genutzt: Werkzeug.Name?
+            var geaendert = false
             do {
-                let anfrage = SprachmodellAnfrage(wissen: AppWissen.text() + "\n\nStand:\n" + kurzstand(speicher), werkzeuge: Werkzeuge.alle.filter(\.fuerServer),
-                                                  verlauf: speicher.zustand.chat.suffix(12).map { ($0.rolle, $0.text) }, frage: text)
-                switch try await modell.antworte(auf: anfrage) {
-                case .werkzeug(let a, let satz): aufruf = a; einleitung = satz
-                case .text(let t):
-                    antwort = LotseAntwort(text: t, werkzeug: nil)
-                    return abschliessen(antwort, frage: text, speicher: speicher)
+                for _ in 0...maxSchritte {
+                    switch try await modell.antworte(auf: anfrage) {
+                    case .text(let t):
+                        return abschliessen(LotseAntwort(text: t, werkzeug: genutzt, aktion: aktion), frage: text, speicher: speicher)
+                    case .werkzeuge(let aufrufe, let inhalt):
+                        var ergebnisse: [(id: String, text: String)] = []
+                        for a in aufrufe {
+                            guard let name = Werkzeug.Name(rawValue: a.name) else { ergebnisse.append((a.id, "Dieses Werkzeug gibt es nicht: \(a.name).")); continue }
+                            let r = ausfuehren(WerkzeugAufruf(name: name, parameter: a.parameter), speicher: speicher)
+                            ergebnisse.append((a.id, r.text))
+                            genutzt = name
+                            if let ak = r.aktion { aktion = ak }
+                            if name == .aufgabeAnlegen || name == .terminAnlegen { geaendert = true }
+                        }
+                        anfrage.schritte.append(ModellSchritt(inhalt: inhalt, ergebnisse: ergebnisse))
+                    }
                 }
+                throw LotseFehler.antwort
             } catch LotseFehler.kontingentErschoepft(let limit, let pro) {
                 let t = pro
-                    ? "Du hast heute die Obergrenze von \(limit) Fragen erreicht. Morgen geht es weiter – oder frag mich etwas, das ich ohne Server beantworten kann."
-                    : "Deine \(limit) freien Fragen für heute sind aufgebraucht. Mit Kompass Pro fragst du unbegrenzt – oder morgen wieder kostenlos."
+                    ? "Du hast heute die Obergrenze von \(limit) Fragen erreicht. Morgen geht es weiter – bis dahin antworte ich mit Bordmitteln."
+                    : "Deine \(limit) freien Fragen für heute sind aufgebraucht. Mit **Kompass Pro** fragst du unbegrenzt – oder morgen wieder kostenlos."
                 return abschliessen(LotseAntwort(text: t, werkzeug: nil, aktion: pro ? nil : .pro), frage: text, speicher: speicher)
             } catch {
-                // Server nicht erreichbar → Regeln; der Nutzer sieht trotzdem eine Antwort
                 LotseStand.geteilt.letzterFehler = "Server gerade nicht erreichbar – ich antworte mit Bordmitteln."
+                // Wurde schon etwas geändert, nicht noch einmal über Regeln ausführen – stattdessen die Ergebnisse zeigen
+                if geaendert, let letzte = anfrage.schritte.last {
+                    return abschliessen(LotseAntwort(text: letzte.ergebnisse.map(\.text).joined(separator: "\n\n"), werkzeug: genutzt, aktion: aktion), frage: text, speicher: speicher)
+                }
             }
         }
 
+        // Ohne Server (oder bei Fehler): Regeln auf dem Gerät
+        let aufruf = Verstehen.erkennen(text, zustand: speicher.zustand, heute: speicher.heute)
         if let a = aufruf {
             antwort = ausfuehren(a, speicher: speicher)
-            if let e = einleitung?.trimmingCharacters(in: .whitespacesAndNewlines), !e.isEmpty, a.name != .aufgabeAnlegen, a.name != .terminAnlegen { antwort.text = e + "\n" + antwort.text }
         } else {
             antwort = LotseAntwort(text: "Das habe ich noch nicht verstanden. Ich merke mir die Frage, damit der Assistent das lernt.\nVersuch zum Beispiel: „\(Werkzeuge.vorschlaege[0])“ oder „\(Werkzeuge.vorschlaege[2])“.", unbeantwortet: true)
         }
@@ -140,13 +159,31 @@ enum Lotse {
 
     static func chatLoeschen(_ id: UUID, speicher: Speicher) { speicher.aendern { $0.chatVerlauf.removeAll { $0.id == id } } }
 
-    /// Kurzer Datenstand für das Sprachmodell (keine Rohdaten, nur Überschriften und Zahlen)
+    /// Datenstand für das Sprachmodell – von der App berechnet (Überschriften und Zahlen, keine Notizen).
+    /// Damit beantwortet Claude einfache Fragen ohne Werkzeug; Genaueres holt es über Werkzeuge.
     static func kurzstand(_ speicher: Speicher) -> String {
-        let z = speicher.zustand, T = speicher.heute
-        var t = "Heute: \(T.text). Ziele: "
-        t += z.ziele.filter { $0.status == .aktiv }.map { "\($0.titel) \(Zahl.prozent(Fortschritt.ziel($0, in: z, heute: T)))" }.joined(separator: ", ")
-        t += ". Habits: " + z.habits.map(\.titel).joined(separator: ", ")
-        t += ". Offene Aufgaben heute: \(z.aufgaben.filter { $0.datum == T && !$0.erledigt }.count)."
-        return t
+        let z = speicher.zustand, T = speicher.heute, jetzt = speicher.jetztMinuten
+        let de = Locale(identifier: "de_DE")
+        var zeilen: [String] = []
+        zeilen.append("Jetzt: \(T.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(de))), \(Tagesplan.uhr(jetzt)) Uhr (\(TimeZone.current.identifier)).")
+        let n = Tagesplan.naechste(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:))
+        if !n.isEmpty { zeilen.append("Als Nächstes: " + n.map { "\($0.titel) (\(Tagesplan.wannText($0, heute: T, jetzt: jetzt)), \($0.art.rawValue))" }.joined(separator: "; ") + ".") }
+        let ohne = Tagesplan.ohneZeit(am: T, zustand: z)
+        let offen = ohne.aufgaben.filter { !$0.erledigt }
+        zeilen.append("Heute ohne Uhrzeit offen: \(offen.count) Aufgaben" + (offen.isEmpty ? "" : " (" + offen.prefix(5).map(\.titel).joined(separator: ", ") + ")")
+                      + ", \(ohne.habits.filter { !$0.voll(am: T) }.count) Habits.")
+        let liegen = z.aufgaben.filter { !$0.erledigt && ($0.datum.map { $0 < T } ?? false) }
+        if !liegen.isEmpty { zeilen.append("Überfällig: \(liegen.count) (" + liegen.prefix(5).map(\.titel).joined(separator: ", ") + ").") }
+        let ziele = z.ziele.filter { $0.status == .aktiv }.map { g -> String in
+            let k = Kurs.aufKurs(g, in: z, heute: T)
+            return "\(g.titel) \(Zahl.prozent(k.fortschritt)) (\(k.lage.text), \(Kurs.bisText(g.faellig, heute: T)))"
+        }
+        if !ziele.isEmpty { zeilen.append("Ziele: " + ziele.joined(separator: "; ") + ".") }
+        let habits = z.habits.filter { T >= $0.angelegt }.map { h -> String in
+            let geplant = HabitRechnung.geplant(h, am: T)
+            return "\(h.titel) (" + (geplant ? (h.voll(am: T) ? "heute erledigt" : "heute offen") : "heute nicht geplant") + ")"
+        }
+        if !habits.isEmpty { zeilen.append("Habits: " + habits.joined(separator: "; ") + ".") }
+        return String(zeilen.joined(separator: "\n").prefix(3800))
     }
 }

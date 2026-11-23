@@ -1,7 +1,7 @@
 // Tests der reinen Teile: Anfrageprüfung, Tool-Umwandlung, Kontingent-Regeln, Datum.
 //   deno test supabase/functions/lotse/
 import { assertEquals } from "jsr:@std/assert";
-import { alsTools, anfragePruefen } from "./lotse.ts";
+import { alsTools, anfragePruefen, MAX_SCHRITTE, schrittePruefen } from "./lotse.ts";
 import { heute, istPro, limitFuer, regelnAusUmgebung, SpeicherZaehler } from "./kontingent.ts";
 import { modelleAusUmgebung, STANDARD_MODELLE } from "./modelle.ts";
 
@@ -24,12 +24,20 @@ Deno.test("Anfrage: gültig und ungültig", () => {
   assertEquals(anfragePruefen({ ...gueltig, werkzeuge: [] }), null);
 });
 
-Deno.test("Werkzeuge werden zu Tools plus „beraten“", () => {
+Deno.test("Werkzeuge werden zu Tools", () => {
   const tools = alsTools([{ name: "aufgabeAnlegen", beschreibung: "legt an", parameter: { titel: "Text", datum: "JJJJ-MM-TT" } }]);
-  assertEquals(tools.length, 2);
+  assertEquals(tools.length, 1);
   assertEquals(tools[0].name, "aufgabeAnlegen");
   assertEquals(Object.keys((tools[0].input_schema as { properties: Record<string, unknown> }).properties), ["titel", "datum"]);
-  assertEquals(tools[1].name, "beraten");
+});
+
+Deno.test("Schritte: gültig, begrenzt, ungültig → leer", () => {
+  const s = { inhalt: [{ type: "tool_use", id: "t1", name: "heute", input: {} }], ergebnisse: [{ id: "t1", text: "3 Termine" }] };
+  assertEquals(schrittePruefen([s]).length, 1);
+  assertEquals(schrittePruefen(Array(10).fill(s)).length, MAX_SCHRITTE);
+  assertEquals(schrittePruefen([{ inhalt: "x", ergebnisse: [] }]), []);
+  assertEquals(schrittePruefen(undefined), []);
+  assertEquals(anfragePruefen({ ...gueltig, schritte: [s] })?.schritte.length, 1);
 });
 
 Deno.test("Kontingent: Tester sind Pro, Store-Nutzer nur wenn gemeldet", () => {

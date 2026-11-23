@@ -9,9 +9,6 @@ struct Werkzeug: Sendable, Hashable {
         case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen
     }
 
-    /// Werkzeuge, die der Server (Sprachmodell) bekommt. „empfehlen“ nicht – Beratung macht dort Stufe 2 besser.
-    var fuerServer: Bool { name != .empfehlen }
-
     let name: Name
     let beschreibung: String
     /// Parameter: Name → Beschreibung
