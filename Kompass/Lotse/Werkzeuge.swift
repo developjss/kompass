@@ -6,8 +6,11 @@ import Foundation
 
 struct Werkzeug: Sendable, Hashable {
     enum Name: String, CaseIterable, Sendable {
-        case heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe
+        case heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen
     }
+
+    /// Werkzeuge, die der Server (Sprachmodell) bekommt. „empfehlen“ nicht – Beratung macht dort Stufe 2 besser.
+    var fuerServer: Bool { name != .empfehlen }
 
     let name: Name
     let beschreibung: String
@@ -56,6 +59,8 @@ enum Werkzeuge {
                  parameter: ["zeitraum": "diese | letzte"], beispiele: ["Wie lief meine Woche?", "Wie viel Fokuszeit hatte ich letzte Woche?"]),
         Werkzeug(name: .hilfe, beschreibung: "Erklärt die App: Bereiche, Fenster, Rechenregeln, erste Schritte.",
                  parameter: ["thema": "Begriff oder Frage"], beispiele: ["Wie fange ich an?", "Wie wird der Fortschritt gerechnet?", "Wo finde ich den Fokus-Timer?"]),
+        Werkzeug(name: .empfehlen, beschreibung: "Empfiehlt, womit du anfangen solltest: Liegengebliebenes, Ziele hinterher, wichtige Aufgaben – mit Begründung.",
+                 parameter: ["zeitraum": "heute | woche"], beispiele: ["Was soll ich diese Woche zuerst machen?", "Worauf soll ich mich konzentrieren?"]),
     ]
 
     static func werkzeug(_ n: Werkzeug.Name) -> Werkzeug { alle.first { $0.name == n }! }
@@ -78,6 +83,7 @@ enum Werkzeuge {
         case .habits: return habits(z, T, name: a.parameter["habit"])
         case .analyse: return analyse(z, T, kalender, letzte: a.parameter["zeitraum"] == "letzte")
         case .hilfe: return hilfe(a.parameter["thema"] ?? "")
+        case .empfehlen: return empfehlen(z, T, woche: a.parameter["zeitraum"] == "woche")
         }
     }
 
@@ -100,15 +106,26 @@ enum Werkzeuge {
         let offeneHabits = habits.filter { !$0.erledigt.contains(T) }
         let termine = termine(z, T, T).filter { $0.start != nil }
         let fokus = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: jetzt)
-        var t = ""
-        if let jetztDran = wichtig.first ?? weitere.first { t += "Jetzt dran: \(jetztDran.titel)\(z.ziel(jetztDran.zielID).map { " (\($0.titel))" } ?? "").\n" }
-        t += "Wichtig: \(wichtig.count) · Weitere: \(weitere.count) · Geschafft: \(erledigt).\n"
-        if !wichtig.isEmpty { t += wichtig.prefix(4).map { "• \($0.titel)" }.joined(separator: "\n") + "\n" }
-        t += offeneHabits.isEmpty ? (habits.isEmpty ? "Keine Habits geplant.\n" : "Alle \(habits.count) Habits abgehakt.\n")
-            : "Habits offen: " + offeneHabits.map(\.titel).joined(separator: ", ") + ".\n"
-        t += termine.isEmpty ? "Keine Termine mit Uhrzeit." : "Termine: " + termine.map { "\(Beispieltermine.uhrzeit($0.start!)) \($0.titel)" }.joined(separator: ", ") + "."
-        if fokus > 0 { t += "\nFokus bisher: \(Zahl.dauer(fokus))." }
-        return LotseAntwort(text: t, werkzeug: .heute, aktion: .bereich(Bereich.heute.rawValue))
+        var zeilen: [String] = []
+        if let jetztDran = wichtig.first ?? weitere.first {
+            zeilen.append("Als Nächstes ist „\(jetztDran.titel)“ dran" + (z.ziel(jetztDran.zielID).map { " – das zahlt auf \($0.titel) ein." } ?? "."))
+        } else if offen.isEmpty && erledigt > 0 {
+            zeilen.append("Für heute ist alles erledigt – \(erledigt) Aufgabe\(erledigt == 1 ? "" : "n") geschafft.")
+        } else {
+            zeilen.append("Heute steht noch keine Aufgabe an.")
+        }
+        let rest = max(0, wichtig.count - 1)
+        if rest > 0 || !weitere.isEmpty {
+            var teile: [String] = []
+            if rest > 0 { teile.append("\(rest) weitere wichtige") }
+            if !weitere.isEmpty { teile.append("\(weitere.count) kleinere") }
+            zeilen.append("Danach warten " + teile.joined(separator: " und ") + " Aufgabe\(rest + weitere.count == 1 ? "" : "n")" + (erledigt > 0 ? "; \(erledigt) hast du schon geschafft." : "."))
+        }
+        if !offeneHabits.isEmpty { zeilen.append("Habits noch offen: " + Satz.liste(offeneHabits.map(\.titel)) + ".") }
+        else if !habits.isEmpty { zeilen.append("Alle Habits für heute sind abgehakt.") }
+        if !termine.isEmpty { zeilen.append("Termine: " + Satz.liste(termine.map { "\($0.titel) um \(Beispieltermine.uhrzeit($0.start!))" }) + ".") }
+        if fokus > 0 { zeilen.append("Fokus bisher \(Zahl.dauer(fokus)).") }
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .heute, aktion: .bereich(Bereich.heute.rawValue))
     }
 
     static func woche(_ z: Zustand, _ T: Tag, naechste: Bool) -> LotseAntwort {
@@ -123,7 +140,7 @@ enum Werkzeuge {
             zeilen.append("\(tagText(d, T)): " + (teile.isEmpty ? "frei" : teile.joined(separator: " · ")))
         }
         let n = z.aufgaben.filter { a in a.datum.map { $0 >= montag && $0 <= montag.plus(tage: 6) } == true && !a.erledigt }.count
-        return LotseAntwort(text: "\(naechste ? "Nächste" : "Diese") Woche: \(n) offene Aufgaben.\n" + zeilen.joined(separator: "\n"),
+        return LotseAntwort(text: "\(naechste ? "Nächste" : "Diese") Woche \(n == 1 ? "steht eine offene Aufgabe" : "stehen \(n) offene Aufgaben") an.\n" + zeilen.joined(separator: "\n"),
                             werkzeug: .woche, aktion: .bereich(Bereich.kalender.rawValue))
     }
 
@@ -137,21 +154,20 @@ enum Werkzeuge {
             let groesste = f.sorted { $0.minuten > $1.minuten }.prefix(2).sorted { $0.start < $1.start }
             zeilen.append("\(tagText(d, T)): " + (groesste.isEmpty ? "voll" : groesste.map { "\(Zeitfenster.text($0)) (\(Zahl.dauer(Double($0.minuten) * 60)))" }.joined(separator: ", ")))
         }
-        let kopf = tage.count == 1 ? "Frei (8–20 Uhr): \(Zahl.dauer(Double(gesamt) * 60))." : "Die nächsten 7 Tage: rund \(gesamt / 60) h frei (8–20 Uhr, ohne Termine und geplante Aufgaben)."
+        let kopf = tage.count == 1 ? "Zwischen 8 und 20 Uhr hast du \(Zahl.dauer(Double(gesamt) * 60)) frei." : "In den nächsten sieben Tagen hast du rund \(gesamt / 60) Stunden frei (8–20 Uhr, ohne Termine und geplante Aufgaben). Die größten Lücken:"
         return LotseAntwort(text: kopf + "\n" + zeilen.joined(separator: "\n"), werkzeug: .freieZeit, aktion: .bereich(Bereich.kalender.rawValue))
     }
 
     static func ziele(_ z: Zustand, _ T: Tag) -> LotseAntwort {
         let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
         guard !aktiv.isEmpty else { return LotseAntwort(text: "Du hast noch kein Ziel. Leg eins an: + Neu → Ziel.", werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue)) }
-        let zeilen = aktiv.map { g -> String in
-            let k = Kurs.aufKurs(g, in: z, heute: T)
-            return "• \(g.titel): \(Zahl.prozent(k.fortschritt)), \(k.lage.text), \(Kurs.bisText(g.faellig, heute: T))"
-        }
-        let hinten = aktiv.filter { [.hinterher, .ueberfaellig].contains(Kurs.aufKurs($0, in: z, heute: T).lage) }
-        var t = zeilen.joined(separator: "\n")
-        if !hinten.isEmpty { t += "\nAufmerksamkeit braucht: " + hinten.map(\.titel).joined(separator: ", ") + "." }
-        return LotseAntwort(text: t, werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue))
+        let kurse = aktiv.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
+        let hinten = kurse.filter { [.hinterher, .ueberfaellig].contains($0.1.lage) }
+        let kopf = hinten.isEmpty
+            ? "Deine \(aktiv.count) Ziele liegen im Plan oder voraus."
+            : (hinten.count == 1 ? "Ein Ziel braucht Aufmerksamkeit: \(hinten[0].0.titel) liegt \(hinten[0].1.lage.text)." : "\(hinten.count) Ziele liegen hinterher: " + Satz.liste(hinten.map(\.0.titel)) + ".")
+        let zeilen = kurse.map { g, k in "• \(g.titel): \(Zahl.prozent(k.fortschritt)) · \(k.lage.text) · \(Kurs.bisText(g.faellig, heute: T))" }
+        return LotseAntwort(text: ([kopf] + zeilen).joined(separator: "\n"), werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue))
     }
 
     /// Ziel nach Name finden: bestes Wort-Überlappen, mindestens ein Wort mit 4+ Zeichen
@@ -202,14 +218,14 @@ enum Werkzeuge {
             return LotseAntwort(text: "Für welches Ziel? Du hast: \(z.ziele.map(\.titel).joined(separator: ", ")).", werkzeug: .fortschrittErklaeren)
         }
         let p = Fortschritt.ziel(g, in: z, heute: T)
-        var t = "\(g.titel) steht bei \(Zahl.prozent(p)). Das ist der Durchschnitt der Meilensteine (mittel ×2, groß ×3):"
+        var t = "\(g.titel) steht bei \(Zahl.prozent(p)), weil die Meilensteine im Schnitt so weit sind (mittel zählt doppelt, groß dreifach):"
         let beitraege = g.schritte.map { ($0, Fortschritt.beitrag($0, in: g, z: z, heute: T), Fortschritt.stand($0, in: z, heute: T)) }
         for (s, b, st) in beitraege { t += "\n• \(s.titel): \(Zahl.prozent(st.anteil))\(st.gewicht > 1 ? " ×\(st.gewicht)" : "") → +\(Zahl.text(b * 100, stellen: 1)) Punkte" }
         // Was bringt am meisten: offener Meilenstein mit größtem Rest × Gewicht
         if let (s, _, st) = beitraege.filter({ $0.2.anteil < 1 }).max(by: { (1 - $0.2.anteil) * Double($0.2.gewicht) < (1 - $1.2.anteil) * Double($1.2.gewicht) }) {
             let summe = g.schritte.reduce(0) { $0 + Double(Fortschritt.gewicht($1)) }
             let rest = (1 - st.anteil) * Double(st.gewicht) / summe * 100
-            t += "\nAm meisten bringt jetzt „\(s.titel)“: bis zu +\(Zahl.text(rest, stellen: 0)) Punkte."
+            t += "\nAm meisten bringt jetzt „\(s.titel)“ – bis zu \(Zahl.text(rest, stellen: 0)) Punkte, wenn du ihn abschließt."
         }
         return LotseAntwort(text: t, werkzeug: .fortschrittErklaeren, aktion: .ziel(g.id))
     }
@@ -222,11 +238,15 @@ enum Werkzeuge {
             return LotseAntwort(text: t, werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
         }
         guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: + Neu → Habit.", werkzeug: .habits) }
-        let zeilen = z.habits.map { h in "• \(h.titel): Serie \(HabitRechnung.serie(h, heute: T)), \(Zahl.prozent(HabitRechnung.quote(h, heute: T)))\(HabitRechnung.geplant(h, am: T) && !h.erledigt.contains(T) ? " · heute offen" : "")" }
-        let schwach = z.habits.filter { HabitRechnung.quote($0, heute: T) < 0.5 }.map(\.titel)
-        var t = zeilen.joined(separator: "\n")
-        if !schwach.isEmpty { t += "\nUnter 50 %: " + schwach.joined(separator: ", ") + ". Kleiner machen oder Wochentage anpassen?" }
-        return LotseAntwort(text: t, werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
+        let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.erledigt.contains(T) }
+        let schwach = z.habits.filter { HabitRechnung.quote($0, heute: T) < 0.5 }
+        let stark = z.habits.max { HabitRechnung.quote($0, heute: T) < HabitRechnung.quote($1, heute: T) }
+        var zeilen: [String] = []
+        zeilen.append(offen.isEmpty ? "Alle Habits für heute sind abgehakt." : "Heute noch offen: " + Satz.liste(offen.map(\.titel)) + ".")
+        if let s = stark { zeilen.append("Am stabilsten läuft „\(s.titel)“ mit \(Zahl.prozent(HabitRechnung.quote(s, heute: T))) in 30 Tagen und Serie \(HabitRechnung.serie(s, heute: T)).") }
+        zeilen += z.habits.map { h in "• \(h.titel): Serie \(HabitRechnung.serie(h, heute: T)) · \(Zahl.prozent(HabitRechnung.quote(h, heute: T)))" }
+        if !schwach.isEmpty { zeilen.append((schwach.count == 1 ? "„\(schwach[0].titel)“ liegt unter 50 %" : Satz.liste(schwach.map(\.titel)) + " liegen unter 50 %") + " – kleiner machen oder Wochentage anpassen?") }
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
     }
 
     static func analyse(_ z: Zustand, _ T: Tag, _ kalender: Calendar, letzte: Bool) -> LotseAntwort {
@@ -237,9 +257,11 @@ enum Werkzeuge {
         let jeZiel = z.ziele.map { ($0.titel, Fortschritt.zeit(ziel: $0.id, in: z, von: von, bis: bis)) }.filter { $0.1 > 0 }.sorted { $0.1 > $1.1 }
         let h = HabitRechnung.quote(alle: z.habits, von: von, bis: bis, heute: T)
         let erledigt = z.aufgaben.filter { a in a.erledigtAm.map { let d = Tag($0, kalender: kalender); return d >= von && d <= bis } == true }.count
-        var t = "\(letzte ? "Letzte" : "Diese") Woche: \(Zahl.dauer(gesamt)) Fokus, davon \(gesamt > 0 ? Int((fuerZiele / gesamt * 100).rounded()) : 0) % für Ziele · \(erledigt) Aufgaben erledigt · Habits \(h.geplant > 0 ? Zahl.prozent(Double(h.erledigt) / Double(h.geplant)) : "–") (\(h.erledigt) von \(h.geplant))."
-        if !jeZiel.isEmpty { t += "\nZeit je Ziel: " + jeZiel.prefix(4).map { "\($0.0) \(Zahl.dauer($0.1))" }.joined(separator: ", ") + "." }
-        if gesamt > 0 && fuerZiele / gesamt < 0.5 { t += "\nWeniger als die Hälfte der Zeit zahlt auf Ziele ein – Aufgaben einem Ziel zuordnen?" }
+        let anteil = gesamt > 0 ? Int((fuerZiele / gesamt * 100).rounded()) : 0
+        var t = "\(letzte ? "Letzte" : "Diese") Woche hast du \(Zahl.dauer(gesamt)) fokussiert gearbeitet, davon \(anteil) % für deine Ziele. \(erledigt) Aufgabe\(erledigt == 1 ? "" : "n") erledigt"
+        t += h.geplant > 0 ? ", Habits zu \(Zahl.prozent(Double(h.erledigt) / Double(h.geplant))) (\(h.erledigt) von \(h.geplant))." : "."
+        if let erstes = jeZiel.first { t += "\nDie meiste Zeit ging in \(erstes.0) (\(Zahl.dauer(erstes.1)))" + (jeZiel.count > 1 ? ", dann " + Satz.liste(jeZiel.dropFirst().prefix(3).map { "\($0.0) (\(Zahl.dauer($0.1)))" }) + "." : ".") }
+        if gesamt > 0 && fuerZiele / gesamt < 0.5 { t += "\nWeniger als die Hälfte zahlt auf Ziele ein – soll ich dir zeigen, welche Aufgaben noch kein Ziel haben?" }
         return LotseAntwort(text: t, werkzeug: .analyse, aktion: .bereich(Bereich.rueckblick.rawValue))
     }
 
@@ -261,5 +283,51 @@ enum Werkzeuge {
             return LotseAntwort(text: f, werkzeug: .hilfe)
         }
         return LotseAntwort(text: "Kompass hat fünf Bereiche:\n" + Bereich.allCases.map { "• \(AppWissen.bereiche[$0] ?? $0.titel)" }.joined(separator: "\n"), werkzeug: .hilfe)
+    }
+
+    /// Empfehlung ohne Sprachmodell: deterministische Reihenfolge – Liegengebliebenes, Ziel hinterher mit größtem Hebel, wichtigste Aufgabe heute, offene Habits.
+    static func empfehlen(_ z: Zustand, _ T: Tag, woche: Bool) -> LotseAntwort {
+        var zeilen: [String] = []
+        let liegen = z.aufgaben.filter { a in a.datum.map { $0 < T } == true && !a.erledigt }
+        let hinten = z.ziele.filter { $0.status == .aktiv }
+            .map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
+            .filter { [.hinterher, .ueberfaellig].contains($0.1.lage) }
+            .sorted { $0.1.fortschritt - $0.1.erwartet < $1.1.fortschritt - $1.1.erwartet }
+        let wichtig = z.aufgaben.filter { $0.datum == T && !$0.erledigt && $0.prio == .hoch }.sorted { $0.reihenfolge < $1.reihenfolge }
+        let offeneHabits = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.erledigt.contains(T) }
+
+        if let (g, k) = hinten.first {
+            var t = "Fang bei \(g.titel) an: Das Ziel liegt \(k.lage.text) (\(Zahl.prozent(k.fortschritt)) statt erwarteter \(Zahl.prozent(k.erwartet)))."
+            if let s = g.schritte.filter({ Fortschritt.stand($0, in: z, heute: T).anteil < 1 })
+                .max(by: { (1 - Fortschritt.stand($0, in: z, heute: T).anteil) * Double(Fortschritt.gewicht($0)) < (1 - Fortschritt.stand($1, in: z, heute: T).anteil) * Double(Fortschritt.gewicht($1)) }) {
+                t += " Am meisten bringt dort „\(s.titel)“."
+            }
+            zeilen.append(t)
+        } else if !liegen.isEmpty {
+            zeilen.append("Räum zuerst auf, was liegen geblieben ist: " + Satz.liste(liegen.prefix(3).map(\.titel)) + (liegen.count > 3 ? " und \(liegen.count - 3) weitere." : "."))
+        } else if let a = wichtig.first {
+            zeilen.append("Fang mit „\(a.titel)“ an" + (z.ziel(a.zielID).map { " – deine wichtigste Aufgabe heute, sie zahlt auf \($0.titel) ein." } ?? " – deine wichtigste Aufgabe heute."))
+        } else {
+            zeilen.append("Heute ist nichts Dringendes offen – ein guter Tag, um an einem Ziel weiterzukommen.")
+        }
+        if hinten.first != nil, !liegen.isEmpty { zeilen.append("Außerdem liegen \(liegen.count) Aufgabe\(liegen.count == 1 ? "" : "n") aus den letzten Tagen offen.") }
+        if hinten.first != nil, let a = wichtig.first { zeilen.append("Heute konkret: „\(a.titel)“.") }
+        if !offeneHabits.isEmpty { zeilen.append("Und die kleinen Dinge nicht vergessen: " + Satz.liste(offeneHabits.prefix(3).map(\.titel)) + ".") }
+        if woche && hinten.count > 1 { zeilen.append("In der Woche danach: " + Satz.liste(hinten.dropFirst().map(\.0.titel)) + ".") }
+        let aktion: ChatNachricht.Aktion = hinten.first.map { .ziel($0.0.id) } ?? .bereich(Bereich.heute.rawValue)
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .empfehlen, aktion: aktion)
+    }
+}
+
+/// Kleine Sprachhelfer für lesbare Antworten.
+enum Satz {
+    /// „A, B und C“
+    static func liste(_ teile: [String]) -> String {
+        let t = Array(teile)
+        switch t.count {
+        case 0: return ""
+        case 1: return t[0]
+        default: return t.dropLast().joined(separator: ", ") + " und " + t[t.count - 1]
+        }
     }
 }

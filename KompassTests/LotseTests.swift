@@ -13,6 +13,7 @@ struct VerstehenTests {
 
     @Test(arguments: [
         ("Was steht heute an?", Werkzeug.Name.heute), ("Was ist jetzt dran?", .heute),
+        ("Was soll ich diese Woche zuerst machen?", .empfehlen), ("Worauf soll ich mich konzentrieren?", .empfehlen), ("Was würdest du mir raten?", .empfehlen),
         ("Wie sieht meine Woche aus?", .woche), ("Was steht nächste Woche an?", .woche), ("Welche Termine habe ich?", .woche),
         ("Wann habe ich diese Woche Zeit?", .freieZeit), ("Habe ich morgen Zeit?", .freieZeit),
         ("Wie stehen meine Ziele?", .ziele), ("Welches Ziel hinkt?", .ziele),
@@ -76,7 +77,7 @@ struct LotseWerkzeugTests {
     @Test func aufgabeAnlegenLandetImNaechstenOffenenMeilenstein() async {
         let s = speicher()
         let vorher = s.zustand.aufgaben.count
-        let a = await Lotse.fragen("Erstelle Aufgabe für Führerschein: Fragebogen Kapitel 5 morgen", speicher: s)
+        let a = await Lotse.fragen("Erstelle Aufgabe für Führerschein: Fragebogen Kapitel 5 morgen", speicher: s, modell: nil)
         #expect(s.zustand.aufgaben.count == vorher + 1)
         let neu = s.zustand.aufgaben.last!
         #expect(neu.titel == "Fragebogen Kapitel 5" && neu.datum == s.heute.plus(tage: 1))
@@ -87,7 +88,7 @@ struct LotseWerkzeugTests {
 
     @Test func erklaerenNenntBeitraegeUndNaechstenHebel() async {
         let s = speicher()
-        let a = await Lotse.fragen("Warum steht der Führerschein bei 54 %?", speicher: s)
+        let a = await Lotse.fragen("Warum steht der Führerschein bei 54 %?", speicher: s, modell: nil)
         #expect(a.werkzeug == .fortschrittErklaeren)
         #expect(a.text.contains("Punkte") && a.text.contains("Am meisten bringt"))
         let p = Fortschritt.ziel(s.zustand.ziele[0], in: s.zustand, heute: s.heute)
@@ -96,7 +97,7 @@ struct LotseWerkzeugTests {
 
     @Test func unbeantwortetWirdGemerktUndRueckmeldungGezaehlt() async {
         let s = speicher()
-        await Lotse.fragen("blubb trallala", speicher: s)
+        await Lotse.fragen("blubb trallala", speicher: s, modell: nil)
         #expect(s.zustand.lernen.lotse.unbeantwortet == ["blubb trallala"])
         let antwort = s.zustand.chat.last!
         Lotse.rueckmeldung(false, nachricht: antwort.id, speicher: s)
@@ -108,7 +109,7 @@ struct LotseWerkzeugTests {
     @Test func chatBleibtBegrenzt() async {
         let s = speicher()
         for i in 0..<110 { s.zustand.chat.append(ChatNachricht(rolle: .nutzer, text: "\(i)", zeit: s.jetzt())) }
-        await Lotse.fragen("Was steht heute an?", speicher: s)
+        await Lotse.fragen("Was steht heute an?", speicher: s, modell: nil)
         #expect(s.zustand.chat.count <= 200)
     }
 }

@@ -33,7 +33,7 @@ export interface Anfrage {
 }
 
 export type Antwort =
-  | { art: "werkzeug"; name: string; parameter: Record<string, string> }
+  | { art: "werkzeug"; name: string; parameter: Record<string, string>; einleitung?: string }
   | { art: "text"; text: string };
 
 export interface Abhaengigkeiten {
@@ -89,18 +89,28 @@ export function alsTools(werkzeuge: WerkzeugBeschreibung[]): Anthropic.Tool[] {
   return tools;
 }
 
-const ROLLE_WERKZEUGWAHL = `Du bist der Lotse in der App Kompass (Aufgaben, Habits, Ziele, Kalender). Du antwortest auf Deutsch, kurz.
-Regeln:
-- Zahlen, Prozente, Termine und Stände nennst du nie selbst. Dafür rufst du immer ein Werkzeug auf.
-- Erkennst du, was der Nutzer will, rufe genau ein Werkzeug auf und fülle die Parameter aus dem Text (Datum als JJJJ-MM-TT, heute/morgen/Wochentag umrechnen; wichtig = "ja"/"nein"; Ziel = Name wie in der App).
-- Braucht die Frage ein Abwägen (Ziel-Konflikte, Priorisierung, Motivation), rufe „beraten“ auf.
-- Nur für Begrüßung, Dank oder eine Rückfrage, wenn du etwas nicht zuordnen kannst, antwortest du mit einem kurzen Satz.`;
+// Gemeinsamer Stil – der Lotse soll sich lesen wie ein erfahrener, freundlicher Assistent, nicht wie ein Protokoll.
+const STIL = `Stil:
+- Antworte auf Deutsch, per „du“, ruhig und klar. Keine Floskeln, kein Lob ohne Anlass, keine Ausrufezeichen-Häufung.
+- Erst die Antwort in einem Satz. Dann höchstens drei kurze Punkte mit „•“, nur wenn sie etwas hinzufügen. Zum Schluss ein konkreter nächster Schritt oder ein Angebot als Frage.
+- Keine Markdown-Auszeichnung (keine Sternchen, keine Überschriften), keine Abkürzungen wie „Std.“, keine Telegramm-Sätze.
+- Kurz: meist unter 70 Wörtern, bei Beratung höchstens 120.`;
 
-const ROLLE_GESPRAECH = `Du bist der Lotse in der App Kompass: ein ruhiger, ehrlicher Begleiter für Ziele, Habits und Alltag. Du antwortest auf Deutsch.
+const ROLLE_WERKZEUGWAHL = `Du bist der Lotse in der App Kompass (Aufgaben, Habits, Ziele, Kalender).
 Regeln:
-- Nutze nur die Zahlen aus dem mitgelieferten Stand. Erfinde keine Werte. Fehlt etwas, sag das.
-- Höchstens 120 Wörter. Eine klare Empfehlung, ein bis zwei Gründe, ein nächster Schritt.
-- Keine Floskeln, kein Lob ohne Anlass. Sprich den Nutzer mit „du“ an.`;
+- Zahlen, Prozente, Termine und Stände nennst du nie selbst. Dafür rufst du immer ein Werkzeug auf – die App rechnet.
+- Erkennst du, was der Nutzer will, rufe genau ein Werkzeug auf und fülle die Parameter aus dem Text (Datum als JJJJ-MM-TT, heute/morgen/übermorgen/Wochentag umrechnen; wichtig = "ja"/"nein"; Ziel = Name wie in der App). Vor dem Aufruf darfst du einen kurzen einleitenden Satz schreiben („Schauen wir auf deine Woche.“) – oder nichts.
+- Braucht die Frage ein Abwägen (Ziel-Konflikte, Priorisierung, Motivation, „was soll ich zuerst“), rufe „beraten“ auf.
+- Fragen außerhalb von Kompass (Allgemeinwissen, Nachrichten, Rechnen, andere Apps): beantworte sie nicht inhaltlich. Sag in einem freundlichen Satz, dass du für Ziele, Habits, Aufgaben und Termine da bist, und biete etwas Passendes an, z. B. „Soll ich dir zeigen, was heute ansteht?“.
+- Begrüßung, Dank, Rückfrage: ein kurzer, warmer Satz.
+${STIL}`;
+
+const ROLLE_GESPRAECH = `Du bist der Lotse in der App Kompass: ein ruhiger, ehrlicher Begleiter für Ziele, Habits und Alltag.
+Regeln:
+- Nutze nur die Zahlen aus dem mitgelieferten Stand. Erfinde keine Werte. Fehlt dir etwas für ein Urteil, sag das in einem Nebensatz, nicht als eigener Absatz.
+- Eine klare Empfehlung, ein bis zwei Gründe, ein nächster Schritt, den man heute tun kann.
+- Sprich den Nutzer so an, wie ein guter Coach es täte: direkt, wohlwollend, ohne Belehrung.
+${STIL}`;
 
 function verlaufAlsNachrichten(verlauf: Anfrage["verlauf"]): Anthropic.MessageParam[] {
   // Die API verlangt wechselnde Rollen; gleiche Rollen hintereinander werden zusammengelegt.
@@ -139,7 +149,8 @@ export async function beantworten(a: Anfrage, d: Abhaengigkeiten): Promise<Antwo
   if (tool && tool.name !== "beraten") {
     const parameter: Record<string, string> = {};
     for (const [k, v] of Object.entries(tool.input as Record<string, unknown>)) if (typeof v === "string" && v) parameter[k] = v;
-    return { art: "werkzeug", name: tool.name, parameter };
+    const einleitung = erste.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text.trim()).filter(Boolean).join(" ");
+    return einleitung ? { art: "werkzeug", name: tool.name, parameter, einleitung } : { art: "werkzeug", name: tool.name, parameter };
   }
   if (!tool) {
     const text = erste.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();

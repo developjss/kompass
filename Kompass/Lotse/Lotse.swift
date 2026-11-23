@@ -6,7 +6,7 @@ enum Lotse {
 
     /// Beantwortet eine Frage und hängt Frage und Antwort an den Chat. Gibt die Antwort zurück.
     @discardableResult
-    static func fragen(_ frage: String, speicher: Speicher) async -> LotseAntwort {
+    static func fragen(_ frage: String, speicher: Speicher, modell: (any Sprachmodell)? = Sprachmodelle.aktiv) async -> LotseAntwort {
         let text = frage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return LotseAntwort(text: "") }
         let jetzt = speicher.jetzt()
@@ -16,12 +16,14 @@ enum Lotse {
         var aufruf = Verstehen.erkennen(text, zustand: speicher.zustand, heute: speicher.heute)
 
         // Stufe 0: Trifft eine Regel, kostet die Antwort nichts – der Server wird nur bei freien Formulierungen gefragt.
-        if aufruf == nil, let modell = Sprachmodelle.aktiv {
+        // Beratungsfragen („was soll ich zuerst …“) gehen mit Server an Stufe 2, ohne Server an die lokale Empfehlung.
+        var einleitung: String?
+        if aufruf == nil || aufruf?.name == .empfehlen, let modell {
             do {
-                let anfrage = SprachmodellAnfrage(wissen: AppWissen.text() + "\n\nStand:\n" + kurzstand(speicher), werkzeuge: Werkzeuge.alle,
+                let anfrage = SprachmodellAnfrage(wissen: AppWissen.text() + "\n\nStand:\n" + kurzstand(speicher), werkzeuge: Werkzeuge.alle.filter(\.fuerServer),
                                                   verlauf: speicher.zustand.chat.suffix(12).map { ($0.rolle, $0.text) }, frage: text)
                 switch try await modell.antworte(auf: anfrage) {
-                case .werkzeug(let a): aufruf = a
+                case .werkzeug(let a, let satz): aufruf = a; einleitung = satz
                 case .text(let t):
                     antwort = LotseAntwort(text: t, werkzeug: nil)
                     return abschliessen(antwort, frage: text, speicher: speicher)
@@ -39,6 +41,7 @@ enum Lotse {
 
         if let a = aufruf {
             antwort = ausfuehren(a, speicher: speicher)
+            if let e = einleitung?.trimmingCharacters(in: .whitespacesAndNewlines), !e.isEmpty, a.name != .aufgabeAnlegen { antwort.text = e + "\n" + antwort.text }
         } else {
             antwort = LotseAntwort(text: "Das habe ich noch nicht verstanden. Ich merke mir die Frage, damit der Lotse das lernt.\nVersuch zum Beispiel: „\(Werkzeuge.vorschlaege[0])“ oder „\(Werkzeuge.vorschlaege[2])“.", unbeantwortet: true)
         }

@@ -101,6 +101,7 @@ struct ClaudeServer: Sprachmodell {
         var name: String?
         var parameter: [String: String]?
         var text: String?
+        var einleitung: String?
         var kontingent: Kontingent?
         var fehler: String?
         var limit: Int?
@@ -135,7 +136,7 @@ struct ClaudeServer: Sprachmodell {
         switch g.art {
         case "werkzeug":
             guard let n = g.name, let werkzeug = Werkzeug.Name(rawValue: n) else { throw LotseFehler.antwort }
-            return .werkzeug(WerkzeugAufruf(name: werkzeug, parameter: g.parameter ?? [:]))
+            return .werkzeug(WerkzeugAufruf(name: werkzeug, parameter: g.parameter ?? [:]), einleitung: g.einleitung)
         case "text":
             guard let t = g.text, !t.isEmpty else { throw LotseFehler.antwort }
             return .text(t)
@@ -152,7 +153,7 @@ struct ClaudeServer: Sprachmodell {
         switch g.art {
         case "werkzeug":
             guard let n = g.name, let w = Werkzeug.Name(rawValue: n) else { throw LotseFehler.antwort }
-            return (.werkzeug(WerkzeugAufruf(name: w, parameter: g.parameter ?? [:])), g.kontingent)
+            return (.werkzeug(WerkzeugAufruf(name: w, parameter: g.parameter ?? [:]), einleitung: g.einleitung), g.kontingent)
         case "text":
             guard let t = g.text, !t.isEmpty else { throw LotseFehler.antwort }
             return (.text(t), g.kontingent)

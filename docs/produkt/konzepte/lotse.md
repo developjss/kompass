@@ -16,7 +16,7 @@ Drei Grundsätze:
 | Baustein | Aufgabe |
 |---|---|
 | `AppWissen` | Beschreibung der App **aus dem Code**: Tabs (`Bereich`), Fenster (`Navigation.Blatt`), Rechenregeln (`SchrittArt.erklaerung` + Sätze aus `rechenregeln.md`), erste Schritte, Werkzeuge. Wird dem Sprachmodell als Systemwissen mitgegeben. |
-| `Werkzeuge` | Zehn Werkzeuge mit Beschreibung, Parametern und Beispielfragen: heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe. Beispielfragen sind zugleich die Vorschläge im leeren Chat. |
+| `Werkzeuge` | Elf Werkzeuge (inkl. `empfehlen`: lokale Empfehlung, mit Server → Gespräch) mit Beschreibung, Parametern und Beispielfragen: heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe. Beispielfragen sind zugleich die Vorschläge im leeren Chat. |
 | `Verstehen` | Regeln (Deutsch): Frage → Werkzeug + Parameter (Datum: heute/morgen/Wochentag/TT.MM., wichtig, Ziel per Wortabgleich). Offline, deterministisch, getestet. |
 | `Sprachmodell` | Schnittstelle: bekommt Wissen, Werkzeuge, Verlauf, Frage; antwortet mit Werkzeugaufruf oder Text. `Sprachmodelle.aktiv` wird beim Start aus `LotseKonfiguration` gesetzt. |
 | `ClaudeServer` | Anbindung an den Kompass-Server (`supabase/functions/lotse/`): Kanal (debug/beta/testflight/store), anonyme Geräte-ID, Kontingent, Pro. Kein Schlüssel, kein Modellname in der App. |
@@ -34,6 +34,10 @@ Der Lotse soll die App „hundertprozentig verstehen“, auch wenn sie sich änd
 3. **Projektregel** (CLAUDE.md): neuer Screen, neues Fenster, neue Rechenregel oder neue Fähigkeit → App-Wissen und Werkzeuge ergänzen, Beispielfragen in die Tests.
 
 Neue Fähigkeit = ein Werkzeug: Eintrag in `Werkzeuge.alle`, Fall in `ausfuehren`, Regel in `Verstehen`, Test. Das Sprachmodell bekommt die neue Fähigkeit automatisch, weil `AppWissen.text()` die Werkzeuge auflistet.
+
+## 3a. Antwortstil
+
+Jede Antwort – ob Regel oder Modell – folgt demselben Muster: **erst die Antwort in einem Satz, dann höchstens drei Punkte, dann ein nächster Schritt oder ein Angebot.** Keine Zahlen-Telegramme, keine Markdown-Sternchen, per „du“, meist unter 70 Wörtern (Beratung bis 120). Fragen außerhalb der App beantwortet der Lotse nicht inhaltlich, sondern sagt freundlich, wofür er da ist, und bietet etwas Passendes an. Vor einem Werkzeug darf das Modell einen einleitenden Satz sagen („Schauen wir auf deine Woche.“), der der Werkzeug-Antwort vorangestellt wird. Stil-Text: `STIL` in `supabase/functions/lotse/lotse.ts`.
 
 ## 4. Lernen durch Nutzer
 
