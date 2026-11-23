@@ -1,7 +1,7 @@
 {
  "meta": {
   "title": "Landkarte",
-  "stand": "23.11.2026 · Kompass: Klick-Dummy fertig, erste SwiftUI-Fassung angelegt",
+  "stand": "23.11.2026 · Kompass: Rechnung Fassung 2, Tabs Fortschritt + Lotse",
   "hinweis": "Ein Baum für App und Projekt. Felder: t Titel, k Art, s Status (built|partial|planned|idea), o wer (founder|ai|ext|later), who, when, f Datei, n Notiz, to Querverweise, c Kinder. Gleiches Format wie Gapless."
  },
  "root": {
@@ -142,7 +142,8 @@
         "t": "Habits",
         "k": "tab",
         "s": "partial",
-        "f": "prototyp/index.html"
+        "f": "prototyp/index.html",
+        "n": "Im Tab „Fortschritt“ (Umschalter Ziele · Habits)."
        },
        {
         "id": "ziele",
@@ -150,7 +151,7 @@
         "k": "tab",
         "s": "partial",
         "f": "prototyp/index.html",
-        "n": "Zeitachse, Verlaufskarten, Schritte, So wird gerechnet, Vorschläge"
+        "n": "Zeitachse, Verlaufskarten, Schritte, So wird gerechnet, Vorschläge Im Tab „Fortschritt“ (Umschalter Ziele · Habits)."
        },
        {
         "id": "rueckblick",
@@ -180,6 +181,14 @@
         "k": "sheet",
         "s": "partial",
         "f": "prototyp/index.html"
+       },
+       {
+        "id": "lotse",
+        "t": "Lotse (Assistent)",
+        "k": "tab",
+        "s": "partial",
+        "f": "Kompass/Lotse/ · docs/produkt/konzepte/lotse.md",
+        "n": "Chat: App-Wissen aus dem Code, Werkzeuge, Regeln offline; Sprachmodell-Anbieter offen."
        }
       ]
      },

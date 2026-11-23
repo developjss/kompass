@@ -19,8 +19,35 @@ struct KompassApp: App {
     }
 }
 
+/// Die fünf Tabs. Ziele und Habits teilen sich „Fortschritt“ (Umschalter oben), Lotse ist der Assistent.
 enum Bereich: String, Hashable, CaseIterable {
-    case heute, kalender, habits, ziele, rueckblick
+    case heute, kalender, fortschritt, lotse, rueckblick
+
+    var titel: String {
+        switch self {
+        case .heute: "Heute"
+        case .kalender: "Kalender"
+        case .fortschritt: "Fortschritt"
+        case .lotse: "Lotse"
+        case .rueckblick: "Rückblick"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .heute: "sun.max"
+        case .kalender: "calendar"
+        case .fortschritt: "target"
+        case .lotse: "sparkles.rectangle.stack"
+        case .rueckblick: "chart.bar"
+        }
+    }
+}
+
+/// Was im Tab „Fortschritt“ gezeigt wird – getrennt, nie vermischt.
+enum FortschrittTeil: String, Hashable, CaseIterable {
+    case ziele, habits
+    var titel: String { self == .ziele ? "Ziele" : "Habits" }
 }
 
 enum NeuArt: String, Hashable, Identifiable {
@@ -28,8 +55,8 @@ enum NeuArt: String, Hashable, Identifiable {
     var id: String { rawValue }
 }
 
-enum InfoThema: String, Hashable, Identifiable {
-    case heute, kalender, habits, ziele, rueckblick
+enum InfoThema: String, Hashable, Identifiable, CaseIterable {
+    case heute, kalender, habits, ziele, rueckblick, lotse
     var id: String { rawValue }
 
     var titel: String {
@@ -39,6 +66,7 @@ enum InfoThema: String, Hashable, Identifiable {
         case .habits: "Habits"
         case .ziele: "Ziele"
         case .rueckblick: "Rückblick"
+        case .lotse: "Lotse"
         }
     }
 
@@ -49,6 +77,7 @@ enum InfoThema: String, Hashable, Identifiable {
         case .habits: "Habits sind das Tägliche: kein Enddatum, sondern eine Serie. Tippe einen Tag an, um ihn abzuhaken. Rechts stehen Serie und Quote der letzten 30 Tage. Der laufende Tag zählt erst, wenn er abgehakt ist."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
         case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
+        case .lotse: "Der Lotse kennt deine Ziele, Habits, Aufgaben und Termine. Frag ihn, was heute ansteht, wann du Zeit hast oder warum ein Ziel bei 54 % steht – oder lass ihn eine Aufgabe anlegen. Er rechnet nie selbst: Zahlen kommen immer aus der App."
         }
     }
 }
@@ -93,7 +122,20 @@ final class Navigation {
     }
 
     var bereich: Bereich = .heute
+    var fortschrittTeil: FortschrittTeil = .ziele
     var blatt: Blatt?
+    /// Navigationspfad im Tab Fortschritt (der Lotse öffnet darüber ein Ziel)
+    var fortschrittPfad: [ZielAuswahl] = []
+
+    func oeffneZiel(_ id: UUID) {
+        zeige(.ziele)
+        fortschrittPfad = [ZielAuswahl(id: id)]
+    }
+
+    func zeige(_ teil: FortschrittTeil) {
+        fortschrittTeil = teil
+        bereich = .fortschritt
+    }
 }
 
 /// Für NavigationLink(value:) auf ein Ziel

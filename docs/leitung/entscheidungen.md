@@ -22,6 +22,8 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | Thema | Vorschlag Claude | Wo |
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
+| [OFFEN] Sprachmodell für den Lotsen: A Claude-API über eigenen Server · B Apple On-Device · C beides · D nur Regeln | A zuerst, B später | `konzepte/lotse.md` §5 |
+| [OFFEN] Namen „Fortschritt“ (Tab Ziele · Habits) und „Lotse“ (Assistent) | so lassen | `konzepte/lotse.md` |
 | [OFFEN] Sprache der App-Texte | Deutsch zuerst, Englisch zusätzlich ab Phase 3 | `CLAUDE.md` |
 | [OFFEN] Nur für dich oder Produkt mit Abo | Produkt mit Abo (B2C, passt zu deinen Ideen-Kriterien) | `fahrplan.md` §1 |
 | [OFFEN] Fokusblöcke in Google/Apple zurückschreiben? | optional, ab Phase 3 | `konzepte/kalender-anbindung.md` |

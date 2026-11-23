@@ -230,25 +230,27 @@
       "id": "s-habits",
       "titel": "Habits in SwiftUI",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "landkarte": "habits",
       "phase": 2,
       "nach": [
         "s-rechnung"
-      ]
+      ],
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "s-ziele",
       "titel": "Ziele, Schritte, So wird gerechnet in SwiftUI",
       "wer": "claude",
-      "status": "laeuft",
+      "status": "erledigt",
       "prio": 2,
       "landkarte": "ziele",
       "phase": 2,
       "nach": [
         "s-rechnung"
-      ]
+      ],
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "s-fokus",
@@ -450,6 +452,59 @@
         "tag": 15
       },
       "seit": "2026-12-15"
+    },
+    {
+      "id": "l-anbieter",
+      "titel": "Sprachmodell-Anbieter für den Lotsen entscheiden (A Claude-Server · B Apple On-Device · C beides)",
+      "wer": "ceo",
+      "helfer": [
+        "claude"
+      ],
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "warum": "Ohne Anbieter antwortet der Lotse nur mit Regeln. Kosten, Datenschutz, Server betreffen den Gründer.",
+      "quelle": "docs/produkt/konzepte/lotse.md §5",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "l-sprachmodell",
+      "titel": "Sprachmodell an den Lotsen anbinden (Sprachmodelle.aktiv), Server ohne Schlüssel in der App",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "nach": [
+        "l-anbieter"
+      ],
+      "quelle": "docs/produkt/konzepte/lotse.md",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "l-werkzeuge",
+      "titel": "Lotse: weitere Werkzeuge (Ziel/Habit anlegen, Aufgabe verschieben/erledigen, Termin zuordnen, Fokus starten)",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/lotse.md §6",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "l-lernen",
+      "titel": "Lotse: unbeantwortete Fragen und Rückmeldungen anonym zusammenführen (Einwilligung, nur Zähler/Fragetexte)",
+      "wer": "claude",
+      "helfer": [
+        "ceo"
+      ],
+      "status": "offen",
+      "prio": 2,
+      "phase": 3,
+      "nach": [
+        "l-sprachmodell"
+      ],
+      "quelle": "docs/produkt/konzepte/lotse.md §4",
+      "landkarte": "lotse"
     }
   ]
 }

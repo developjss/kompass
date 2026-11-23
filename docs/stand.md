@@ -13,7 +13,7 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 ## 2. Aktueller Stand
 
 **Phase 0 – Klick-Dummy: fertig (23.11.2026)** – alles in `prototyp/`:
-- Fünf Bereiche: Heute, Kalender (Planen und Kalender in einem), Habits, Ziele, Rückblick. Fokus-Timer, Hinzufügen-Kacheln, Einstellungen mit Kalender-Verbindung (Beispieltermine).
+- Fünf Bereiche: Heute, Kalender (Planen und Kalender in einem), Habits, Ziele, Rückblick. (In der App seit 23.11.2026: Fortschritt = Ziele · Habits, dazu Lotse.) Fokus-Timer, Hinzufügen-Kacheln, Einstellungen mit Kalender-Verbindung (Beispieltermine).
 - Design wie Gapless (Harbor 2): Indigo, SF Pro Rounded, Verlaufskarten, gruppierte Listen, Text ≤ ~35 Wörter je Bildschirm (`docs/produkt/design.md`).
 - **Fortschritts-Rechnung** mit Schritten (Aufgaben/abhaken, Zeit, Habit, Zahl), Gewichten, „Auf Kurs“, Prognose und Lernen; Vorschläge aus Vorlagen und KI (`docs/produkt/rechenregeln.md`).
 - Speicherung: Browser + privat im Claude-Konto (nur Prototyp).
@@ -23,11 +23,13 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Phase 2 begonnen – erste SwiftUI-Fassung (23.11.2026):** `Kompass.xcodeproj` mit Schemes Kompass und Kompass Beta. Rechen-Logik als Swift-Port mit 42 Tests, fünf Bereiche grob wie im Klick-Dummy, Speicherung als Datei auf dem Gerät, Beispieltermine. Kein Server, keine echte Kalender-Anbindung. Details und Lücken: `docs/technik/app.md`.
 
+**Tabs und Lotse (23.11.2026, wartet auf „Ja, mergen“):** Fünf Tabs: Heute · Kalender · **Fortschritt** (Ziele · Habits per Umschalter, getrennt) · **Lotse** · Rückblick. Lotse = Chat-Assistent: App-Wissen aus dem Code, zehn Werkzeuge, regelbasiertes Verstehen offline, Lernen aus Rückmeldungen, Steckdose für ein Sprachmodell. [OFFEN] Anbieter (`docs/produkt/konzepte/lotse.md` §5).
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte
 
 Reihenfolge: `/fahrplan` (Phase 1).
-1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo).
+1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo), **Sprachmodell-Anbieter für den Lotsen**.
 2. Klick-Dummy eine Woche selbst nutzen, Funde in `/fahrplan` sammeln.
 3. Phase 2 weiter: Personen-Test als Swift-Test, SwiftData, dann Heute, Habits, Ziele fein ausbauen (Design und Funktionen ändern sich noch).

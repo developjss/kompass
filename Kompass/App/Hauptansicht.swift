@@ -45,11 +45,11 @@ private struct Bereiche: View {
     var body: some View {
         @Bindable var nav = nav
         TabView(selection: $nav.bereich) {
-            Tab("Heute", systemImage: "sun.max", value: Bereich.heute) { NavigationStack { HeuteAnsicht().zielZiel() } }
-            Tab("Kalender", systemImage: "calendar", value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
-            Tab("Habits", systemImage: "flame", value: Bereich.habits) { NavigationStack { HabitsAnsicht() } }
-            Tab("Ziele", systemImage: "target", value: Bereich.ziele) { NavigationStack { ZieleAnsicht().zielZiel() } }
-            Tab("Rückblick", systemImage: "chart.bar", value: Bereich.rueckblick) { NavigationStack { RueckblickAnsicht() } }
+            Tab(Bereich.heute.titel, systemImage: Bereich.heute.symbol, value: Bereich.heute) { NavigationStack { HeuteAnsicht().zielZiel() } }
+            Tab(Bereich.kalender.titel, systemImage: Bereich.kalender.symbol, value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
+            Tab(Bereich.fortschritt.titel, systemImage: Bereich.fortschritt.symbol, value: Bereich.fortschritt) { NavigationStack(path: $nav.fortschrittPfad) { FortschrittAnsicht().zielZiel() } }
+            Tab(Bereich.lotse.titel, systemImage: Bereich.lotse.symbol, value: Bereich.lotse) { NavigationStack { LotseAnsicht().zielZiel() } }
+            Tab(Bereich.rueckblick.titel, systemImage: Bereich.rueckblick.symbol, value: Bereich.rueckblick) { NavigationStack { RueckblickAnsicht() } }
         }
         .tint(Farbe.akzent)
         .sheet(item: $nav.blatt) { blatt in
