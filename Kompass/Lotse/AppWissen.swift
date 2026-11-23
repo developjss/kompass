@@ -10,7 +10,7 @@ enum AppWissen {
     static let bereiche: [Bereich: String] = [
         .heute: "Home (erster Tab): Jetzt-Karte, darunter „Dein Tag im Blick“ als Reel (Slides: Jetzt, Danach, wie voll der Tag ist, Heute offen, Ziele, Los); dann mit dem, was läuft oder als Nächstes kommt (Termin, Aufgabe oder Habit) – Fokus starten, Erledigt, Menge; Hinweise (enger Tag, Überschneidung, zu wenig Zeit); Als Nächstes; Heute offen (Aufgaben und Habits ohne Uhrzeit); Liegen geblieben; Ziele; Tagesabschluss.",
         .kalender: "Kalender: oben die nächsten drei Einträge; Umschalter Tag (Zeitleiste, Tipp auf eine Stunde = neuer Termin), Woche (7 Spalten), Monat (Raster mit farbigen Einträgen), Jahr (Auslastung); darunter „Ohne Uhrzeit“ und Eingang – Aufgaben und Habits per Ziehen in den Tag legen. Farben nach Ziel oder Kategorie (Einstellungen). Termine aus Apple (EventKit), Google als Beispiel, eigene Kompass-Termine.",
-        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Kopfkarte „x von y auf Kurs“, je Ziel Prozent, Auf Kurs, Frist; Ziel-Seite mit Satz „so wird gerechnet“, Meilensteinen, Aufgaben, Habits, Terminen, Einsatz und Fakten-Zeilen zum Bearbeiten) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
+        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Kopfkarte „x von y auf Kurs“, je Ziel Prozent, Auf Kurs, Frist; Ziel-Seite schlicht: Kopfkarte (antippen = so wird gerechnet), Warum, „Dein nächster Schritt“ mit Knopf, Meilensteine; unter „Verfeinern“ eigene Seiten für Aufgaben, Habits, Termine, Einsatz und Details) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
         .lotse: "Assistent (Tab in der Mitte, früher „Lotse“): dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
     ]
@@ -30,7 +30,7 @@ enum AppWissen {
         "habitzuziel": "Habit zum Ziel: bestehenden oder neuen Habit verbinden; zählt in die Prozente (Anzahl oder Wochen) oder nur als Einsatz.",
         "aufgabezuziel": "Aufgaben zum Ziel: bestehende Aufgaben einem Ziel und Meilenstein zuordnen.",
         "terminzuziel": "Termine zum Ziel: eine Termin-Serie zuordnen; zählt in Zahl (je 1) oder Zeit (Dauer) oder nur als Einsatz.",
-        "zielbearbeiten": "Ziel bearbeiten (ändern): eine Fakten-Zeile der Ziel-Seite antippen – Titel, Bis wann, Bereich, Warum, Aussehen (Farbe, Symbol).",
+        "zielbearbeiten": "Ziel bearbeiten (ändern): Ziel-Seite › Verfeinern › Details, dort eine Fakten-Zeile antippen – Titel, Bis wann, Bereich, Warum, Aussehen (Farbe, Symbol). Dort auch „Als erreicht markieren“ und löschen.",
         "habitmenge": "Menge eintragen: wie viel vom Habit heute geschafft ist (z. B. 12 von 20 Minuten) – große Zahl, Schnellwahl halb/ganz.",
         "termin": "Termin anlegen oder ändern: Titel, Tag, von–bis (Chips 30 Min, 1 h, 2 h), Kategorie (Farbe), zählt für ein Ziel (Meilenstein Zeit/Zahl) oder erfüllt einen Habit, Wiederholung; löschen.",
         "chats": "Frühere Chats (oben links im Assistenten): Liste der letzten 30 Chats mit erster Frage und Datum; antippen öffnet ihn wieder, wischen löscht.",

@@ -50,3 +50,27 @@ struct ZielSatzTests {
         #expect(Fortschritt.satz(g, in: Zustand(), heute: heute) == "Erreicht – zählt als 100 %.")
     }
 }
+
+@Suite("Ziele · nächster Schritt")
+struct NaechsterSchrittTests {
+    let heute = Tag(2027, 5, 5)
+
+    @Test func meilensteinMitDemGroesstenRest() {
+        var g = Ziel(titel: "Test", farbe: "#000000", symbol: "x", bereich: "x", faellig: Tag(2027, 12, 31), angelegt: Tag(2027, 1, 1))
+        let a = Schritt(titel: "A", art: .aufgaben, gewicht: 1)
+        let b = Schritt(titel: "B", art: .aufgaben, gewicht: 3)
+        let c = Schritt(titel: "C", art: .aufgaben, gewicht: 3, geschafft: true)
+        g.schritte = [a, b, c]
+        var z = Zustand(ziele: [g])
+        z.aufgaben = [Aufgabe(titel: "später", datum: Tag(2027, 5, 9), zielID: g.id, schrittID: b.id),
+                      Aufgabe(titel: "zuerst", datum: Tag(2027, 5, 6), zielID: g.id, schrittID: b.id)]
+        let n = Fortschritt.naechsterSchritt(g, in: z, heute: heute)
+        #expect(n?.schritt.id == b.id && n?.aufgabe?.titel == "zuerst")
+        #expect(abs((n?.punkte ?? 0) - 3.0 / 7.0) < 1e-9)
+        // alles geschafft → kein nächster Schritt; erreichtes Ziel auch nicht
+        g.schritte = [c]
+        #expect(Fortschritt.naechsterSchritt(g, in: Zustand(ziele: [g]), heute: heute) == nil)
+        g.schritte = [a]; g.status = .erreicht
+        #expect(Fortschritt.naechsterSchritt(g, in: Zustand(ziele: [g]), heute: heute) == nil)
+    }
+}

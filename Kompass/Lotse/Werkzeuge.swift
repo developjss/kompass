@@ -267,11 +267,10 @@ enum Werkzeuge {
         var t = "\(g.titel) steht bei \(Zahl.prozent(p)), weil die Meilensteine im Schnitt so weit sind (mittel zählt doppelt, groß dreifach):"
         let beitraege = g.schritte.map { ($0, Fortschritt.beitrag($0, in: g, z: z, heute: T), Fortschritt.stand($0, in: z, heute: T)) }
         for (s, b, st) in beitraege { t += "\n• \(s.titel): \(Zahl.prozent(st.anteil))\(st.gewicht > 1 ? " ×\(st.gewicht)" : "") → +\(Zahl.text(b * 100, stellen: 1)) Punkte" }
-        // Was bringt am meisten: offener Meilenstein mit größtem Rest × Gewicht
-        if let (s, _, st) = beitraege.filter({ $0.2.anteil < 1 }).max(by: { (1 - $0.2.anteil) * Double($0.2.gewicht) < (1 - $1.2.anteil) * Double($1.2.gewicht) }) {
-            let summe = g.schritte.reduce(0) { $0 + Double(Fortschritt.gewicht($1)) }
-            let rest = (1 - st.anteil) * Double(st.gewicht) / summe * 100
-            t += "\nAm meisten bringt jetzt „\(s.titel)“ – bis zu \(Zahl.text(rest, stellen: 0)) Punkte, wenn du ihn abschließt."
+        // Was bringt am meisten: dieselbe Rechnung wie „Dein nächster Schritt“ auf der Ziel-Seite (rechenregeln.md §10)
+        if let n = Fortschritt.naechsterSchritt(g, in: z, heute: T) {
+            t += "\nAm meisten bringt jetzt „\(n.schritt.titel)“ – bis zu \(Zahl.text(n.punkte * 100, stellen: 0)) Punkte, wenn du ihn abschließt."
+            if let a = n.aufgabe { t += " Nächste Aufgabe dazu: „\(a.titel)“." }
         }
         return LotseAntwort(text: t, werkzeug: .fortschrittErklaeren, aktion: .ziel(g.id))
     }

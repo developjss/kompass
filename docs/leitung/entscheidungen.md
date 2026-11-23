@@ -20,6 +20,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 23.11.2026 | [ENTSCHEIDUNG] Kompass ergänzt Apple- und Google-Kalender, ersetzt sie nicht (kann es aber); Termine sind Zielen und Habits zuordenbar | `docs/produkt/konzepte/kalender-anbindung.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] So einfach wie möglich, so intelligent wie möglich, fein anpassbar; Vorschläge direkt übernehmen oder erweitern; **gerechnet wird immer gleich und richtig** | `docs/produkt/rechenregeln.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] App soll durch Nutzer dazulernen | `docs/produkt/rechenregeln.md` §7 |
+| 23.11.2026 | [ENTSCHEIDUNG] Ziele minimal: Ziel-Seite zeigt nur Kopfkarte, Warum, „Dein nächster Schritt“ und Meilensteine, Rest unter „Verfeinern“; Regel „nächster Schritt“ = offener Meilenstein mit größtem fehlendem Beitrag (PR #17, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §1, `konzepte/struktur-v3.md` §11 |
 
 ## 2. Offen (Gründer entscheidet)
 
