@@ -23,9 +23,9 @@ struct KompassApp: App {
     }
 }
 
-/// Die fünf Tabs. Ziele und Habits teilen sich „Fortschritt“ (Umschalter oben), Lotse ist der Assistent.
+/// Die fünf Tabs in Reihenfolge; der Lotse steht in der Mitte. Ziele und Habits teilen sich „Fortschritt“ (Umschalter oben).
 enum Bereich: String, Hashable, CaseIterable {
-    case heute, kalender, fortschritt, lotse, rueckblick
+    case heute, kalender, lotse, fortschritt, rueckblick
 
     var titel: String {
         switch self {

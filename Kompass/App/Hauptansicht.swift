@@ -47,8 +47,8 @@ private struct Bereiche: View {
         TabView(selection: $nav.bereich) {
             Tab(Bereich.heute.titel, systemImage: Bereich.heute.symbol, value: Bereich.heute) { NavigationStack { HeuteAnsicht().zielZiel() } }
             Tab(Bereich.kalender.titel, systemImage: Bereich.kalender.symbol, value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
-            Tab(Bereich.fortschritt.titel, systemImage: Bereich.fortschritt.symbol, value: Bereich.fortschritt) { NavigationStack(path: $nav.fortschrittPfad) { FortschrittAnsicht().zielZiel() } }
             Tab(Bereich.lotse.titel, systemImage: Bereich.lotse.symbol, value: Bereich.lotse) { NavigationStack { LotseAnsicht().zielZiel() } }
+            Tab(Bereich.fortschritt.titel, systemImage: Bereich.fortschritt.symbol, value: Bereich.fortschritt) { NavigationStack(path: $nav.fortschrittPfad) { FortschrittAnsicht().zielZiel() } }
             Tab(Bereich.rueckblick.titel, systemImage: Bereich.rueckblick.symbol, value: Bereich.rueckblick) { NavigationStack { RueckblickAnsicht() } }
         }
         .tint(Farbe.akzent)

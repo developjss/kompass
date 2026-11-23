@@ -54,7 +54,7 @@ SF Pro Rounded (Dynamic Type): Large Title 34 heavy · Abschnitt (Title 2) 22 bo
 - **Gruppierte Liste:** Zeilen in einer weißen Karte, Trennlinie ab 66 pt; letzte Zeile „+ Aufgabe“. Je Gruppe 3 Einträge, dann „N weitere ⌄“.
 - **Verlaufskarten** (wie „Insights“): Titel, große Zahl (40 heavy), eine Zeile, Mini-Grafik; tief → hell, weicher Lichtschein oben links, farbiger Schatten.
 - **Hinzufügen-Kacheln** (wie „Add“): 2×2 Verlaufskacheln, weißes Symbol im Glaskreis.
-- **Tab-Leiste:** schwebende Glas-Kapsel, aktives Symbol kräftiger, aktiver Tab mit accentSoft. Fünf Tabs: Heute · Kalender · Fortschritt · Lotse · Rückblick.
+- **Tab-Leiste:** schwebende Glas-Kapsel, aktives Symbol kräftiger, aktiver Tab mit accentSoft. Fünf Tabs: Heute · Kalender · **Lotse** (Mitte) · Fortschritt · Rückblick.
 - **Umschalter** (Fortschritt: Ziele · Habits): Kapsel in accentSoft, aktives Segment als weiße Kapsel mit leichtem Schatten, unter dem Seitenkopf.
 - **Chat (Lotse):** Nutzer-Blasen in accent/weiß rechts, Lotse-Blasen als weiße Karte links mit Sprung-Link und Daumen; Vorschläge als Chips; Eingabe als Kapsel mit rundem Senden-Knopf.
 - **Seitenfuß:** Speicherstatus + „Daten & Kalender“ unten auf jeder Seite.

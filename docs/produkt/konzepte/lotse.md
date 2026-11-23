@@ -1,6 +1,6 @@
 # Lotse – der Assistent in Kompass
 
-Stand: 23. November 2026 · Arbeitstitel „Lotse“ (Tab 4). Gebaut: Grundversorgung ohne Sprachmodell. [OFFEN] Anbieter des Sprachmodells (Abschnitt 5).
+Stand: 23. November 2026 · Arbeitstitel „Lotse“ (mittlerer Tab). Gebaut: Grundversorgung ohne Sprachmodell. [OFFEN] Anbieter des Sprachmodells (Abschnitt 5).
 
 ## 1. Was der Lotse ist
 
