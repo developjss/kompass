@@ -8,8 +8,8 @@ enum AppWissen {
 
     /// Kurzbeschreibung je Tab – auch Antwort auf „Wo finde ich …?“
     static let bereiche: [Bereich: String] = [
-        .heute: "Heute: die eine Aufgabe, die jetzt dran ist, dann Wichtig, Weitere, Geschafft, fällige Habits, Termine und die nächsten Ziele. Unten der Tagesabschluss.",
-        .kalender: "Kalender: Wochenleiste, Termine aus Google/Apple neben deinen Aufgaben mit Uhrzeit, Aufgaben ohne Uhrzeit, Eingang für Ideen ohne Datum.",
+        .heute: "Home (erster Tab): Jetzt-Karte mit dem, was läuft oder als Nächstes kommt (Termin, Aufgabe oder Habit) – Fokus starten, Erledigt, Menge; Hinweise (enger Tag, Überschneidung, zu wenig Zeit); Als Nächstes; Heute offen (Aufgaben und Habits ohne Uhrzeit); Liegen geblieben; Ziele; Tagesabschluss.",
+        .kalender: "Kalender: oben die nächsten drei Einträge; Umschalter Tag (Zeitleiste, Tipp auf eine Stunde = neuer Termin), Woche (7 Spalten), Monat (Raster mit farbigen Einträgen), Jahr (Auslastung); darunter „Ohne Uhrzeit“ und Eingang – Aufgaben und Habits per Ziehen in den Tag legen. Farben nach Ziel oder Kategorie (Einstellungen). Termine aus Apple (EventKit), Google als Beispiel, eigene Kompass-Termine.",
         .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Kopfkarte „x von y auf Kurs“, je Ziel Prozent, Auf Kurs, Frist; Ziel-Seite mit Satz „so wird gerechnet“, Meilensteinen, Aufgaben, Habits, Terminen, Einsatz und Fakten-Zeilen zum Bearbeiten) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
         .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
@@ -17,7 +17,7 @@ enum AppWissen {
 
     /// Fenster (Sheets) und was man dort tut – Schlüssel = Präfix der `Navigation.Blatt`-id
     static let fenster: [String: String] = [
-        "neu": "+ Neu: Aufgabe, Habit oder Ziel anlegen. Beim Ziel schlägt die App Meilenstein-Vorlagen aus dem Titel vor (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte).",
+        "neu": "+ Neu: Aufgabe (mit Datum, Uhrzeit, Dauer, Kategorie), Termin, Habit (mit fester Uhrzeit) oder Ziel anlegen. Beim Ziel schlägt die App Meilenstein-Vorlagen aus dem Titel vor (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte).",
         "info": "(i): kurze Erklärung der Seite.",
         "einstellungen": "Daten & Kalender: Beispielkalender ein/aus, Speicherort, Demo-Daten neu laden.",
         "aufgabe": "Aufgabe: Titel, erledigt, wichtig, Datum, Wiederholung, Ziel, Notizen, löschen oder Serie beenden.",
@@ -32,6 +32,7 @@ enum AppWissen {
         "terminzuziel": "Termine zum Ziel: eine Termin-Serie zuordnen; zählt in Zahl (je 1) oder Zeit (Dauer) oder nur als Einsatz.",
         "zielbearbeiten": "Ziel bearbeiten (ändern): eine Fakten-Zeile der Ziel-Seite antippen – Titel, Bis wann, Bereich, Warum, Aussehen (Farbe, Symbol).",
         "habitmenge": "Menge eintragen: wie viel vom Habit heute geschafft ist (z. B. 12 von 20 Minuten) – große Zahl, Schnellwahl halb/ganz.",
+        "termin": "Termin anlegen oder ändern: Titel, Tag, von–bis (Chips 30 Min, 1 h, 2 h), Kategorie (Farbe), zählt für ein Ziel (Meilenstein Zeit/Zahl) oder erfüllt einen Habit, Wiederholung; löschen.",
         "pro": "Kompass Pro: unbegrenzte Lotse-Fragen und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
     ]
 
@@ -43,6 +44,7 @@ enum AppWissen {
             "Alles ohne Meilenstein (Aufgaben, Habits, Termine, Fokuszeit) zählt als Einsatz und ändert die Prozente nicht.",
             "Auf Kurs vergleicht Fortschritt mit der verstrichenen Zeit: 5 Punkte darüber = voraus, 10 darunter = hinterher.",
             "Prognose: Tempo der letzten 4 Wochen, ab 7 Tagen Verlauf.",
+            "Tagesplan: wache Zeit 7–22 Uhr; enger Tag = mindestens 75 % verplant oder weniger als 90 Minuten frei; Überschneidung ab 5 Minuten; zu wenig Zeit, wenn Offenes ohne Uhrzeit länger dauert als die freie Zeit. Eigene Termine zählen für ein Ziel wie Termin-Serien und erfüllen einen Habit, sobald sie vorbei sind.",
             "Habit: Tagesanteil = Menge ÷ Soll (halb geschafft zählt halb). Serie = geplante Tage rückwärts, nur volle Tage; bei „n-mal pro Woche“ erfüllte Wochen. Quote = Σ Anteile ÷ geplante Tage der letzten 30 Tage.",
             "Wiederkehrende Aufgaben zählen nicht in „erledigte ÷ alle“, sondern über Fokuszeit.",
             "Lernen ändert nie bestehende Prozente – nur Vorschläge (Soll-Stunden, Habit-Soll) und die Prognose.",
@@ -75,7 +77,7 @@ enum AppWissen {
         let id = UUID()
         let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id, .titel), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge)]
+                                          .terminZuZiel(id), .zielBearbeiten(id, .titel), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge), .termin(nil, tag: "2026-01-01", start: nil)]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

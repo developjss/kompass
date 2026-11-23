@@ -26,6 +26,10 @@ enum Verstehen {
         let t = normal(frage)
         guard !t.isEmpty else { return nil }
 
+        // 0. Termin anlegen: „Termin: …“, „trag … ein“, „Termin … um 15 Uhr“
+        if hat(t, "termin:", "neuer termin", "trag ", "trage ", "eintragen", "termin anlegen", "termin erstellen") || (hat(t, "termin") && uhrzeit(aus: t) != nil && hat(t, "leg", "erstell", "mach", "plane", "neu")) {
+            if uhrzeit(aus: t) != nil || hat(t, "termin") { return termin(aus: frage, t: t, z: z, T: T) }
+        }
         // 1. Aufgabe anlegen (vor allem anderen, sonst fängt „heute“ die Frage)
         if hat(t, "erstell", "leg ", "lege ", "anleg", "neue aufgabe", "aufgabe:", "erinnere mich", "notier", "fuege", "fueg ", "hinzu", "todo:", "to do:"),
            hat(t, "aufgabe", "erinnere", "notier", "todo", "to do") || t.hasPrefix("erstelle") || t.hasPrefix("lege") {
@@ -35,8 +39,14 @@ enum Verstehen {
         if hat(t, "was soll ich", "womit anfang", "womit fange", "womit soll", "worauf", "konzentrier", "priorisier", "raetst du", "raten", "empfiehlst", "empfehl", "was wuerdest du", "zuerst machen", "zuerst angehen", "am wichtigsten") {
             return WerkzeugAufruf(name: .empfehlen, parameter: ["zeitraum": hat(t, "woche") ? "woche" : "heute"])
         }
-        // 2b. „Jetzt dran“ vor den Hilfe-Mustern („was ist …“)
-        if hat(t, "jetzt dran", "als naechstes") { return WerkzeugAufruf(name: .heute) }
+        // 2b. „Als Nächstes“ und „Jetzt dran“ vor den Hilfe-Mustern („was ist …“)
+        if hat(t, "als naechstes", "naechster termin", "was kommt") { return WerkzeugAufruf(name: .naechstes) }
+        if hat(t, "jetzt dran") { return WerkzeugAufruf(name: .heute) }
+        // 2c. Wie voll ist ein Tag · Platz für … · enger Tag
+        if hat(t, "wie voll", "platz fuer", "noch platz", "eng ", "enger tag", "verplant", "ueberschneid", "schaffe ich", "passt noch") {
+            let (d, _) = datum(aus: t, heute: T)
+            return WerkzeugAufruf(name: .tagesplan, parameter: ["tag": (d ?? T).text])
+        }
         // 3. Hilfe / App-Fragen
         if hat(t, "wie funktioniert", "wie fange", "wie starte", "wie beginne", "was ist ", "was bedeutet", "wo finde", "wo ist", "wo kann", "wie kann ich", "wie wird", "wie rechnet", "wie berechn", "wie zaehl", "erklaer", "hilfe", "onboarding", "anleitung", "was kann die app", "was kannst du") {
             // „wie steht/läuft Ziel X“ ist keine Hilfe – prüfen, ob ein Ziel gemeint ist
@@ -81,6 +91,53 @@ enum Verstehen {
         // 11. Termine / Kalender → Woche
         if hat(t, "termin", "kalender", "wochenende") { return WerkzeugAufruf(name: .woche) }
         return nil
+    }
+
+    // MARK: Termin aus Text
+
+    /// „15 Uhr“, „15:30“, „um 9“ → Minuten; zweite Uhrzeit nach „bis“ ist das Ende.
+    static func uhrzeit(aus t: String) -> Int? { uhrzeiten(aus: t).first }
+
+    static func uhrzeiten(aus t: String) -> [Int] {
+        var out: [Int] = []
+        let re = try! NSRegularExpression(pattern: #"\b([01]?\d|2[0-3])(?::([0-5]\d))?\s*(?:uhr)?\b"#)
+        let ns = t as NSString
+        for m in re.matches(in: t, range: NSRange(location: 0, length: ns.length)) {
+            let ganz = ns.substring(with: m.range)
+            let hatUhr = ganz.contains("uhr") || ganz.contains(":")
+            // Zahl ohne „uhr“/„:“ nur nach „um“ oder „bis“ (sonst sind Datum oder Mengen gemeint)
+            let davor = ns.substring(to: m.range.location).trimmingCharacters(in: .whitespaces)
+            guard hatUhr || davor.hasSuffix("um") || davor.hasSuffix("bis") || davor.hasSuffix("ab") else { continue }
+            if ns.substring(from: m.range.location + m.range.length).hasPrefix(".") { continue } // 3.1. = Datum
+            let h = Int(ns.substring(with: m.range(at: 1))) ?? 0
+            let mi = m.range(at: 2).location != NSNotFound ? Int(ns.substring(with: m.range(at: 2))) ?? 0 : 0
+            out.append(h * 60 + mi)
+        }
+        return out
+    }
+
+    static func termin(aus frage: String, t: String, z: Zustand, T: Tag) -> WerkzeugAufruf {
+        var titel = frage
+        if let i = frage.firstIndex(of: ":"), frage[..<i].lowercased().contains("termin") { titel = String(frage[frage.index(after: i)...]) }
+        titel = titel.replacingOccurrences(of: #"(?i)^(bitte )?(trag(e)?|leg(e)?|erstell(e)?|mach(e)?|plane)( mir)?( bitte)?( einen| den)?( neuen)?( termin)?( an| ein)?\s*"#, with: "", options: .regularExpression)
+        titel = titel.replacingOccurrences(of: #"(?i)^(neuer )?termin:?\s*"#, with: "", options: .regularExpression)
+        let (datum, datumWort) = datum(aus: t, heute: T)
+        let zeiten = uhrzeiten(aus: t)
+        // Datum, Uhrzeiten und Füllwörter aus dem Titel
+        if let w = datumWort {
+            let muster = NSRegularExpression.escapedPattern(for: w).replacingOccurrences(of: "ue", with: "[uü]e?")
+            titel = titel.replacingOccurrences(of: #"(?i)(\b(am|fuer|für)\s+)?"# + muster + #"\.?"#, with: "", options: .regularExpression)
+        }
+        titel = titel.replacingOccurrences(of: #"(?i)\b(um|ab|von|bis)?\s*([01]?\d|2[0-3])(:[0-5]\d)?\s*(uhr)?\b"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\b(ein|eintragen|an|anlegen|bitte|termin)\b\.?"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: " +", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: " .,:;!-"))
+        if !titel.isEmpty { titel = titel.prefix(1).uppercased() + titel.dropFirst() }
+        var p = ["titel": titel, "datum": (datum ?? T).text]
+        if let s = zeiten.first { p["start"] = Tagesplan.uhr(s) }
+        if zeiten.count > 1 { p["ende"] = Tagesplan.uhr(zeiten[1]) }
+        if let g = Werkzeuge.findeZiel(frage, in: z) { p["ziel"] = g.titel }
+        return WerkzeugAufruf(name: .terminAnlegen, parameter: p)
     }
 
     // MARK: Aufgabe aus Text

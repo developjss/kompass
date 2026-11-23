@@ -19,7 +19,7 @@ struct KompassApp: App {
                 }
                 .onChange(of: speicher.zustand.einstellungen.pro) { _, neu in Sprachmodelle.einrichten(pro: neu) }
                 .onChange(of: phase) { _, neu in
-                    if neu != .active { speicher.speichernJetzt() }
+                    if neu != .active { speicher.speichernJetzt() } else if speicher.lage == .bereit { speicher.appleKalenderLesen() }
                 }
         }
     }
@@ -31,7 +31,7 @@ enum Bereich: String, Hashable, CaseIterable {
 
     var titel: String {
         switch self {
-        case .heute: "Heute"
+        case .heute: "Home"
         case .kalender: "Kalender"
         case .fortschritt: "Fortschritt"
         case .lotse: "Lotse"
@@ -41,7 +41,7 @@ enum Bereich: String, Hashable, CaseIterable {
 
     var symbol: String {
         switch self {
-        case .heute: "sun.max"
+        case .heute: "house"
         case .kalender: "calendar"
         case .fortschritt: "target"
         case .lotse: "sparkles.rectangle.stack"
@@ -57,8 +57,21 @@ enum FortschrittTeil: String, Hashable, CaseIterable {
 }
 
 enum NeuArt: String, Hashable, Identifiable {
-    case aufgabe, habit, ziel
+    case aufgabe, termin, habit, ziel
     var id: String { rawValue }
+}
+
+/// Ansicht im Kalender
+enum KalenderModus: String, Hashable, CaseIterable {
+    case tag, woche, monat, jahr
+    var titel: String {
+        switch self {
+        case .tag: "Tag"
+        case .woche: "Woche"
+        case .monat: "Monat"
+        case .jahr: "Jahr"
+        }
+    }
 }
 
 /// Welche Zeile der Ziel-Seite bearbeitet wird
@@ -68,7 +81,7 @@ enum ZielFeld: String, Hashable, CaseIterable {
 
 /// Welche Zeile der Habit-Seite bearbeitet wird (je Zeile ein Editor, wie bei einer Gapless-Transaktion)
 enum HabitFeld: String, Hashable, CaseIterable {
-    case titel, menge, rhythmus, erinnerung, ziel, aussehen
+    case titel, menge, rhythmus, kalender, erinnerung, ziel, aussehen
 }
 
 enum InfoThema: String, Hashable, Identifiable, CaseIterable {
@@ -77,7 +90,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
 
     var titel: String {
         switch self {
-        case .heute: "Heute"
+        case .heute: "Home"
         case .kalender: "Kalender"
         case .habits: "Habits"
         case .ziele: "Ziele"
@@ -88,8 +101,8 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
 
     var text: String {
         switch self {
-        case .heute: "Oben steht die eine Aufgabe, die jetzt dran ist. „Wichtig“ zahlt auf deine Ziele ein, „Weitere“ nicht. Mit dem Auge zeigst du nur eine Aufgabe. Erledigtes landet unter „Geschafft“."
-        case .kalender: "Termine aus Google oder Apple stehen neben deinen Aufgaben. Der Eingang sammelt Ideen ohne Datum. Kompass ergänzt deinen Kalender, ersetzt ihn aber nicht."
+        case .heute: "Home zeigt, was jetzt dran ist: oben läuft oder kommt der nächste Eintrag – mit Fokus und Erledigt. Hinweise warnen vor engen Tagen, Überschneidungen und zu wenig Zeit. Darunter: als Nächstes, was heute noch offen ist, und deine Ziele."
+        case .kalender: "Oben die nächsten drei Einträge. Darunter Tag, Woche, Monat oder Jahr. Aufgaben und Habits ohne Uhrzeit ziehst du von unten in den Tag. Termine legst du mit „+ Neu“ an – sie können für ein Ziel zählen oder einen Habit erfüllen."
         case .habits: "Habits sind das Tägliche. Unter „Heute“ hakst du ab oder trägst eine Menge ein – halb geschafft zählt halb. „Diese Woche“ zeigt Tages- und Wochen-Habits, „Alle Habits“ Soll, Rhythmus, Quote und Serie. Die Serie zählt nur volle Tage."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
         case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
@@ -122,6 +135,8 @@ final class Navigation {
         case habitMenge(UUID, tag: String)
         /// Eine Zeile der Habit-Seite bearbeiten
         case habitBearbeiten(UUID, HabitFeld)
+        /// Termin anlegen (id nil) oder bearbeiten; Tag als Text, Start in Minuten
+        case termin(UUID?, tag: String, start: Int?)
 
         var id: String {
             switch self {
@@ -140,12 +155,23 @@ final class Navigation {
             case .pro: "pro"
             case .habitMenge(let h, let t): "habitmenge-\(h)-\(t)"
             case .habitBearbeiten(let h, let f): "habitbearbeiten-\(h)-\(f.rawValue)"
+            case .termin(let i, let t, let s): "termin-\(i?.uuidString ?? "neu")-\(t)-\(s ?? -1)"
             }
         }
     }
 
     var bereich: Bereich = .heute
     var fortschrittTeil: FortschrittTeil = .ziele
+    /// Kalender: gewählter Tag (nil = heute) und Ansicht
+    var kalenderTag: Tag?
+    var kalenderModus: KalenderModus = .tag
+
+    /// Kalender an einem Tag öffnen
+    func oeffneKalender(_ tag: Tag?, modus: KalenderModus = .tag) {
+        kalenderTag = tag
+        kalenderModus = modus
+        bereich = .kalender
+    }
     var blatt: Blatt?
     /// Navigationspfad im Tab Fortschritt (Ziel- und Habit-Seiten; der Lotse öffnet darüber)
     var fortschrittPfad = NavigationPath()

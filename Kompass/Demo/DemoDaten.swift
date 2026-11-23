@@ -81,6 +81,8 @@ enum DemoDaten {
             hb("Kein Handy nach 22 Uhr", "#B8456E", "moon.fill", .taeglich, nil, nil, nil, 0.55),
         ]
         habits[0].eintragen(12, am: T)
+        habits[0].uhrzeit = 21 * 60           // Buch lesen: abends fest im Kalender
+        habits[1].uhrzeit = 18 * 60           // LAPL-Theorie werktags 18:00
         auto.schritte.insert(Schritt(titel: "Prüfungsfragen üben", art: .habit, seit: T.plus(tage: -70), soll: 60, habitID: habits[2].id), at: 4)
         fit.schritte.insert(Schritt(titel: "Sport 3× pro Woche, 8 Wochen", art: .habit, seit: T.plus(tage: -70), soll: 8,
                                     habitID: habits[3].id, habitModus: .wochen), at: 1)
@@ -99,8 +101,8 @@ enum DemoDaten {
             tk("Theorie-Fragebogen Kapitel 4", T, auto.id, .hoch),
             tk("Meteorologie: Kapitel Wolken", T, flug.id, .hoch, uhr: 10 * 60),
             tk("Sparplan für Dezember aufsetzen", T, geld.id, .hoch, uhr: 16 * 60, dauer: 45),
-            tk("Paket zur Post bringen", T, nil, .normal),
-            tk("Visum-Verlängerung klären", T, nil, .normal),
+            tk("Paket zur Post bringen", T, nil, .normal, dauer: 20),
+            tk("Visum-Verlängerung klären", T, nil, .normal, dauer: 30),
             tk("Morgen-Check-in", T, nil, .normal, erledigt: jetzt.addingTimeInterval(-3 * 3600), fokus: 8 * 60),
             tk("5-km-Lauf", T, fit.id, .hoch, erledigt: jetzt.addingTimeInterval(-2 * 3600), fokus: 32 * 60),
             tk("Fahrstunde vorbereiten", d1, auto.id, .hoch),
@@ -132,7 +134,16 @@ enum DemoDaten {
         for i in aufgaben.indices { aufgaben[i].schrittID = zeitSchritt(aufgaben[i].zielID) }
         for i in sitzungen.indices { sitzungen[i].schrittID = zeitSchritt(sitzungen[i].zielID) }
 
+        aufgaben[3].kategorie = .freizeit
+        aufgaben[4].kategorie = .arbeit
+        aufgaben[9].kategorie = .arbeit
         var z = Zustand(ziele: ziele, habits: habits, aufgaben: aufgaben, sitzungen: sitzungen)
+        // Eigene Termine: Vorlesung (Studium), Gym erfüllt den Habit Sport und zählt als Einsatz für „Fit“
+        z.terminSpeichern(EigenerTermin(titel: "Vorlesung BWL", tag: T.montag.plus(tage: -14), start: 11 * 60 + 30, ende: 13 * 60,
+                                        kategorie: .studium, wiederholung: .woechentlich))
+        z.terminSpeichern(EigenerTermin(titel: "Gym", tag: T.montag.plus(tage: -14).plus(tage: 4), start: 18 * 60, ende: 19 * 60,
+                                        kategorie: .gesundheit, zielID: fit.id, habitID: habits[3].id, wiederholung: .woechentlich, habitBis: T.plus(tage: -1)))
+        z.terminSpeichern(EigenerTermin(titel: "Abendessen mit Mia", tag: T.plus(tage: 2), start: 19 * 60, ende: 21 * 60, kategorie: .freizeit))
         z.lernen.zeitVerhaeltnisse = [1.2, 1.35]
         z.einstellungen.googleBeispiel = true
         z.einstellungen.appleBeispiel = true

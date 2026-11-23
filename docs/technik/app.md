@@ -6,7 +6,7 @@ Stand: 23. November 2026 · erste, grobe Fassung. Design und Rechnung wie im Kli
 
 - `Kompass.xcodeproj` in Xcode öffnen, Scheme **Kompass** (Entwicklung) oder **Kompass Beta** wählen, iPhone-Simulator, Start.
 - Ab iOS 26, iPhone und iPad. Mac folgt.
-- Tests: Scheme Kompass → Product › Test (⌘U). Ohne Xcode-Oberfläche:
+- Tests: Scheme Kompass → Product › Test (⌘U) = **Full** (App-Tests + UI-Tests). **App-Tests** nur: `-only-testing:KompassTests`, **UI-Tests** nur: `-only-testing:KompassUITests` (Start mit `-demoNeu`, Bildschirmfotos im Testbericht). Der Personen-Test (`PersonenTests`, 6 Personen × 3,5 Jahre) dauert einige Minuten. Ohne Xcode-Oberfläche:
 
 ```bash
 xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS Simulator,name=iPhone 17' test
@@ -33,7 +33,8 @@ xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS
 | `Kompass/Ansichten/` | Heute, Kalender, Fortschritt (Ziele · Habits), Ziel-Detail, Habit-Seite (`Habits/HabitDetail.swift`, Editor je Zeile), Lotse (Chat), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
 | `Kompass/Lotse/` | Assistent: `AppWissen` (aus dem Code), `Werkzeuge`, `Verstehen` (Regeln), `Sprachmodell` (Schnittstelle), `Lotse` (Steuerung) – `docs/produkt/konzepte/lotse.md` |
 | `Kompass/Demo/` | Demo-Daten (fester Zufall) und Beispieltermine |
-| `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle aus `prototyp/tests/unit.py` und mehr) |
+| `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle aus `prototyp/tests/unit.py` und mehr), Personen-Test |
+| `KompassUITests/` | UI-Tests: Rundgang, Kalender-Ansichten, Termin/Aufgabe anlegen, Habit-/Ziel-Seite, Lotse, große Schrift |
 
 Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner) – keine Projektdatei anfassen.
 

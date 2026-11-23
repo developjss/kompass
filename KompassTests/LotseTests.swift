@@ -23,6 +23,8 @@ struct VerstehenTests {
         ("Wie lief meine Woche?", .analyse), ("Wie viel Fokuszeit hatte ich letzte Woche?", .analyse),
         ("Wie fange ich an?", .hilfe), ("Wie wird der Fortschritt gerechnet?", .hilfe), ("Wo finde ich den Fokus-Timer?", .hilfe), ("Was kannst du?", .hilfe),
         ("Wie kann ich eine Erinnerung für einen Habit einstellen?", .hilfe),
+        ("Was steht als Nächstes an?", .naechstes), ("Wie voll ist mein Tag?", .tagesplan), ("Ist morgen noch Platz für Sport?", .tagesplan),
+        ("Trag morgen 15 Uhr Zahnarzt ein", .terminAnlegen), ("Neuer Termin: Fahrstunde Freitag 17:00 bis 18:30", .terminAnlegen),
         ("Erstelle Aufgabe: Flugschule anrufen morgen", .aufgabeAnlegen), ("Neue Aufgabe für Führerschein: Fragebogen Kapitel 5", .aufgabeAnlegen),
         ("Erinnere mich daran, Oma anzurufen", .aufgabeAnlegen),
     ])
@@ -48,6 +50,14 @@ struct VerstehenTests {
         #expect(a.parameter["datum"] == Tag(2026, 11, 27).text) // nächster Freitag
         #expect(a.parameter["wichtig"] == "ja")
         #expect(a.parameter["ziel"] == "Führerschein Klasse B")
+    }
+
+    @Test func terminAusText() {
+        let a = Verstehen.erkennen("Trag morgen 15 Uhr Zahnarzt ein", zustand: z, heute: heute)!
+        #expect(a.name == .terminAnlegen && a.parameter["titel"] == "Zahnarzt" && a.parameter["datum"] == Tag(2026, 11, 24).text && a.parameter["start"] == "15:00")
+        let b = Verstehen.erkennen("Neuer Termin: Fahrstunde Freitag 17:00 bis 18:30", zustand: z, heute: heute)!
+        #expect(b.parameter["titel"] == "Fahrstunde" && b.parameter["start"] == "17:00" && b.parameter["ende"] == "18:30" && b.parameter["datum"] == Tag(2026, 11, 27).text)
+        #expect(Verstehen.uhrzeiten(aus: "steuer abgeben 3.1.") == [])
     }
 
     @Test func aufgabeOhneDatumUndDatumAlsZahl() {

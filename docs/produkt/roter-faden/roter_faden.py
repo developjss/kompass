@@ -187,12 +187,12 @@ seite(K1, "Die 6 Prinzipien", "prinzipien", "Aus deiner Ideen-Word – und wo si
       ], [3600, 6038]))
 
 # =============================================================== 2 Heute
-K2 = kapitel("Heute", "kap2", ["Die Startseite: was jetzt dran ist und was heute zählt."],
-             [("Heute", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Erklärung (i)", "info")])
-seite(K2, "Heute", "heute", "Oben die eine Aufgabe, die jetzt dran ist; darunter Wichtig (zahlt auf Ziele ein), Weitere, Geschafft; daneben bzw. darunter Habits, Termine, Ziele.",
-      bilder=[("heute.jpg", "Heute")],
-      klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Kreis links → erledigt, landet unter „Geschafft“", "Aufgabe antippen → Aufgabe bearbeiten (Datum, Uhrzeit, Ziel, Schritt, Wiederholung)",
-              "Auge bei „Wichtig“ → nur eine Aufgabe sichtbar (Prinzip 1)", "„Liegen geblieben“ → „Alle auf heute“", "+ Neu → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
+K2 = kapitel("Home", "kap2", ["Die Startseite: was jetzt dran ist, was ansteht und wo es eng wird."],
+             [("Home", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Erklärung (i)", "info")])
+seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder kommt als Nächstes – Termin, Aufgabe oder Habit) mit Fokus, Erledigt oder Menge; darunter Hinweise (enger Tag, Überschneidung, zu wenig Zeit), Als Nächstes, Heute offen, Liegen geblieben, Ziele, Tagesabschluss. Konzept: " + doc("docs/produkt/konzepte/struktur-v3.md"),
+      bilder=[("heute.jpg", "Home")],
+      klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge eintragen direkt auf der Karte", "Hinweis antippen → der Tag im Kalender", "Kreis links → erledigt",
+              "„Liegen geblieben“ → „Alle auf heute“", "+ Neu → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
       gespeichert=LOKAL)
 seite(K2, "Fokus-Modus", "fokus", "Vollbild mit Timer. Jede Minute zählt für das Ziel und den Schritt der Aufgabe.",
       bilder=[("fokus.jpg", "Fokus")],
@@ -206,12 +206,12 @@ seite(K2, "Erklärung (i)", "info", "Jede Seite hat oben ein (i). Erklärungen s
 # =============================================================== 3 Kalender
 K3 = kapitel("Kalender", "kap3", ["Planen und Kalender in einem Bereich. Ergänzt Google und Apple."],
              [("Kalender", "kalender"), ("Termin zuordnen", "termin"), ("Einstellungen & Kalender verbinden", "einstellungen")])
-seite(K3, "Kalender", "kalender", "Tag oder Woche. Oben je Tag die Aufgaben ohne Uhrzeit, darunter die Stunden mit Terminen. Der Eingang sammelt Ideen ohne Datum.",
+seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ (drei Karten), darunter Tag · Woche · Monat · Jahr. Tag: Zeitleiste mit Blöcken in Ziel- oder Kategoriefarbe. Darunter „Ohne Uhrzeit“ und Eingang – Aufgaben und Habits per Ziehen in den Tag legen.",
       bilder=[("kalender.jpg", "Kalender (Tag)")],
-      klicks=["In eine freie Stunde tippen → Aufgabe zu dieser Uhrzeit", "„+“ unter einem Tag → Aufgabe ohne Uhrzeit", "Aufgabe ziehen (am Handy kurz halten) → anderer Tag oder Uhrzeit",
-              "Gestreifter Block (Termin) → [[Termin zuordnen|termin]]", "Eingang ⌄ → aufklappen"],
-      gespeichert=LOKAL + " Termine selbst bleiben in Google/Apple.",
-      kommt=["Echte Anbindung: Apple über EventKit, Google über Anmeldung (OAuth) – " + doc("docs/produkt/konzepte/kalender-anbindung.md")])
+      klicks=["Leere Stunde antippen → neuer Termin", "„+ Neu“ → Termin: Titel, Zeit, Kategorie, zählt für Ziel oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
+              "Monat: Tag antippen, nochmal → Tagesansicht", "Jahr: Tage nach Auslastung eingefärbt"],
+      gespeichert=LOKAL + " Apple-Termine werden nur gelesen (EventKit, nach Zustimmung).",
+      kommt=["Google-Anmeldung (OAuth) – " + doc("docs/produkt/konzepte/kalender-anbindung.md")])
 seite(K3, "Termin zuordnen", "termin", "Ein Termin aus Google oder Apple kann einem Ziel oder Habit zugeordnet werden – für die ganze Serie, ab heute.",
       bilder=[("termin.jpg", "Termin")],
       klicks=["Ziel wählen → Zeit jeder stattgefundenen Fahrstunde zählt fürs Ziel", "Habit wählen → wird an Termintagen abgehakt", "„Aufgabe daraus machen“ → Vorbereitung"],
@@ -247,7 +247,7 @@ seite(K5, "Vorschläge", "vorschlaege", "Passende Schritte aus Vorlagen – oder
 # =============================================================== 6 Rückblick & Hinzufügen
 K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und wie Neues in die App kommt."],
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
-seite(K6, "Rückblick", "rueckblick", "Fokuszeit mit 12-Wochen-Kurve, Zeit pro Ziel als Ring, Habit-Quote, Wochenreflexion.",
+seite(K6, "Rückblick", "rueckblick", "Oben eine Aussage („62 % deiner Pläne geschafft“), darunter weiße Karten: Fokuszeit (12 Wochen), Zeit je Ziel, Habits je Habit, Auslastung je Tag (Linie = enger Tag), Wochenreflexion.",
       bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
 seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite: vier Kacheln.",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])

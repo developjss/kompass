@@ -56,6 +56,13 @@ struct LotseAnsicht: View {
                     .focused($fokus)
                     .submitLabel(.send)
                     .onSubmit { senden(eingabe) }
+                    // Mehrzeiliges Feld: die Senden-Taste der Tastatur fügt „\n“ ein → als Senden behandeln
+                    .onChange(of: eingabe) { _, neu in
+                        if neu.hasSuffix("\n") {
+                            let text = String(neu.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
+                            if text.isEmpty { eingabe = "" } else { senden(text) }
+                        }
+                    }
                 if leer {
                     Button { fokus = true } label: {
                         Image(systemName: "mic").frame(width: 40, height: 40).foregroundStyle(Farbe.zweitrangig)
@@ -69,6 +76,7 @@ struct LotseAnsicht: View {
                     }
                     .disabled(denkt)
                     .accessibilityLabel("Senden")
+                    .accessibilityIdentifier("lotse.senden")
                 }
             }
             .padding(.leading, 14).padding(.trailing, 4).padding(.vertical, 4)

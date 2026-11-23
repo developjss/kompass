@@ -1,25 +1,47 @@
 import SwiftUI
 
-/// Heute: eine Aufgabe „Jetzt dran“, dann Wichtig / Weitere / Geschafft, Habits, Termine, Ziele.
+/// Home (Struktur v3 §3): das Werkzeug für jetzt – Jetzt-Karte, Hinweise, Als Nächstes, Heute offen, Ziele, Tagesabschluss.
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
-    @State private var alleGeschafften = false
 
     var body: some View {
         let z = speicher.zustand
         let T = speicher.heute
-        let offen = z.aufgaben.filter { $0.datum == T && !$0.erledigt }.sorted { $0.reihenfolge < $1.reihenfolge }
-        let wichtig = offen.filter { $0.prio == .hoch }
-        let weitere = offen.filter { $0.prio != .hoch }
-        let geschafft = z.aufgaben.filter { a in a.erledigt && a.erledigtAm.map { Tag($0, kalender: speicher.kalender) == T } == true }
-            .sorted { ($0.erledigtAm ?? .distantPast) > ($1.erledigtAm ?? .distantPast) }
+        let jetzt = speicher.jetztMinuten
+        let naechste = Tagesplan.naechste(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:), anzahl: 4)
+        let fokus = HomeRechnung.fokus(zustand: z, heute: T, jetzt: jetzt, naechste: naechste)
+        let hinweise = Tagesplan.hinweise(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:))
         let liegen = z.aufgaben.filter { a in a.datum.map { $0 < T } == true && !a.erledigt }.sorted { ($0.datum ?? T) < ($1.datum ?? T) }
-        let jetzt = wichtig.first ?? weitere.first
-        let einstellung = z.einstellungen
+        let ohne = Tagesplan.ohneZeit(am: T, zustand: z)
+        let offenA = ohne.aufgaben.filter { !$0.erledigt }.sorted { ($0.prio == .hoch ? 0 : 1, $0.reihenfolge) < ($1.prio == .hoch ? 0 : 1, $1.reihenfolge) }
+        let offenH = ohne.habits.filter { !$0.voll(am: T) }
+        let rest = naechste.filter { $0.id != fokus.block?.id }.prefix(3)
 
-        Seite(titel: "Heute", info: .heute) {
-            JetztDranKarte(aufgabe: jetzt, erledigt: geschafft.count, gesamt: offen.count + geschafft.count)
+        Seite(titel: "Home", info: .heute) {
+            JetztKarte(fokus: fokus)
+
+            if !hinweise.isEmpty {
+                AbschnittKopf(titel: hinweise.count == 1 ? "Ein Hinweis" : "\(min(hinweise.count, 3)) Hinweise")
+                GruppierteListe {
+                    ForEach(hinweise.prefix(3)) { HinweisZeile(hinweis: $0) }
+                }
+            }
+
+            AbschnittKopf(titel: "Als Nächstes") { Button("Kalender ›") { nav.oeffneKalender(nil) } }
+            GruppierteListe {
+                if rest.isEmpty { LeerZeile(text: "Nichts mehr mit Uhrzeit. Zieh im Kalender eine Aufgabe in den Tag.") }
+                ForEach(Array(rest)) { b in NaechsteZeile(block: b) }
+            }
+
+            AbschnittKopf(titel: "Heute offen") {
+                Text(offenA.isEmpty && offenH.isEmpty ? "alles erledigt" : "\(offenA.count + offenH.count)").foregroundStyle(Farbe.zweitrangig)
+            }
+            GruppierteListe {
+                ForEach(offenH) { HomeHabitZeile(habit: $0) }
+                ForEach(offenA) { AufgabeZeile(aufgabe: $0) }
+                AufgabeHinzufuegen(platzhalter: "Aufgabe für heute", datum: T, prio: .normal)
+            }
 
             if !liegen.isEmpty {
                 AbschnittKopf(titel: "Liegen geblieben") {
@@ -29,55 +51,14 @@ struct HeuteAnsicht: View {
                 }
                 GruppierteListe {
                     ForEach(liegen.prefix(3)) { AufgabeZeile(aufgabe: $0, datumZeigen: true) }
-                    if liegen.count > 3 { LeerZeile(text: "\(liegen.count - 3) weitere") }
+                    if liegen.count > 3 { LeerZeile(text: "\(liegen.count - 3) weitere im Kalender") }
                 }
             }
-
-            AbschnittKopf(titel: "Wichtig") {
-                Button {
-                    speicher.aendern { $0.einstellungen.nurEineAufgabe.toggle() }
-                } label: { Image(systemName: einstellung.nurEineAufgabe ? "eye.slash" : "eye") }
-                    .accessibilityLabel(einstellung.nurEineAufgabe ? "Alle wichtigen Aufgaben zeigen" : "Nur eine Aufgabe zeigen")
-            }
-            GruppierteListe {
-                ForEach(einstellung.nurEineAufgabe ? Array(wichtig.prefix(1)) : wichtig) { AufgabeZeile(aufgabe: $0) }
-                if einstellung.nurEineAufgabe && wichtig.count > 1 { LeerZeile(text: "\(wichtig.count - 1) ausgeblendet") }
-                AufgabeHinzufuegen(platzhalter: "Wichtige Aufgabe", datum: T, prio: .hoch)
-            }
-
-            AbschnittKopf(titel: "Weitere") {
-                Button {
-                    speicher.aendern { $0.einstellungen.weitereAusblenden.toggle() }
-                } label: {
-                    if einstellung.weitereAusblenden { Text("\(weitere.count) versteckt") } else { Image(systemName: "eye") }
-                }
-                .accessibilityLabel(einstellung.weitereAusblenden ? "Weitere einblenden" : "Weitere ausblenden")
-            }
-            if !einstellung.weitereAusblenden {
-                GruppierteListe {
-                    ForEach(weitere) { AufgabeZeile(aufgabe: $0) }
-                    AufgabeHinzufuegen(platzhalter: "Aufgabe", datum: T, prio: .normal)
-                }
-            }
-
-            if !geschafft.isEmpty {
-                AbschnittKopf(titel: "Geschafft") { Text("\(geschafft.count)").foregroundStyle(Farbe.zweitrangig) }
-                GruppierteListe {
-                    ForEach(alleGeschafften ? geschafft : Array(geschafft.prefix(3))) { AufgabeZeile(aufgabe: $0) }
-                    if geschafft.count > 3 {
-                        Button(alleGeschafften ? "Weniger" : "\(geschafft.count - 3) weitere") { alleGeschafften.toggle() }
-                            .font(.unterzeile).frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                }
-            }
-
-            HabitsHeute()
-            TermineHeute()
 
             AbschnittKopf(titel: "Ziele") { Button("Alle ›") { nav.zeige(.ziele) } }
             let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
             GruppierteListe {
-                if aktiv.isEmpty { LeerZeile(text: "Noch keine Ziele.") }
+                if aktiv.isEmpty { LeerZeile(text: "Noch keine Ziele. „+ Neu“ → Ziel.") }
                 ForEach(aktiv.prefix(3)) { ZielZeile(ziel: $0) }
             }
 
@@ -89,147 +70,271 @@ struct HeuteAnsicht: View {
     }
 }
 
-/// Kopfkarte „Jetzt dran“ mit Fokus und Erledigt; unten Tagesfortschritt.
-private struct JetztDranKarte: View {
-    var aufgabe: Aufgabe?
-    var erledigt: Int
-    var gesamt: Int
+/// Was die Jetzt-Karte zeigt (rein): ein Block (läuft oder in ≤ 60 Min), sonst die wichtigste offene Aufgabe ohne Uhrzeit, sonst ein offener Habit.
+enum HomeRechnung {
+    struct Fokus {
+        var block: Tagesplan.Block?
+        var aufgabe: Aufgabe?
+        var habit: Habit?
+        var geschafft: Int
+        var gesamt: Int
+    }
+
+    static func fokus(zustand z: Zustand, heute T: Tag, jetzt: Int, naechste: [Tagesplan.Block]) -> Fokus {
+        // Heute geplant: Aufgaben mit Datum heute + geplante Habits
+        let aufgaben = z.aufgaben.filter { $0.datum == T }
+        let habits = z.habits.filter { T >= $0.angelegt && HabitRechnung.geplant($0, am: T) }
+        let geschafft = aufgaben.filter(\.erledigt).count + habits.filter { $0.voll(am: T) }.count
+        let gesamt = aufgaben.count + habits.count
+        if let b = naechste.first, b.tag == T, b.start - jetzt <= 60 {
+            return Fokus(block: b, geschafft: geschafft, gesamt: gesamt)
+        }
+        let offen = aufgaben.filter { !$0.erledigt && $0.uhrzeit == nil }
+            .sorted { ($0.prio == .hoch ? 0 : 1, $0.reihenfolge) < ($1.prio == .hoch ? 0 : 1, $1.reihenfolge) }
+        if let a = offen.first { return Fokus(aufgabe: a, geschafft: geschafft, gesamt: gesamt) }
+        if let h = habits.first(where: { !$0.voll(am: T) && $0.zeit(am: T) == nil }) { return Fokus(habit: h, geschafft: geschafft, gesamt: gesamt) }
+        if let b = naechste.first { return Fokus(block: b, geschafft: geschafft, gesamt: gesamt) }
+        return Fokus(geschafft: geschafft, gesamt: gesamt)
+    }
+}
+
+/// Große Karte oben: Titel, wann, Knöpfe (Fokus, Erledigt, Menge), darunter „x von y geschafft“.
+private struct JetztKarte: View {
+    var fokus: HomeRechnung.Fokus
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
     var body: some View {
         let z = speicher.zustand
         let T = speicher.heute
-        Verlaufskarte(farben: Farbe.indigo) {
-            if let a = aufgabe {
-                KartenLabel(text: "Jetzt dran")
-                Text(a.titel).font(.kompass(.title2, .heavy)).fixedSize(horizontal: false, vertical: true)
-                if let g = z.ziel(a.zielID) { Text(g.titel).font(.unterzeile).opacity(0.85) }
-                HStack(spacing: 8) {
-                    let laeuft = z.timer?.aufgabeID == a.id
-                    Button { nav.blatt = .fokus(a.id) } label: {
-                        Label(laeuft ? "Fokus öffnen" : "Fokus starten", systemImage: laeuft ? "pause.fill" : "play.fill")
-                            .font(.kompass(.subheadline, .bold)).padding(.horizontal, 16).frame(minHeight: 44)
-                            .background(.white, in: Capsule()).foregroundStyle(Farbe.indigo[0])
-                    }
-                    Button { speicher.aendern { $0.erledigen(a.id, jetzt: speicher.jetzt()) } } label: {
-                        Label("Erledigt", systemImage: "checkmark").font(.kompass(.subheadline, .bold))
-                            .padding(.horizontal, 16).frame(minHeight: 44)
-                            .background(.white.opacity(0.18), in: Capsule())
-                    }
+        let farbe = fokus.block?.farbe ?? fokus.habit?.farbe ?? fokus.aufgabe.flatMap { z.ziel($0.zielID)?.farbe }
+        Verlaufskarte(farben: farbe.map(Farbe.verlauf) ?? Farbe.indigo) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    KartenLabel(text: label)
+                    Text(titel).font(.kompass(.title2, .heavy)).fixedSize(horizontal: false, vertical: true)
+                    if let u = unter { Text(u).font(.unterzeile).opacity(0.88) }
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 8)
+                Spacer(minLength: 8)
+                Image(systemName: symbol).font(.system(size: 20, weight: .semibold))
+                    .frame(width: 48, height: 48).background(.white.opacity(0.2), in: Circle())
+                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                    .accessibilityHidden(true)
+            }
+            knoepfe.padding(.top, 10)
+            if fokus.gesamt > 0 {
+                Balken(anteil: Double(fokus.geschafft) / Double(fokus.gesamt)).padding(.top, 12)
+                let sek = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: speicher.jetzt())
+                Text("\(fokus.geschafft) von \(fokus.gesamt) geschafft · \(Zahl.dauer(sek)) Fokus").font(.klein).opacity(0.9)
+            }
+        }
+    }
+
+    private var label: String {
+        if let b = fokus.block { return Tagesplan.laeuft(b, heute: speicher.heute, jetzt: speicher.jetztMinuten) ? "Läuft gerade" : "Als Nächstes · \(Tagesplan.wannText(b, heute: speicher.heute, jetzt: speicher.jetztMinuten))" }
+        if fokus.aufgabe != nil { return "Jetzt dran" }
+        if fokus.habit != nil { return "Heute noch offen" }
+        return "Alles erledigt"
+    }
+
+    private var titel: String { fokus.block?.titel ?? fokus.aufgabe?.titel ?? fokus.habit?.titel ?? "Für heute ist nichts mehr offen." }
+
+    private var unter: String? {
+        let z = speicher.zustand
+        if let b = fokus.block {
+            let zeit = "\(Tagesplan.uhr(b.start))–\(Tagesplan.uhr(b.ende))"
+            if Tagesplan.laeuft(b, heute: speicher.heute, jetzt: speicher.jetztMinuten) { return "\(zeit) · noch \(b.ende - speicher.jetztMinuten) Min" }
+            return [zeit, z.ziel(b.zielID)?.titel].compactMap { $0 }.joined(separator: " · ")
+        }
+        if let a = fokus.aufgabe { return z.ziel(a.zielID)?.titel }
+        if let h = fokus.habit { return HabitRechnung.mengenText(h, am: speicher.heute) }
+        return nil
+    }
+
+    private var symbol: String {
+        if let b = fokus.block { return b.art == .termin ? "calendar" : b.art == .habit ? "repeat" : "checkmark.circle" }
+        if fokus.habit != nil { return "repeat" }
+        if fokus.aufgabe != nil { return "scope" }
+        return "sparkles"
+    }
+
+    @ViewBuilder private var knoepfe: some View {
+        let T = speicher.heute
+        HStack(spacing: 8) {
+            if let id = aufgabeID {
+                let laeuft = speicher.zustand.timer?.aufgabeID == id
+                HauptKnopf(text: laeuft ? "Fokus öffnen" : "Fokus starten", symbol: laeuft ? "pause.fill" : "play.fill") { nav.blatt = .fokus(id) }
+                NebenKnopf(text: "Erledigt", symbol: "checkmark") { speicher.aendern { $0.erledigen(id, jetzt: speicher.jetzt()) } }
+            } else if let h = habitID.flatMap({ speicher.zustand.habit($0) }) {
+                if h.menge != nil {
+                    HauptKnopf(text: "Menge eintragen", symbol: "plus") { nav.blatt = .habitMenge(h.id, tag: T.text) }
+                    NebenKnopf(text: "Ganz", symbol: "checkmark") { speicher.aendern { $0.habitUmschalten(h.id, am: T) } }
+                } else {
+                    HauptKnopf(text: "Abhaken", symbol: "checkmark") { speicher.aendern { $0.habitUmschalten(h.id, am: T) } }
+                }
+            } else if let b = fokus.block {
+                HauptKnopf(text: "Im Kalender", symbol: "calendar") { nav.oeffneKalender(b.tag) }
+                if b.eigenID != nil { NebenKnopf(text: "Ändern", symbol: "pencil") { KalenderAktion.oeffnen(b, nav: nav) } }
             } else {
-                KartenLabel(text: "Alles erledigt")
-                Text("Für heute ist nichts mehr offen.").font(.kompass(.title2, .heavy))
+                HauptKnopf(text: "Plan für morgen", symbol: "calendar") { nav.oeffneKalender(T.plus(tage: 1)) }
             }
-            let fokus = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: speicher.jetzt())
-            Balken(anteil: gesamt > 0 ? Double(erledigt) / Double(gesamt) : 0).padding(.top, 12)
-            Text("\(erledigt) von \(gesamt) erledigt · \(Zahl.dauer(fokus)) Fokus").font(.klein).opacity(0.9)
         }
+    }
+
+    private var aufgabeID: UUID? { fokus.block?.aufgabeID ?? fokus.aufgabe?.id }
+    private var habitID: UUID? { fokus.block?.art == .habit ? fokus.block?.habitID : fokus.habit?.id }
+}
+
+/// Weißer Kapsel-Knopf auf Verlaufskarten (Gapless-Stil)
+struct HauptKnopf: View {
+    var text: String
+    var symbol: String
+    var aktion: () -> Void
+    var body: some View {
+        Button(action: aktion) {
+            Label(text, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 16).frame(minHeight: 44)
+                .background(.white, in: Capsule()).foregroundStyle(Farbe.indigo[0])
+        }
+        .buttonStyle(.plain)
     }
 }
 
-private struct HabitsHeute: View {
+/// Glas-Knopf auf Verlaufskarten
+struct NebenKnopf: View {
+    var text: String
+    var symbol: String
+    var aktion: () -> Void
+    var body: some View {
+        Button(action: aktion) {
+            Label(text, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 16).frame(minHeight: 44)
+                .background(.white.opacity(0.18), in: Capsule()).overlay(Capsule().strokeBorder(.white.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Hinweis: Symbol im Kreis (Bernstein/Rose), Text, Tag; Tipp öffnet den Tag im Kalender.
+private struct HinweisZeile: View {
+    var hinweis: Tagesplan.Hinweis
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
     var body: some View {
-        let T = speicher.heute
-        let faellig = speicher.zustand.habits.filter { HabitRechnung.geplant($0, am: T) }
-        AbschnittKopf(titel: "Habits") { Button("Alle ›") { nav.zeige(.habits) } }
-        GruppierteListe {
-            if speicher.zustand.habits.isEmpty { LeerZeile(text: "Noch keine Habits.") }
-            else if faellig.isEmpty { LeerZeile(text: "Heute nichts geplant.") }
-            ForEach(faellig) { h in
-                HStack(spacing: 10) {
-                    Haken(an: h.voll(am: T), farbe: Color(hex: h.farbe), beschriftung: h.titel) {
-                        speicher.aendern { $0.habitUmschalten(h.id, am: T) }
-                    }
-                    .padding(.leading, 4)
-                    Button { nav.oeffneHabit(h.id) } label: {
-                        Text(h.titel).font(.zeile).foregroundStyle(Farbe.text).frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-                    Label("\(HabitRechnung.serie(h, heute: T))", systemImage: "flame.fill")
-                        .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig).padding(.trailing, 16)
-                        .accessibilityLabel("Serie \(HabitRechnung.serie(h, heute: T))")
-                }
-                .frame(minHeight: Mass.zeileKompakt)
-            }
-        }
-    }
-}
-
-private struct TermineHeute: View {
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let z = speicher.zustand
-        let T = speicher.heute
-        let e = z.einstellungen
-        let termine = Beispieltermine.termine(am: T, google: e.googleBeispiel, apple: e.appleBeispiel, heute: T)
-        let mitZeit = z.aufgaben.filter { $0.datum == T && $0.uhrzeit != nil }
-        AbschnittKopf(titel: "Termine") { Button("Kalender ›") { nav.bereich = .kalender } }
-        GruppierteListe {
-            if termine.isEmpty && mitZeit.isEmpty {
-                LeerZeile(text: e.googleBeispiel || e.appleBeispiel ? "Keine Termine mit Uhrzeit." : "Kalender verbinden, um Termine zu sehen.")
-            }
-            ForEach(Zeitleiste.eintraege(termine: termine, aufgaben: mitZeit, zustand: z), id: \.id) { ZeitleistenZeile(eintrag: $0) }
-        }
-    }
-}
-
-/// Termine und Aufgaben mit Uhrzeit gemeinsam nach Zeit sortiert.
-enum Zeitleiste {
-    struct Eintrag: Identifiable {
-        var id: String
-        var titel: String
-        var start: Int?
-        var unter: String
-        var farbe: Color
-        var aufgabeID: UUID?
-        var erledigt = false
-    }
-
-    @MainActor
-    static func eintraege(termine: [Termin], aufgaben: [Aufgabe], zustand z: Zustand) -> [Eintrag] {
-        let t = termine.map { e in
-            Eintrag(id: e.id, titel: e.titel, start: e.start,
-                    unter: e.start.map { "\(Beispieltermine.uhrzeit($0))–\(Beispieltermine.uhrzeit(e.ende ?? $0)) · \(e.quelle.name)" } ?? "ganztägig · \(e.quelle.name)",
-                    farbe: Color(hex: e.quelle.farbe))
-        }
-        let a = aufgaben.map { x in
-            Eintrag(id: x.id.uuidString, titel: x.titel, start: x.uhrzeit,
-                    unter: "\(Beispieltermine.uhrzeit(x.uhrzeit ?? 0)) · \(x.dauer) Min · Aufgabe",
-                    farbe: z.ziel(x.zielID).map { Color(hex: $0.farbe) } ?? Farbe.pfeil, aufgabeID: x.id, erledigt: x.erledigt)
-        }
-        return (t + a).sorted { ($0.start ?? -1) < ($1.start ?? -1) }
-    }
-}
-
-struct ZeitleistenZeile: View {
-    var eintrag: Zeitleiste.Eintrag
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        Button {
-            if let id = eintrag.aufgabeID { nav.blatt = .aufgabe(id) }
-        } label: {
+        Button { nav.oeffneKalender(hinweis.tag) } label: {
             HStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 2).fill(eintrag.farbe).frame(width: 4, height: 36).padding(.leading, 18)
+                Image(systemName: symbol).font(.system(size: 15, weight: .bold))
+                    .frame(width: 36, height: 36)
+                    .background(farbe.opacity(0.14), in: Circle()).foregroundStyle(farbe)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(eintrag.titel).font(.zeile).foregroundStyle(Farbe.text).strikethrough(eintrag.erledigt)
-                    Text(eintrag.unter).font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                    Text(titel).font(.zeile).foregroundStyle(Farbe.text)
+                    Text(hinweis.text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
                 }
-                Spacer()
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
             }
-            .frame(minHeight: Mass.zeileKompakt)
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .frame(minHeight: Mass.zeile)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(eintrag.aufgabeID == nil)
+    }
+
+    private var tagText: String {
+        let T = speicher.heute
+        if hinweis.tag == T { return "Heute" }
+        if hinweis.tag == T.plus(tage: 1) { return "Morgen" }
+        return hinweis.tag.datum().formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "de_DE")))
+    }
+
+    private var titel: String {
+        switch hinweis.art {
+        case .eng: "\(tagText): enger Tag"
+        case .ueberschneidung: "\(tagText): Überschneidung"
+        case .keinPlatz: "\(tagText): zu wenig Zeit"
+        }
+    }
+
+    private var symbol: String {
+        switch hinweis.art {
+        case .eng: "gauge.with.dots.needle.67percent"
+        case .ueberschneidung: "rectangle.on.rectangle"
+        case .keinPlatz: "hourglass"
+        }
+    }
+
+    private var farbe: Color { hinweis.art == .ueberschneidung ? Color(hex: "#B8456E") : Farbe.warnung }
+}
+
+/// Als-Nächstes-Zeile: Uhrzeit groß links, Titel, Unterzeile, Haken für Aufgaben/Habits.
+private struct NaechsteZeile: View {
+    var block: Tagesplan.Block
+    @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(spacing: 0) {
+                Text(Tagesplan.uhr(block.start)).font(.kompass(.subheadline, .bold)).monospacedDigit().foregroundStyle(Farbe.text)
+                if block.tag != speicher.heute {
+                    Text(block.tag == speicher.heute.plus(tage: 1) ? "morgen" : block.tag.datum().formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE"))))
+                        .font(.caption2).foregroundStyle(Farbe.zweitrangig)
+                }
+            }
+            .frame(width: 52)
+            .padding(.leading, 8)
+            RoundedRectangle(cornerRadius: 2).fill(Color(hex: block.farbe)).frame(width: 4, height: 34)
+            Button { KalenderAktion.oeffnen(block, nav: nav) } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(block.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                    Text(unter).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if block.art != .termin {
+                Haken(an: block.erledigt, farbe: Color(hex: block.farbe), beschriftung: block.titel) { KalenderAktion.abhaken(block, speicher: speicher) }
+                    .padding(.trailing, 6)
+            } else {
+                Color.clear.frame(width: 16)
+            }
+        }
+        .frame(minHeight: Mass.zeile)
+    }
+
+    private var unter: String {
+        var t = "\(block.dauer) Min"
+        if let g = speicher.zustand.ziel(block.zielID) { t += " · \(g.titel)" }
+        else if block.art == .habit { t += " · Habit" }
+        return t
+    }
+}
+
+/// Habit ohne Uhrzeit auf Home: Kachel · Titel · Stand · Haken; Tipp = Menge eintragen.
+private struct HomeHabitZeile: View {
+    var habit: Habit
+    @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
+
+    var body: some View {
+        let T = speicher.heute
+        let c = Color(hex: habit.farbe)
+        HStack(spacing: 10) {
+            Haken(an: habit.voll(am: T), farbe: c, beschriftung: habit.titel) { speicher.aendern { $0.habitUmschalten(habit.id, am: T) } }
+                .padding(.leading, 4)
+            Button {
+                if habit.menge != nil { nav.blatt = .habitMenge(habit.id, tag: T.text) } else { nav.oeffneHabit(habit.id) }
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(habit.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                    Text("\(HabitRechnung.mengenText(habit, am: T)) · Habit").font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Image(systemName: habit.symbol).font(.footnote.weight(.semibold)).foregroundStyle(c).padding(.trailing, 16).accessibilityHidden(true)
+        }
+        .frame(minHeight: Mass.zeileKompakt)
     }
 }

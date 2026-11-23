@@ -69,6 +69,7 @@ private struct BlattInhalt: View {
     var blatt: Navigation.Blatt
     var body: some View {
         switch blatt {
+        case .neu(.termin): TerminBlatt(terminID: nil, tag: nil, start: nil)
         case .neu(let art): NeuBlatt(art: art ?? .aufgabe)
         case .info(let t): InfoBlatt(thema: t)
         case .einstellungen: EinstellungenBlatt()
@@ -84,6 +85,7 @@ private struct BlattInhalt: View {
         case .pro: ProBlatt()
         case .habitMenge(let h, let t): HabitMengeBlatt(habitID: h, tag: Tag(text: t) ?? Tag(Date()))
         case .habitBearbeiten(let h, let f): HabitFeldBlatt(habitID: h, feld: f)
+        case .termin(let i, let t, let s): TerminBlatt(terminID: i, tag: Tag(text: t), start: s)
         }
     }
 }

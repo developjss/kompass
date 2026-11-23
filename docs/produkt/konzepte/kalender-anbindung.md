@@ -1,6 +1,6 @@
 # Konzept: Kalender-Anbindung
 
-Stand: 23. November 2026 · noch nicht gebaut (Klick-Dummy zeigt Beispieltermine).
+Stand: 23. November 2026 · Apple-Kalender lesen gebaut (EventKit, Schalter in „Daten & Kalender“, Struktur v3); eigene Kompass-Termine zählen für Ziele und erfüllen Habits. Google: [OFFEN] Aufgabe `k-google`.
 
 - **Grundsatz** [ENTSCHEIDUNG – 23.11.2026]: Kompass ergänzt Google- und Apple-Kalender, ersetzt sie nicht. Termine bleiben dort; Kompass liest und speichert nur die Zuordnung (Termin-Serie → Ziel oder Habit).
 - **Apple:** iPhone/iPad/Mac über EventKit (Systemberechtigung). Windows/Android nur über iCloud-CalDAV mit app-spezifischem Passwort [RISIKO: umständlich].

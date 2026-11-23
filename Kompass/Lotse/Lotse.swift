@@ -41,7 +41,7 @@ enum Lotse {
 
         if let a = aufruf {
             antwort = ausfuehren(a, speicher: speicher)
-            if let e = einleitung?.trimmingCharacters(in: .whitespacesAndNewlines), !e.isEmpty, a.name != .aufgabeAnlegen { antwort.text = e + "\n" + antwort.text }
+            if let e = einleitung?.trimmingCharacters(in: .whitespacesAndNewlines), !e.isEmpty, a.name != .aufgabeAnlegen, a.name != .terminAnlegen { antwort.text = e + "\n" + antwort.text }
         } else {
             antwort = LotseAntwort(text: "Das habe ich noch nicht verstanden. Ich merke mir die Frage, damit der Lotse das lernt.\nVersuch zum Beispiel: „\(Werkzeuge.vorschlaege[0])“ oder „\(Werkzeuge.vorschlaege[2])“.", unbeantwortet: true)
         }
@@ -66,9 +66,33 @@ enum Lotse {
             if prio == .hoch { t += ", wichtig" }
             if let ziel { t += " · Ziel: \(ziel.titel)" + (n.schrittID != nil ? " (zählt im nächsten offenen Meilenstein)" : " (nur Einsatz – kein offener Meilenstein)") }
             return LotseAntwort(text: t + ".", werkzeug: .aufgabeAnlegen, aktion: .aufgabe(n.id))
+        case .terminAnlegen:
+            let titel = a.parameter["titel"]?.trimmingCharacters(in: .whitespaces) ?? ""
+            guard !titel.isEmpty else { return LotseAntwort(text: "Wie heißt der Termin? Zum Beispiel: „Trag morgen 15 Uhr Zahnarzt ein“.", werkzeug: .terminAnlegen) }
+            guard let s = a.parameter["start"].flatMap(Lotse.minuten) else {
+                return LotseAntwort(text: "Um wie viel Uhr? Zum Beispiel: „\(titel) morgen um 15 Uhr“.", werkzeug: .terminAnlegen)
+            }
+            let tag = a.parameter["datum"].flatMap { Tag(text: $0) } ?? T
+            let e = a.parameter["ende"].flatMap(Lotse.minuten).flatMap { $0 > s ? $0 : nil } ?? min(24 * 60 - 1, s + 60)
+            let ziel = Werkzeuge.findeZiel(a.parameter["ziel"], in: speicher.zustand)
+            let schritt = ziel?.schritte.first { $0.art == .zeit || $0.art == .zahl }
+            let neu = EigenerTermin(titel: titel, tag: tag, start: s, ende: e, zielID: ziel?.id, schrittID: schritt?.id)
+            speicher.aendern { $0.terminSpeichern(neu) }
+            var t = "Eingetragen: „\(titel)“ " + (tag == T ? "heute" : tag == T.plus(tage: 1) ? "morgen" : "am \(tag.tag).\(tag.monat).") + " \(Tagesplan.uhr(s))–\(Tagesplan.uhr(e))"
+            if let ziel { t += " · zählt für \(ziel.titel)" + (schritt.map { " (\($0.titel))" } ?? " (Einsatz)") }
+            let b = Tagesplan.bloecke(am: tag, zustand: speicher.zustand, termine: speicher.termine(am: tag))
+            if let k = b.first(where: { $0.eigenID != neu.id && min($0.ende, e) - max($0.start, s) >= 5 }) { t += ". Achtung: überschneidet sich mit „\(k.titel)“" }
+            return LotseAntwort(text: t + ".", werkzeug: .terminAnlegen, aktion: .bereich(Bereich.kalender.rawValue))
         default:
             return Werkzeuge.ausfuehren(a, z: speicher.zustand, heute: T, jetzt: speicher.jetzt(), kalender: speicher.kalender)
         }
+    }
+
+    /// „15:30“ → 930
+    static func minuten(_ s: String) -> Int? {
+        let t = s.split(separator: ":").compactMap { Int($0) }
+        guard t.count == 2, (0..<24).contains(t[0]), (0..<60).contains(t[1]) else { return nil }
+        return t[0] * 60 + t[1]
     }
 
     private static func abschliessen(_ antwort: LotseAntwort, frage: String, speicher: Speicher) -> LotseAntwort {
