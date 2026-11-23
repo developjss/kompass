@@ -10,7 +10,7 @@ Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ �
 - **Als erreicht markiert:** 100 %. **Keine Meilensteine:** 0 % und Hinweis „Wie misst du das?“.
 - **Ziel als Zahl** (Vermögen, Gewicht) = ein Zahl-Meilenstein. **Zwischenstände** (z. B. 100.000 €) gehören zum Zahl-Meilenstein, werden automatisch erreicht, sobald der Stand sie erreicht, und zählen nicht extra.
 - „So wird gerechnet“ zeigt je Meilenstein den Beitrag in Prozentpunkten: `Gewicht × Stand ÷ Σ Gewicht`. Die Beiträge ergeben zusammen den Fortschritt.
-- **Dein nächster Schritt** (Ziel-Seite, Zielkarte, Assistent): der offene Meilenstein mit dem größten fehlenden Beitrag `Gewicht × (1 − Stand) ÷ Σ Gewicht`; bei Gleichstand der frühere. Dazu die erste offene Aufgabe dieses Meilensteins (nach Tag, dann Reihenfolge). Erreichtes Ziel oder alles geschafft → keiner. Umsetzung `Fortschritt.naechsterSchritt`, Test `NaechsterSchrittTests`. [VORSCHLAG – 23.11.2026, wartet auf „Ja, mergen“]
+- **Dein nächster Schritt** (Ziel-Seite, Zielkarte, Assistent): der offene Meilenstein mit dem größten fehlenden Beitrag `Gewicht × (1 − Stand) ÷ Σ Gewicht`; bei Gleichstand der frühere. Dazu die erste offene Aufgabe dieses Meilensteins (nach Tag, dann Reihenfolge). Erreichtes Ziel oder alles geschafft → keiner. Umsetzung `Fortschritt.naechsterSchritt`, Test `NaechsterSchrittTests`. [ENTSCHEIDUNG – 23.11.2026, Gründer: „Ja, mergen“]
 
 ## 2. Stand eines Meilensteins (0–100 %)
 
