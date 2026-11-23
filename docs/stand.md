@@ -23,6 +23,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Phase 2 begonnen – erste SwiftUI-Fassung (23.11.2026):** `Kompass.xcodeproj` mit Schemes Kompass und Kompass Beta. Rechen-Logik als Swift-Port mit 42 Tests, fünf Bereiche grob wie im Klick-Dummy, Speicherung als Datei auf dem Gerät, Beispieltermine. Kein Server, keine echte Kalender-Anbindung. Details und Lücken: `docs/technik/app.md`.
 
+**Rechnung Fassung 2 (23.11.2026, wartet auf „Ja, mergen“):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
+
 ## 3. Nächste Schritte
 
 Reihenfolge: `/fahrplan` (Phase 1).

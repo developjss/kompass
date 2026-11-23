@@ -16,3 +16,6 @@ __pycache__/
 # Test-Ausgaben des Personen-Tests
 prototyp/tests/ergebnis.json
 prototyp/tests/*.png
+
+# Xcode legt das beim Öffnen an
+Kompass.xcodeproj/project.xcworkspace/

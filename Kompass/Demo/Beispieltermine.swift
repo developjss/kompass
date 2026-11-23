@@ -45,5 +45,23 @@ enum Beispieltermine {
         return out.sorted { ($0.start ?? -1) < ($1.start ?? -1) }
     }
 
+    /// Alle Serien der nächsten 14 Tage (für „Termin-Serie zuordnen“), ohne ganztägige.
+    static func serien(google: Bool, apple: Bool, heute: Tag) -> [(serie: String, titel: String, wann: String)] {
+        let namen = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+        var gesehen: [String: (String, String)] = [:]
+        var reihenfolge: [String] = []
+        for i in 0..<14 {
+            let d = heute.plus(tage: i)
+            for t in termine(am: d, google: google, apple: apple, heute: heute) where t.start != nil {
+                let k = "\(t.quelle.rawValue):\(t.schluessel)"
+                if gesehen[k] == nil {
+                    gesehen[k] = (t.titel, "\(namen[d.wochentag - 1]) \(uhrzeit(t.start ?? 0))–\(uhrzeit(t.ende ?? 0)) · \(t.quelle.name)")
+                    reihenfolge.append(k)
+                }
+            }
+        }
+        return reihenfolge.map { ($0, gesehen[$0]!.0, gesehen[$0]!.1) }
+    }
+
     static func uhrzeit(_ m: Int) -> String { String(format: "%02d:%02d", m / 60, m % 60) }
 }

@@ -5,4 +5,4 @@
 - `rechenregeln.md` – alle Formeln (Fortschritt, Auf Kurs, Prognose, Habits, Lernen, Timer, Wiederholung)
 - `design.md` – Harbor 2 nach Gapless: Textregeln, Farben, Maße, Schrift, Bausteine, Bewegung
 - `inhalte-und-assets.md` – Demo-Daten, Vorlagen, Bilder
-- `konzepte/` – noch nicht gebaut: `kalender-anbindung.md`, `lernen-ueber-alle-nutzer.md`
+- `konzepte/` – `ziele-und-rechnung.md` (Analyse + Rechnung Fassung 2) · noch nicht gebaut: `kalender-anbindung.md`, `lernen-ueber-alle-nutzer.md`

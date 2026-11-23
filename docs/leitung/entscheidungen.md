@@ -23,8 +23,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
 | [OFFEN] Sprache der App-Texte | Deutsch zuerst, Englisch zusätzlich ab Phase 3 | `CLAUDE.md` |
 | [OFFEN] Nur für dich oder Produkt mit Abo | Produkt mit Abo (B2C, passt zu deinen Ideen-Kriterien) | `fahrplan.md` §1 |
-| [OFFEN] 90-%-Regel: Schritt erst durch Abhaken 100 % | so lassen | `rechenregeln.md` §2 |
-| [OFFEN] Habits zählen nur über Habit-Schritte in die Prozente, sonst in „Auf Kurs“ | so lassen | `rechenregeln.md` §3 |
+| [OFFEN] Rechnung Fassung 2: nur Meilensteine zählen, Rest = Einsatz; Termine zählen (Zahl je 1, Zeit Dauer); Habit-Wochen | so übernehmen | `konzepte/ziele-und-rechnung.md` |
+| [OFFEN] 90-%-Regel: Meilenstein erst durch Abhaken 100 % | so lassen | `rechenregeln.md` §2 |
 | [OFFEN] Gewichtung Standard gleich, wählbar klein/mittel/groß | so lassen | `rechenregeln.md` §2 |
 | [OFFEN] Fokusblöcke in Google/Apple zurückschreiben? | optional, ab Phase 3 | `konzepte/kalender-anbindung.md` |
-| [OFFEN] Kalendertermine (z. B. Fahrstunden) direkt in Zahl-/Zeit-Schritte zählen | ja, Phase 3 | `rechenregeln.md` §8 |

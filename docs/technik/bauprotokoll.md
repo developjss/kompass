@@ -4,6 +4,7 @@ Neueste oben. Je gemergtem Block eine Zeile: Datum · Kürzel · was · Tests.
 
 | Datum | Kürzel | Was | Tests |
 |---|---|---|---|
+| 23.11.2026 | P2-ZR | Rechnung Fassung 2 (nur Meilensteine zählen; Zahl/Zeit mit Terminen; Habit-Wochen; Zwischenstände; Lern-Vorschläge) und Ziel-Detail zum Bearbeiten (Meilensteine, Aufgaben, Habits, Termine hinzufügen/lösen, Stand eintragen, Ziel bearbeiten). Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md` | 39 Swift-Testfälle grün (9 neu), im Simulator geprüft |
 | 23.11.2026 | P2-XC | Xcode-Projekt `Kompass` (Schemes Debug/Beta), Rechen-Logik in Swift (`Kompass/Rechnung/`), fünf Bereiche grob wie im Klick-Dummy, Speicher als JSON, Demo-Daten. Beschreibung: `docs/technik/app.md` | 42 Swift-Tests grün, Debug und Beta gebaut, im Simulator geprüft (hell/dunkel) |
 | 23.11.2026 | P0-FP | Fahrplan-Seite veröffentlicht (Link in `docs/leitung/aufgaben/README.md`); Gapless-Reste entfernt (Logo „G“, „fertig bis auf Plaid“); Ordnungs-Prüfung: Test-Ausgabe `ergebnis.json` darf fehlen | `scripts/test_fahrplan.py` + `test_ordnung.py` 19 grün, `ordnung.py` 0 Fehler |
 | 23.11.2026 | P0-ORG | Projekt angelegt wie Gapless: CLAUDE.md, Skills `/fahrplan` und `/roterfaden`, docs/ nach Landkarte, Fahrplan, Roter Faden (Fassung 1), Landkarte. Werkzeuge `scripts/fahrplan.py`, `scripts/ordnung.py`, `docx_bau.py` aus Gapless übernommen (Vermerk nach Arbeitsweise §0). | `fahrplan.py check`, `ordnung.py`, `pruefen.py` grün |

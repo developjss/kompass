@@ -77,3 +77,36 @@ enum LernRechnung {
         uebernahmeQuote(gezeigt: gezeigt, uebernommen: uebernommen) >= 0.4
     }
 }
+
+// Vorschläge aus dem eigenen Verlauf (§7). Lernen ändert nie bestehende Prozente – nur Vorschläge und Prognosen.
+extension LernRechnung {
+
+    /// Soll-Stunden für einen neuen Zeit-Meilenstein: eigene Schätzung × Zeitfaktor, auf ganze Stunden.
+    static func vorschlagStunden(_ geschaetzt: Double, verhaeltnisse: [Double]) -> Double {
+        max(1, (geschaetzt * zeitfaktor(verhaeltnisse)).rounded())
+    }
+
+    /// Habit-Meilenstein „Anzahl“: geplante Tage bis zur Fälligkeit × bisherige 30-Tage-Quote (mindestens 1).
+    static func vorschlagAnzahl(_ h: Habit, heute: Tag, bis faellig: Tag) -> Double {
+        var tage = 0
+        var d = heute
+        while d <= faellig { if HabitRechnung.geplant(h, am: d) { tage += 1 }; d = d.plus(tage: 1) }
+        let q = HabitRechnung.quote(h, heute: heute)
+        return max(1, (Double(tage) * (q > 0 ? q : 1)).rounded())
+    }
+
+    /// Habit-Meilenstein „Wochen“: Wochen bis zur Fälligkeit × geglätteter Anteil erfüllter Wochen der letzten 8 Wochen.
+    /// Anteil = (erfüllt + 1) ÷ (8 + 2) – bei wenig Erfahrung Richtung 50 %.
+    static func vorschlagWochen(_ h: Habit, heute: Tag, bis faellig: Tag) -> Double {
+        let wochen = max(1, heute.tage(bis: faellig) / 7)
+        let start = heute.montag.plus(tage: -56)
+        var erfuellt = 0
+        for k in 0..<8 {
+            let m = start.plus(tage: 7 * k)
+            let w = HabitRechnung.woche(h, montag: m, seit: h.angelegt, heute: heute)
+            if w.geplant > 0 && w.erledigt >= w.geplant { erfuellt += 1 }
+        }
+        let anteil = Double(erfuellt + 1) / 10
+        return max(1, (Double(wochen) * anteil).rounded())
+    }
+}

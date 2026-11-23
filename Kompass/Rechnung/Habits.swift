@@ -69,6 +69,30 @@ enum HabitRechnung {
         return (e, g)
     }
 
+    /// Woche erfüllt = an allen geplanten Tagen dieser Woche (ab `seit`) erledigt. Wochen ohne geplanten Tag zählen nicht.
+    /// Die laufende Woche zählt erst, wenn alle ihre geplanten Tage erledigt sind.
+    static func woche(_ h: Habit, montag: Tag, seit: Tag, heute: Tag) -> (geplant: Int, erledigt: Int) {
+        var g = 0, e = 0
+        for i in 0..<7 {
+            let d = montag.plus(tage: i)
+            guard d >= seit, geplant(h, am: d) else { continue }
+            g += 1
+            if d <= heute && h.erledigt.contains(d) { e += 1 }
+        }
+        return (g, e)
+    }
+
+    static func erfuellteWochen(_ h: Habit, seit: Tag, heute: Tag) -> Int {
+        var n = 0
+        var m = seit.montag
+        while m <= heute {
+            let w = woche(h, montag: m, seit: seit, heute: heute)
+            if w.geplant > 0 && w.erledigt >= w.geplant { n += 1 }
+            m = m.plus(tage: 7)
+        }
+        return n
+    }
+
     static func haeufigkeit(_ h: Habit) -> String {
         if h.wochentage.count == 7 { return "täglich" }
         if h.wochentage == [1, 2, 3, 4, 5] { return "werktags" }

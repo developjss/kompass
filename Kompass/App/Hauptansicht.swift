@@ -76,6 +76,11 @@ private struct BlattInhalt: View {
         case .fokus(let id): FokusBlatt(aufgabeID: id)
         case .rechnung(let id): RechnungBlatt(zielID: id)
         case .reflexion(let woche): ReflexionBlatt(woche: woche)
+        case .meilenstein(let z, let s): MeilensteinBlatt(zielID: z, schrittID: s)
+        case .habitZuZiel(let z): HabitZuZielBlatt(zielID: z)
+        case .aufgabeZuZiel(let z): AufgabeZuZielBlatt(zielID: z)
+        case .terminZuZiel(let z): TerminZuZielBlatt(zielID: z)
+        case .zielBearbeiten(let z): ZielBearbeitenBlatt(zielID: z)
         }
     }
 }

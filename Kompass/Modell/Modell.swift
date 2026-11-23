@@ -3,17 +3,43 @@ import Foundation
 // Datenmodell wie im Klick-Dummy (docs/technik/plattformen-und-speicherung.md). Reine Werte, keine Logik.
 // Felder sind bewusst offen gehalten (Optionals mit Standardwerten), damit spätere Änderungen alte Daten lesen können.
 
+/// Wie ein Meilenstein gemessen wird (rechenregeln.md §2). Rohwerte bleiben für gespeicherte Daten gleich.
 enum SchrittArt: String, Codable, Sendable, CaseIterable {
-    case aufgaben, zeit, habit, zahl
+    case aufgaben, zahl, zeit, habit
 
     var name: String {
         switch self {
-        case .aufgaben: "Aufgaben / abhaken"
-        case .zeit: "Zeit sammeln"
-        case .habit: "Habit wiederholen"
-        case .zahl: "Zahl erreichen"
+        case .aufgaben: "Abhaken"
+        case .zahl: "Zahl"
+        case .zeit: "Zeit"
+        case .habit: "Habit"
         }
     }
+
+    /// Ein Satz, wie gezählt wird – für die Auswahl beim Anlegen.
+    var erklaerung: String {
+        switch self {
+        case .aufgaben: "Fertig, wenn abgehakt. Aufgaben füllen bis 90 %."
+        case .zahl: "Von Start bis Ziel, z. B. kg, €, Fahrstunden. Termine zählen je 1."
+        case .zeit: "Stunden aus Fokus-Timer und Terminen."
+        case .habit: "Wie oft oder wie viele Wochen du einen Habit durchhältst."
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .aufgaben: "checkmark.circle"
+        case .zahl: "number"
+        case .zeit: "clock"
+        case .habit: "flame"
+        }
+    }
+}
+
+/// Habit-Meilenstein: Anzahl erledigter Male oder durchgehaltene Wochen.
+enum HabitModus: String, Codable, Sendable, CaseIterable {
+    case anzahl, wochen
+    var name: String { self == .anzahl ? "Anzahl" : "Wochen durchhalten" }
 }
 
 struct Schritt: Identifiable, Codable, Sendable, Hashable {
@@ -23,25 +49,25 @@ struct Schritt: Identifiable, Codable, Sendable, Hashable {
     /// 1 klein, 2 mittel, 3 groß – alles andere zählt als 1 (rechenregeln.md §2).
     var gewicht: Int = 1
     var geschafft = false
-    /// Ab wann ein Habit-Schritt zählt.
+    /// Ab wann ein Habit-Meilenstein zählt.
     var seit: Tag?
-    /// Soll: Stunden (Zeit), Anzahl (Habit) oder Zielwert (Zahl).
+    /// Soll: Stunden (Zeit), Anzahl bzw. Wochen (Habit) oder Zielwert (Zahl).
     var soll: Double?
     var start: Double?
+    /// Zahl: zuletzt eingetragener Stand (ohne Termine)
     var aktuell: Double?
     var einheit: String?
     var habitID: UUID?
+    var habitModus: HabitModus?
+    /// Zahl: Zwischenstände (z. B. 100.000 €) – werden automatisch erreicht, zählen nicht extra.
+    var schwellen: [Double]?
+    /// Zahl: eingetragene Stände
+    var verlauf: [VerlaufPunkt]?
+
+    var modus: HabitModus { habitModus ?? .anzahl }
 }
 
 enum ZielStatus: String, Codable, Sendable { case aktiv, erreicht }
-
-struct ZahlMessung: Codable, Sendable, Hashable {
-    var start: Double
-    var aktuell: Double
-    var ziel: Double
-    var einheit: String
-    var verlauf: [VerlaufPunkt] = []
-}
 
 struct VerlaufPunkt: Codable, Sendable, Hashable {
     var tag: Tag
@@ -58,8 +84,7 @@ struct Ziel: Identifiable, Codable, Sendable, Hashable {
     var warum: String = ""
     var status: ZielStatus = .aktiv
     var angelegt: Tag
-    /// Gesetzt = Ziel als Zahl; sonst zählen die Schritte.
-    var zahl: ZahlMessung?
+    /// Meilensteine – einzige Quelle des Fortschritts (rechenregeln.md §1)
     var schritte: [Schritt] = []
 }
 
@@ -123,6 +148,26 @@ struct FokusSitzung: Identifiable, Codable, Sendable, Hashable {
     var sekunden: TimeInterval
 }
 
+/// Termin-Serie aus dem Kalender, einem Ziel (Einsatz) und optional einem Meilenstein (Fortschritt) zugeordnet.
+/// Gespeichert werden nur Tag und Dauer stattgefundener Termine ab `seit` – kein Titel, kein Ort.
+struct TerminVerknuepfung: Identifiable, Codable, Sendable, Hashable {
+    var id = UUID()
+    /// „quelle:schlüssel“, z. B. „google:fahr“
+    var serie: String
+    var titel: String
+    var zielID: UUID
+    var schrittID: UUID?
+    var seit: Tag
+    var vorkommen: [TerminVorkommen] = []
+    /// Bis zu diesem Tag ist abgeglichen (danach nur neue Tage prüfen)
+    var abgeglichenBis: Tag?
+}
+
+struct TerminVorkommen: Codable, Sendable, Hashable {
+    var tag: Tag
+    var minuten: Int
+}
+
 /// Laufender Fokus-Timer: abgeschlossene Abschnitte plus ggf. der laufende.
 struct LaufenderTimer: Codable, Sendable, Hashable {
     var aufgabeID: UUID
@@ -160,7 +205,8 @@ struct Reflexion: Codable, Sendable, Hashable {
 
 /// Der ganze gespeicherte Zustand. Version hochzählen, wenn sich das Format ändert.
 struct Zustand: Codable, Sendable, Hashable {
-    var version = 1
+    static let aktuelleVersion = 2
+    var version = Zustand.aktuelleVersion
     var ziele: [Ziel] = []
     var habits: [Habit] = []
     var aufgaben: [Aufgabe] = []
@@ -171,8 +217,33 @@ struct Zustand: Codable, Sendable, Hashable {
     var einstellungen = Einstellungen()
     var reflexionen: [String: Reflexion] = [:]
     var timer: LaufenderTimer?
+    var termine: [TerminVerknuepfung] = []
+
+    init(ziele: [Ziel] = [], habits: [Habit] = [], aufgaben: [Aufgabe] = [], sitzungen: [FokusSitzung] = []) {
+        self.ziele = ziele
+        self.habits = habits
+        self.aufgaben = aufgaben
+        self.sitzungen = sitzungen
+    }
+
+    /// Fehlende Felder (ältere Versionen) bekommen Standardwerte statt eines Lesefehlers.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        ziele = try c.decodeIfPresent([Ziel].self, forKey: .ziele) ?? []
+        habits = try c.decodeIfPresent([Habit].self, forKey: .habits) ?? []
+        aufgaben = try c.decodeIfPresent([Aufgabe].self, forKey: .aufgaben) ?? []
+        sitzungen = try c.decodeIfPresent([FokusSitzung].self, forKey: .sitzungen) ?? []
+        verlauf = try c.decodeIfPresent([UUID: [VerlaufPunkt]].self, forKey: .verlauf) ?? [:]
+        lernen = try c.decodeIfPresent(Lernen.self, forKey: .lernen) ?? Lernen()
+        einstellungen = try c.decodeIfPresent(Einstellungen.self, forKey: .einstellungen) ?? Einstellungen()
+        reflexionen = try c.decodeIfPresent([String: Reflexion].self, forKey: .reflexionen) ?? [:]
+        timer = try c.decodeIfPresent(LaufenderTimer.self, forKey: .timer)
+        termine = try c.decodeIfPresent([TerminVerknuepfung].self, forKey: .termine) ?? []
+    }
 
     func ziel(_ id: UUID?) -> Ziel? { id.flatMap { i in ziele.first { $0.id == i } } }
     func habit(_ id: UUID?) -> Habit? { id.flatMap { i in habits.first { $0.id == i } } }
     func aufgabe(_ id: UUID?) -> Aufgabe? { id.flatMap { i in aufgaben.first { $0.id == i } } }
+    func schritt(_ id: UUID?, in zielID: UUID?) -> Schritt? { id.flatMap { i in ziel(zielID)?.schritte.first { $0.id == i } } }
 }

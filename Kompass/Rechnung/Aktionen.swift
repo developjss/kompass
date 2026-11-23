@@ -78,10 +78,108 @@ extension Zustand {
         if habits[i].erledigt.contains(tag) { habits[i].erledigt.remove(tag) } else { habits[i].erledigt.insert(tag) }
     }
 
-    mutating func schrittUmschalten(ziel zid: UUID, schritt sid: UUID) {
+    /// Abhaken / wieder öffnen. Ein abgehakter Zeit-Meilenstein wird gelernt: tatsächlich ÷ geplant (§7).
+    mutating func schrittUmschalten(ziel zid: UUID, schritt sid: UUID, heute: Tag) {
         guard let g = ziele.firstIndex(where: { $0.id == zid }),
               let s = ziele[g].schritte.firstIndex(where: { $0.id == sid }) else { return }
         ziele[g].schritte[s].geschafft.toggle()
+        let x = ziele[g].schritte[s]
+        if x.geschafft, x.art == .zeit, let soll = x.soll, soll > 0 {
+            let h = Fortschritt.stunden(von: x, in: self, heute: heute)
+            if h > 0 { lernen.zeitVerhaeltnisse = Array((lernen.zeitVerhaeltnisse + [(h / soll * 1000).rounded() / 1000]).suffix(30)) }
+        }
+    }
+
+    /// Meilenstein anlegen oder ersetzen (gleiche id).
+    mutating func schrittSpeichern(_ x: Schritt, ziel zid: UUID) {
+        guard let g = ziele.firstIndex(where: { $0.id == zid }) else { return }
+        if let i = ziele[g].schritte.firstIndex(where: { $0.id == x.id }) { ziele[g].schritte[i] = x } else { ziele[g].schritte.append(x) }
+    }
+
+    mutating func schrittVerschieben(ziel zid: UUID, von: IndexSet, nach: Int) {
+        guard let g = ziele.firstIndex(where: { $0.id == zid }) else { return }
+        ziele[g].schritte.move(fromOffsets: von, toOffset: nach)
+    }
+
+    /// Neuen Stand eines Zahl-Meilensteins eintragen (wird im Verlauf gespeichert; ein Wert pro Tag).
+    mutating func zahlEintragen(_ wert: Double, ziel zid: UUID, schritt sid: UUID, heute: Tag) {
+        guard let g = ziele.firstIndex(where: { $0.id == zid }),
+              let s = ziele[g].schritte.firstIndex(where: { $0.id == sid }), wert.isFinite else { return }
+        ziele[g].schritte[s].aktuell = wert
+        var v = ziele[g].schritte[s].verlauf ?? []
+        v.removeAll { $0.tag == heute }
+        v.append(VerlaufPunkt(tag: heute, wert: wert))
+        ziele[g].schritte[s].verlauf = v.sorted { $0.tag < $1.tag }
+    }
+
+    // MARK: Verknüpfen mit Zielen
+
+    /// Aufgabe einem Ziel (und optional einem Meilenstein) zuordnen. Ohne Meilenstein: nächster offener.
+    mutating func aufgabeZuordnen(_ aid: UUID, ziel zid: UUID?, schritt sid: UUID? = nil, automatisch: Bool = true, heute: Tag) {
+        guard let i = aufgaben.firstIndex(where: { $0.id == aid }) else { return }
+        aufgaben[i].zielID = zid
+        aufgaben[i].schrittID = zid == nil ? nil : (sid ?? (automatisch ? Fortschritt.naechsterOffenerSchritt(ziel(zid), in: self, heute: heute)?.id : nil))
+    }
+
+    /// Habit mit Ziel verbinden; optional zählt er als Meilenstein (Anzahl oder Wochen).
+    mutating func habitVerknuepfen(_ hid: UUID, ziel zid: UUID, alsMeilenstein modus: HabitModus?, soll: Double, heute: Tag) {
+        guard let i = habits.firstIndex(where: { $0.id == hid }) else { return }
+        habits[i].zielID = zid
+        if let modus {
+            let x = Schritt(titel: habits[i].titel, art: .habit, seit: heute, soll: soll, habitID: hid, habitModus: modus)
+            schrittSpeichern(x, ziel: zid)
+        }
+    }
+
+    /// Habit vom Ziel lösen: Verbindung und seine Habit-Meilensteine in diesem Ziel fallen weg.
+    mutating func habitLoesen(_ hid: UUID, ziel zid: UUID) {
+        if let i = habits.firstIndex(where: { $0.id == hid }), habits[i].zielID == zid { habits[i].zielID = nil }
+        if let g = ziele.firstIndex(where: { $0.id == zid }) {
+            let weg = ziele[g].schritte.filter { $0.art == .habit && $0.habitID == hid }.map(\.id)
+            for sid in weg { schrittLoeschen(ziel: zid, schritt: sid) }
+        }
+    }
+
+    /// Habit löschen: auch aus allen Meilensteinen (die bleiben, zeigen „Habit wählen“).
+    mutating func habitLoeschen(_ hid: UUID) {
+        habits.removeAll { $0.id == hid }
+    }
+
+    /// Termin-Serie einem Ziel und optional einem Meilenstein zuordnen (ab heute, nur stattgefundene Termine zählen).
+    mutating func terminVerknuepfen(serie: String, titel: String, ziel zid: UUID, schritt sid: UUID?, seit: Tag) {
+        termine.removeAll { $0.serie == serie && $0.zielID == zid }
+        termine.append(TerminVerknuepfung(serie: serie, titel: titel, zielID: zid, schrittID: sid, seit: seit))
+    }
+
+    mutating func terminLoesen(_ id: UUID) { termine.removeAll { $0.id == id } }
+
+    /// Stattgefundene Termine der verknüpften Serien übernehmen (nur Tag und Dauer). `quelle` liefert die Termine eines Tages.
+    mutating func termineAbgleichen(heute: Tag, quelle: (Tag) -> [Termin]) {
+        for i in termine.indices {
+            let l = termine[i]
+            // Heute wird jedes Mal neu geprüft (Termin kann noch dazukommen), frühere Tage nur einmal.
+            var neu = l.vorkommen.filter { $0.tag >= l.seit && $0.tag < heute && $0.tag <= (l.abgeglichenBis ?? l.seit.plus(tage: -1)) }
+            var d = max(l.seit, (l.abgeglichenBis ?? l.seit.plus(tage: -1)).plus(tage: 1))
+            if d > heute { d = heute }
+            while d <= heute {
+                for t in quelle(d) where "\(t.quelle.rawValue):\(t.schluessel)" == l.serie {
+                    if let a = t.start, let e = t.ende { neu.append(TerminVorkommen(tag: d, minuten: max(0, e - a))) }
+                }
+                d = d.plus(tage: 1)
+            }
+            termine[i].vorkommen = neu.sorted { $0.tag < $1.tag }
+            termine[i].abgeglichenBis = heute.plus(tage: -1)
+        }
+    }
+
+    /// Ziel löschen: Aufgaben, Habits und Termine bleiben, verlieren nur die Zuordnung.
+    mutating func zielLoeschen(_ zid: UUID) {
+        ziele.removeAll { $0.id == zid }
+        for i in aufgaben.indices where aufgaben[i].zielID == zid { aufgaben[i].zielID = nil; aufgaben[i].schrittID = nil }
+        for i in habits.indices where habits[i].zielID == zid { habits[i].zielID = nil }
+        for i in sitzungen.indices where sitzungen[i].zielID == zid { sitzungen[i].zielID = nil; sitzungen[i].schrittID = nil }
+        termine.removeAll { $0.zielID == zid }
+        verlauf[zid] = nil
     }
 
     /// Gelöschter Schritt: seine Aufgaben werden „Keiner – nur Einsatz“.
@@ -89,6 +187,8 @@ extension Zustand {
         guard let g = ziele.firstIndex(where: { $0.id == zid }) else { return }
         ziele[g].schritte.removeAll { $0.id == sid }
         for i in aufgaben.indices where aufgaben[i].schrittID == sid { aufgaben[i].schrittID = nil }
+        for i in sitzungen.indices where sitzungen[i].schrittID == sid { sitzungen[i].schrittID = nil }
+        for i in termine.indices where termine[i].schrittID == sid { termine[i].schrittID = nil }
     }
 
     // MARK: Fokus-Timer
