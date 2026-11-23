@@ -1,13 +1,11 @@
 import SwiftUI
 
-/// Ziel im Detail: Kopf mit Prozent, dann Meilensteine (zählen), Aufgaben, Habits, Termine (fließen ein) und Einsatz.
-/// Alles lässt sich hier hinzufügen, abhaken und wieder lösen.
+/// Ziel im Detail, geführt und schlank: Kopf (Prozent, Kurs, Frist), ein Satz wie gerechnet wird, **dein nächster Schritt**,
+/// die Meilensteine. Alles Weitere (Aufgaben, Habits, Termine, Einsatz, Details) liegt unter „Verfeinern“ auf eigenen Seiten.
 struct ZielDetail: View {
     var id: UUID
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
-    @Environment(\.dismiss) private var dismiss
-    @State private var loeschenFragen = false
 
     var body: some View {
         let z = speicher.zustand
@@ -20,12 +18,12 @@ struct ZielDetail: View {
                     Button { nav.blatt = .rechnung(g.id) } label: {
                         Verlaufskarte(farben: Farbe.verlauf(g.farbe)) {
                             HStack {
-                                KartenLabel(text: g.bereich)
+                                Label(g.bereich, systemImage: g.symbol).font(.klein).opacity(0.9)
                                 Spacer()
                                 Image(systemName: "info.circle").opacity(0.85)
                             }
                             Text(Zahl.prozent(kurs.fortschritt)).font(.grosseZahl).contentTransition(.numericText())
-                            Text("\(kurs.lage.text) · \(Kurs.bisText(g.faellig, heute: T))").font(.unterzeile).opacity(0.9)
+                            Text("\(kurs.lage.text.prefix(1).uppercased() + kurs.lage.text.dropFirst()) · \(Kurs.bisText(g.faellig, heute: T))").font(.unterzeile).opacity(0.9)
                             Balken(anteil: kurs.fortschritt).padding(.top, 8)
                             Text(prognoseText(prognose)).font(.klein).opacity(0.9).padding(.top, 4)
                         }
@@ -33,52 +31,15 @@ struct ZielDetail: View {
                     .buttonStyle(.plain)
                     .accessibilityHint("Zeigt, wie gerechnet wird")
 
-                    // Ein Satz, wie gerechnet wird (Zahlen aus der Rechnung) – (i) zeigt die Einzelheiten
-                    Button { nav.blatt = .rechnung(g.id) } label: {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Image(systemName: "function").font(.footnote.weight(.bold)).foregroundStyle(Farbe.akzent)
-                            Text(Fortschritt.satz(g, in: z, heute: T)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                                .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.top, 12)
-                        .contentShape(Rectangle())
+                    if !g.warum.isEmpty {
+                        Text("„\(g.warum)“").font(.unterzeile).italic().foregroundStyle(Farbe.zweitrangig).padding(.top, 12)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityHint("Zeigt, wie gerechnet wird")
+
+                    NaechsterSchrittKarte(ziel: g).padding(.top, 16)
 
                     MeilensteinListe(ziel: g)
-                    ZielAufgaben(ziel: g)
-                    ZielHabits(ziel: g)
-                    ZielTermine(ziel: g)
-                    ZielEinsatz(ziel: g)
 
-                    AbschnittKopf(titel: "Fakten")
-                    GruppierteListe {
-                        FaktZeile("Titel", wert: g.titel) { nav.blatt = .zielBearbeiten(g.id, .titel) }
-                        FaktZeile("Bis wann", wert: g.faellig.datum().formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE")))) { nav.blatt = .zielBearbeiten(g.id, .faellig) }
-                        FaktZeile("Bereich", wert: g.bereich) { nav.blatt = .zielBearbeiten(g.id, .bereich) }
-                        FaktZeile("Warum", wert: g.warum.isEmpty ? "–" : g.warum) { nav.blatt = .zielBearbeiten(g.id, .warum) }
-                        FaktZeile(titel: "Aussehen", wert: {
-                            HStack(spacing: 8) {
-                                Image(systemName: g.symbol).font(.footnote.weight(.semibold)).foregroundStyle(Color(hex: g.farbe))
-                                Circle().fill(Color(hex: g.farbe)).frame(width: 16, height: 16)
-                            }
-                        }) { nav.blatt = .zielBearbeiten(g.id, .aussehen) }
-                    }
-
-                    Button(g.status == .erreicht ? "Wieder aktiv setzen" : "Als erreicht markieren") {
-                        speicher.aendern { s in
-                            if let i = s.ziele.firstIndex(where: { $0.id == id }) { s.ziele[i].status = g.status == .erreicht ? .aktiv : .erreicht }
-                        }
-                    }
-                    .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
-                    .padding(.top, Mass.abschnitt)
-
-                    Button("Ziel löschen", role: .destructive) { loeschenFragen = true }
-                        .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
-                        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
-                        .padding(.top, 12)
+                    Verfeinern(ziel: g)
                 }
                 .padding(Mass.rand)
                 .padding(.bottom, 24)
@@ -88,13 +49,6 @@ struct ZielDetail: View {
             .background(Farbe.grund.ignoresSafeArea())
             .navigationTitle(g.titel)
             .navigationBarTitleDisplayMode(.inline)
-            .confirmationDialog("Ziel wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) {
-                    let zid = g.id
-                    speicher.aendern { $0.zielLoeschen(zid) }
-                    dismiss()
-                }
-            } message: { Text("Aufgaben, Habits und Termine bleiben erhalten.") }
         } else {
             ContentUnavailableView("Ziel nicht gefunden", systemImage: "target", description: Text("Es wurde vielleicht gelöscht."))
         }
@@ -106,6 +60,242 @@ struct ZielDetail: View {
         case .keinFortschritt: "Kein messbarer Fortschritt in den letzten Wochen"
         case .datum(let d, _, _): "Im jetzigen Tempo erreicht: \(d.datum().formatted(.dateTime.month(.wide).year().locale(Locale(identifier: "de_DE"))))"
         }
+    }
+}
+
+// MARK: Dein nächster Schritt
+
+/// Eine Karte, eine Handlung: der Meilenstein, der am meisten bringt – mit genau dem Knopf, der ihn voranbringt.
+private struct NaechsterSchrittKarte: View {
+    var ziel: Ziel
+    @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
+
+    var body: some View {
+        let z = speicher.zustand
+        let T = speicher.heute
+        let c = Color(hex: ziel.farbe)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.forward.circle.fill").foregroundStyle(c)
+                Text("Dein nächster Schritt").font(.klein).foregroundStyle(Farbe.zweitrangig)
+            }
+            if ziel.status == .erreicht {
+                Text("Geschafft – dieses Ziel ist erreicht.").font(.kompass(.title3, .bold)).foregroundStyle(Farbe.text)
+            } else if ziel.schritte.isEmpty {
+                Text("Lege fest, woran du den Fortschritt misst.").font(.kompass(.title3, .bold)).foregroundStyle(Farbe.text)
+                Text("Ein Meilenstein kann abgehakt, gezählt, in Stunden oder über einen Habit gemessen werden.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                knopf("Ersten Meilenstein anlegen", "plus") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) }
+            } else if let n = Fortschritt.naechsterSchritt(ziel, in: z, heute: T) {
+                let st = Fortschritt.stand(n.schritt, in: z, heute: T)
+                Text(titel(n)).font(.kompass(.title3, .bold)).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
+                Text("„\(n.schritt.titel)“ · \(st.text) · bringt bis zu +\(Int((n.punkte * 100).rounded())) Prozentpunkte")
+                    .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) { aktionen(n) }
+            } else {
+                Text("Alle Meilensteine sind geschafft.").font(.kompass(.title3, .bold)).foregroundStyle(Farbe.text)
+                knopf("Als erreicht markieren", "checkmark") {
+                    let zid = ziel.id
+                    speicher.aendern { s in if let i = s.ziele.firstIndex(where: { $0.id == zid }) { s.ziele[i].status = .erreicht } }
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Mass.karte, style: .continuous).strokeBorder(c.opacity(0.35), lineWidth: 1.5))
+    }
+
+    private func titel(_ n: Fortschritt.NaechsterSchritt) -> String {
+        if let a = n.aufgabe { return a.titel }
+        switch n.schritt.art {
+        case .aufgaben: return "Abhaken, sobald es geschafft ist"
+        case .zahl: return "Neuen Stand eintragen"
+        case .zeit: return "Zeit sammeln – mit einer Aufgabe und Fokus"
+        case .habit: return "Den Habit dranbleiben"
+        }
+    }
+
+    @ViewBuilder private func aktionen(_ n: Fortschritt.NaechsterSchritt) -> some View {
+        let T = speicher.heute
+        if let a = n.aufgabe {
+            knopf("Fokus starten", "play.fill") { nav.blatt = .fokus(a.id) }
+            knopf("Erledigt", "checkmark", neben: true) { speicher.aendern { $0.erledigen(a.id, jetzt: speicher.jetzt()) } }
+        } else {
+            switch n.schritt.art {
+            case .aufgaben:
+                knopf("Abhaken", "checkmark") { let zid = ziel.id, sid = n.schritt.id; speicher.aendern { $0.schrittUmschalten(ziel: zid, schritt: sid, heute: T) } }
+                knopf("Aufgabe dazu", "plus", neben: true) { nav.blatt = .aufgabeZuZiel(ziel.id) }
+            case .zahl:
+                knopf("Stand eintragen", "number") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: n.schritt.id) }
+            case .zeit:
+                knopf("Aufgabe zuordnen", "plus") { nav.blatt = .aufgabeZuZiel(ziel.id) }
+            case .habit:
+                if let h = n.schritt.habitID { knopf("Habit öffnen", "repeat") { nav.oeffneHabit(h) } }
+            }
+        }
+    }
+
+    private func knopf(_ text: String, _ symbol: String, neben: Bool = false, _ aktion: @escaping () -> Void) -> some View {
+        Button(action: aktion) {
+            Label(text, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 16).frame(minHeight: 44)
+                .background(neben ? Farbe.akzentWeich : Farbe.akzent, in: Capsule())
+                .foregroundStyle(neben ? Farbe.akzent : .white)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: Verfeinern – alles Weitere auf eigenen Seiten
+
+/// Teile der Ziel-Seite, die nur bei Bedarf geöffnet werden.
+enum ZielTeil: String, Hashable, CaseIterable {
+    case aufgaben, habits, termine, einsatz, details
+
+    var titel: String {
+        switch self {
+        case .aufgaben: "Aufgaben"
+        case .habits: "Habits"
+        case .termine: "Termine"
+        case .einsatz: "Einsatz"
+        case .details: "Details"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .aufgaben: "checklist"
+        case .habits: "repeat"
+        case .termine: "calendar"
+        case .einsatz: "clock"
+        case .details: "slider.horizontal.3"
+        }
+    }
+    /// Ein Satz: was hier passiert und warum
+    var erklaerung: String {
+        switch self {
+        case .aufgaben: "Aufgaben mit diesem Ziel fallen in den nächsten offenen Meilenstein. Ohne passenden Meilenstein zählen sie als Einsatz."
+        case .habits: "Ein Habit zählt in die Prozente, wenn ein Meilenstein ihn misst – sonst als Einsatz."
+        case .termine: "Termin-Serien aus dem Kalender: jeder stattgefundene Termin zählt in einen Zahl- oder Zeit-Meilenstein oder als Einsatz."
+        case .einsatz: "Fokuszeit und Termine für dieses Ziel. Einsatz zeigt, was du investierst – die Prozente ändert er nicht."
+        case .details: "Titel, Frist, Bereich, Warum und Aussehen. Hier markierst du das Ziel auch als erreicht oder löschst es."
+        }
+    }
+}
+
+/// Für NavigationLink(value:) auf einen Teil eines Ziels
+struct ZielTeilAuswahl: Hashable { var id: UUID; var teil: ZielTeil }
+
+private struct Verfeinern: View {
+    var ziel: Ziel
+    @Environment(Speicher.self) private var speicher
+
+    var body: some View {
+        AbschnittKopf(titel: "Verfeinern") { Text("optional").foregroundStyle(Farbe.zweitrangig) }
+        GruppierteListe {
+            ForEach(ZielTeil.allCases, id: \.self) { t in
+                NavigationLink(value: ZielTeilAuswahl(id: ziel.id, teil: t)) {
+                    HStack(spacing: 12) {
+                        Image(systemName: t.symbol).font(.body.weight(.semibold)).foregroundStyle(Color(hex: ziel.farbe)).frame(width: 32)
+                        Text(t.titel).font(.zeile).foregroundStyle(Farbe.text)
+                        Spacer(minLength: 8)
+                        Text(wert(t)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                        Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                    }
+                    .padding(.horizontal, 14).frame(minHeight: Mass.zeileKompakt).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(t.titel), \(wert(t))")
+            }
+        }
+    }
+
+    private func wert(_ t: ZielTeil) -> String {
+        let z = speicher.zustand, T = speicher.heute
+        switch t {
+        case .aufgaben:
+            let offen = z.aufgaben.filter { $0.zielID == ziel.id && !$0.erledigt }.count
+            return offen == 0 ? "keine offen" : "\(offen) offen"
+        case .habits:
+            let n = z.habits.filter { h in h.zielID == ziel.id || ziel.schritte.contains { $0.habitID == h.id } }.count
+            return n == 0 ? "keine" : "\(n)"
+        case .termine:
+            let n = z.termine.filter { $0.zielID == ziel.id }.count
+            return n == 0 ? "keine" : "\(n) Serie\(n == 1 ? "" : "n")"
+        case .einsatz: return "\(Zahl.dauer(Fortschritt.zeit(ziel: ziel.id, in: z, von: T.montag, bis: T))) diese Woche"
+        case .details: return ziel.faellig.datum().formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "de_DE")))
+        }
+    }
+}
+
+/// Eine Unterseite des Ziels: Satz oben (was und warum), dann genau ein Teil.
+struct ZielTeilSeite: View {
+    var id: UUID
+    var teil: ZielTeil
+    @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
+    @Environment(\.dismiss) private var dismiss
+    @State private var loeschenFragen = false
+
+    var body: some View {
+        if let g = speicher.zustand.ziel(id) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: teil.symbol).font(.body.weight(.semibold)).foregroundStyle(Color(hex: g.farbe))
+                            .frame(width: 36, height: 36).background(Color(hex: g.farbe).opacity(0.14), in: Circle())
+                        Text(teil.erklaerung).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+                    }
+                    switch teil {
+                    case .aufgaben: ZielAufgaben(ziel: g)
+                    case .habits: ZielHabits(ziel: g)
+                    case .termine: ZielTermine(ziel: g)
+                    case .einsatz: ZielEinsatz(ziel: g)
+                    case .details: details(g)
+                    }
+                }
+                .padding(Mass.rand).padding(.bottom, 24)
+                .frame(maxWidth: 720).frame(maxWidth: .infinity)
+            }
+            .background(Farbe.grund.ignoresSafeArea())
+            .navigationTitle(teil.titel)
+            .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog("Ziel wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
+                Button("Löschen", role: .destructive) {
+                    let zid = g.id
+                    nav.fortschrittPfad = NavigationPath()
+                    speicher.aendern { $0.zielLoeschen(zid) }
+                }
+            } message: { Text("Aufgaben, Habits und Termine bleiben erhalten.") }
+        } else {
+            ContentUnavailableView("Ziel nicht gefunden", systemImage: "target")
+        }
+    }
+
+    @ViewBuilder private func details(_ g: Ziel) -> some View {
+        AbschnittKopf(titel: "Fakten")
+        GruppierteListe {
+            FaktZeile("Titel", wert: g.titel) { nav.blatt = .zielBearbeiten(g.id, .titel) }
+            FaktZeile("Bis wann", wert: g.faellig.datum().formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE")))) { nav.blatt = .zielBearbeiten(g.id, .faellig) }
+            FaktZeile("Bereich", wert: g.bereich) { nav.blatt = .zielBearbeiten(g.id, .bereich) }
+            FaktZeile("Warum", wert: g.warum.isEmpty ? "–" : g.warum) { nav.blatt = .zielBearbeiten(g.id, .warum) }
+            FaktZeile(titel: "Aussehen", wert: {
+                HStack(spacing: 8) {
+                    Image(systemName: g.symbol).font(.footnote.weight(.semibold)).foregroundStyle(Color(hex: g.farbe))
+                    Circle().fill(Color(hex: g.farbe)).frame(width: 16, height: 16)
+                }
+            }) { nav.blatt = .zielBearbeiten(g.id, .aussehen) }
+        }
+        Button(g.status == .erreicht ? "Wieder aktiv setzen" : "Als erreicht markieren") {
+            let zid = g.id, neu: ZielStatus = g.status == .erreicht ? .aktiv : .erreicht
+            speicher.aendern { s in if let i = s.ziele.firstIndex(where: { $0.id == zid }) { s.ziele[i].status = neu } }
+        }
+        .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        .padding(.top, Mass.abschnitt)
+        Button("Ziel löschen", role: .destructive) { loeschenFragen = true }
+            .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+            .padding(.top, 12)
     }
 }
 

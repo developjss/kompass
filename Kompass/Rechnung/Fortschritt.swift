@@ -193,3 +193,30 @@ enum Zahl {
         return m % 60 == 0 ? "\(m / 60) h" : "\(m / 60) h \(m % 60) min"
     }
 }
+
+// MARK: Nächster Schritt eines Ziels (für die geführte Ziel-Seite)
+
+extension Fortschritt {
+    struct NaechsterSchritt: Equatable, Sendable {
+        var schritt: Schritt
+        /// Prozentpunkte, die dieser Meilenstein am Ziel noch fehlen lässt (0…1)
+        var punkte: Double
+        /// Offene Aufgabe in diesem Meilenstein (früheste zuerst), falls vorhanden
+        var aufgabe: Aufgabe?
+    }
+
+    /// Der Meilenstein, der am meisten fehlt (Gewicht × Rest), nicht geschafft; bei Gleichstand der frühere in der Liste.
+    static func naechsterSchritt(_ g: Ziel, in z: Zustand, heute: Tag) -> NaechsterSchritt? {
+        guard g.status == .aktiv else { return nil }
+        var bester: (Schritt, Double)?
+        for s in g.schritte where !s.geschafft {
+            let f = fehlend(s, in: g, z: z, heute: heute)
+            guard f > 0.000_1 else { continue }
+            if bester == nil || f > bester!.1 + 0.000_000_1 { bester = (s, f) }
+        }
+        guard let (s, f) = bester else { return nil }
+        let a = z.aufgaben.filter { $0.schrittID == s.id && !$0.erledigt }
+            .sorted { ($0.datum ?? Tag(9999, 1, 1), $0.reihenfolge) < ($1.datum ?? Tag(9999, 1, 1), $1.reihenfolge) }.first
+        return NaechsterSchritt(schritt: s, punkte: f, aufgabe: a)
+    }
+}

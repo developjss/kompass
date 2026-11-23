@@ -33,6 +33,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Geführt v4 (23.11.2026, PR #16):** „Lotse“ heißt Assistent (KI-Zeichen, neuer Chat je App-Start, frühere Chats oben links); Anlegen in Schritten (Was → Titel → Wann → Details → Fertig); Home mit Reel „Dein Tag im Blick“; Kalender-Ziehen mit leuchtenden Zielzonen und Herausziehen; Fortschritt schlanker (Umschalter-Fehler behoben, Erledigtes eingeklappt). Konzept: `docs/produkt/konzepte/struktur-v3.md` §10.
 
+**Ziele minimal (23.11.2026, PR offen):** Zielliste als weiße Karten mit Ring und „Als Nächstes“; Ziel-Seite nur Kopfkarte, Warum, „Dein nächster Schritt“ (ein Knopf) und Meilensteine; alles Weitere unter „Verfeinern“ auf eigenen Seiten mit Erklärsatz. Neue Rechenregel „nächster Schritt“ (rechenregeln.md §1) wartet auf „Ja, mergen“. Konzept: `struktur-v3.md` §11.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte

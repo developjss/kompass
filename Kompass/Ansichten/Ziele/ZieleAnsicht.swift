@@ -8,7 +8,6 @@ struct ZieleAnsicht: View {
     var body: some View {
         let z = speicher.zustand
         let liste = z.ziele.filter { $0.status == (erreichteZeigen ? .erreicht : .aktiv) }.sorted { $0.faellig < $1.faellig }
-        let jahre = Dictionary(grouping: liste) { $0.faellig.jahr }.sorted { $0.key < $1.key }
         let erreicht = z.ziele.filter { $0.status == .erreicht }.count
 
         VStack(alignment: .leading, spacing: 0) {
@@ -18,14 +17,9 @@ struct ZieleAnsicht: View {
                     LeerZeile(text: erreichteZeigen ? "Noch kein Ziel erreicht." : "Noch keine Ziele. Oben auf „+ Neu“.")
                 }
             }
-            if jahre.count > 1 {
-                ForEach(jahre, id: \.key) { jahr, ziele in
-                    AbschnittKopf(titel: String(jahr)) { Text("\(ziele.count)").foregroundStyle(Farbe.zweitrangig) }
-                    VStack(spacing: 12) { ForEach(ziele) { ZielKarte(ziel: $0) } }
-                }
-            } else if let (jahr, ziele) = jahre.first {
-                AbschnittKopf(titel: erreichteZeigen ? "Erreicht" : "Aktiv") { Text("bis \(String(jahr))").foregroundStyle(Farbe.zweitrangig) }
-                VStack(spacing: 12) { ForEach(ziele) { ZielKarte(ziel: $0) } }
+            if !liste.isEmpty {
+                AbschnittKopf(titel: erreichteZeigen ? "Erreicht" : "Deine Ziele") { Text("nach Frist").foregroundStyle(Farbe.zweitrangig) }
+                VStack(spacing: 12) { ForEach(liste) { ZielKarte(ziel: $0) } }
             }
             if erreicht > 0 || erreichteZeigen {
                 PfeilZeile(symbol: "checkmark", text: erreichteZeigen ? "Zurück zu aktiven Zielen" : "Erreicht · \(erreicht)") { erreichteZeigen.toggle() }
@@ -85,31 +79,45 @@ struct ZielKarte: View {
         let z = speicher.zustand
         let T = speicher.heute
         let kurs = Kurs.aufKurs(ziel, in: z, heute: T)
-        let wochen = (0..<8).map { k -> Double in
-            let s = T.montag.plus(tage: -7 * (7 - k))
-            return Fortschritt.zeit(ziel: ziel.id, in: z, von: s, bis: s.plus(tage: 6)) / 3600
-        }
+        let c = Color(hex: ziel.farbe)
         NavigationLink(value: ZielAuswahl(id: ziel.id)) {
-            Verlaufskarte(farben: Farbe.verlauf(ziel.farbe)) {
-                HStack {
-                    Text(ziel.titel).font(.kompass(.headline, .bold)).lineLimit(2)
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.footnote.weight(.bold)).opacity(0.8)
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle().stroke(c.opacity(0.15), lineWidth: 6)
+                    Circle().trim(from: 0, to: max(0.001, kurs.fortschritt)).stroke(c, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
+                    Text(Zahl.prozent(kurs.fortschritt)).font(.kompass(.caption, .heavy)).foregroundStyle(Farbe.text).monospacedDigit()
+                        .minimumScaleFactor(0.7).lineLimit(1).padding(6)
                 }
-                HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Zahl.prozent(kurs.fortschritt)).font(.grosseZahl).contentTransition(.numericText())
-                        Text("\(kurs.lage.text) · \(Kurs.bisText(ziel.faellig, heute: T))").font(.unterzeile).opacity(0.9)
+                .frame(width: 58, height: 58)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text).lineLimit(2)
+                    HStack(spacing: 6) {
+                        Text(kurs.lage.text).font(.klein).padding(.horizontal, 8).frame(minHeight: 22)
+                            .background(lageFarbe(kurs.lage).opacity(0.14), in: Capsule()).foregroundStyle(lageFarbe(kurs.lage))
+                        Text(Kurs.bisText(ziel.faellig, heute: T)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                     }
-                    Spacer()
-                    Kurve(werte: wochen).frame(width: 96, height: 34)
+                    if let n = Fortschritt.naechsterSchritt(ziel, in: z, heute: T) {
+                        Text("Als Nächstes: \(n.aufgabe?.titel ?? n.schritt.titel)").font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                    }
                 }
-                Balken(anteil: kurs.fortschritt).padding(.top, 6)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ziel.titel), \(Zahl.prozent(kurs.fortschritt)), \(kurs.lage.text), \(Kurs.bisText(ziel.faellig, heute: T))")
         .accessibilityAddTraits(.isButton)
+    }
+
+    private func lageFarbe(_ l: Kurs.Lage) -> Color {
+        switch l {
+        case .voraus, .erreicht: Farbe.freude
+        case .imPlan: Farbe.akzent
+        case .hinterher, .ueberfaellig: Farbe.warnung
+        }
     }
 }

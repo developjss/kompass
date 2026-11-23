@@ -62,6 +62,7 @@ private extension View {
     func zielZiel() -> some View {
         navigationDestination(for: ZielAuswahl.self) { ZielDetail(id: $0.id) }
             .navigationDestination(for: HabitAuswahl.self) { HabitDetail(id: $0.id) }
+            .navigationDestination(for: ZielTeilAuswahl.self) { ZielTeilSeite(id: $0.id, teil: $0.teil) }
     }
 }
 

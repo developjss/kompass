@@ -78,3 +78,10 @@ Eine Aussage oben („Diese Woche: 62 % deiner Pläne geschafft“), dann weiße
 - **Home als Reel**: Karte „Dein Tag im Blick“ (wie „Your November ahead“) öffnet Slides: Jetzt · Danach · wie voll der Tag ist · Heute offen · Ziele · Los. Home selbst schlanker: Jetzt-Karte, Reel, Hinweise, Heute offen, Liegen geblieben, Tagesabschluss.
 - **Kalender**: Zielzonen leuchten beim Darüberziehen, kurze Vibration beim Ablegen; Aufgaben und Habits lassen sich aus der Zeitleiste zurück nach „Ohne Uhrzeit“ und in den Eingang ziehen (Habit mit fester Uhrzeit: an diesem Tag ohne Uhrzeit, `planZeiten = −1`).
 - **Fortschritt**: eine Seite für Ziele · Habits (Umschalter wechselt beim ersten Tipp); Habits: Heute nur Offenes, Erledigtes eingeklappt „n erledigt ⌄“, „Alle Habits“ mit Wochenpunkten; der Abschnitt „Diese Woche“ ist darin aufgegangen.
+
+## 11. Ziele minimal (23.11.2026, Auftrag des Gründers: „minimalistischer und geführter, nur das Nötigste, verfeinern wenn man will“)
+
+- **Liste:** weiße Karten nach Frist (keine Jahresgruppen): Ring mit Prozent, Lage-Chip, restliche Zeit, „Als Nächstes: …“.
+- **Ziel-Seite:** Kopfkarte (antippen = so wird gerechnet) · Warum · **Dein nächster Schritt** (ein Satz, was zu tun ist, wie viele Punkte es bringt, ein passender Knopf) · Meilensteine.
+- **Verfeinern (optional):** Aufgaben, Habits, Termine, Einsatz, Details – je eine eigene Seite, oben ein Satz, was dort passiert und warum. Bearbeiten, erreicht und löschen stehen in Details.
+- Rechnung: `Fortschritt.naechsterSchritt` (rechenregeln.md §1); Assistent nennt denselben Schritt.

@@ -190,8 +190,16 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(karte.waitForExistence(timeout: 5))
         karte.tap()
         XCTAssertTrue(sichtbar(app, "Meilensteine"), "Ziel-Seite öffnet nicht")
-        XCTAssertTrue(sichtbar(app, "Durchschnitt") || sichtbar(app, "Stand des einen"), "Rechen-Satz fehlt")
+        XCTAssertTrue(sichtbar(app, "Dein nächster Schritt"), "Nächster Schritt fehlt")
         foto(app, "Ziel-Seite")
+        // Minimal: Fakten stehen nicht auf der Seite, sondern unter Verfeinern › Details
+        XCTAssertFalse(app.staticTexts["Fakten"].exists, "Ziel-Seite zeigt zu viel")
+        let details = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Details")).firstMatch
+        for _ in 0..<6 where !details.isHittable { app.swipeUp() }
+        details.tap()
+        XCTAssertTrue(sichtbar(app, "Fakten"), "Details-Seite öffnet nicht")
+        XCTAssertTrue(sichtbar(app, "Ziel löschen"), "Löschen fehlt in Details")
+        foto(app, "Ziel Details")
     }
 
     // MARK: Lotse
