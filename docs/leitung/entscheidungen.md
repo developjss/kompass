@@ -6,6 +6,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 23.11.2026 | [ENTSCHEIDUNG] Habits v2 Rechenregel: Tagesanteil = Menge ÷ Soll (halb geschafft zählt halb), Serie nur volle Tage, „n-mal pro Woche“ mit Wochen-Serie; Habit-Meilensteine zählen Anteile („Ja, mergen“ PR #11) | `docs/produkt/rechenregeln.md` §6, `docs/produkt/konzepte/habits-v2.md` §5 |
 | 23.11.2026 | [ENTSCHEIDUNG] Lotse-Sprachmodell Weg A: Claude über eigenen Server, gestuft (Regeln → Haiku 5.5 Werkzeugwahl → Sonnet 5.5 Gespräch); Modellnamen nur auf dem Server; Kontingent frei/Pro; Tester frei bis Store-Start | `docs/produkt/konzepte/lotse.md` §5, `docs/technik/lotse-server.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Rechnung Fassung 2: Ziele bestehen aus Meilensteinen (gewichtet 1/2/3), nur sie zählen in die Prozente; Termine zählen (Zahl je 1, Zeit Dauer); Habit als Anzahl oder Wochen (Woche = alle geplanten Tage); 90-%-Regel; Lernen nur in Vorschlägen | `docs/produkt/rechenregeln.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Technik-Weg A: SwiftUI zuerst (Auftrag des Gründers, das Xcode-Projekt anzulegen) | `docs/technik/app.md` |
@@ -23,7 +24,6 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | Thema | Vorschlag Claude | Wo |
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
-| [OFFEN] Habits v2 Rechenregel: Tagesanteil = Menge ÷ Soll (halb zählt halb), Serie nur volle Tage, n-mal pro Woche | so übernehmen | `rechenregeln.md` §6, `konzepte/habits-v2.md` |
 | [OFFEN] Ort des Lotse-Servers: Supabase Edge Functions (auch für späteren Abgleich) oder anderer Host | Supabase, Region EU | `docs/technik/lotse-server.md` |
 | [OFFEN] Kontingent: 5 freie Server-Fragen/Tag, Pro bis 300; Preis von Pro | so starten, Preis offen | `docs/technik/lotse-server.md` §5 |
 | [OFFEN] Namen „Fortschritt“ (Tab Ziele · Habits) und „Lotse“ (Assistent) | so lassen | `konzepte/lotse.md` |

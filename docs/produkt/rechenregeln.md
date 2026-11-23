@@ -48,7 +48,7 @@ Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ �
 
 Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute − Stand vor ~28 Tagen) ÷ Tage. Weniger als 7 Tage Verlauf → keine Prognose. Tempo ≤ 0 → „kein messbarer Fortschritt“. Sonst `Rest-Tage = (1 − Fortschritt) ÷ Tempo` → voraussichtliches Datum.
 
-## 6. Habits (Habits v2, 23.11.2026 – braucht „Ja, mergen“)
+## 6. Habits (Habits v2) [ENTSCHEIDUNG – 23.11.2026]
 
 - **Menge und Einheit:** Ein Habit kann ein Soll je Tag haben (20 Minuten, 300 g, 5 km, 30 Mal). Ohne Soll ist er ein Abhaken.
 - **Tagesanteil** = eingetragene Menge ÷ Soll, begrenzt auf 0–1 („halb geschafft zählt halb“). Abhaken = ganze Menge = 1. Ohne Soll: 0 oder 1.
