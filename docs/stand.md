@@ -21,11 +21,11 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 - Veröffentlichte Klick-Dummys: Desktop https://claude.ai/artifact/WGCELrUQhpXXw83xyqfoyG · iPhone https://claude.ai/artifact/8eGuar3yT9cbmESEypVfRq
 - Plan-Dokument (erste Fassung, teils überholt): https://claude.ai/artifact/C4GGc8iQmAQj542WrpLP9b
 
-**Nichts gebaut für die echte App.** Es gibt noch kein Xcode-Projekt, keinen Server, keine echte Kalender-Anbindung.
+**Phase 2 begonnen – erste SwiftUI-Fassung (23.11.2026):** `Kompass.xcodeproj` mit Schemes Kompass und Kompass Beta. Rechen-Logik als Swift-Port mit 42 Tests, fünf Bereiche grob wie im Klick-Dummy, Speicherung als Datei auf dem Gerät, Beispieltermine. Kein Server, keine echte Kalender-Anbindung. Details und Lücken: `docs/technik/app.md`.
 
 ## 3. Nächste Schritte
 
 Reihenfolge: `/fahrplan` (Phase 1).
-1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Weg A (SwiftUI zuerst) oder B (Flutter), Sprache der App-Texte, nur für sich oder verkaufen (Abo), 90-%-Regel und Habit-Zählung bestätigen.
+1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo), 90-%-Regel und Habit-Zählung bestätigen.
 2. Klick-Dummy eine Woche selbst nutzen, Funde in `/fahrplan` sammeln.
-3. Phase 2 starten: Xcode-Projekt `Kompass/` mit Rechen-Logik zuerst (Swift-Port von `rechenregeln.md` + Personen-Test als Unit-Tests), dann Heute, Habits, Ziele.
+3. Phase 2 weiter: Personen-Test als Swift-Test, SwiftData, dann Heute, Habits, Ziele fein ausbauen (Design und Funktionen ändern sich noch).

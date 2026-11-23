@@ -1,0 +1,89 @@
+import SwiftUI
+
+@main
+struct KompassApp: App {
+    @State private var speicher = Speicher()
+    @State private var nav = Navigation()
+    @Environment(\.scenePhase) private var phase
+
+    var body: some Scene {
+        WindowGroup {
+            Hauptansicht()
+                .environment(speicher)
+                .environment(nav)
+                .task { await speicher.laden() }
+                .onChange(of: phase) { _, neu in
+                    if neu != .active { speicher.speichernJetzt() }
+                }
+        }
+    }
+}
+
+enum Bereich: String, Hashable, CaseIterable {
+    case heute, kalender, habits, ziele, rueckblick
+}
+
+enum NeuArt: String, Hashable, Identifiable {
+    case aufgabe, habit, ziel
+    var id: String { rawValue }
+}
+
+enum InfoThema: String, Hashable, Identifiable {
+    case heute, kalender, habits, ziele, rueckblick
+    var id: String { rawValue }
+
+    var titel: String {
+        switch self {
+        case .heute: "Heute"
+        case .kalender: "Kalender"
+        case .habits: "Habits"
+        case .ziele: "Ziele"
+        case .rueckblick: "Rückblick"
+        }
+    }
+
+    var text: String {
+        switch self {
+        case .heute: "Oben steht die eine Aufgabe, die jetzt dran ist. „Wichtig“ zahlt auf deine Ziele ein, „Weitere“ nicht. Mit dem Auge zeigst du nur eine Aufgabe. Erledigtes landet unter „Geschafft“."
+        case .kalender: "Termine aus Google oder Apple stehen neben deinen Aufgaben. Der Eingang sammelt Ideen ohne Datum. Kompass ergänzt deinen Kalender, ersetzt ihn aber nicht."
+        case .habits: "Habits sind das Tägliche: kein Enddatum, sondern eine Serie. Tippe einen Tag an, um ihn abzuhaken. Rechts stehen Serie und Quote der letzten 30 Tage. Der laufende Tag zählt erst, wenn er abgehakt ist."
+        case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
+        case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
+        }
+    }
+}
+
+/// Welches Fenster (Sheet) offen ist und welcher Bereich gewählt ist.
+@MainActor
+@Observable
+final class Navigation {
+    enum Blatt: Identifiable, Hashable {
+        case neu(NeuArt?)
+        case info(InfoThema)
+        case einstellungen
+        case aufgabe(UUID)
+        case habit(UUID)
+        case fokus(UUID)
+        case rechnung(UUID)
+        case reflexion(woche: Bool)
+
+        var id: String {
+            switch self {
+            case .neu(let a): "neu-\(a?.rawValue ?? "")"
+            case .info(let t): "info-\(t.rawValue)"
+            case .einstellungen: "einstellungen"
+            case .aufgabe(let i): "aufgabe-\(i)"
+            case .habit(let i): "habit-\(i)"
+            case .fokus(let i): "fokus-\(i)"
+            case .rechnung(let i): "rechnung-\(i)"
+            case .reflexion(let w): "reflexion-\(w)"
+            }
+        }
+    }
+
+    var bereich: Bereich = .heute
+    var blatt: Blatt?
+}
+
+/// Für NavigationLink(value:) auf ein Ziel
+struct ZielAuswahl: Hashable { var id: UUID }
