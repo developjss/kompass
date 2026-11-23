@@ -138,11 +138,12 @@
       "id": "e-rechnung",
       "titel": "Rechenregeln Fassung 2 bestätigen (Meilensteine, Termine, Habit-Wochen, 90-%-Regel)",
       "wer": "ceo",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "landkarte": "engine",
       "phase": 1,
-      "quelle": "docs/produkt/konzepte/ziele-und-rechnung.md"
+      "quelle": "docs/produkt/konzepte/ziele-und-rechnung.md",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "t-nutzen",
@@ -190,7 +191,7 @@
       "id": "s-rechnung",
       "titel": "Rechen-Logik in Swift (reine Funktionen) + Tests",
       "wer": "claude",
-      "status": "laeuft",
+      "status": "erledigt",
       "prio": 1,
       "landkarte": "engine",
       "phase": 2,
@@ -198,7 +199,8 @@
         "s-xcode",
         "e-rechnung"
       ],
-      "warum": "Swift-Port steht (Kompass/Rechnung/, 42 Tests); fertig, sobald e-rechnung bestätigt ist."
+      "warum": "Swift-Port steht (Kompass/Rechnung/, 42 Tests); fertig, sobald e-rechnung bestätigt ist.",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "s-personentest",
