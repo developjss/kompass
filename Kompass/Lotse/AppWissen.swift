@@ -11,7 +11,7 @@ enum AppWissen {
         .heute: "Heute: die eine Aufgabe, die jetzt dran ist, dann Wichtig, Weitere, Geschafft, fällige Habits, Termine und die nächsten Ziele. Unten der Tagesabschluss.",
         .kalender: "Kalender: Wochenleiste, Termine aus Google/Apple neben deinen Aufgaben mit Uhrzeit, Aufgaben ohne Uhrzeit, Eingang für Ideen ohne Datum.",
         .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Prozent, Auf Kurs, Frist, Meilensteine) und Habits (Woche abhaken, Serie, Quote).",
-        .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen.",
+        .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
     ]
 
@@ -30,6 +30,7 @@ enum AppWissen {
         "aufgabezuziel": "Aufgaben zum Ziel: bestehende Aufgaben einem Ziel und Meilenstein zuordnen.",
         "terminzuziel": "Termine zum Ziel: eine Termin-Serie zuordnen; zählt in Zahl (je 1) oder Zeit (Dauer) oder nur als Einsatz.",
         "zielbearbeiten": "Ziel bearbeiten: Titel, Warum, Bereich, Datum, Farbe, löschen (Aufgaben und Habits bleiben).",
+        "pro": "Kompass Pro: unbegrenzte Lotse-Fragen und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
     ]
 
     /// Rechenregeln in Sätzen (Quelle: rechenregeln.md Fassung 2) – der Lotse erklärt, rechnet aber nie.
@@ -72,7 +73,7 @@ enum AppWissen {
         let id = UUID()
         let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .habit(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id)]
+                                          .terminZuZiel(id), .zielBearbeiten(id), .pro]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

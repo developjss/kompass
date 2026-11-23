@@ -21,7 +21,8 @@ struct SprachmodellAnfrage: Sendable {
 }
 
 enum SprachmodellAntwort: Sendable {
-    case werkzeug(WerkzeugAufruf)
+    /// Werkzeugaufruf, optional mit einem einleitenden Satz des Modells („Schauen wir auf deine Woche.“)
+    case werkzeug(WerkzeugAufruf, einleitung: String? = nil)
     case text(String)
 }
 
@@ -30,5 +31,11 @@ enum Sprachmodelle {
     /// Hier wird der Anbieter eingesteckt, sobald entschieden. nil = nur Regeln.
     nonisolated(unsafe) static var aktiv: (any Sprachmodell)?
 
-    static var beschreibung: String { aktiv?.name ?? "Regeln auf dem Gerät (kein Sprachmodell angeschlossen)" }
+    static var beschreibung: String { aktiv?.name ?? "Regeln auf dem Gerät (kein Server eingetragen)" }
+
+    /// Beim Start und nach Änderungen in den Einstellungen: Server aus der Konfiguration einstecken.
+    @MainActor
+    static func einrichten(pro: Bool) {
+        if let url = LotseKonfiguration.serverURL { aktiv = ClaudeServer(url: url, pro: pro) } else { aktiv = nil }
+    }
 }

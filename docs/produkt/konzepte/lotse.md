@@ -16,9 +16,10 @@ Drei Grundsätze:
 | Baustein | Aufgabe |
 |---|---|
 | `AppWissen` | Beschreibung der App **aus dem Code**: Tabs (`Bereich`), Fenster (`Navigation.Blatt`), Rechenregeln (`SchrittArt.erklaerung` + Sätze aus `rechenregeln.md`), erste Schritte, Werkzeuge. Wird dem Sprachmodell als Systemwissen mitgegeben. |
-| `Werkzeuge` | Zehn Werkzeuge mit Beschreibung, Parametern und Beispielfragen: heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe. Beispielfragen sind zugleich die Vorschläge im leeren Chat. |
+| `Werkzeuge` | Elf Werkzeuge (inkl. `empfehlen`: lokale Empfehlung, mit Server → Gespräch) mit Beschreibung, Parametern und Beispielfragen: heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe. Beispielfragen sind zugleich die Vorschläge im leeren Chat. |
 | `Verstehen` | Regeln (Deutsch): Frage → Werkzeug + Parameter (Datum: heute/morgen/Wochentag/TT.MM., wichtig, Ziel per Wortabgleich). Offline, deterministisch, getestet. |
-| `Sprachmodell` | Schnittstelle: bekommt Wissen, Werkzeuge, Verlauf, Frage; antwortet mit Werkzeugaufruf oder Text. `Sprachmodelle.aktiv` ist die Steckdose – heute leer. |
+| `Sprachmodell` | Schnittstelle: bekommt Wissen, Werkzeuge, Verlauf, Frage; antwortet mit Werkzeugaufruf oder Text. `Sprachmodelle.aktiv` wird beim Start aus `LotseKonfiguration` gesetzt. |
+| `ClaudeServer` | Anbindung an den Kompass-Server (`supabase/functions/lotse/`): Kanal (debug/beta/testflight/store), anonyme Geräte-ID, Kontingent, Pro. Kein Schlüssel, kein Modellname in der App. |
 | `Lotse` | Steuerung: Frage → (Modell oder Regeln) → Werkzeug → Antwort in den Chat → Lernen. Fällt bei Modellfehler auf Regeln zurück. |
 | `LotseAnsicht` | Chat: Begrüßung mit Vorschlägen, Blasen, Sprung in die App („Ziel öffnen ›“), Daumen hoch/runter, Verlauf löschen, Hinweis womit geantwortet wird. |
 
@@ -34,6 +35,10 @@ Der Lotse soll die App „hundertprozentig verstehen“, auch wenn sie sich änd
 
 Neue Fähigkeit = ein Werkzeug: Eintrag in `Werkzeuge.alle`, Fall in `ausfuehren`, Regel in `Verstehen`, Test. Das Sprachmodell bekommt die neue Fähigkeit automatisch, weil `AppWissen.text()` die Werkzeuge auflistet.
 
+## 3a. Antwortstil
+
+Jede Antwort – ob Regel oder Modell – folgt demselben Muster: **erst die Antwort in einem Satz, dann höchstens drei Punkte, dann ein nächster Schritt oder ein Angebot.** Keine Zahlen-Telegramme, keine Markdown-Sternchen, per „du“, meist unter 70 Wörtern (Beratung bis 120). Fragen außerhalb der App beantwortet der Lotse nicht inhaltlich, sondern sagt freundlich, wofür er da ist, und bietet etwas Passendes an. Vor einem Werkzeug darf das Modell einen einleitenden Satz sagen („Schauen wir auf deine Woche.“), der der Werkzeug-Antwort vorangestellt wird. Stil-Text: `STIL` in `supabase/functions/lotse/lotse.ts`.
+
 ## 4. Lernen durch Nutzer
 
 Grundsatz wie bei den Rechenregeln: **Lernen ändert nie, was der Lotse ausrechnet** – nur was er versteht und vorschlägt.
@@ -47,7 +52,7 @@ Grundsatz wie bei den Rechenregeln: **Lernen ändert nie, was der Lotse ausrechn
 
 Heute nur auf dem Gerät. [VORSCHLAG] Später anonym aggregiert (nur Zähler und Fragetexte ohne Daten des Nutzers, Einwilligung), wie in `lernen-ueber-alle-nutzer.md`: häufige unbeantwortete Fragen werden zu neuen Werkzeugen; Beispielfragen ordnen sich nach Nutzung. Mit Sprachmodell zusätzlich: Daumen-runter-Fälle werden Beispiele im Systemwissen („so nicht“).
 
-## 5. Sprachmodell – Entscheidung des Gründers [OFFEN]
+## 5. Sprachmodell – [ENTSCHEIDUNG – 23.11.2026] Weg A, gestuft
 
 | Weg | Für | Gegen |
 |---|---|---|
@@ -56,11 +61,11 @@ Heute nur auf dem Gerät. [VORSCHLAG] Später anonym aggregiert (nur Zähler und
 | **C · B, Rückfall A** | privat wo möglich, stark wo nötig | am meisten Aufwand |
 | **D · Nur Regeln** (heute) | kostenlos, offline, deterministisch | versteht nur, was programmiert ist; kein Gespräch |
 
-[VORSCHLAG] **A zuerst** (ein kleiner Server, Claude Haiku für Werkzeugwahl, Sonnet für Gespräche), weil die Werkzeugwahl das Kernproblem ist und der Server das anonyme Lernen trägt; B später für Geräte, die es können. Rechtlich als Prüffrage: Auftragsverarbeitung, welche Daten die Frage enthält, Opt-in.
+Entschieden: **A** mit drei Stufen – Regeln auf dem Gerät (kostenlos) → Werkzeugwahl mit Claude Haiku 5.5 → Gespräch mit Claude Sonnet 5.5 nur bei Abwägen. Modellnamen leben nur auf dem Server und tauschen sich ohne App-Update (`LOTSE_MODELLE`, automatischer Nachrücker bei Wegfall). Kontingent: 5 freie Server-Fragen am Tag, Pro unbegrenzt (Fair-Use 300), Tester frei. Betrieb: `docs/technik/lotse-server.md`. B (Apple On-Device) bleibt als spätere Stufe 1 für Geräte, die es können. Rechtlich als Prüffrage: Auftragsverarbeitung, welche Daten die Frage enthält, Opt-in.
 
 ## 6. Noch nicht gebaut
 
-- Sprachmodell-Anbindung (nach Entscheidung) · Aufgabe `l-anbieter`, `l-sprachmodell`
+- Server bereitstellen (Anthropic-Konto, Supabase-Projekt, URL eintragen) · Aufgabe `l-deploy`; Kauf von Pro (StoreKit) und Prüfung auf dem Server · `l-storekit`, `l-pro-pruefung`; Einwilligung beim ersten Nutzen · `l-einwilligung`
 - Weitere Werkzeuge [VORSCHLAG]: Ziel anlegen mit Meilenstein-Vorschlägen, Habit anlegen, Aufgabe verschieben/erledigen, Termin zuordnen, Fokus starten, Reflexion führen
 - Mehrschrittige Gespräche (Rückfragen: „Für welches Ziel?“ merkt sich die Frage) – mit Sprachmodell einfacher
 - Sprache: Diktat über die Tastatur geht schon; eigener Mikrofon-Knopf [OFFEN]

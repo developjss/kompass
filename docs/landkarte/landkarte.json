@@ -188,7 +188,7 @@
         "k": "tab",
         "s": "partial",
         "f": "Kompass/Lotse/ · docs/produkt/konzepte/lotse.md",
-        "n": "Chat: App-Wissen aus dem Code, Werkzeuge, Regeln offline; Sprachmodell-Anbieter offen."
+        "n": "Chat: App-Wissen aus dem Code, Werkzeuge, Regeln offline; freie Fragen über den Kompass-Server (Claude, gestuft). Server noch nicht bereitgestellt."
        }
       ]
      },
@@ -273,6 +273,15 @@
       "k": "area",
       "s": "built",
       "f": "prototyp/tests/run.py · docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md"
+     },
+     {
+      "id": "lotse-server",
+      "t": "Lotse-Server (Supabase Edge Function)",
+      "k": "area",
+      "s": "partial",
+      "o": "ai",
+      "f": "supabase/functions/lotse/ · docs/technik/lotse-server.md",
+      "n": "Code fertig; Deploy braucht Anthropic-Konto und Supabase-Projekt des Gründers."
      }
     ]
    },

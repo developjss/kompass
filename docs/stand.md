@@ -23,13 +23,13 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Phase 2 begonnen – erste SwiftUI-Fassung (23.11.2026):** `Kompass.xcodeproj` mit Schemes Kompass und Kompass Beta. Rechen-Logik als Swift-Port mit 42 Tests, fünf Bereiche grob wie im Klick-Dummy, Speicherung als Datei auf dem Gerät, Beispieltermine. Kein Server, keine echte Kalender-Anbindung. Details und Lücken: `docs/technik/app.md`.
 
-**Tabs und Lotse (23.11.2026, wartet auf „Ja, mergen“):** Fünf Tabs: Heute · Kalender · **Fortschritt** (Ziele · Habits per Umschalter, getrennt) · **Lotse** · Rückblick. Lotse = Chat-Assistent: App-Wissen aus dem Code, zehn Werkzeuge, regelbasiertes Verstehen offline, Lernen aus Rückmeldungen, Steckdose für ein Sprachmodell. [OFFEN] Anbieter (`docs/produkt/konzepte/lotse.md` §5).
+**Tabs und Lotse (23.11.2026, wartet auf „Ja, mergen“):** Fünf Tabs: Heute · Kalender · **Fortschritt** (Ziele · Habits per Umschalter, getrennt) · **Lotse** · Rückblick. Lotse = Chat-Assistent: App-Wissen aus dem Code, zehn Werkzeuge, regelbasiertes Verstehen offline, Lernen aus Rückmeldungen, Steckdose für ein Sprachmodell. Sprachmodell entschieden (Weg A, Claude gestuft): Server-Code `supabase/functions/lotse/`, App-Anbindung mit Kontingent und Pro – Server läuft auf Supabase-Projekt „kompass“ (EU) und ist live gegen Claude geprüft (`docs/technik/lotse-server.md`).
 
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte
 
 Reihenfolge: `/fahrplan` (Phase 1).
-1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo), **Sprachmodell-Anbieter für den Lotsen**.
+1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo), Ort des Lotse-Servers, Preis von Pro.
 2. Klick-Dummy eine Woche selbst nutzen, Funde in `/fahrplan` sammeln.
 3. Phase 2 weiter: Personen-Test als Swift-Test, SwiftData, dann Heute, Habits, Ziele fein ausbauen (Design und Funktionen ändern sich noch).

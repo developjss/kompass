@@ -221,6 +221,8 @@ struct ChatNachricht: Identifiable, Codable, Sendable, Hashable {
         case ziel(UUID)
         case aufgabe(UUID)
         case bereich(String)
+        /// Kompass Pro vorstellen (Kontingent aufgebraucht)
+        case pro
     }
 
     var id = UUID()
@@ -239,6 +241,19 @@ struct Einstellungen: Codable, Sendable, Hashable {
     var weitereAusblenden = false
     var googleBeispiel = false
     var appleBeispiel = false
+    /// Kompass Pro (unbegrenzter Lotse). [RISIKO] Bis zur StoreKit-Prüfung nur ein Schalter (Test).
+    var pro = false
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        nurEineAufgabe = try c.decodeIfPresent(Bool.self, forKey: .nurEineAufgabe) ?? false
+        weitereAusblenden = try c.decodeIfPresent(Bool.self, forKey: .weitereAusblenden) ?? false
+        googleBeispiel = try c.decodeIfPresent(Bool.self, forKey: .googleBeispiel) ?? false
+        appleBeispiel = try c.decodeIfPresent(Bool.self, forKey: .appleBeispiel) ?? false
+        pro = try c.decodeIfPresent(Bool.self, forKey: .pro) ?? false
+    }
 }
 
 struct Reflexion: Codable, Sendable, Hashable {

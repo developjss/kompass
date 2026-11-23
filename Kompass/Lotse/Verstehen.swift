@@ -31,8 +31,12 @@ enum Verstehen {
            hat(t, "aufgabe", "erinnere", "notier", "todo", "to do") || t.hasPrefix("erstelle") || t.hasPrefix("lege") {
             return aufgabe(aus: frage, t: t, z: z, T: T)
         }
-        // 2. „Jetzt dran“ vor den Hilfe-Mustern („was ist …“)
-        if hat(t, "jetzt dran", "was soll ich", "als naechstes", "womit anfang", "womit fange") { return WerkzeugAufruf(name: .heute) }
+        // 2. Beratung: „Was soll ich zuerst …“, „worauf konzentrieren“, „was raetst du“ → Empfehlung (mit Server: Gespräch)
+        if hat(t, "was soll ich", "womit anfang", "womit fange", "womit soll", "worauf", "konzentrier", "priorisier", "raetst du", "raten", "empfiehlst", "empfehl", "was wuerdest du", "zuerst machen", "zuerst angehen", "am wichtigsten") {
+            return WerkzeugAufruf(name: .empfehlen, parameter: ["zeitraum": hat(t, "woche") ? "woche" : "heute"])
+        }
+        // 2b. „Jetzt dran“ vor den Hilfe-Mustern („was ist …“)
+        if hat(t, "jetzt dran", "als naechstes") { return WerkzeugAufruf(name: .heute) }
         // 3. Hilfe / App-Fragen
         if hat(t, "wie funktioniert", "wie fange", "wie starte", "wie beginne", "was ist ", "was bedeutet", "wo finde", "wo ist", "wo kann", "wie kann ich", "wie wird", "wie rechnet", "wie berechn", "wie zaehl", "erklaer", "hilfe", "onboarding", "anleitung", "was kann die app", "was kannst du") {
             // „wie steht/läuft Ziel X“ ist keine Hilfe – prüfen, ob ein Ziel gemeint ist

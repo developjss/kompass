@@ -460,25 +460,27 @@
       "helfer": [
         "claude"
       ],
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "warum": "Ohne Anbieter antwortet der Lotse nur mit Regeln. Kosten, Datenschutz, Server betreffen den Gründer.",
       "quelle": "docs/produkt/konzepte/lotse.md §5",
-      "landkarte": "lotse"
+      "landkarte": "lotse",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "l-sprachmodell",
-      "titel": "Sprachmodell an den Lotsen anbinden (Sprachmodelle.aktiv), Server ohne Schlüssel in der App",
+      "titel": "Lotse-Server und App-Anbindung (gebaut; fertig nach Deploy und erstem Test gegen den Server)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "nach": [
-        "l-anbieter"
+        "l-deploy"
       ],
       "quelle": "docs/produkt/konzepte/lotse.md",
-      "landkarte": "lotse"
+      "landkarte": "lotse",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "l-werkzeuge",
@@ -505,6 +507,75 @@
       ],
       "quelle": "docs/produkt/konzepte/lotse.md §4",
       "landkarte": "lotse"
+    },
+    {
+      "id": "l-deploy",
+      "titel": "Lotse-Server bereitstellen: Anthropic-Konto (Console) + Schlüssel, Supabase-Projekt EU, db push, secrets, deploy, URL in LotseKonfiguration",
+      "wer": "ceo",
+      "helfer": [
+        "claude"
+      ],
+      "status": "erledigt",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/technik/lotse-server.md §2",
+      "landkarte": "lotse-server",
+      "erledigtAm": "2026-11-23"
+    },
+    {
+      "id": "l-storekit",
+      "titel": "Kompass Pro kaufen: StoreKit-Produkt, Paywall, Wiederherstellen; Preis festlegen",
+      "wer": "claude",
+      "helfer": [
+        "ceo"
+      ],
+      "status": "offen",
+      "prio": 1,
+      "phase": 3,
+      "quelle": "docs/technik/lotse-server.md §5",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "l-pro-pruefung",
+      "titel": "Pro-Kauf auf dem Server prüfen (App Store Server API), dann LOTSE_PRO_PRUEFUNG=an und LOTSE_TESTER_FREI=false",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 3,
+      "nach": [
+        "l-storekit"
+      ],
+      "quelle": "docs/technik/lotse-server.md §5",
+      "landkarte": "lotse-server"
+    },
+    {
+      "id": "l-einwilligung",
+      "titel": "Einwilligung beim ersten Lotse-Nutzen (Fragen gehen an Server/Anthropic) + Datenschutzerklärung ergänzen",
+      "wer": "claude",
+      "helfer": [
+        "ceo"
+      ],
+      "status": "offen",
+      "prio": 1,
+      "phase": 3,
+      "quelle": "docs/technik/lotse-server.md §8",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "l-kosten",
+      "titel": "Nach einer Woche TestFlight: echte Lotse-Kosten aus der Console in lotse-server.md §6 eintragen",
+      "wer": "ceo",
+      "helfer": [
+        "claude"
+      ],
+      "status": "offen",
+      "prio": 2,
+      "phase": 3,
+      "nach": [
+        "l-deploy"
+      ],
+      "quelle": "docs/technik/lotse-server.md §6",
+      "landkarte": "lotse-server"
     }
   ]
 }
