@@ -1,6 +1,6 @@
 # Habits v2 – Konzept für den Tab „Fortschritt · Habits“
 
-Stand: 23. November 2026 · Grundlage: Screenshots der App (Simulator), Gapless (Harbor 2: `design.md`, Transaktions-Seite, Listen), Vorgaben des Gründers vom 23.11. [ENTSCHEIDUNG – 23.11.2026] „Ja, so bauen“. Block 1 gebaut (Modell, Rechnung, Habits-Seite, Menge eintragen, Anlegen mit Chips); Block 2 offen (Detail-Seite mit Bearbeiten je Zeile, Mitteilungen). Rechenregel §5 in `rechenregeln.md` §6 übernommen – braucht „Ja, mergen“.
+Stand: 23. November 2026 · Grundlage: Screenshots der App (Simulator), Gapless (Harbor 2: `design.md`, Transaktions-Seite, Listen), Vorgaben des Gründers vom 23.11. [ENTSCHEIDUNG – 23.11.2026] „Ja, so bauen“. Block 1 gebaut (Modell, Rechnung, Habits-Seite, Menge eintragen, Anlegen mit Chips); Block 2 offen (Detail-Seite mit Bearbeiten je Zeile, Mitteilungen). Rechenregel §5 in `rechenregeln.md` §6 übernommen [ENTSCHEIDUNG – 23.11.2026, PR #11].
 
 ## 1. Befund – so ist es heute
 
@@ -78,7 +78,7 @@ Alle Habits                               Bearbeiten ›
 
 Migration: `erledigt: Set<Tag>` → `eintraege[tag] = 1`; `wochentage` → `.wochentage(…)` bzw. `.taeglich` bei allen sieben.
 
-## 5. Rechenregeln (Änderung von `rechenregeln.md` §6 – braucht „Ja, mergen“)
+## 5. Rechenregeln (in `rechenregeln.md` §6 übernommen) [ENTSCHEIDUNG – 23.11.2026]
 
 - **Anteil eines Tages** = eingetragene Menge ÷ Soll, begrenzt auf 0–1. Ohne Menge: 0 oder 1. Abhaken = 1.
 - **Wochen-Habit „n-mal pro Woche“**: Anteil der Woche = Σ Tagesanteile ÷ n, begrenzt auf 1; geplanter Tag = jeder Tag der Woche, solange die Woche noch nicht voll ist.
