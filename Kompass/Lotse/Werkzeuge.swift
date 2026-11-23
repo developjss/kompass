@@ -235,7 +235,7 @@ enum Werkzeuge {
             let t = "\(h.titel): Serie \(HabitRechnung.serie(h, heute: T)), beste \(HabitRechnung.besteSerie(h, heute: T)), Quote \(Zahl.prozent(HabitRechnung.quote(h, heute: T))) in 30 Tagen · \(HabitRechnung.haeufigkeit(h))"
                 + (HabitRechnung.geplant(h, am: T) ? (h.voll(am: T) ? " · heute erledigt" : " · heute noch offen") : " · heute nicht geplant")
                 + (z.ziel(h.zielID).map { " · Ziel: \($0.titel)" } ?? "")
-            return LotseAntwort(text: t, werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
+            return LotseAntwort(text: t, werkzeug: .habits, aktion: .habit(h.id))
         }
         guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: + Neu → Habit.", werkzeug: .habits) }
         let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }
@@ -275,13 +275,13 @@ enum Werkzeuge {
             let passend = AppWissen.regeln.filter { treffer($0) > 0 }
             return LotseAntwort(text: (passend.isEmpty ? Array(AppWissen.regeln.prefix(3)) : Array(passend.prefix(4))).joined(separator: "\n"), werkzeug: .hilfe)
         }
-        if let b = Bereich.allCases.max(by: { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 < treffer(AppWissen.bereiche[$1] ?? "") + treffer($1.titel) * 2 }),
-           treffer(AppWissen.bereiche[b] ?? "") + treffer(b.titel) > 0 {
-            return LotseAntwort(text: AppWissen.bereiche[b] ?? "", werkzeug: .hilfe, aktion: .bereich(b.rawValue))
-        }
-        if let f = AppWissen.fenster.values.max(by: { treffer($0) < treffer($1) }), treffer(f) > 0 {
-            return LotseAntwort(text: f, werkzeug: .hilfe)
-        }
+        // Bereich oder Fenster – was besser passt; bei Gleichstand der Bereich (Einstieg), ein Fenster nur, wenn es klar mehr trifft.
+        let bereich = Bereich.allCases.max { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 < treffer(AppWissen.bereiche[$1] ?? "") + treffer($1.titel) * 2 }
+        let bereichPunkte = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 } ?? 0
+        let fenster = AppWissen.fenster.values.max { treffer($0) < treffer($1) }
+        let fensterPunkte = fenster.map(treffer) ?? 0
+        if let f = fenster, fensterPunkte > bereichPunkte { return LotseAntwort(text: f, werkzeug: .hilfe) }
+        if let b = bereich, bereichPunkte > 0 { return LotseAntwort(text: AppWissen.bereiche[b] ?? "", werkzeug: .hilfe, aktion: .bereich(b.rawValue)) }
         return LotseAntwort(text: "Kompass hat fünf Bereiche:\n" + Bereich.allCases.map { "• \(AppWissen.bereiche[$0] ?? $0.titel)" }.joined(separator: "\n"), werkzeug: .hilfe)
     }
 

@@ -144,7 +144,7 @@ private struct HeuteZeile: View {
     }
 
     private func tippen() {
-        if habit.menge != nil { nav.blatt = .habitMenge(habit.id, tag: speicher.heute.text) } else { nav.blatt = .habit(habit.id) }
+        if habit.menge != nil { nav.blatt = .habitMenge(habit.id, tag: speicher.heute.text) } else { nav.oeffneHabit(habit.id) }
     }
 }
 
@@ -159,7 +159,7 @@ private struct WochenZeile: View {
         let T = speicher.heute
         let c = Color(hex: habit.farbe)
         let w = HabitRechnung.woche(habit, montag: T.montag, seit: habit.angelegt, heute: T)
-        Button { nav.blatt = .habit(habit.id) } label: {
+        Button { nav.oeffneHabit(habit.id) } label: {
             HStack(spacing: 12) {
                 SymbolKachel(symbol: habit.symbol, farbe: c)
                 VStack(alignment: .leading, spacing: 6) {
@@ -224,7 +224,7 @@ private struct AlleZeile: View {
         let T = speicher.heute
         let serie = HabitRechnung.serie(habit, heute: T)
         let wochen: Bool = { if case .proWoche = habit.rhythmus { return true } else { return false } }()
-        Button { nav.blatt = .habit(habit.id) } label: {
+        Button { nav.oeffneHabit(habit.id) } label: {
             HStack(spacing: 12) {
                 SymbolKachel(symbol: habit.symbol, farbe: Color(hex: habit.farbe))
                 VStack(alignment: .leading, spacing: 2) {
@@ -319,64 +319,5 @@ struct HabitMengeBlatt: View {
             }
         }
         .presentationDetents([.medium])
-    }
-}
-
-/// Details eines Habits: Soll, Rhythmus, Erinnerung, Ziel, Serie, Quote, Verlauf; Löschen.
-/// [OFFEN] Bearbeiten je Zeile (habits-v2.md §7) – nächster Block.
-struct HabitBlatt: View {
-    var id: UUID
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            if let h = speicher.zustand.habit(id) {
-                let T = speicher.heute
-                let wochen: Bool = { if case .proWoche = h.rhythmus { return true } else { return false } }()
-                List {
-                    Section {
-                        LabeledContent("Soll", value: HabitRechnung.sollText(h))
-                        LabeledContent("Erinnerung", value: h.erinnerung.map { Beispieltermine.uhrzeit($0) } ?? "aus")
-                        if let g = speicher.zustand.ziel(h.zielID) { LabeledContent("Ziel", value: g.titel) }
-                    }
-                    Section {
-                        LabeledContent("Heute", value: HabitRechnung.mengenText(h, am: T))
-                        if h.menge != nil {
-                            Button("Menge eintragen") { nav.blatt = .habitMenge(h.id, tag: T.text) }
-                        }
-                        Button(h.voll(am: T) ? "Heute wieder öffnen" : "Heute abhaken") { speicher.aendern { $0.habitUmschalten(h.id, am: T) } }
-                    }
-                    Section("Stand") {
-                        LabeledContent("Serie", value: "\(HabitRechnung.serie(h, heute: T)) \(wochen ? "Wochen" : "Tage")")
-                        LabeledContent("Beste Serie", value: "\(HabitRechnung.besteSerie(h, heute: T)) \(wochen ? "Wochen" : "Tage")")
-                        LabeledContent("Quote 30 Tage", value: Zahl.prozent(HabitRechnung.quote(h, heute: T)))
-                    }
-                    Section("Letzte 14 Tage") {
-                        ForEach(0..<14, id: \.self) { i in
-                            let d = T.plus(tage: -i)
-                            if HabitRechnung.geplant(h, am: d) || h.eintraege[d] != nil {
-                                LabeledContent(d == T ? "Heute" : d.datum().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))) {
-                                    Text(HabitRechnung.mengenText(h, am: d)).foregroundStyle(h.voll(am: d) ? Farbe.freude : .secondary)
-                                }
-                            }
-                        }
-                    }
-                    Section {
-                        Button("Habit löschen", role: .destructive) {
-                            speicher.aendern { s in s.habits.removeAll { $0.id == id } }
-                            dismiss()
-                        }
-                    }
-                }
-                .navigationTitle(h.titel)
-                .navigationBarTitleDisplayMode(.inline)
-                .schliessenKnopf()
-            } else {
-                ContentUnavailableView("Habit nicht gefunden", systemImage: "questionmark")
-            }
-        }
-        .presentationDetents([.medium, .large])
     }
 }

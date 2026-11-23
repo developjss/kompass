@@ -26,11 +26,11 @@ xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS
 
 | Ordner | Was |
 |---|---|
-| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag` (Kalendertag, sommerzeitfest), Fortschritt, Auf Kurs, Prognose, Habits, Wiederholung, Fokus-Timer, Lernen, Aktionen |
+| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag` (Kalendertag, sommerzeitfest), Fortschritt, Auf Kurs, Prognose, Habits, Erinnerungen (welche Mitteilungen anstehen), Wiederholung, Fokus-Timer, Lernen, Aktionen |
 | `Kompass/Modell/` | Datenmodell (Ziel, Schritt, Habit, Aufgabe, Fokus-Sitzung, Zustand) |
 | `Kompass/App/` | Start, Navigation, Speicher (Laden/Speichern, Lade- und Fehlerzustand) |
 | `Kompass/Design/` | Farben, Maße, Schrift, Bausteine (Seitenkopf, gruppierte Liste, Verlaufskarte, Haken …) nach `docs/produkt/design.md` |
-| `Kompass/Ansichten/` | Heute, Kalender, Fortschritt (Ziele · Habits), Ziel-Detail, Lotse (Chat), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
+| `Kompass/Ansichten/` | Heute, Kalender, Fortschritt (Ziele · Habits), Ziel-Detail, Habit-Seite (`Habits/HabitDetail.swift`, Editor je Zeile), Lotse (Chat), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
 | `Kompass/Lotse/` | Assistent: `AppWissen` (aus dem Code), `Werkzeuge`, `Verstehen` (Regeln), `Sprachmodell` (Schnittstelle), `Lotse` (Steuerung) – `docs/produkt/konzepte/lotse.md` |
 | `Kompass/Demo/` | Demo-Daten (fester Zufall) und Beispieltermine |
 | `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle aus `prototyp/tests/unit.py` und mehr) |

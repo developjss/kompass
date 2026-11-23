@@ -22,6 +22,7 @@ struct VerstehenTests {
         ("Wie laufen meine Habits?", .habits), ("Wie ist meine Serie beim Lesen?", .habits),
         ("Wie lief meine Woche?", .analyse), ("Wie viel Fokuszeit hatte ich letzte Woche?", .analyse),
         ("Wie fange ich an?", .hilfe), ("Wie wird der Fortschritt gerechnet?", .hilfe), ("Wo finde ich den Fokus-Timer?", .hilfe), ("Was kannst du?", .hilfe),
+        ("Wie kann ich eine Erinnerung für einen Habit einstellen?", .hilfe),
         ("Erstelle Aufgabe: Flugschule anrufen morgen", .aufgabeAnlegen), ("Neue Aufgabe für Führerschein: Fragebogen Kapitel 5", .aufgabeAnlegen),
         ("Erinnere mich daran, Oma anzurufen", .aufgabeAnlegen),
     ])
@@ -139,6 +140,11 @@ struct ZeitfensterTests {
 struct AppWissenTests {
     @Test func jederTabIstBeschrieben() {
         for b in Bereich.allCases { #expect(!(AppWissen.bereiche[b] ?? "").isEmpty, "\(b)") }
+    }
+
+    @Test func hilfeZurErinnerungNenntDenEditor() {
+        let a = Werkzeuge.hilfe("Wie kann ich eine Erinnerung für einen Habit einstellen?")
+        #expect(a.text.contains("Erinnerung") && a.text.contains("Mitteilung"))
     }
 
     @Test func jedesFensterIstBeschrieben() {

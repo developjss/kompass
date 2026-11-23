@@ -61,6 +61,7 @@ private struct Bereiche: View {
 private extension View {
     func zielZiel() -> some View {
         navigationDestination(for: ZielAuswahl.self) { ZielDetail(id: $0.id) }
+            .navigationDestination(for: HabitAuswahl.self) { HabitDetail(id: $0.id) }
     }
 }
 
@@ -72,7 +73,6 @@ private struct BlattInhalt: View {
         case .info(let t): InfoBlatt(thema: t)
         case .einstellungen: EinstellungenBlatt()
         case .aufgabe(let id): AufgabeBlatt(id: id)
-        case .habit(let id): HabitBlatt(id: id)
         case .fokus(let id): FokusBlatt(aufgabeID: id)
         case .rechnung(let id): RechnungBlatt(zielID: id)
         case .reflexion(let woche): ReflexionBlatt(woche: woche)
@@ -83,6 +83,7 @@ private struct BlattInhalt: View {
         case .zielBearbeiten(let z): ZielBearbeitenBlatt(zielID: z)
         case .pro: ProBlatt()
         case .habitMenge(let h, let t): HabitMengeBlatt(habitID: h, tag: Tag(text: t) ?? Tag(Date()))
+        case .habitBearbeiten(let h, let f): HabitFeldBlatt(habitID: h, feld: f)
         }
     }
 }

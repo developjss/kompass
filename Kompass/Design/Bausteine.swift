@@ -313,3 +313,49 @@ struct PfeilZeile: View {
         .buttonStyle(.plain)
     }
 }
+
+/// Fakt als Zeile: Bezeichnung links, Wert rechts, Pfeil – antippen öffnet den Editor (wie eine Gapless-Transaktion).
+struct FaktZeile<Wert: View>: View {
+    var titel: String
+    @ViewBuilder var wert: Wert
+    var aktion: () -> Void
+
+    var body: some View {
+        Button(action: aktion) {
+            HStack(spacing: 12) {
+                Text(titel).font(.zeile).foregroundStyle(Farbe.text)
+                Spacer(minLength: 12)
+                wert.font(.unterzeile).foregroundStyle(Farbe.zweitrangig).multilineTextAlignment(.trailing)
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+            }
+            .padding(.horizontal, 16)
+            .frame(minHeight: Mass.zeileKompakt)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Bearbeiten")
+    }
+}
+
+extension FaktZeile where Wert == Text {
+    init(_ titel: String, wert: String, aktion: @escaping () -> Void) {
+        self.init(titel: titel, wert: { Text(wert) }, aktion: aktion)
+    }
+}
+
+/// Ein Wert mit Bezeichnung als kleine Karte – drei nebeneinander (Serie · Beste · Quote).
+struct WertKachel: View {
+    var titel: String
+    var wert: String
+    var einheit: String? = nil
+    var body: some View {
+        VStack(spacing: 3) {
+            Text(wert).font(.kompass(.title2, .heavy)).foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Text(einheit.map { "\(titel) · \($0)" } ?? titel).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, minHeight: 68)
+        .padding(.horizontal, 8)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
