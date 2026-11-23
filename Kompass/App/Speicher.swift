@@ -53,6 +53,8 @@ final class Speicher {
             return
         }
         do {
+            // Start mit frischen Demo-Daten (UI-Tests, Vorführung): Startargument „-demoNeu“
+            if ProcessInfo.processInfo.arguments.contains("-demoNeu") { try? FileManager.default.removeItem(at: datei) }
             if FileManager.default.fileExists(atPath: datei.path) {
                 let daten = try Data(contentsOf: datei)
                 zustand = try JSONDecoder.kompass.decode(Zustand.self, from: daten)
@@ -68,6 +70,7 @@ final class Speicher {
             termineAbgleichen()
             zustand.verlaufFortschreiben(heute: heute)
             lage = .bereit
+            appleKalenderLesen()
             erinnerungenPlanen()
         } catch {
             lage = .fehler("Deine Daten konnten nicht gelesen werden.")
@@ -115,9 +118,34 @@ final class Speicher {
 
     /// Stattgefundene Termine verknüpfter Serien übernehmen (Beispielkalender; später EventKit/Google).
     func termineAbgleichen() {
-        let e = zustand.einstellungen, T = heute
-        guard e.googleBeispiel || e.appleBeispiel else { return }
-        zustand.termineAbgleichen(heute: T) { Beispieltermine.termine(am: $0, google: e.googleBeispiel, apple: e.appleBeispiel, heute: T) }
+        let T = heute
+        let z = zustand
+        let extern = externeTermine
+        zustand.termineAbgleichen(heute: T) { d in Kalenderquelle.termine(am: d, zustand: z, heute: T, extern: extern[d] ?? []) }
+        let k = kalender.dateComponents([.hour, .minute], from: jetzt())
+        zustand.habitsAusTerminen(heute: T, jetzt: (k.hour ?? 0) * 60 + (k.minute ?? 0))
+    }
+
+    /// Termine aus dem Apple-Kalender (EventKit), je Tag – nur gelesen, nicht gespeichert.
+    var externeTermine: [Tag: [Termin]] = [:]
+
+    /// Apple-Kalender neu lesen (6 Wochen zurück, 1 Jahr voraus), wenn eingeschaltet und erlaubt.
+    func appleKalenderLesen() {
+        guard datei != nil, zustand.einstellungen.appleKalender else { externeTermine = [:]; return }
+        AppleKalender.aktiv.statusLesen()
+        externeTermine = AppleKalender.aktiv.termine(von: heute.plus(tage: -42), bis: heute.plus(tage: 366), kalender: kalender)
+        termineAbgleichen()
+    }
+
+    /// Alle Termine eines Tages (Beispiel, eigene, Apple).
+    func termine(am d: Tag) -> [Termin] {
+        Kalenderquelle.termine(am: d, zustand: zustand, heute: heute, extern: externeTermine[d] ?? [])
+    }
+
+    /// Minuten seit Mitternacht jetzt
+    var jetztMinuten: Int {
+        let k = kalender.dateComponents([.hour, .minute], from: jetzt())
+        return (k.hour ?? 0) * 60 + (k.minute ?? 0)
     }
 
     /// Habit-Mitteilungen neu planen (nur in der echten App, nicht in Vorschau und Tests).

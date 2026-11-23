@@ -248,3 +248,53 @@ extension Zustand {
         }
     }
 }
+
+// MARK: Kalender (Struktur v3): einplanen, eigene Termine, Habits aus Terminen
+
+extension Zustand {
+
+    /// Aufgabe in den Kalender legen: Tag (und optional Uhrzeit). `uhrzeit: nil` = ganzer Tag ohne Uhrzeit.
+    mutating func aufgabeEinplanen(_ id: UUID, tag: Tag?, uhrzeit: Int?) {
+        guard let i = aufgaben.firstIndex(where: { $0.id == id }) else { return }
+        aufgaben[i].datum = tag
+        aufgaben[i].uhrzeit = tag == nil ? nil : uhrzeit.map { min(max($0, 0), 24 * 60 - 5) }
+    }
+
+    /// Habit an einem Tag zu einer Uhrzeit planen (nur dieser Tag); nil = Uhrzeit für den Tag entfernen.
+    mutating func habitEinplanen(_ id: UUID, tag: Tag, uhrzeit: Int?) {
+        guard let i = habits.firstIndex(where: { $0.id == id }) else { return }
+        habits[i].planZeiten[tag] = uhrzeit.map { min(max($0, 0), 24 * 60 - 5) }
+    }
+
+    /// Eigenen Termin anlegen oder ändern; zählt er für ein Ziel, wird die Serie verknüpft (Einsatz bzw. Meilenstein Zeit/Zahl).
+    mutating func terminSpeichern(_ t: EigenerTermin) {
+        if let i = eigeneTermine.firstIndex(where: { $0.id == t.id }) { eigeneTermine[i] = t } else { eigeneTermine.append(t) }
+        let serie = "kompass:\(t.id.uuidString)"
+        termine.removeAll { $0.serie == serie }
+        if let z = t.zielID, ziel(z) != nil {
+            termine.append(TerminVerknuepfung(serie: serie, titel: t.titel, zielID: z, schrittID: t.schrittID, seit: t.tag))
+        }
+    }
+
+    mutating func terminLoeschen(_ id: UUID) {
+        eigeneTermine.removeAll { $0.id == id }
+        termine.removeAll { $0.serie == "kompass:\(id.uuidString)" }
+    }
+
+    /// Termine mit Habit: ist der Termin vorbei, ist der Habit an dem Tag erfüllt (nur wenn noch nichts eingetragen ist).
+    mutating func habitsAusTerminen(heute: Tag, jetzt: Int) {
+        for i in eigeneTermine.indices {
+            let t = eigeneTermine[i]
+            guard let hid = t.habitID, let h = habits.firstIndex(where: { $0.id == hid }) else { continue }
+            var d = max(t.tag, (t.habitBis ?? t.tag.plus(tage: -1)).plus(tage: 1))
+            var bis = t.habitBis
+            while d <= heute {
+                if d == heute && t.ende > jetzt { break }
+                if t.findetStatt(am: d), habits[h].eintraege[d] == nil { habits[h].eintraege[d] = habits[h].menge ?? 1 }
+                bis = d
+                d = d.plus(tage: 1)
+            }
+            eigeneTermine[i].habitBis = bis
+        }
+    }
+}

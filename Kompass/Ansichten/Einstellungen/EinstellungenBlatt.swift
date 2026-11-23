@@ -10,12 +10,31 @@ struct EinstellungenBlatt: View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Google Kalender", isOn: schalter(\.googleBeispiel))
-                    Toggle("Apple Kalender (iCloud)", isOn: schalter(\.appleBeispiel))
+                    Toggle("Apple-Kalender lesen", isOn: Binding(get: { speicher.zustand.einstellungen.appleKalender }, set: { neu in
+                        Task {
+                            let ok = neu ? await AppleKalender.aktiv.erlauben() : true
+                            speicher.aendern { $0.einstellungen.appleKalender = neu && ok }
+                            speicher.appleKalenderLesen()
+                        }
+                    }))
+                    if AppleKalender.aktiv.status == .abgelehnt {
+                        Button("Zugriff in den iOS-Einstellungen erlauben") {
+                            if let u = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(u) }
+                        }
+                    }
+                    Toggle("Farben nach Kategorie", isOn: schalter(\.farbenNachKategorie))
                 } header: {
                     Text("Kalender")
                 } footer: {
-                    Text("Noch Beispieltermine – keine echte Verbindung.")
+                    Text("Termine bleiben auf deinem Gerät. Google-Kalender, die im Apple-Kalender eingebunden sind, erscheinen mit. Ohne Schalter färbt Kompass nach Ziel.")
+                }
+                Section {
+                    Toggle("Beispiel: Google", isOn: schalter(\.googleBeispiel))
+                    Toggle("Beispiel: Apple", isOn: schalter(\.appleBeispiel))
+                } header: {
+                    Text("Beispieltermine")
+                } footer: {
+                    Text("Zum Ausprobieren ohne echten Kalender.")
                 }
                 Section {
                     LabeledContent("Antwortet mit", value: Sprachmodelle.aktiv == nil ? "Regeln auf dem Gerät" : "Regeln + Claude")

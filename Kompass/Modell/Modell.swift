@@ -168,6 +168,12 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
     var einheit: Einheit?
     /// Erinnerung als Minuten seit Mitternacht; nil = keine
     var erinnerung: Int?
+    /// Feste Uhrzeit im Kalender (Minuten seit Mitternacht); nil = irgendwann am Tag
+    var uhrzeit: Int?
+    /// Dauer im Kalender in Minuten; nil = aus der Menge (Minuten/Stunden) oder 30
+    var dauer: Int?
+    /// Uhrzeit nur für einen Tag (in den Kalender gezogen); geht `uhrzeit` vor
+    var planZeiten: [Tag: Int] = [:]
     var notiz = ""
     var zielID: UUID?
     /// Eingetragene Menge je Tag. Ohne Soll: 1 = abgehakt.
@@ -202,6 +208,19 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
 
     func voll(am tag: Tag) -> Bool { anteil(am: tag) >= 1 }
 
+    /// Uhrzeit an einem Tag: in den Tag gezogen, sonst die feste Uhrzeit.
+    func zeit(am tag: Tag) -> Int? { planZeiten[tag] ?? uhrzeit }
+
+    /// Wie lange der Habit im Kalender dauert.
+    var dauerMinuten: Int {
+        if let d = dauer, d > 0 { return d }
+        if let m = menge, m > 0, let e = einheit {
+            if e == .minuten { return max(5, Int(m.rounded())) }
+            if e == .stunden { return max(5, Int((m * 60).rounded())) }
+        }
+        return 30
+    }
+
     /// Tage, die voll geschafft sind (für ältere Rechenwege).
     var erledigt: Set<Tag> { Set(eintraege.filter { anteil(am: $0.key) >= 1 }.map(\.key)) }
 
@@ -215,7 +234,7 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
     }
 
     /// Codable: Einträge als Text-Schlüssel; alte Felder `wochentage` und `erledigt` werden gelesen.
-    private enum K: String, CodingKey { case id, titel, farbe, symbol, rhythmus, menge, einheit, erinnerung, notiz, zielID, eintraege, angelegt, wochentage, erledigt }
+    private enum K: String, CodingKey { case id, titel, farbe, symbol, rhythmus, menge, einheit, erinnerung, uhrzeit, dauer, planZeiten, notiz, zielID, eintraege, angelegt, wochentage, erledigt }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: K.self)
@@ -228,6 +247,11 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
         menge = try c.decodeIfPresent(Double.self, forKey: .menge)
         einheit = try c.decodeIfPresent(Einheit.self, forKey: .einheit)
         erinnerung = try c.decodeIfPresent(Int.self, forKey: .erinnerung)
+        uhrzeit = try c.decodeIfPresent(Int.self, forKey: .uhrzeit)
+        dauer = try c.decodeIfPresent(Int.self, forKey: .dauer)
+        var p: [Tag: Int] = [:]
+        for (k, v) in try c.decodeIfPresent([String: Int].self, forKey: .planZeiten) ?? [:] { if let t = Tag(text: k) { p[t] = v } }
+        planZeiten = p
         notiz = try c.decodeIfPresent(String.self, forKey: .notiz) ?? ""
         zielID = try c.decodeIfPresent(UUID.self, forKey: .zielID)
         angelegt = try c.decode(Tag.self, forKey: .angelegt)
@@ -242,6 +266,8 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
         try c.encode(id, forKey: .id); try c.encode(titel, forKey: .titel); try c.encode(farbe, forKey: .farbe); try c.encode(symbol, forKey: .symbol)
         try c.encode(rhythmus, forKey: .rhythmus)
         try c.encodeIfPresent(menge, forKey: .menge); try c.encodeIfPresent(einheit, forKey: .einheit); try c.encodeIfPresent(erinnerung, forKey: .erinnerung)
+        try c.encodeIfPresent(uhrzeit, forKey: .uhrzeit); try c.encodeIfPresent(dauer, forKey: .dauer)
+        if !planZeiten.isEmpty { try c.encode(Dictionary(uniqueKeysWithValues: planZeiten.map { ($0.key.text, $0.value) }), forKey: .planZeiten) }
         try c.encode(notiz, forKey: .notiz); try c.encodeIfPresent(zielID, forKey: .zielID); try c.encode(angelegt, forKey: .angelegt)
         try c.encode(Dictionary(uniqueKeysWithValues: eintraege.map { ($0.key.text, $0.value) }), forKey: .eintraege)
     }
@@ -282,8 +308,80 @@ struct Aufgabe: Identifiable, Codable, Sendable, Hashable {
     var wiederholung: Wiederholung = .nie
     var serie: UUID?
     var ankerTag: Int?
+    /// Farbe im Kalender, wenn kein Ziel dran hängt
+    var kategorie: Kategorie?
 
     var einmalig: Bool { wiederholung == .nie }
+}
+
+/// Kategorie für Farben im Kalender (Struktur v3 §1).
+enum Kategorie: String, Codable, Sendable, CaseIterable, Hashable {
+    case arbeit, schule, studium, freizeit, gesundheit, familie
+
+    var name: String {
+        switch self {
+        case .arbeit: "Arbeit"
+        case .schule: "Schule"
+        case .studium: "Studium"
+        case .freizeit: "Freizeit"
+        case .gesundheit: "Gesundheit"
+        case .familie: "Familie"
+        }
+    }
+
+    var farbe: String {
+        switch self {
+        case .arbeit: "#3B4CCA"
+        case .schule: "#1F7AC2"
+        case .studium: "#7A4FD6"
+        case .freizeit: "#C2410C"
+        case .gesundheit: "#15803D"
+        case .familie: "#B8456E"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .arbeit: "briefcase.fill"
+        case .schule: "backpack.fill"
+        case .studium: "graduationcap.fill"
+        case .freizeit: "sun.max.fill"
+        case .gesundheit: "heart.fill"
+        case .familie: "house.fill"
+        }
+    }
+}
+
+/// Termin, den man in Kompass anlegt (Apple/Google bleiben dort). Kann für ein Ziel zählen oder einen Habit erfüllen.
+struct EigenerTermin: Identifiable, Codable, Sendable, Hashable {
+    var id = UUID()
+    var titel: String
+    var tag: Tag
+    /// Minuten seit Mitternacht
+    var start: Int
+    var ende: Int
+    var kategorie: Kategorie?
+    var zielID: UUID?
+    var schrittID: UUID?
+    /// Erfüllt diesen Habit, sobald der Termin vorbei ist
+    var habitID: UUID?
+    /// nie, täglich, werktags, wöchentlich (monatlich = gleicher Tag im Monat)
+    var wiederholung: Wiederholung = .nie
+    var notiz: String?
+    /// Bis zu diesem Tag sind Habit-Einträge übernommen
+    var habitBis: Tag?
+
+    /// Findet der Termin an diesem Tag statt?
+    func findetStatt(am d: Tag) -> Bool {
+        guard d >= tag else { return false }
+        switch wiederholung {
+        case .nie: return d == tag
+        case .taeglich: return true
+        case .werktags: return d.wochentag <= 5
+        case .woechentlich: return d.wochentag == tag.wochentag
+        case .monatlich: return d.tag == tag.tag
+        }
+    }
 }
 
 struct FokusSitzung: Identifiable, Codable, Sendable, Hashable {
@@ -391,6 +489,10 @@ struct Einstellungen: Codable, Sendable, Hashable {
     var appleBeispiel = false
     /// Kompass Pro (unbegrenzter Lotse). [RISIKO] Bis zur StoreKit-Prüfung nur ein Schalter (Test).
     var pro = false
+    /// Farben im Kalender nach Ziel (Standard) oder Kategorie
+    var farbenNachKategorie = false
+    /// Apple-Kalender (EventKit) lesen – nur nach Zustimmung
+    var appleKalender = false
 
     init() {}
 
@@ -401,6 +503,8 @@ struct Einstellungen: Codable, Sendable, Hashable {
         googleBeispiel = try c.decodeIfPresent(Bool.self, forKey: .googleBeispiel) ?? false
         appleBeispiel = try c.decodeIfPresent(Bool.self, forKey: .appleBeispiel) ?? false
         pro = try c.decodeIfPresent(Bool.self, forKey: .pro) ?? false
+        farbenNachKategorie = try c.decodeIfPresent(Bool.self, forKey: .farbenNachKategorie) ?? false
+        appleKalender = try c.decodeIfPresent(Bool.self, forKey: .appleKalender) ?? false
     }
 }
 
@@ -423,6 +527,8 @@ struct Zustand: Codable, Sendable, Hashable {
     var reflexionen: [String: Reflexion] = [:]
     var timer: LaufenderTimer?
     var termine: [TerminVerknuepfung] = []
+    /// Termine, die in Kompass angelegt wurden
+    var eigeneTermine: [EigenerTermin] = []
     /// Chat mit dem Lotsen (die letzten 200 Nachrichten)
     var chat: [ChatNachricht] = []
 
@@ -448,10 +554,12 @@ struct Zustand: Codable, Sendable, Hashable {
         timer = try c.decodeIfPresent(LaufenderTimer.self, forKey: .timer)
         termine = try c.decodeIfPresent([TerminVerknuepfung].self, forKey: .termine) ?? []
         chat = try c.decodeIfPresent([ChatNachricht].self, forKey: .chat) ?? []
+        eigeneTermine = try c.decodeIfPresent([EigenerTermin].self, forKey: .eigeneTermine) ?? []
     }
 
     func ziel(_ id: UUID?) -> Ziel? { id.flatMap { i in ziele.first { $0.id == i } } }
     func habit(_ id: UUID?) -> Habit? { id.flatMap { i in habits.first { $0.id == i } } }
     func aufgabe(_ id: UUID?) -> Aufgabe? { id.flatMap { i in aufgaben.first { $0.id == i } } }
+    func eigenerTermin(_ id: UUID?) -> EigenerTermin? { id.flatMap { i in eigeneTermine.first { $0.id == i } } }
     func schritt(_ id: UUID?, in zielID: UUID?) -> Schritt? { id.flatMap { i in ziel(zielID)?.schritte.first { $0.id == i } } }
 }

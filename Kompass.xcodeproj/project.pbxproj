@@ -280,6 +280,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Dev";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits und rechnet freie Zeit. Die Termine bleiben auf deinem Gerät.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -308,6 +309,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Beta";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits und rechnet freie Zeit. Die Termine bleiben auf deinem Gerät.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -336,6 +338,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Kompass;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits und rechnet freie Zeit. Die Termine bleiben auf deinem Gerät.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

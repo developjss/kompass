@@ -1,11 +1,16 @@
 import SwiftUI
 
-/// Anlegen: Aufgabe, Habit oder Ziel. Grobe Fassung ohne Vorschläge.
-/// [OFFEN] Vorschläge aus Vorlagen und KI (rechenregeln.md §7) wie im Klick-Dummy.
+/// Anlegen: Aufgabe, Termin, Habit oder Ziel – ein Bildschirm, Chips statt Räder (Struktur v3).
 struct NeuBlatt: View {
     @State var art: NeuArt
     @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
     @Environment(\.dismiss) private var dismiss
+    @State private var mitUhrzeit = false
+    @State private var uhrzeit = 9 * 60
+    @State private var dauer = 60
+    @State private var kategorie: Kategorie?
+    @State private var habitUhrzeit: Int?
 
     @State private var titel = ""
     @State private var datum = Date()
@@ -39,11 +44,15 @@ struct NeuBlatt: View {
             Form {
                 Picker("Was", selection: $art) {
                     Text("Aufgabe").tag(NeuArt.aufgabe)
+                    Text("Termin").tag(NeuArt.termin)
                     Text("Habit").tag(NeuArt.habit)
                     Text("Ziel").tag(NeuArt.ziel)
                 }
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
+                .onChange(of: art) { _, neu in
+                    if neu == .termin { nav.blatt = .termin(nil, tag: speicher.heute.text, start: nil) }
+                }
 
                 Section { TextField(platzhalter, text: $titel) }
 
@@ -51,13 +60,27 @@ struct NeuBlatt: View {
                 case .aufgabe:
                     Section {
                         Toggle("Mit Datum", isOn: $mitDatum)
-                        if mitDatum { DatePicker("Datum", selection: $datum, displayedComponents: .date) }
+                        if mitDatum {
+                            DatePicker("Datum", selection: $datum, displayedComponents: .date)
+                            Toggle("Mit Uhrzeit", isOn: $mitUhrzeit)
+                            if mitUhrzeit {
+                                DatePicker("Uhrzeit", selection: Binding(get: { uhr(uhrzeit) }, set: { uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute)
+                                ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { (dauerText($0), $0 == dauer) }) { dauer = [15, 30, 60, 90, 120][$0] }
+                            }
+                        }
+                    } footer: { Text(mitDatum ? (mitUhrzeit ? "Steht als Block im Kalender." : "Steht am Tag unter „Ohne Uhrzeit“ – ziehbar in den Kalender.") : "Landet im Eingang.") }
+                    Section {
                         Toggle("Wichtig", isOn: $wichtig)
                         Picker("Wiederholen", selection: $wiederholung) {
                             ForEach(Wiederholung.allCases, id: \.self) { Text($0.name).tag($0) }
                         }
                         zielPicker
+                        ChipReihe(titel: "Kategorie", auswahl: Kategorie.allCases.map { ($0.name, $0 == kategorie) }) { i in
+                            let k = Kategorie.allCases[i]; kategorie = kategorie == k ? nil : k
+                        }
                     }
+                case .termin:
+                    EmptyView()
                 case .habit:
                     habitTeil
                 case .ziel:
@@ -148,6 +171,14 @@ struct NeuBlatt: View {
             if rhythmusArt == .proWoche { Stepper("\(proWoche)× pro Woche", value: $proWoche, in: 1...7) }
         }
         Section {
+            ChipReihe(titel: "Feste Uhrzeit im Kalender", auswahl: [("keine", habitUhrzeit == nil)] + [7, 12, 18, 21].map { ("\($0):00", habitUhrzeit == $0 * 60) }) { i in
+                habitUhrzeit = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
+            }
+            if habitUhrzeit != nil {
+                DatePicker("Uhrzeit", selection: Binding(get: { uhr(habitUhrzeit ?? 0) }, set: { habitUhrzeit = minuten($0) }), displayedComponents: .hourAndMinute)
+            }
+        } footer: { Text(habitUhrzeit == nil ? "Ohne Uhrzeit steht der Habit am Tag unter „Ohne Uhrzeit“." : "Steht als Block im Kalender und unter „Als Nächstes“.") }
+        Section {
             ChipReihe(titel: "Erinnerung", auswahl: [("aus", erinnerung == nil)] + [7, 12, 18, 21].map { ("\($0):00", erinnerung == $0 * 60) }) { i in
                 erinnerung = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
             }
@@ -179,8 +210,11 @@ struct NeuBlatt: View {
         }
     }
 
+    private func dauerText(_ m: Int) -> String { m < 60 ? "\(m) Min" : m % 60 == 0 ? "\(m / 60) h" : "\(m / 60),5 h" }
+
     private var platzhalter: String {
         switch art {
+        case .termin: "Termin"
         case .aufgabe: "Was ist zu tun?"
         case .habit: "z. B. 20 Minuten lesen"
         case .ziel: "z. B. Halbmarathon laufen"
@@ -202,21 +236,27 @@ struct NeuBlatt: View {
         case .aufgabe:
             let tag = mitDatum ? Tag(datum, kalender: k) : nil
             let w = wiederholung, z = zielID, p: Prioritaet = wichtig ? .hoch : .normal
+            let u = mitDatum && mitUhrzeit ? uhrzeit : nil, du = dauer, k = kategorie
             speicher.aendern { s in
                 let a = s.aufgabeAnlegen(t, datum: tag, prio: p, zielID: z, heute: heute)
-                if let i = s.aufgaben.firstIndex(where: { $0.id == a.id }) { s.aufgaben[i].wiederholung = w }
+                if let i = s.aufgaben.firstIndex(where: { $0.id == a.id }) {
+                    s.aufgaben[i].wiederholung = w; s.aufgaben[i].uhrzeit = u; s.aufgaben[i].dauer = du; s.aufgaben[i].kategorie = k
+                }
             }
         case .habit:
             let farbe = Farbe.ziele[speicher.zustand.habits.count % Farbe.ziele.count]
             let v = vorschlag
-            let h = Habit(titel: t, farbe: farbe, symbol: vorschlagGenutzt ? symbol : (v.symbol == "star.fill" ? "star.fill" : v.symbol),
+            var h = Habit(titel: t, farbe: farbe, symbol: vorschlagGenutzt ? symbol : (v.symbol == "star.fill" ? "star.fill" : v.symbol),
                           rhythmus: habitRhythmus, menge: mitMenge ? menge : nil, einheit: mitMenge ? habitEinheit : nil,
                           erinnerung: erinnerung, zielID: zielID, angelegt: heute)
+            h.uhrzeit = habitUhrzeit
             if h.erinnerung != nil {
                 Task { await Erinnerungen.aktiv.erlaubnis(); speicher.aendern { $0.habits.append(h) } }
             } else {
                 speicher.aendern { $0.habits.append(h) }
             }
+        case .termin:
+            break
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
             let vl = gewaehlteVorlage

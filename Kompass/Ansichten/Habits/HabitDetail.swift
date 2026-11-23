@@ -47,6 +47,7 @@ struct HabitDetail: View {
                         FaktZeile("Titel", wert: h.titel) { nav.blatt = .habitBearbeiten(h.id, .titel) }
                         FaktZeile("Menge", wert: mengeText(h)) { nav.blatt = .habitBearbeiten(h.id, .menge) }
                         FaktZeile("Rhythmus", wert: HabitRechnung.haeufigkeit(h)) { nav.blatt = .habitBearbeiten(h.id, .rhythmus) }
+                        FaktZeile("Im Kalender", wert: h.uhrzeit.map { "\(Tagesplan.uhr($0)) · \(h.dauerMinuten) Min" } ?? "ohne Uhrzeit") { nav.blatt = .habitBearbeiten(h.id, .kalender) }
                         FaktZeile("Erinnerung", wert: erinnerungText(h)) { nav.blatt = .habitBearbeiten(h.id, .erinnerung) }
                         FaktZeile("Ziel", wert: z.ziel(h.zielID)?.titel ?? "keins") { nav.blatt = .habitBearbeiten(h.id, .ziel) }
                         FaktZeile(titel: "Aussehen", wert: {
@@ -248,6 +249,7 @@ struct HabitFeldBlatt: View {
                     case .titel: titelTeil
                     case .menge: mengeTeil
                     case .rhythmus: rhythmusTeil
+                    case .kalender: kalenderTeil
                     case .erinnerung: erinnerungTeil
                     case .ziel: zielTeil
                     case .aussehen: aussehenTeil
@@ -270,6 +272,7 @@ struct HabitFeldBlatt: View {
         case .titel: "Titel"
         case .menge: "Menge"
         case .rhythmus: "Wie oft"
+        case .kalender: "Im Kalender"
         case .erinnerung: "Erinnerung"
         case .ziel: "Ziel"
         case .aussehen: "Aussehen"
@@ -322,6 +325,23 @@ struct HabitFeldBlatt: View {
             }
             if rhythmusArt == .proWoche { Stepper("\(proWoche)× pro Woche", value: $proWoche, in: 1...7) }
         } footer: { Text("„n-mal pro Woche“: die Serie zählt erfüllte Wochen.") }
+    }
+
+    @ViewBuilder private var kalenderTeil: some View {
+        let u = h?.uhrzeit
+        Section {
+            ChipReihe(titel: "Feste Uhrzeit", auswahl: [("keine", u == nil)] + [7, 12, 18, 21].map { ("\($0):00", u == $0 * 60) }) { i in
+                h?.uhrzeit = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
+            }
+            if u != nil {
+                DatePicker("Uhrzeit", selection: Binding(get: { uhr(u ?? 0) }, set: { h?.uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute)
+                ChipReihe(titel: "Dauer", auswahl: [("aus Menge", h?.dauer == nil)] + [15, 30, 45, 60, 90].map { ("\($0) Min", h?.dauer == $0) }) { i in
+                    h?.dauer = i == 0 ? nil : [15, 30, 45, 60, 90][i - 1]
+                }
+            }
+        } footer: {
+            Text(u == nil ? "Ohne Uhrzeit steht der Habit im Kalender unter „Ohne Uhrzeit“ – von dort ziehst du ihn in einen Tag." : "Steht an jedem geplanten Tag als Block im Kalender und unter „Als Nächstes“.")
+        }
     }
 
     @ViewBuilder private var erinnerungTeil: some View {

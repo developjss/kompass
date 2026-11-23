@@ -80,6 +80,17 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - **Kalenderwoche** nach ISO 8601 (KW 53 möglich).
 - Kalendertermine zählen in Zahl- und Zeit-Meilensteine (§2, §3).
 
-## 9. Prüfung
+## 9. Tagesplan (Struktur v3) [ENTSCHEIDUNG – 23.11.2026, Gründer: „allem selber zustimmen“]
+
+- **Blöcke eines Tages:** Termine mit Zeit (Beispiel, Kompass, Apple) + Aufgaben mit Uhrzeit (Dauer, min. 5 Min) + Habits mit Uhrzeit an geplanten Tagen (Dauer: eingestellt, sonst Menge in Minuten/Stunden, sonst 30 Min). Ein in den Tag gezogener Habit hat nur an diesem Tag eine Uhrzeit.
+- **Wache Zeit** 7–22 Uhr. **Verplant** = Vereinigung offener Blöcke darin; **frei** = 900 Min − verplant; **enger Tag** = verplant ≥ 75 % oder frei < 90 Min.
+- **Überschneidung:** zwei offene Blöcke überlappen ≥ 5 Min (heute nur noch nicht vorbei).
+- **Kein Platz:** Dauer offener Aufgaben und Habits ohne Uhrzeit > freie Minuten (heute ab jetzt).
+- **Als Nächstes:** laufende und kommende offene Blöcke, nach Start, bis 7 Tage voraus.
+- **Eigene Termine:** zählen für ein Ziel wie verknüpfte Termin-Serien (§8); mit Habit ist der Habit an dem Tag erfüllt, sobald der Termin vorbei ist (nur wenn noch nichts eingetragen ist).
+- Farben: nach Ziel (Standard) oder Kategorie (Einstellung).
+- Swift: `Kompass/Rechnung/Tagesplan.swift`, Tests `KompassTests/TagesplanTests.swift`.
+
+## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

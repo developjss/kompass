@@ -3,9 +3,21 @@ import Foundation
 // Beispieltermine statt echter Kalender (wie im Klick-Dummy). Echte Anbindung: EventKit / Google, Aufgabe `s-eventkit`.
 
 struct Termin: Identifiable, Hashable, Sendable {
-    enum Quelle: String, Sendable { case google, apple
-        var name: String { self == .google ? "Google" : "Apple" }
-        var farbe: String { self == .google ? "#4285F4" : "#FF5A5F" }
+    enum Quelle: String, Sendable { case google, apple, kompass
+        var name: String {
+            switch self {
+            case .google: "Google"
+            case .apple: "Apple"
+            case .kompass: "Kompass"
+            }
+        }
+        var farbe: String {
+            switch self {
+            case .google: "#4285F4"
+            case .apple: "#FF5A5F"
+            case .kompass: "#3B4CCA"
+            }
+        }
     }
 
     var id: String { "\(quelle.rawValue):\(schluessel):\(tag.text)" }
@@ -16,6 +28,12 @@ struct Termin: Identifiable, Hashable, Sendable {
     /// Minuten seit Mitternacht; nil = ganztägig
     var start: Int?
     var ende: Int?
+    /// Nur bei Kompass-Terminen bzw. Apple-Kalenderfarbe
+    var eigenID: UUID? = nil
+    var kategorie: Kategorie? = nil
+    var zielID: UUID? = nil
+    var habitID: UUID? = nil
+    var kalenderFarbe: String? = nil
 }
 
 enum Beispieltermine {

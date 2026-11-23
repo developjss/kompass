@@ -6,7 +6,7 @@ import Foundation
 
 struct Werkzeug: Sendable, Hashable {
     enum Name: String, CaseIterable, Sendable {
-        case heute, woche, freieZeit, aufgabeAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen
+        case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen
     }
 
     /// Werkzeuge, die der Server (Sprachmodell) bekommt. „empfehlen“ nicht – Beratung macht dort Stufe 2 besser.
@@ -40,6 +40,10 @@ enum Werkzeuge {
     static let alle: [Werkzeug] = [
         Werkzeug(name: .heute, beschreibung: "Was heute ansteht: offene Aufgaben (wichtig/weitere), fällige Habits, Termine, Fokuszeit.",
                  parameter: [:], beispiele: ["Was steht heute an?", "Was ist jetzt dran?"]),
+        Werkzeug(name: .naechstes, beschreibung: "Die nächsten drei Einträge mit Uhrzeit (Termine, Aufgaben, Habits) ab jetzt, bis 7 Tage voraus.",
+                 parameter: [:], beispiele: ["Was steht als Nächstes an?", "Was kommt als Nächstes?"]),
+        Werkzeug(name: .tagesplan, beschreibung: "Wie voll ein Tag ist: verplant, frei, längste Lücke, Hinweise (enger Tag, Überschneidung, zu wenig Zeit für Offenes).",
+                 parameter: ["tag": "heute | morgen | Wochentag"], beispiele: ["Wie voll ist mein Tag?", "Ist morgen noch Platz für Sport?"]),
         Werkzeug(name: .woche, beschreibung: "Überblick über die Woche: Termine und Aufgaben je Tag.",
                  parameter: ["zeitraum": "diese | naechste"], beispiele: ["Wie sieht meine Woche aus?", "Was steht nächste Woche an?"]),
         Werkzeug(name: .freieZeit, beschreibung: "Freie Zeitfenster (8–20 Uhr, ab 30 Minuten) zwischen Terminen und Aufgaben mit Uhrzeit.",
@@ -47,6 +51,9 @@ enum Werkzeuge {
         Werkzeug(name: .aufgabeAnlegen, beschreibung: "Legt eine Aufgabe an. Fällt automatisch in den nächsten offenen Meilenstein, wenn ein Ziel genannt ist.",
                  parameter: ["titel": "Text", "datum": "heute | morgen | Wochentag | TT.MM. | leer = Eingang", "wichtig": "ja | nein", "ziel": "Name eines Ziels"],
                  beispiele: ["Erstelle Aufgabe: Flugschule anrufen morgen", "Neue Aufgabe für Führerschein: Fragebogen Kapitel 5"]),
+        Werkzeug(name: .terminAnlegen, beschreibung: "Legt einen Termin in Kompass an (Titel, Tag, von–bis). Zählt für ein Ziel, wenn eins genannt ist.",
+                 parameter: ["titel": "Text", "datum": "heute | morgen | Wochentag | TT.MM.", "start": "HH:MM", "ende": "HH:MM (optional, sonst 1 h)", "ziel": "Name eines Ziels (optional)"],
+                 beispiele: ["Trag morgen 15 Uhr Zahnarzt ein", "Neuer Termin: Fahrstunde Freitag 17:00 bis 18:30"]),
         Werkzeug(name: .ziele, beschreibung: "Alle aktiven Ziele mit Prozent, Auf Kurs und Frist.",
                  parameter: [:], beispiele: ["Wie stehen meine Ziele?", "Welches Ziel hinkt?"]),
         Werkzeug(name: .ziel, beschreibung: "Ein Ziel im Detail: Meilensteine mit Stand, Prognose, Einsatz, offene Aufgaben.",
@@ -66,7 +73,7 @@ enum Werkzeuge {
     static func werkzeug(_ n: Werkzeug.Name) -> Werkzeug { alle.first { $0.name == n }! }
 
     /// Beispielfragen für den leeren Chat (eine je Werkzeug, ohne Hilfe-Dopplung)
-    static var vorschlaege: [String] { [Werkzeug.Name.heute, .freieZeit, .ziele, .fortschrittErklaeren, .aufgabeAnlegen, .hilfe].map { werkzeug($0).beispiele[0] } }
+    static var vorschlaege: [String] { [Werkzeug.Name.naechstes, .tagesplan, .ziele, .fortschrittErklaeren, .terminAnlegen, .hilfe].map { werkzeug($0).beispiele[0] } }
 
     // MARK: Ausführen (nur lesen) – Änderungen laufen über `Lotse`, damit der Speicher sie sichert
 
@@ -74,6 +81,9 @@ enum Werkzeuge {
     static func ausfuehren(_ a: WerkzeugAufruf, z: Zustand, heute T: Tag, jetzt: Date, kalender: Calendar) -> LotseAntwort {
         switch a.name {
         case .heute: return heute(z, T, jetzt)
+        case .naechstes: return naechstes(z, T, minuten(jetzt, kalender))
+        case .tagesplan: return tagesplan(z, T, minuten(jetzt, kalender), tag: a.parameter["tag"].flatMap { Tag(text: $0) } ?? T)
+        case .terminAnlegen: return LotseAntwort(text: "Dafür brauche ich Titel, Tag und Uhrzeit.", werkzeug: .terminAnlegen) // echte Anlage in Lotse
         case .woche: return woche(z, T, naechste: a.parameter["zeitraum"] == "naechste")
         case .freieZeit: return freieZeit(z, T, a.parameter["zeitraum"] ?? "woche")
         case .aufgabeAnlegen: return LotseAntwort(text: "Dafür brauche ich einen Titel.", werkzeug: .aufgabeAnlegen) // echte Anlage in Lotse
@@ -88,7 +98,43 @@ enum Werkzeuge {
     }
 
     private static func termine(_ z: Zustand, _ d: Tag, _ T: Tag) -> [Termin] {
-        Beispieltermine.termine(am: d, google: z.einstellungen.googleBeispiel, apple: z.einstellungen.appleBeispiel, heute: T)
+        Kalenderquelle.termine(am: d, zustand: z, heute: T)
+    }
+
+    private static func minuten(_ d: Date, _ k: Calendar) -> Int {
+        let c = k.dateComponents([.hour, .minute], from: d); return (c.hour ?? 0) * 60 + (c.minute ?? 0)
+    }
+
+    static func naechstes(_ z: Zustand, _ T: Tag, _ jetzt: Int) -> LotseAntwort {
+        let n = Tagesplan.naechste(zustand: z, heute: T, jetzt: jetzt, termine: { termine(z, $0, T) })
+        guard !n.isEmpty else {
+            return LotseAntwort(text: "In den nächsten 7 Tagen steht nichts mit Uhrzeit an. Im Kalender kannst du Aufgaben in einen Tag ziehen.", werkzeug: .naechstes, aktion: .bereich(Bereich.kalender.rawValue))
+        }
+        var zeilen = ["Als Nächstes:"]
+        for b in n {
+            var t = "• \(Tagesplan.wannText(b, heute: T, jetzt: jetzt)): \(b.titel)"
+            if let g = z.ziel(b.zielID) { t += " (\(g.titel))" }
+            zeilen.append(t)
+        }
+        let h = Tagesplan.hinweise(zustand: z, heute: T, jetzt: jetzt, termine: { termine(z, $0, T) }, tage: 1)
+        if let x = h.first { zeilen.append("Achtung: \(x.text).") }
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .naechstes, aktion: .bereich(Bereich.kalender.rawValue))
+    }
+
+    static func tagesplan(_ z: Zustand, _ T: Tag, _ jetzt: Int, tag d: Tag) -> LotseAntwort {
+        let b = Tagesplan.bloecke(am: d, zustand: z, termine: termine(z, d, T))
+        let a = Tagesplan.auslastung(b, ab: d == T ? jetzt : Tagesplan.wachVon)
+        let frei = d == T ? Tagesplan.freiAb(b, ab: jetzt) : a.frei
+        var zeilen = ["\(tagText(d, T)): \(Zahl.dauer(TimeInterval(a.verplant * 60))) verplant, \(Zahl.dauer(TimeInterval(frei * 60))) frei\(d == T ? " ab jetzt" : "") (7–22 Uhr)."]
+        if a.laengsteLuecke >= 30 { zeilen.append("Längste Lücke: \(Zahl.dauer(TimeInterval(a.laengsteLuecke * 60))).") }
+        let ohne = Tagesplan.ohneZeit(am: d, zustand: z)
+        let offen = ohne.habits.filter { !$0.voll(am: d) }.map { "\($0.titel) (\($0.dauerMinuten) Min)" } + ohne.aufgaben.filter { !$0.erledigt }.map { "\($0.titel) (\($0.dauer) Min)" }
+        if !offen.isEmpty { zeilen.append("Noch ohne Uhrzeit: " + Satz.liste(Array(offen.prefix(4))) + ".") }
+        for h in Tagesplan.hinweise(zustand: z, heute: T, jetzt: jetzt, termine: { termine(z, $0, T) }, tage: max(1, T.tage(bis: d) + 1)) where h.tag == d {
+            zeilen.append(h.art == .eng ? "Das ist ein enger Tag – neue Termine besser auf einen anderen Tag legen." : "Achtung: \(h.text).")
+        }
+        if !a.eng && frei >= 60 { zeilen.append("Es ist noch Platz – im Kalender ziehst du etwas in eine Lücke.") }
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .tagesplan, aktion: .bereich(Bereich.kalender.rawValue))
     }
 
     private static let wochentage = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
