@@ -79,7 +79,7 @@ d.image(B("heute.jpg"), 4.6, "Die Startseite „Heute“ im Klick-Dummy (erfunde
 d.box("So liest du dieses Dokument", [
     "Jede Seite hier ist **eine Seite der App**. Oben steht, wo du bist (blaue Wörter führen zurück), unten „↑ Inhalt“.",
     "→ sagt, wohin ein Tipp führt. **Gespeichert** sagt, wo das Ergebnis liegt. **Kommt noch** zeigt, was die echte App zusätzlich braucht.",
-    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App ist als erste, grobe Fassung angelegt (" + doc("docs/technik/app.md", "Die App") + ") und wird danach weitergebaut. Dort heißen die Bereiche inzwischen Heute, Kalender, Fortschritt (Ziele · Habits), Lotse (Assistent) und Rückblick.",
+    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App ist als erste, grobe Fassung angelegt (" + doc("docs/technik/app.md", "Die App") + ") und wird danach weitergebaut. Dort heißen die Bereiche inzwischen Heute, Kalender, Lotse (Assistent, in der Mitte), Fortschritt (Ziele · Habits) und Rückblick.",
 ])
 INHALT_POS = len(d.body)
 
