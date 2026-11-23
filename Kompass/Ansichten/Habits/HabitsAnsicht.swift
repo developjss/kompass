@@ -18,7 +18,7 @@ struct HabitsAnsicht: View {
             return q.geplant > 0 ? Double(q.erledigt) / Double(q.geplant) : 0
         }
 
-        Seite(titel: "Habits", info: .habits, neu: .habit) {
+        Seite(titel: "Fortschritt", info: .habits, neu: .habit, oben: AnyView(FortschrittWahl())) {
             if !z.habits.isEmpty {
                 Verlaufskarte(farben: Farbe.gruen) {
                     HStack(alignment: .bottom, spacing: 16) {

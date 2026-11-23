@@ -7,6 +7,7 @@
 - Barrierefreiheit: Dynamic Type, VoiceOver, Reduce Motion.
 - Textregeln (Gapless): ≤ ~35 Wörter je Bildschirmhöhe, eine Zeile = ein Fakt, Erklärungen hinter (i), Überschrift = Aussage.
 - Ein Auftrag = ein Screen oder Baustein. Danach bauen, prüfen, committen.
+- **Lotse mitziehen:** Neuer Bereich, neues Fenster, neue Rechenregel oder neue Fähigkeit → `AppWissen` und `Werkzeuge` ergänzen, Beispielfragen in `LotseTests` (`docs/produkt/konzepte/lotse.md` §3). Der Lotse rechnet nie und ändert nur über Werkzeuge.
 - Keine neuen Abhängigkeiten, SDKs oder Anbieter ohne Rückfrage.
 - App-Texte auf Deutsch (Zielmarkt Deutschland/Europa zuerst) [OFFEN: Englisch zusätzlich, `docs/leitung/fahrplan.md`].
 

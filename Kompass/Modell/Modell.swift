@@ -185,11 +185,53 @@ struct Lernen: Codable, Sendable, Hashable {
     var zeitVerhaeltnisse: [Double] = []
     /// je Vorschlag (normalisierter Titel): gezeigt / übernommen
     var vorschlaege: [String: VorschlagZaehler] = [:]
+    /// Was der Lotse aus Rückmeldungen lernt
+    var lotse = LotseLernen()
 
     struct VorschlagZaehler: Codable, Sendable, Hashable {
         var gezeigt = 0
         var uebernommen = 0
     }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        zeitVerhaeltnisse = try c.decodeIfPresent([Double].self, forKey: .zeitVerhaeltnisse) ?? []
+        vorschlaege = try c.decodeIfPresent([String: VorschlagZaehler].self, forKey: .vorschlaege) ?? [:]
+        lotse = try c.decodeIfPresent(LotseLernen.self, forKey: .lotse) ?? LotseLernen()
+    }
+}
+
+/// Lernen des Lotsen: nur Zähler und Fragen, nie Antworten verändern. Später anonym über alle Nutzer zusammengeführt.
+struct LotseLernen: Codable, Sendable, Hashable {
+    /// Fragen, die kein Werkzeug getroffen haben (die letzten 50) – daraus entstehen neue Werkzeuge
+    var unbeantwortet: [String] = []
+    /// Fragen mit „Daumen runter“ (die letzten 50)
+    var schlecht: [String] = []
+    var gut = 0
+    /// je Werkzeug: wie oft genutzt
+    var genutzt: [String: Int] = [:]
+}
+
+/// Eine Nachricht im Lotsen-Chat.
+struct ChatNachricht: Identifiable, Codable, Sendable, Hashable {
+    enum Rolle: String, Codable, Sendable { case nutzer, lotse }
+    enum Aktion: Codable, Sendable, Hashable {
+        case ziel(UUID)
+        case aufgabe(UUID)
+        case bereich(String)
+    }
+
+    var id = UUID()
+    var rolle: Rolle
+    var text: String
+    var zeit: Date
+    /// Welches Werkzeug geantwortet hat (für Lernen und Anzeige)
+    var werkzeug: String?
+    var aktion: Aktion?
+    /// Rückmeldung des Nutzers: true gut, false schlecht
+    var rueckmeldung: Bool?
 }
 
 struct Einstellungen: Codable, Sendable, Hashable {
@@ -218,6 +260,8 @@ struct Zustand: Codable, Sendable, Hashable {
     var reflexionen: [String: Reflexion] = [:]
     var timer: LaufenderTimer?
     var termine: [TerminVerknuepfung] = []
+    /// Chat mit dem Lotsen (die letzten 200 Nachrichten)
+    var chat: [ChatNachricht] = []
 
     init(ziele: [Ziel] = [], habits: [Habit] = [], aufgaben: [Aufgabe] = [], sitzungen: [FokusSitzung] = []) {
         self.ziele = ziele
@@ -240,6 +284,7 @@ struct Zustand: Codable, Sendable, Hashable {
         reflexionen = try c.decodeIfPresent([String: Reflexion].self, forKey: .reflexionen) ?? [:]
         timer = try c.decodeIfPresent(LaufenderTimer.self, forKey: .timer)
         termine = try c.decodeIfPresent([TerminVerknuepfung].self, forKey: .termine) ?? []
+        chat = try c.decodeIfPresent([ChatNachricht].self, forKey: .chat) ?? []
     }
 
     func ziel(_ id: UUID?) -> Ziel? { id.flatMap { i in ziele.first { $0.id == i } } }

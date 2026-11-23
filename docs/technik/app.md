@@ -30,7 +30,8 @@ xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS
 | `Kompass/Modell/` | Datenmodell (Ziel, Schritt, Habit, Aufgabe, Fokus-Sitzung, Zustand) |
 | `Kompass/App/` | Start, Navigation, Speicher (Laden/Speichern, Lade- und Fehlerzustand) |
 | `Kompass/Design/` | Farben, Maße, Schrift, Bausteine (Seitenkopf, gruppierte Liste, Verlaufskarte, Haken …) nach `docs/produkt/design.md` |
-| `Kompass/Ansichten/` | Heute, Kalender, Habits, Ziele (+ Detail, So wird gerechnet), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
+| `Kompass/Ansichten/` | Heute, Kalender, Fortschritt (Ziele · Habits), Ziel-Detail, Lotse (Chat), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
+| `Kompass/Lotse/` | Assistent: `AppWissen` (aus dem Code), `Werkzeuge`, `Verstehen` (Regeln), `Sprachmodell` (Schnittstelle), `Lotse` (Steuerung) – `docs/produkt/konzepte/lotse.md` |
 | `Kompass/Demo/` | Demo-Daten (fester Zufall) und Beispieltermine |
 | `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle aus `prototyp/tests/unit.py` und mehr) |
 
@@ -42,6 +43,7 @@ Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner
 - `heute` und `jetzt` werden übergeben, nie im Rechen-Code gelesen – so ist jede Lage testbar.
 - Speicherung vorläufig als JSON-Datei auf dem Gerät (Application Support, Dateischutz). [OFFEN] SwiftData (`s-speicher`), danach Sync.
 - Kalender: noch Beispieltermine. [OFFEN] EventKit (`s-eventkit`), Google.
+- Lotse: antwortet mit Regeln; `Sprachmodelle.aktiv` ist die Steckdose für den Anbieter [OFFEN]. Jeder neue Screen/Werkzeug muss ins `AppWissen` (Test erzwingt es).
 
 ## Noch nicht drin (gegenüber dem Klick-Dummy)
 

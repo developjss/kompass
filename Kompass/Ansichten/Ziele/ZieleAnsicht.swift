@@ -11,7 +11,7 @@ struct ZieleAnsicht: View {
         let jahre = Dictionary(grouping: liste) { $0.faellig.jahr }.sorted { $0.key < $1.key }
         let erreicht = z.ziele.filter { $0.status == .erreicht }.count
 
-        Seite(titel: erreichteZeigen ? "Erreicht" : "Ziele", info: .ziele, neu: .ziel) {
+        Seite(titel: erreichteZeigen ? "Erreicht" : "Fortschritt", info: .ziele, neu: .ziel, oben: AnyView(FortschrittWahl())) {
             if liste.isEmpty {
                 GruppierteListe {
                     LeerZeile(text: erreichteZeigen ? "Noch kein Ziel erreicht." : "Noch keine Ziele. Oben auf „+ Neu“.")

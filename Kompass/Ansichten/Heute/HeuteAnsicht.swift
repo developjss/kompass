@@ -74,7 +74,7 @@ struct HeuteAnsicht: View {
             HabitsHeute()
             TermineHeute()
 
-            AbschnittKopf(titel: "Ziele") { Button("Alle ›") { nav.bereich = .ziele } }
+            AbschnittKopf(titel: "Ziele") { Button("Alle ›") { nav.zeige(.ziele) } }
             let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
             GruppierteListe {
                 if aktiv.isEmpty { LeerZeile(text: "Noch keine Ziele.") }
@@ -138,7 +138,7 @@ private struct HabitsHeute: View {
     var body: some View {
         let T = speicher.heute
         let faellig = speicher.zustand.habits.filter { HabitRechnung.geplant($0, am: T) }
-        AbschnittKopf(titel: "Habits") { Button("Alle ›") { nav.bereich = .habits } }
+        AbschnittKopf(titel: "Habits") { Button("Alle ›") { nav.zeige(.habits) } }
         GruppierteListe {
             if speicher.zustand.habits.isEmpty { LeerZeile(text: "Noch keine Habits.") }
             else if faellig.isEmpty { LeerZeile(text: "Heute nichts geplant.") }

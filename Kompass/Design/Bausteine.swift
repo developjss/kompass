@@ -7,6 +7,8 @@ struct Seite<Inhalt: View>: View {
     var titel: String
     var info: InfoThema?
     var neu: NeuArt? = nil
+    /// z. B. der Umschalter Ziele · Habits, direkt unter dem Kopf
+    var oben: AnyView? = nil
     @ViewBuilder var inhalt: Inhalt
     @Environment(Navigation.self) private var nav
 
@@ -15,7 +17,8 @@ struct Seite<Inhalt: View>: View {
             VStack(alignment: .leading, spacing: 0) {
                 SeitenKopf(titel: titel, info: info, neu: neu)
                     .padding(.top, 14)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, oben == nil ? 20 : 12)
+                if let oben { oben.padding(.bottom, 16) }
                 inhalt
                 SeitenFuss()
                     .padding(.top, Mass.abschnitt)
@@ -40,6 +43,8 @@ struct SeitenKopf: View {
     var titel: String
     var info: InfoThema?
     var neu: NeuArt?
+    /// false = kein „+ Neu“ (z. B. Lotse)
+    var neuZeigen = true
     @Environment(Navigation.self) private var nav
 
     var body: some View {
@@ -47,15 +52,17 @@ struct SeitenKopf: View {
             Text(titel)
                 .font(.seitenTitel)
                 .foregroundStyle(Farbe.text)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
-            Button { nav.blatt = .neu(neu) } label: {
-                Text("+ Neu").font(.kompass(.subheadline, .bold))
-                    .padding(.horizontal, 14).frame(minHeight: 44)
-                    .background(Farbe.akzentWeich, in: Capsule())
-                    .foregroundStyle(Farbe.akzent)
+            if neuZeigen {
+                Button { nav.blatt = .neu(neu) } label: {
+                    Text("+ Neu").font(.kompass(.subheadline, .bold))
+                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .background(Farbe.akzentWeich, in: Capsule())
+                        .foregroundStyle(Farbe.akzent)
+                }
             }
             if let info {
                 RunderKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(info) }
