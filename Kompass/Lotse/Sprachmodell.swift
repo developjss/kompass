@@ -21,7 +21,8 @@ struct SprachmodellAnfrage: Sendable {
 }
 
 enum SprachmodellAntwort: Sendable {
-    case werkzeug(WerkzeugAufruf)
+    /// Werkzeugaufruf, optional mit einem einleitenden Satz des Modells („Schauen wir auf deine Woche.“)
+    case werkzeug(WerkzeugAufruf, einleitung: String? = nil)
     case text(String)
 }
 

@@ -9,7 +9,7 @@ struct ClaudeServerTests {
     @Test func werkzeugAntwortLesen() throws {
         let json = #"{"art":"werkzeug","name":"aufgabeAnlegen","parameter":{"titel":"Oma anrufen","datum":"2026-11-24"},"kontingent":{"frei":4,"limit":5,"pro":false}}"#
         let (a, k) = try ClaudeServer.lesen(Data(json.utf8), status: 200)
-        guard case .werkzeug(let w) = a else { Issue.record("kein Werkzeug"); return }
+        guard case .werkzeug(let w, _) = a else { Issue.record("kein Werkzeug"); return }
         #expect(w.name == .aufgabeAnlegen && w.parameter["titel"] == "Oma anrufen")
         #expect(k == Kontingent(frei: 4, limit: 5, pro: false))
     }
@@ -58,31 +58,34 @@ struct LotseStufenTests {
 
     @Test func regelTrefferFragtDenServerNicht() async {
         let m = ZaehlModell(antwort: .text("sollte nicht kommen"))
-        Sprachmodelle.aktiv = m
-        defer { Sprachmodelle.aktiv = nil }
-        let a = await Lotse.fragen("Was steht heute an?", speicher: speicher())
+        let a = await Lotse.fragen("Was steht heute an?", speicher: speicher(), modell: m)
         #expect(m.aufrufe == 0 && a.werkzeug == .heute)
     }
 
     @Test func freieFormulierungGehtAnDenServerUndWerkzeugWirdAusgefuehrt() async {
-        let m = ZaehlModell(antwort: .werkzeug(WerkzeugAufruf(name: .ziele)))
-        Sprachmodelle.aktiv = m
-        defer { Sprachmodelle.aktiv = nil }
-        let a = await Lotse.fragen("blubb trallala", speicher: speicher())
+        let m = ZaehlModell(antwort: .werkzeug(WerkzeugAufruf(name: .ziele), einleitung: "Schauen wir auf deine Ziele."))
+        let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
+        #expect(a.text.hasPrefix("Schauen wir auf deine Ziele."))
         #expect(m.aufrufe == 1 && a.werkzeug == .ziele && !a.unbeantwortet)
     }
 
     @Test func kontingentErschoepftZeigtPro() async {
-        Sprachmodelle.aktiv = ZaehlModell(antwort: .text(""), fehler: LotseFehler.kontingentErschoepft(limit: 5, pro: false))
-        defer { Sprachmodelle.aktiv = nil }
-        let a = await Lotse.fragen("blubb trallala", speicher: speicher())
+        let m = ZaehlModell(antwort: .text(""), fehler: LotseFehler.kontingentErschoepft(limit: 5, pro: false))
+        let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
         #expect(a.aktion == .pro && a.text.contains("5"))
     }
 
+    @Test func beratungsfrageGehtAnDenServerUndFaelltLokalZurueck() async {
+        let m = ZaehlModell(antwort: .text("Fang mit Fitness an."))
+        let a = await Lotse.fragen("Was soll ich diese Woche zuerst machen?", speicher: speicher(), modell: m)
+        #expect(m.aufrufe == 1 && a.text == "Fang mit Fitness an.")
+        let b = await Lotse.fragen("Was soll ich diese Woche zuerst machen?", speicher: speicher(), modell: nil)
+        #expect(b.werkzeug == .empfehlen && b.text.contains("Fit: 75 kg & Halbmarathon")) // liegt hinterher → zuerst
+    }
+
     @Test func serverFehlerFaelltAufRegelnZurueck() async {
-        Sprachmodelle.aktiv = ZaehlModell(antwort: .text(""), fehler: LotseFehler.server(503))
-        defer { Sprachmodelle.aktiv = nil }
-        let a = await Lotse.fragen("blubb trallala", speicher: speicher())
+        let m = ZaehlModell(antwort: .text(""), fehler: LotseFehler.server(503))
+        let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
         #expect(a.unbeantwortet && LotseStand.geteilt.letzterFehler != nil)
     }
 }
