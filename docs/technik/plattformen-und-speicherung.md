@@ -18,5 +18,6 @@ Zuerst iPhone und Mac (SwiftUI, Weg A [ENTSCHEIDUNG – 23.11.2026]), danach Win
 - **Klick-Dummy:** Browser (gebündelt alle 0,4 s + beim Verlassen) und privat im Claude-Konto.
 - **App, jetzt:** JSON-Datei auf dem Gerät (`Kompass/App/Speicher.swift`), offline vollständig.
 - **App, Schritt 1:** lokal (SwiftData), offline vollständig.
+- **Lotse-Server:** Supabase Edge Function (`supabase/functions/lotse/`), speichert nur Zähler je Geräte-ID und Tag.
 - **App, Schritt 2:** Sync über einen Server (z. B. Supabase) mit Zeitstempel je Zeile; Kalendertermine werden nicht kopiert, nur die Zuordnung.
 - Größe nach 2 Jahren laut Personen-Test: 280–500 KB je Person (lokal unkritisch; für Sync in Tabellen statt eines Dokuments).
