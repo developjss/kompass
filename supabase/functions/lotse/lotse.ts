@@ -117,14 +117,12 @@ function verlaufAlsNachrichten(verlauf: Anfrage["verlauf"]): Anthropic.MessagePa
 }
 
 export async function beantworten(a: Anfrage, d: Abhaengigkeiten): Promise<Antwort> {
-  const system: Anthropic.TextBlockParam[] = [
-    { type: "text", text: ROLLE_WERKZEUGWAHL },
-    // App-Wissen ist bei allen Nutzern gleich → Prompt-Cache (ab einer Mindestlänge je Modell)
-    { type: "text", text: a.wissen, cache_control: { type: "ephemeral" } },
-  ];
+  // App-Wissen ist bei allen Nutzern gleich → Prompt-Cache (ab einer Mindestlänge je Modell). Leere Blöcke lehnt die API ab.
+  const wissen: Anthropic.TextBlockParam[] = a.wissen.trim() ? [{ type: "text", text: a.wissen, cache_control: { type: "ephemeral" } }] : [];
+  const system: Anthropic.TextBlockParam[] = [{ type: "text", text: ROLLE_WERKZEUGWAHL }, ...wissen];
   const nachrichten: Anthropic.MessageParam[] = [
     ...verlaufAlsNachrichten(a.verlauf),
-    { role: "user", content: `Stand:\n${a.kurzstand}\n\nFrage: ${a.frage}` },
+    { role: "user", content: a.kurzstand.trim() ? `Stand:\n${a.kurzstand}\n\nFrage: ${a.frage}` : a.frage },
   ];
 
   const erste = await mitRueckfall(d, "werkzeugwahl", (model) =>
@@ -157,10 +155,7 @@ export async function beantworten(a: Anfrage, d: Abhaengigkeiten): Promise<Antwo
       output_config: { effort: "low" },
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      system: [
-        { type: "text", text: ROLLE_GESPRAECH },
-        { type: "text", text: a.wissen, cache_control: { type: "ephemeral" } },
-      ],
+      system: [{ type: "text", text: ROLLE_GESPRAECH }, ...wissen],
       messages: nachrichten,
     }));
   const text = zweite.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -204,12 +199,20 @@ export async function behandle(req: Request, d: Abhaengigkeiten): Promise<Respon
   const pro = istPro(a.kanal, a.pro, d.regeln);
   const limit = limitFuer(pro, d.regeln);
   const tag = heute(a.zeitzone);
-  const bisher = await d.zaehler.stand(a.nutzer, tag);
+  let bisher = 0;
+  try {
+    bisher = await d.zaehler.stand(a.nutzer, tag);
+  } catch {
+    return json(503, { fehler: "zaehler" }); // Zähler nicht erreichbar → lieber nicht antworten als unbegrenzt
+  }
   if (bisher >= limit) return json(429, { fehler: "kontingent", limit, pro, frei: 0 });
 
   try {
     const antwort = await beantworten(a, d);
-    const stand = await d.zaehler.zaehlen(a.nutzer, tag);
+    let stand = bisher + 1;
+    try {
+      stand = await d.zaehler.zaehlen(a.nutzer, tag);
+    } catch { /* Antwort steht schon – Zähler nachtragen ist nicht möglich, nicht schlimm */ }
     return json(200, { ...antwort, kontingent: { frei: Math.max(0, limit - stand), limit, pro } });
   } catch (e) {
     if (e instanceof ModellFehler) return json(503, { fehler: "modell" });

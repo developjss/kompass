@@ -472,14 +472,15 @@
       "id": "l-sprachmodell",
       "titel": "Lotse-Server und App-Anbindung (gebaut; fertig nach Deploy und erstem Test gegen den Server)",
       "wer": "claude",
-      "status": "laeuft",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "nach": [
         "l-deploy"
       ],
       "quelle": "docs/produkt/konzepte/lotse.md",
-      "landkarte": "lotse"
+      "landkarte": "lotse",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "l-werkzeuge",
@@ -514,11 +515,12 @@
       "helfer": [
         "claude"
       ],
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "quelle": "docs/technik/lotse-server.md §2",
-      "landkarte": "lotse-server"
+      "landkarte": "lotse-server",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "l-storekit",

@@ -22,12 +22,12 @@ enum Kanal: String, Sendable {
 
 /// Einstellungen für den Server: URL je Kanal, im Debug/Beta überschreibbar. Kein Schlüssel.
 enum LotseKonfiguration {
-    /// Server-URL je Kanal. Leer = kein Sprachmodell, nur Regeln. [OFFEN] Nach dem Deploy hier eintragen (docs/technik/lotse-server.md).
+    /// Server-URL je Kanal. Leer = kein Sprachmodell, nur Regeln. Projekt „kompass“ (Supabase, EU) – docs/technik/lotse-server.md.
     static let standardURL: [Kanal: String] = [
-        .debug: "",
-        .beta: "",
-        .testflight: "",
-        .store: "",
+        .debug: "https://wvjgdyazlbevofyolanu.supabase.co/functions/v1/lotse",
+        .beta: "https://wvjgdyazlbevofyolanu.supabase.co/functions/v1/lotse",
+        .testflight: "https://wvjgdyazlbevofyolanu.supabase.co/functions/v1/lotse",
+        .store: "https://wvjgdyazlbevofyolanu.supabase.co/functions/v1/lotse",
     ]
     /// Gemeinsamer App-Schlüssel (hält zufällige Aufrufer fern; kein Geheimnis im strengen Sinn). Muss zu LOTSE_APP_SCHLUESSEL auf dem Server passen.
     static let appSchluessel = ""
