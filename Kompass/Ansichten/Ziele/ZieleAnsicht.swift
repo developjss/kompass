@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Ziele nach Jahr: Verlaufskarte je Ziel mit Prozent, Auf Kurs, Frist, Wochenzeit und Balken.
+/// Ziele (Inhalt im Tab Fortschritt): Aussage-Karte, dann Verlaufskarte je Ziel mit Prozent, Auf Kurs, Frist, Wochenzeit und Balken.
 struct ZieleAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @State private var erreichteZeigen = false
@@ -11,7 +11,7 @@ struct ZieleAnsicht: View {
         let jahre = Dictionary(grouping: liste) { $0.faellig.jahr }.sorted { $0.key < $1.key }
         let erreicht = z.ziele.filter { $0.status == .erreicht }.count
 
-        Seite(titel: erreichteZeigen ? "Erreicht" : "Fortschritt", info: .ziele, neu: .ziel, oben: AnyView(FortschrittWahl())) {
+        VStack(alignment: .leading, spacing: 0) {
             if !erreichteZeigen { ZieleKopf(ziele: liste) }
             if liste.isEmpty {
                 GruppierteListe {

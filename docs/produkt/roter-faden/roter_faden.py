@@ -79,7 +79,7 @@ d.image(B("heute.jpg"), 4.6, "Die Startseite „Heute“ im Klick-Dummy (erfunde
 d.box("So liest du dieses Dokument", [
     "Jede Seite hier ist **eine Seite der App**. Oben steht, wo du bist (blaue Wörter führen zurück), unten „↑ Inhalt“.",
     "→ sagt, wohin ein Tipp führt. **Gespeichert** sagt, wo das Ergebnis liegt. **Kommt noch** zeigt, was die echte App zusätzlich braucht.",
-    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App ist als erste, grobe Fassung angelegt (" + doc("docs/technik/app.md", "Die App") + ") und wird danach weitergebaut. Dort heißen die Bereiche inzwischen Heute, Kalender, Lotse (Assistent, in der Mitte), Fortschritt (Ziele · Habits) und Rückblick.",
+    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App ist als erste, grobe Fassung angelegt (" + doc("docs/technik/app.md", "Die App") + ") und wird danach weitergebaut. Dort heißen die Bereiche inzwischen Home, Kalender, Assistent (KI-Chat, in der Mitte), Fortschritt (Ziele · Habits) und Rückblick.",
 ])
 INHALT_POS = len(d.body)
 
@@ -189,7 +189,7 @@ seite(K1, "Die 6 Prinzipien", "prinzipien", "Aus deiner Ideen-Word – und wo si
 # =============================================================== 2 Heute
 K2 = kapitel("Home", "kap2", ["Die Startseite: was jetzt dran ist, was ansteht und wo es eng wird."],
              [("Home", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Erklärung (i)", "info")])
-seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder kommt als Nächstes – Termin, Aufgabe oder Habit) mit Fokus, Erledigt oder Menge; darunter Hinweise (enger Tag, Überschneidung, zu wenig Zeit), Als Nächstes, Heute offen, Liegen geblieben, Ziele, Tagesabschluss. Konzept: " + doc("docs/produkt/konzepte/struktur-v3.md"),
+seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder kommt als Nächstes – Termin, Aufgabe oder Habit) mit Fokus, Erledigt oder Menge; dann „Dein Tag im Blick“ als Reel (Slides: Jetzt, Danach, wie voll der Tag ist, Heute offen, Ziele, Los); darunter Hinweise (enger Tag, Überschneidung, zu wenig Zeit), Heute offen, Liegen geblieben, Tagesabschluss. Konzept: " + doc("docs/produkt/konzepte/struktur-v3.md"),
       bilder=[("heute.jpg", "Home")],
       klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge eintragen direkt auf der Karte", "Hinweis antippen → der Tag im Kalender", "Kreis links → erledigt",
               "„Liegen geblieben“ → „Alle auf heute“", "+ Neu → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
@@ -249,7 +249,7 @@ K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und 
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
 seite(K6, "Rückblick", "rueckblick", "Oben eine Aussage („62 % deiner Pläne geschafft“), darunter weiße Karten: Fokuszeit (12 Wochen), Zeit je Ziel, Habits je Habit, Auslastung je Tag (Linie = enger Tag), Wochenreflexion.",
       bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
-seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite: vier Kacheln.",
+seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite, geführt in Schritten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Vorschlag) → Wann → Details → „Passt das so?“ → Anlegen.",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])
 seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Titel, wann (Heute, Morgen, Eingang, Datum, Uhrzeit), wichtig oder weitere, Ziel.",
       bilder=[("neu-aufgabe.jpg", "Aufgabe")], gespeichert="Aufgabe fällt automatisch in den nächsten offenen Schritt ihres Ziels; " + LOKAL)

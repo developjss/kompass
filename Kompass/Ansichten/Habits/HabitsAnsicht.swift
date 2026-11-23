@@ -5,6 +5,7 @@ import SwiftUI
 struct HabitsAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @State private var erledigteZeigen = false
 
     var body: some View {
         let z = speicher.zustand
@@ -13,7 +14,7 @@ struct HabitsAnsicht: View {
         let offen = heute.filter { !$0.voll(am: T) }
         let geschafft = heute.filter { $0.voll(am: T) }
 
-        Seite(titel: "Fortschritt", info: .habits, neu: .habit, oben: AnyView(FortschrittWahl())) {
+        VStack(alignment: .leading, spacing: 0) {
             if z.habits.isEmpty {
                 GruppierteListe {
                     LeerZeile(text: "Noch keine Habits. Oben auf „+ Neu“ – zum Beispiel „20 Minuten lesen“.")
@@ -23,31 +24,34 @@ struct HabitsAnsicht: View {
                 HabitsKopf(heute: heute, offen: offen)
 
                 AbschnittKopf(titel: "Heute") {
-                    Text(offen.isEmpty ? "alles geschafft" : "\(offen.count) offen").foregroundStyle(Farbe.zweitrangig)
+                    Text(offen.isEmpty ? (heute.isEmpty ? "frei" : "alles geschafft") : "\(offen.count) offen").foregroundStyle(Farbe.zweitrangig)
                 }
                 GruppierteListe {
                     if heute.isEmpty { LeerZeile(text: "Heute ist kein Habit geplant.") }
+                    if offen.isEmpty && !heute.isEmpty { LeerZeile(text: "Alles abgehakt – gut gemacht.") }
                     ForEach(offen) { HeuteZeile(habit: $0) }
-                    ForEach(geschafft) { HeuteZeile(habit: $0) }
+                    if !geschafft.isEmpty {
+                        Button { withAnimation(.snappy(duration: 0.2)) { erledigteZeigen.toggle() } } label: {
+                            HStack {
+                                Text("\(geschafft.count) erledigt").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                                Spacer()
+                                Image(systemName: erledigteZeigen ? "chevron.up" : "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                            }
+                            .padding(.horizontal, 16).frame(minHeight: 44).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(erledigteZeigen ? "Erledigte ausblenden" : "\(geschafft.count) erledigte zeigen")
+                        if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0) } }
+                    }
                 }
 
-                AbschnittKopf(titel: "Diese Woche") { Text(wochenText(T)).foregroundStyle(Farbe.zweitrangig) }
+                AbschnittKopf(titel: "Alle Habits") { Text("diese Woche").foregroundStyle(Farbe.zweitrangig) }
                 GruppierteListe {
                     ForEach(z.habits.sorted { wochenReihenfolge($0) < wochenReihenfolge($1) }) { WochenZeile(habit: $0) }
-                }
-
-                AbschnittKopf(titel: "Alle Habits") { Text("\(z.habits.count)").foregroundStyle(Farbe.zweitrangig) }
-                GruppierteListe {
-                    ForEach(z.habits) { AlleZeile(habit: $0) }
                     PlusZeile(text: "Habit") { nav.blatt = .neu(.habit) }
                 }
             }
         }
-    }
-
-    private func wochenText(_ T: Tag) -> String {
-        let m = T.montag, s = m.plus(tage: 6)
-        return "\(m.tag).\(m.monat). – \(s.tag).\(s.monat)."
     }
 
     private func wochenReihenfolge(_ h: Habit) -> Int { if case .proWoche = h.rhythmus { return 0 } else { return 1 } }
@@ -211,40 +215,6 @@ private struct WochenZeile: View {
         if w.erfuellt { return "Woche geschafft" }
         let rest = 7 - T.wochentag
         return "\(Zahl.text(w.erledigt, stellen: 1)) von \(n)" + (rest > 0 ? " · noch \(rest) Tag\(rest == 1 ? "" : "e")" : "")
-    }
-}
-
-/// Alle Habits: Titel · „20 min · täglich“ · rechts Quote und Serie · Chevron.
-private struct AlleZeile: View {
-    var habit: Habit
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let T = speicher.heute
-        let serie = HabitRechnung.serie(habit, heute: T)
-        let wochen: Bool = { if case .proWoche = habit.rhythmus { return true } else { return false } }()
-        Button { nav.oeffneHabit(habit.id) } label: {
-            HStack(spacing: 12) {
-                SymbolKachel(symbol: habit.symbol, farbe: Color(hex: habit.farbe))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(habit.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
-                    Text(HabitRechnung.sollText(habit) + (habit.erinnerung.map { " · \(Beispieltermine.uhrzeit($0))" } ?? ""))
-                        .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
-                }
-                Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(Zahl.prozent(HabitRechnung.quote(habit, heute: T))).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.text).monospacedDigit()
-                    Text(serie > 0 ? "Serie \(serie)\(wochen ? " Wo." : "")" : "keine Serie").font(.klein).foregroundStyle(Farbe.zweitrangig)
-                }
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Farbe.pfeil)
-            }
-            .padding(.horizontal, 12)
-            .frame(minHeight: Mass.zeile)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
     }
 }
 

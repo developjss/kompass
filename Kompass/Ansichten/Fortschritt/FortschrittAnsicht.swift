@@ -5,9 +5,13 @@ struct FortschrittAnsicht: View {
     @Environment(Navigation.self) private var nav
 
     var body: some View {
-        switch nav.fortschrittTeil {
-        case .ziele: ZieleAnsicht()
-        case .habits: HabitsAnsicht()
+        let teil = nav.fortschrittTeil
+        // Eine Seite für beide Teile: der Umschalter bleibt stehen, nur der Inhalt wechselt (sonst gingen Tipps verloren).
+        Seite(titel: "Fortschritt", info: teil == .ziele ? .ziele : .habits, neu: teil == .ziele ? .ziel : .habit, oben: AnyView(FortschrittWahl())) {
+            switch teil {
+            case .ziele: ZieleAnsicht()
+            case .habits: HabitsAnsicht()
+            }
         }
     }
 }
@@ -21,7 +25,7 @@ struct FortschrittWahl: View {
             ForEach(FortschrittTeil.allCases, id: \.self) { teil in
                 let an = nav.fortschrittTeil == teil
                 Button {
-                    withAnimation(.snappy(duration: 0.2)) { nav.fortschrittTeil = teil }
+                    nav.fortschrittTeil = teil
                 } label: {
                     Text(teil.titel)
                         .font(.kompass(.subheadline, .bold)).lineLimit(1).minimumScaleFactor(0.6)

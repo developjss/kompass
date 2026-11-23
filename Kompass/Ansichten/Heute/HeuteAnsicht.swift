@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Home (Struktur v3 §3): das Werkzeug für jetzt – Jetzt-Karte, Hinweise, Als Nächstes, Heute offen, Ziele, Tagesabschluss.
+/// Home (Struktur v3 §3, geführt wie ein Reel): Jetzt-Karte, „Dein Tag“ als Reel, Hinweise, Heute offen, Liegen geblieben, Tagesabschluss.
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @State private var reel = false
 
     var body: some View {
         let z = speicher.zustand
@@ -16,22 +17,19 @@ struct HeuteAnsicht: View {
         let ohne = Tagesplan.ohneZeit(am: T, zustand: z)
         let offenA = ohne.aufgaben.filter { !$0.erledigt }.sorted { ($0.prio == .hoch ? 0 : 1, $0.reihenfolge) < ($1.prio == .hoch ? 0 : 1, $1.reihenfolge) }
         let offenH = ohne.habits.filter { !$0.voll(am: T) }
-        let rest = naechste.filter { $0.id != fokus.block?.id }.prefix(3)
+        let slides = z.ziele.contains { $0.status == .aktiv } ? 6 : 5
 
         Seite(titel: "Home", info: .heute) {
             JetztKarte(fokus: fokus)
+
+            TagReelKarte(slides: slides, teaser: reelTeaser(naechste: naechste, hinweise: hinweise, offen: offenA.count + offenH.count)) { reel = true }
+                .padding(.top, 12)
 
             if !hinweise.isEmpty {
                 AbschnittKopf(titel: hinweise.count == 1 ? "Ein Hinweis" : "\(min(hinweise.count, 3)) Hinweise")
                 GruppierteListe {
                     ForEach(hinweise.prefix(3)) { HinweisZeile(hinweis: $0) }
                 }
-            }
-
-            AbschnittKopf(titel: "Als Nächstes") { Button("Kalender ›") { nav.oeffneKalender(nil) } }
-            GruppierteListe {
-                if rest.isEmpty { LeerZeile(text: "Nichts mehr mit Uhrzeit. Zieh im Kalender eine Aufgabe in den Tag.") }
-                ForEach(Array(rest)) { b in NaechsteZeile(block: b) }
             }
 
             AbschnittKopf(titel: "Heute offen") {
@@ -55,18 +53,20 @@ struct HeuteAnsicht: View {
                 }
             }
 
-            AbschnittKopf(titel: "Ziele") { Button("Alle ›") { nav.zeige(.ziele) } }
-            let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
-            GruppierteListe {
-                if aktiv.isEmpty { LeerZeile(text: "Noch keine Ziele. „+ Neu“ → Ziel.") }
-                ForEach(aktiv.prefix(3)) { ZielZeile(ziel: $0) }
-            }
-
             PfeilZeile(symbol: "moon", text: z.reflexionen["tag:\(T.text)"] == nil ? "Tagesabschluss · 2 Min." : "Tagesabschluss ✓") {
                 nav.blatt = .reflexion(woche: false)
             }
             .padding(.top, Mass.abschnitt)
         }
+        .fullScreenCover(isPresented: $reel) { TagReel() }
+    }
+
+    private func reelTeaser(naechste: [Tagesplan.Block], hinweise: [Tagesplan.Hinweis], offen: Int) -> String {
+        var t: [String] = []
+        if !naechste.isEmpty { t.append("\(naechste.count) mit Uhrzeit") }
+        if offen > 0 { t.append("\(offen) offen") }
+        if let h = hinweise.first(where: { $0.tag == speicher.heute }) { t.append(h.art == .eng ? "enger Tag" : h.art == .ueberschneidung ? "eine Überschneidung" : "wenig Zeit") }
+        return (t.isEmpty ? "Heute ist frei" : t.joined(separator: " · ")) + " · 1 Min."
     }
 }
 

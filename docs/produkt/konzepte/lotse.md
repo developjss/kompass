@@ -1,3 +1,5 @@
+> **Name in der App seit 23.11.2026: „Assistent“** (Entscheidung des Gründers). Im Code und in diesem Dokument bleibt der Arbeitsname „Lotse“.
+
 # Lotse – der Assistent in Kompass
 
 Stand: 23. November 2026 · Arbeitstitel „Lotse“ (mittlerer Tab). Gebaut: Grundversorgung ohne Sprachmodell. [OFFEN] Anbieter des Sprachmodells (Abschnitt 5).

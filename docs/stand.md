@@ -31,6 +31,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Struktur v3 (23.11.2026, PR #15):** Home statt Heute (Jetzt-Karte für Termin, Aufgabe oder Habit; Hinweise bei engen Tagen, Überschneidungen, zu wenig Zeit), Kalender neu (Als Nächstes, Tag · Woche · Monat · Jahr, Ziehen in die Zeitleiste, eigene Termine mit Ziel/Habit, Farben nach Ziel oder Kategorie), Rückblick neu (Plan geschafft, Auslastung), Apple-Kalender lesen (EventKit, nach Zustimmung), Lotse mit „Als Nächstes“, „Wie voll ist mein Tag?“, „Termin eintragen“. Neue Rechenregel §9 Tagesplan (Gründer: „allem selber zustimmen“). Personen-Test (6 Personen × 3,5 Jahre) als Swift-Test, UI-Tests über die ganze App. Konzept: `docs/produkt/konzepte/struktur-v3.md`.
 
+**Geführt v4 (23.11.2026, PR #16):** „Lotse“ heißt Assistent (KI-Zeichen, neuer Chat je App-Start, frühere Chats oben links); Anlegen in Schritten (Was → Titel → Wann → Details → Fertig); Home mit Reel „Dein Tag im Blick“; Kalender-Ziehen mit leuchtenden Zielzonen und Herausziehen; Fortschritt schlanker (Umschalter-Fehler behoben, Erledigtes eingeklappt). Konzept: `docs/produkt/konzepte/struktur-v3.md` §10.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte

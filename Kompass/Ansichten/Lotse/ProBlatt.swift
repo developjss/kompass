@@ -13,12 +13,12 @@ struct ProBlatt: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Verlaufskarte(farben: Farbe.indigo) {
                         KartenLabel(text: "Kompass Pro")
-                        Text(pro ? "Pro ist aktiv." : "Der Lotse ohne Grenze.").font(.kompass(.title2, .heavy))
-                        Text(pro ? "Unbegrenzte Fragen und Gespräche." : "Ohne Pro: \(k?.limit ?? 5) freie Fragen pro Tag. Klare Fragen beantwortet der Lotse immer kostenlos.")
+                        Text(pro ? "Pro ist aktiv." : "Der Assistent ohne Grenze.").font(.kompass(.title2, .heavy))
+                        Text(pro ? "Unbegrenzte Fragen und Gespräche." : "Ohne Pro: \(k?.limit ?? 5) freie Fragen pro Tag. Klare Fragen beantwortet der Assistent immer kostenlos.")
                             .font(.unterzeile).opacity(0.9)
                     }
                     GruppierteListe {
-                        Zeile(symbol: "infinity", text: "Unbegrenzte Lotse-Fragen")
+                        Zeile(symbol: "infinity", text: "Unbegrenzte Fragen an den Assistenten")
                         Zeile(symbol: "bubble.left.and.bubble.right", text: "Gespräche: Ziel-Konflikte, Prioritäten")
                         Zeile(symbol: "arrow.triangle.2.circlepath", text: "Später: Abgleich zwischen Geräten")
                     }

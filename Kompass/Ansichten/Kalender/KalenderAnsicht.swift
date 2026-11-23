@@ -259,7 +259,7 @@ struct Wochenleiste: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .dropDestination(for: String.self) { items, _ in KalenderAktion.ablegen(items, tag: d, uhrzeit: nil, speicher: speicher) }
+                .ablagezone(ecken: 16) { items, _ in KalenderAktion.ablegen(items, tag: d, uhrzeit: nil, speicher: speicher) }
                 .accessibilityLabel("\(d.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))), \(b.count) Einträge")
                 .accessibilityAddTraits(an ? .isSelected : [])
             }
@@ -338,7 +338,7 @@ struct TagZeitleiste: View {
                 }
                 .frame(height: CGFloat(bis - von) * hoehe)
                 .padding(.vertical, 10).padding(.horizontal, 10)
-                .dropDestination(for: String.self) { items, ort in
+                .ablagezone(ecken: 0) { items, ort in
                     let m = von * 60 + Int((ort.y - 10) / hoehe * 60)
                     return KalenderAktion.ablegen(items, tag: tag, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
                 }
@@ -417,7 +417,11 @@ struct BlockKachel: View {
         .accessibilityAddTraits(.isButton)
 
         if let p = KalenderAktion.nutzlast(block) {
-            inhalt.draggable(p) { Text(block.titel).font(.kompass(.subheadline, .bold)).padding(8).background(c.opacity(0.2), in: Capsule()) }
+            inhalt.draggable(p) {
+                Label(block.titel, systemImage: block.art == .habit ? "repeat" : "checkmark.circle").font(.kompass(.subheadline, .bold))
+                    .padding(.horizontal, 12).padding(.vertical, 8).background(Farbe.karte, in: Capsule())
+                    .overlay(Capsule().strokeBorder(c, lineWidth: 2)).shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+            }
         } else {
             inhalt
         }
@@ -486,7 +490,7 @@ private struct WochenRaster: View {
                     .frame(height: CGFloat(bis - von) * hoehe)
                     .background(d == T ? Farbe.akzentWeich.opacity(0.4) : .clear)
                     .contentShape(Rectangle())
-                    .dropDestination(for: String.self) { items, ort in
+                    .ablagezone(ecken: 6) { items, ort in
                         let m = von * 60 + Int(ort.y / hoehe * 60)
                         return KalenderAktion.ablegen(items, tag: d, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
                     }
@@ -569,7 +573,7 @@ private struct MonatsZelle: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .dropDestination(for: String.self) { items, _ in KalenderAktion.ablegen(items, tag: tag, uhrzeit: nil, speicher: speicher) }
+        .ablagezone(ecken: 10) { items, _ in KalenderAktion.ablegen(items, tag: tag, uhrzeit: nil, speicher: speicher) }
         .accessibilityLabel("\(tag.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))), \(eintraege.count) Einträge")
         .accessibilityAddTraits(gewaehlt ? .isSelected : [])
     }
@@ -711,7 +715,8 @@ private struct OffenesZumZiehen: View {
             } oeffnen: { nav.blatt = .aufgabe(a.id) } }
             AufgabeHinzufuegen(platzhalter: "Aufgabe für \(tagText)", datum: tag, prio: .normal)
         }
-        Text("Halten und in den Kalender ziehen gibt eine Uhrzeit.").font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
+        .ablagezone { items, _ in KalenderAktion.ablegen(items, tag: tag, uhrzeit: nil, speicher: speicher) }
+        Text("Halten und ziehen: in den Kalender für eine Uhrzeit, zurück hierher ohne Uhrzeit.").font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
 
         AbschnittKopf(titel: "Eingang") { Text("\(eingang.count)").foregroundStyle(Farbe.zweitrangig) }
         GruppierteListe {
@@ -724,7 +729,7 @@ private struct OffenesZumZiehen: View {
             } oeffnen: { nav.blatt = .aufgabe(a.id) } }
             AufgabeHinzufuegen(platzhalter: "Idee", datum: nil, prio: .normal)
         }
-        .dropDestination(for: String.self) { items, _ in KalenderAktion.ablegen(items, tag: nil, uhrzeit: nil, speicher: speicher) }
+        .ablagezone { items, _ in KalenderAktion.ablegen(items, tag: nil, uhrzeit: nil, speicher: speicher) }
     }
 }
 
@@ -759,14 +764,47 @@ private struct ZiehZeile: View {
         .frame(minHeight: Mass.zeileKompakt)
         .draggable(nutzlast) {
             Label(titel, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 12).padding(.vertical, 8)
-                .background(c.opacity(0.2), in: Capsule())
+                .background(Farbe.karte, in: Capsule()).overlay(Capsule().strokeBorder(c, lineWidth: 2))
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         }
         .accessibilityAction(named: "Öffnen", oeffnen)
         .accessibilityAction(named: einplanen?.0 ?? "Öffnen") { (einplanen?.1 ?? oeffnen)() }
     }
 }
 
-// MARK: Aktionen
+// MARK: Ablagezone (Ziehen & Ablegen)
+
+/// Zielzone zum Ablegen: leuchtet beim Darüberziehen, vibriert kurz beim Ablegen.
+private struct Ablagezone: ViewModifier {
+    var ecken: CGFloat
+    var aktion: ([String], CGPoint) -> Bool
+    @State private var ziel = false
+    @State private var abgelegt = 0
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if ziel {
+                    RoundedRectangle(cornerRadius: ecken, style: .continuous).fill(Farbe.akzent.opacity(0.10))
+                        .overlay(RoundedRectangle(cornerRadius: ecken, style: .continuous).strokeBorder(Farbe.akzent, lineWidth: 2))
+                        .allowsHitTesting(false)
+                }
+            }
+            .dropDestination(for: String.self) { items, ort in
+                let ok = aktion(items, ort)
+                if ok { abgelegt += 1 }
+                return ok
+            } isTargeted: { ziel = $0 }
+            .sensoryFeedback(.success, trigger: abgelegt)
+            .animation(.snappy(duration: 0.15), value: ziel)
+    }
+}
+
+extension View {
+    func ablagezone(ecken: CGFloat = Mass.karte, _ aktion: @escaping ([String], CGPoint) -> Bool) -> some View {
+        modifier(Ablagezone(ecken: ecken, aktion: aktion))
+    }
+}
 
 enum KalenderAktion {
     static func nutzlast(_ b: Tagesplan.Block) -> String? {

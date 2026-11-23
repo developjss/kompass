@@ -40,7 +40,7 @@ final class KompassUITests: XCTestCase {
     func testRundgangAlleTabs() {
         let app = starten()
         XCTAssertTrue(sichtbar(app, "Home"))
-        XCTAssertTrue(sichtbar(app, "Als Nächstes"))
+        XCTAssertTrue(sichtbar(app, "Dein Tag im Blick"))
         XCTAssertTrue(sichtbar(app, "Heute offen"))
         foto(app, "Home")
 
@@ -49,7 +49,7 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(sichtbar(app, "Als Nächstes"))
         foto(app, "Kalender Tag")
 
-        tab(app, "Lotse")
+        tab(app, "Assistent")
         XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: 5) || app.textFields.firstMatch.waitForExistence(timeout: 2))
         foto(app, "Lotse")
 
@@ -83,18 +83,55 @@ final class KompassUITests: XCTestCase {
         app.buttons["Heute"].tap()
     }
 
-    func testTerminAnlegenErscheintImKalender() {
+    /// Geführtes Anlegen: Titel → Wann → Details → Fertig → Anlegen
+    func testTerminAnlegenGefuehrt() {
         let app = starten()
         tab(app, "Kalender")
         app.buttons["+ Neu"].tap()
-        let titel = app.textFields.firstMatch
+        let titel = app.textViews.firstMatch.waitForExistence(timeout: 5) ? app.textViews.firstMatch : app.textFields.firstMatch
         XCTAssertTrue(titel.waitForExistence(timeout: 5))
         titel.tap()
         titel.typeText("UI Testtermin")
-        XCTAssertTrue(sichtbar(app, "Zählt für"))
-        app.buttons["Anlegen"].tap()
+        let weiter = app.buttons["neu.weiter"]
+        XCTAssertTrue(weiter.waitForExistence(timeout: 3))
+        weiter.tap()                                   // → Wann
+        XCTAssertTrue(sichtbar(app, "Wann findet er statt?"))
+        foto(app, "Neu Termin Wann")
+        weiter.tap()                                   // → Details
+        XCTAssertTrue(sichtbar(app, "Zählt er für etwas?"))
+        weiter.tap()                                   // → Fertig
+        XCTAssertTrue(sichtbar(app, "Passt das so?"))
+        foto(app, "Neu Termin Fertig")
+        weiter.tap()                                   // Anlegen
         XCTAssertTrue(sichtbar(app, "UI Testtermin", timeout: 5), "Neuer Termin erscheint nicht")
-        foto(app, "Termin angelegt")
+    }
+
+    /// Erster Schritt „Was möchtest du anlegen?“ mit vier Kacheln, Habit-Vorschlag aus dem Titel
+    func testNeuWasUndHabitVorschlag() {
+        let app = starten()
+        app.buttons["+ Neu"].firstMatch.tap()
+        XCTAssertTrue(sichtbar(app, "Was möchtest du anlegen?"))
+        foto(app, "Neu Was")
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Habit")).firstMatch.tap()
+        let titel = app.textViews.firstMatch.waitForExistence(timeout: 5) ? app.textViews.firstMatch : app.textFields.firstMatch
+        titel.tap()
+        titel.typeText("20 Minuten lesen")
+        XCTAssertTrue(sichtbar(app, "Vorschlag übernehmen: 20 Minuten pro Tag") || sichtbar(app, "20 Minuten pro Tag"), "Kein Vorschlag aus dem Titel")
+        foto(app, "Neu Habit Vorschlag")
+    }
+
+    /// Dein Tag als Reel: Start, Slides, Fertig
+    func testTagReel() {
+        let app = starten()
+        let karte = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Dein Tag im Blick")).firstMatch
+        XCTAssertTrue(karte.waitForExistence(timeout: 5))
+        karte.tap()
+        let weiter = app.buttons["reel.weiter"]
+        XCTAssertTrue(weiter.waitForExistence(timeout: 5), "Reel öffnet nicht")
+        foto(app, "Reel 1")
+        var n = 0
+        while weiter.exists && n < 8 { weiter.tap(); n += 1; usleep(300_000) }
+        XCTAssertTrue(sichtbar(app, "Dein Tag im Blick", timeout: 5), "Reel schließt nicht")
     }
 
     // MARK: Home
@@ -161,7 +198,7 @@ final class KompassUITests: XCTestCase {
 
     func testLotseBeantwortetAlsNaechstes() {
         let app = starten()
-        tab(app, "Lotse")
+        tab(app, "Assistent")
         let feld = app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch
         XCTAssertTrue(feld.waitForExistence(timeout: 5))
         feld.tap()
@@ -174,7 +211,7 @@ final class KompassUITests: XCTestCase {
     /// Befund aus dem UI-Test: die Senden-Taste der Tastatur muss senden (mehrzeiliges Feld)
     func testLotseSendetMitTastatur() {
         let app = starten()
-        tab(app, "Lotse")
+        tab(app, "Assistent")
         let feld = app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch
         XCTAssertTrue(feld.waitForExistence(timeout: 5))
         feld.tap()

@@ -6,6 +6,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 23.11.2026 | [ENTSCHEIDUNG] Der Chat-Assistent heißt in der App **„Assistent“** (statt „Lotse“; Code-Namen bleiben); jeder App-Start beginnt einen neuen Chat, frühere Chats bleiben erreichbar. Anlegen, Home und Kalender „geführt“ wie Gapless (Personal check, Reel) | `docs/produkt/konzepte/struktur-v3.md` §10 |
 | 23.11.2026 | [ENTSCHEIDUNG] Struktur v3: Home statt Heute, Kalender mit Tag/Woche/Monat/Jahr und Ziehen, eigene Termine (zählen für Ziel, erfüllen Habit), Rechenregel Tagesplan (enger Tag ≥ 75 % von 7–22 Uhr oder < 90 Min frei; Überschneidung ≥ 5 Min; kein Platz), Apple-Kalender nur lesen nach Zustimmung (Gründer: „allem selber zustimmen und fortfahren“) | `docs/produkt/konzepte/struktur-v3.md`, `rechenregeln.md` §9 |
 | 23.11.2026 | [ENTSCHEIDUNG] Habits v2 Rechenregel: Tagesanteil = Menge ÷ Soll (halb geschafft zählt halb), Serie nur volle Tage, „n-mal pro Woche“ mit Wochen-Serie; Habit-Meilensteine zählen Anteile („Ja, mergen“ PR #11) | `docs/produkt/rechenregeln.md` §6, `docs/produkt/konzepte/habits-v2.md` §5 |
 | 23.11.2026 | [ENTSCHEIDUNG] Lotse-Sprachmodell Weg A: Claude über eigenen Server, gestuft (Regeln → Haiku 5.5 Werkzeugwahl → Sonnet 5.5 Gespräch); Modellnamen nur auf dem Server; Kontingent frei/Pro; Tester frei bis Store-Start | `docs/produkt/konzepte/lotse.md` §5, `docs/technik/lotse-server.md` |

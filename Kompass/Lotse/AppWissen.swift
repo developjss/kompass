@@ -8,16 +8,16 @@ enum AppWissen {
 
     /// Kurzbeschreibung je Tab – auch Antwort auf „Wo finde ich …?“
     static let bereiche: [Bereich: String] = [
-        .heute: "Home (erster Tab): Jetzt-Karte mit dem, was läuft oder als Nächstes kommt (Termin, Aufgabe oder Habit) – Fokus starten, Erledigt, Menge; Hinweise (enger Tag, Überschneidung, zu wenig Zeit); Als Nächstes; Heute offen (Aufgaben und Habits ohne Uhrzeit); Liegen geblieben; Ziele; Tagesabschluss.",
+        .heute: "Home (erster Tab): Jetzt-Karte, darunter „Dein Tag im Blick“ als Reel (Slides: Jetzt, Danach, wie voll der Tag ist, Heute offen, Ziele, Los); dann mit dem, was läuft oder als Nächstes kommt (Termin, Aufgabe oder Habit) – Fokus starten, Erledigt, Menge; Hinweise (enger Tag, Überschneidung, zu wenig Zeit); Als Nächstes; Heute offen (Aufgaben und Habits ohne Uhrzeit); Liegen geblieben; Ziele; Tagesabschluss.",
         .kalender: "Kalender: oben die nächsten drei Einträge; Umschalter Tag (Zeitleiste, Tipp auf eine Stunde = neuer Termin), Woche (7 Spalten), Monat (Raster mit farbigen Einträgen), Jahr (Auslastung); darunter „Ohne Uhrzeit“ und Eingang – Aufgaben und Habits per Ziehen in den Tag legen. Farben nach Ziel oder Kategorie (Einstellungen). Termine aus Apple (EventKit), Google als Beispiel, eigene Kompass-Termine.",
         .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Kopfkarte „x von y auf Kurs“, je Ziel Prozent, Auf Kurs, Frist; Ziel-Seite mit Satz „so wird gerechnet“, Meilensteinen, Aufgaben, Habits, Terminen, Einsatz und Fakten-Zeilen zum Bearbeiten) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
-        .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
+        .lotse: "Assistent (Tab in der Mitte, früher „Lotse“): dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
     ]
 
     /// Fenster (Sheets) und was man dort tut – Schlüssel = Präfix der `Navigation.Blatt`-id
     static let fenster: [String: String] = [
-        "neu": "+ Neu: Aufgabe (mit Datum, Uhrzeit, Dauer, Kategorie), Termin, Habit (mit fester Uhrzeit) oder Ziel anlegen. Beim Ziel schlägt die App Meilenstein-Vorlagen aus dem Titel vor (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte).",
+        "neu": "+ Neu, geführt in Schritten: Was (Aufgabe, Termin, Habit, Ziel als Kacheln) → Titel (mit Vorschlag) → Wann → Details → Passt das so? → Anlegen. Beim Ziel schlägt die App Meilenstein-Vorlagen aus dem Titel vor (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte).",
         "info": "(i): kurze Erklärung der Seite.",
         "einstellungen": "Daten & Kalender: Beispielkalender ein/aus, Speicherort, Demo-Daten neu laden.",
         "aufgabe": "Aufgabe: Titel, erledigt, wichtig, Datum, Wiederholung, Ziel, Notizen, löschen oder Serie beenden.",
@@ -33,7 +33,8 @@ enum AppWissen {
         "zielbearbeiten": "Ziel bearbeiten (ändern): eine Fakten-Zeile der Ziel-Seite antippen – Titel, Bis wann, Bereich, Warum, Aussehen (Farbe, Symbol).",
         "habitmenge": "Menge eintragen: wie viel vom Habit heute geschafft ist (z. B. 12 von 20 Minuten) – große Zahl, Schnellwahl halb/ganz.",
         "termin": "Termin anlegen oder ändern: Titel, Tag, von–bis (Chips 30 Min, 1 h, 2 h), Kategorie (Farbe), zählt für ein Ziel (Meilenstein Zeit/Zahl) oder erfüllt einen Habit, Wiederholung; löschen.",
-        "pro": "Kompass Pro: unbegrenzte Lotse-Fragen und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
+        "chats": "Frühere Chats (oben links im Assistenten): Liste der letzten 30 Chats mit erster Frage und Datum; antippen öffnet ihn wieder, wischen löscht.",
+        "pro": "Kompass Pro: unbegrenzte Fragen an den Assistenten und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
     ]
 
     /// Rechenregeln in Sätzen (Quelle: rechenregeln.md Fassung 2) – der Lotse erklärt, rechnet aber nie.
@@ -77,7 +78,7 @@ enum AppWissen {
         let id = UUID()
         let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id, .titel), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge), .termin(nil, tag: "2026-01-01", start: nil)]
+                                          .terminZuZiel(id), .zielBearbeiten(id, .titel), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge), .termin(nil, tag: "2026-01-01", start: nil), .chats]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

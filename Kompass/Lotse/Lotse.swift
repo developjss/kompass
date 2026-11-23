@@ -43,7 +43,7 @@ enum Lotse {
             antwort = ausfuehren(a, speicher: speicher)
             if let e = einleitung?.trimmingCharacters(in: .whitespacesAndNewlines), !e.isEmpty, a.name != .aufgabeAnlegen, a.name != .terminAnlegen { antwort.text = e + "\n" + antwort.text }
         } else {
-            antwort = LotseAntwort(text: "Das habe ich noch nicht verstanden. Ich merke mir die Frage, damit der Lotse das lernt.\nVersuch zum Beispiel: „\(Werkzeuge.vorschlaege[0])“ oder „\(Werkzeuge.vorschlaege[2])“.", unbeantwortet: true)
+            antwort = LotseAntwort(text: "Das habe ich noch nicht verstanden. Ich merke mir die Frage, damit der Assistent das lernt.\nVersuch zum Beispiel: „\(Werkzeuge.vorschlaege[0])“ oder „\(Werkzeuge.vorschlaege[2])“.", unbeantwortet: true)
         }
         return abschliessen(antwort, frage: text, speicher: speicher)
     }
@@ -117,6 +117,28 @@ enum Lotse {
     }
 
     static func verlaufLoeschen(speicher: Speicher) { speicher.aendern { $0.chat.removeAll() } }
+
+    /// Neuer Chat: der laufende wandert in den Verlauf (wenn er eine Frage enthält), höchstens 30 bleiben.
+    static func neuerChat(speicher: Speicher) {
+        guard speicher.zustand.chat.contains(where: { $0.rolle == .nutzer }) else { return }
+        speicher.aendern { z in
+            let start = z.chat.first?.zeit ?? speicher.jetzt()
+            z.chatVerlauf.insert(Chat(start: start, nachrichten: z.chat), at: 0)
+            if z.chatVerlauf.count > 30 { z.chatVerlauf.removeLast(z.chatVerlauf.count - 30) }
+            z.chat.removeAll()
+        }
+    }
+
+    /// Früheren Chat wieder öffnen (der laufende geht in den Verlauf).
+    static func chatOeffnen(_ id: UUID, speicher: Speicher) {
+        neuerChat(speicher: speicher)
+        speicher.aendern { z in
+            guard let i = z.chatVerlauf.firstIndex(where: { $0.id == id }) else { return }
+            z.chat = z.chatVerlauf.remove(at: i).nachrichten
+        }
+    }
+
+    static func chatLoeschen(_ id: UUID, speicher: Speicher) { speicher.aendern { $0.chatVerlauf.removeAll { $0.id == id } } }
 
     /// Kurzer Datenstand für das Sprachmodell (keine Rohdaten, nur Überschriften und Zahlen)
     static func kurzstand(_ speicher: Speicher) -> String {

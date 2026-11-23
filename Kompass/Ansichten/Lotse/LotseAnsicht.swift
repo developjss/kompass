@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Der Lotse: leerer Chat mit Begrüßung in der Mitte und Vorschlägen unten; Eingabe mit „+“-Menü, Mikrofon und Senden.
+/// Der Assistent (Tab in der Mitte): leerer Chat mit KI-Zeichen und Vorschlägen; frühere Chats oben links; Eingabe mit „+“-Menü, Mikrofon und Senden.
 struct LotseAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -13,10 +13,16 @@ struct LotseAnsicht: View {
         let chat = speicher.zustand.chat
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                SeitenKopf(titel: "Lotse", info: .lotse, neu: nil, neuZeigen: false)
-                if !chat.isEmpty {
-                    RunderKnopf(symbol: "square.and.pencil", beschriftung: "Neuer Chat") { Lotse.verlaufLoeschen(speicher: speicher) }
+                RunderKnopf(symbol: "clock.arrow.circlepath", beschriftung: "Frühere Chats") { nav.blatt = .chats }
+                HStack(spacing: 8) {
+                    AssistentZeichen(groesse: 30)
+                    Text("Assistent").font(.kompass(.title2, .heavy)).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
                 }
+                Spacer(minLength: 8)
+                if !chat.isEmpty {
+                    RunderKnopf(symbol: "square.and.pencil", beschriftung: "Neuer Chat") { Lotse.neuerChat(speicher: speicher) }
+                }
+                RunderKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.lotse) }
             }
             .padding(.horizontal, Mass.rand).padding(.top, 14)
             StatusPille().padding(.horizontal, Mass.rand).padding(.top, 10)
@@ -50,7 +56,7 @@ struct LotseAnsicht: View {
             }
             .accessibilityLabel("Mehr: Aufgabe anlegen, Ziel besprechen, Woche planen")
             HStack(spacing: 4) {
-                TextField("Frag den Lotsen …", text: $eingabe, axis: .vertical)
+                TextField("Frag den Assistenten …", text: $eingabe, axis: .vertical)
                     .lineLimit(1...4)
                     .font(.kompass(.body, .medium))
                     .focused($fokus)
@@ -136,20 +142,15 @@ private struct StatusPille: View {
 private struct Begruessung: View {
     var frage: (String) -> Void
     private let vorschlaege: [(String, String)] = [
-        ("sun.max", Werkzeuge.werkzeug(.heute).beispiele[0]),
-        ("clock", Werkzeuge.werkzeug(.freieZeit).beispiele[0]),
+        ("calendar", Werkzeuge.werkzeug(.naechstes).beispiele[0]),
+        ("gauge.with.dots.needle.67percent", Werkzeuge.werkzeug(.tagesplan).beispiele[0]),
         ("target", Werkzeuge.werkzeug(.fortschrittErklaeren).beispiele[0]),
     ]
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            ZStack {
-                Circle().fill(LinearGradient(colors: Farbe.indigo, startPoint: .bottomTrailing, endPoint: .topLeading)).frame(width: 56, height: 56)
-                    .shadow(color: Farbe.indigo[0].opacity(0.3), radius: 14, y: 6)
-                Image(systemName: "sparkles").font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
-            }
-            .accessibilityHidden(true)
+            AssistentZeichen(groesse: 88, schein: true).accessibilityHidden(true)
             Text("Bereit, wenn du es bist.")
                 .font(.kompass(.title, .heavy)).foregroundStyle(Farbe.text)
                 .multilineTextAlignment(.center).padding(.top, 18)
@@ -231,10 +232,11 @@ private struct PlusMenue: View {
                     }
                 }
                 Section {
-                    Button("Verlauf löschen", systemImage: "trash", role: .destructive) { Lotse.verlaufLoeschen(speicher: speicher); dismiss() }
+                    Button("Neuer Chat", systemImage: "square.and.pencil") { Lotse.neuerChat(speicher: speicher); dismiss() }
+                    Button("Frühere Chats", systemImage: "clock.arrow.circlepath") { dismiss(); nav.blatt = .chats }
                 }
             }
-            .navigationTitle("Lotse")
+            .navigationTitle("Assistent")
             .navigationBarTitleDisplayMode(.inline)
             .schliessenKnopf()
         }
@@ -270,8 +272,8 @@ private struct Blase: View {
 
     var body: some View {
         let nutzer = nachricht.rolle == .nutzer
-        HStack {
-            if nutzer { Spacer(minLength: 48) }
+        HStack(alignment: .top, spacing: 8) {
+            if nutzer { Spacer(minLength: 48) } else { AssistentZeichen(groesse: 26).padding(.top, 8).accessibilityHidden(true) }
             VStack(alignment: .leading, spacing: 8) {
                 Text(nachricht.text)
                     .font(.kompass(.body, nutzer ? .semibold : .medium))
@@ -295,7 +297,7 @@ private struct Blase: View {
             if !nutzer { Spacer(minLength: 24) }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(nutzer ? "Du: \(nachricht.text)" : "Lotse: \(nachricht.text)")
+        .accessibilityLabel(nutzer ? "Du: \(nachricht.text)" : "Assistent: \(nachricht.text)")
     }
 
     private func aktionText(_ a: ChatNachricht.Aktion) -> String {
@@ -333,5 +335,59 @@ private struct Daumen: View {
         .buttonStyle(.plain)
         .accessibilityLabel(beschriftung)
         .accessibilityAddTraits(an ? .isSelected : [])
+    }
+}
+
+
+// MARK: KI-Zeichen und Verlauf
+
+/// Das Zeichen des Assistenten: Verlauf Indigo → Violett, Glasring, Funken. Überall gleich (Tab, Kopf, Blasen, Home).
+struct AssistentZeichen: View {
+    var groesse: CGFloat = 32
+    var schein = false
+    var body: some View {
+        ZStack {
+            Circle().fill(LinearGradient(colors: [Farbe.indigo[0], Farbe.violett[1]], startPoint: .bottomLeading, endPoint: .topTrailing))
+            Circle().strokeBorder(.white.opacity(0.45), lineWidth: max(1, groesse / 28))
+            Circle().fill(.white.opacity(0.18)).frame(width: groesse * 0.7, height: groesse * 0.7).blur(radius: groesse / 6).offset(x: -groesse / 6, y: -groesse / 6)
+            Image(systemName: "sparkles").font(.system(size: groesse * 0.46, weight: .bold)).foregroundStyle(.white)
+        }
+        .frame(width: groesse, height: groesse)
+        .shadow(color: schein ? Farbe.violett[0].opacity(0.45) : .clear, radius: groesse / 4, y: groesse / 8)
+        .accessibilityLabel("Assistent")
+    }
+}
+
+/// Frühere Chats: erste Frage als Titel, Datum; antippen öffnet, wischen löscht.
+struct ChatVerlaufBlatt: View {
+    @Environment(Speicher.self) private var speicher
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                let chats = speicher.zustand.chatVerlauf
+                if chats.isEmpty {
+                    Text("Noch keine früheren Chats. Jeder Start der App beginnt einen neuen Chat.").foregroundStyle(.secondary)
+                }
+                ForEach(chats) { c in
+                    Button {
+                        Lotse.chatOeffnen(c.id, speicher: speicher)
+                        dismiss()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(c.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(2)
+                            Text("\(c.start.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(Locale(identifier: "de_DE")))) · \(c.nachrichten.count) Nachrichten")
+                                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                        }
+                    }
+                }
+                .onDelete { i in for x in i { Lotse.chatLoeschen(chats[x].id, speicher: speicher) } }
+            }
+            .navigationTitle("Frühere Chats")
+            .navigationBarTitleDisplayMode(.inline)
+            .schliessenKnopf()
+        }
+        .presentationDetents([.medium, .large])
     }
 }
