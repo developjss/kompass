@@ -172,7 +172,7 @@ struct NeuBlatt: View {
     private var hinweisUnten: String {
         switch schritt {
         case .titel: return art == .habit ? "Aus dem Titel schlägt Kompass Menge und Einheit vor." : art == .ziel ? "Aus dem Titel kommen Meilenstein-Vorlagen." : "Kurz und klar – du kannst alles später ändern."
-        case .wann: return art == .aufgabe ? "Ohne Uhrzeit landet sie am Tag unter „Ohne Uhrzeit“ – ziehbar in den Kalender." : art == .habit ? "Mit fester Uhrzeit steht der Habit als Block im Kalender." : ""
+        case .wann: return art == .aufgabe ? "Ohne Uhrzeit schlägt der Kalender sie unter „Empfehlung“ vor – ziehbar in den Tag." : art == .habit ? "Mit fester Uhrzeit steht der Habit als Block im Kalender." : ""
         case .details: return "Alles hier ist optional."
         default: return ""
         }

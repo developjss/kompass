@@ -1,7 +1,16 @@
 import SwiftUI
 
-/// Kalender (Struktur v3 §4): oben „Als Nächstes“, dann Tag · Woche · Monat · Jahr, darunter Offenes zum Hineinziehen.
+/// Kalender (Struktur v3 §4, v5): oben „Als Nächstes“ als Stapel, dann Tag · Woche · Monat · Jahr, darunter „Empfehlung“ zum Hineinziehen.
 struct KalenderAnsicht: View {
+    private func empfehlungsBereich(_ m: KalenderModus) -> Empfehlung.Bereich? {
+        switch m {
+        case .tag: .tag
+        case .woche: .woche
+        case .monat: .monat
+        case .jahr: nil
+        }
+    }
+
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
@@ -11,7 +20,7 @@ struct KalenderAnsicht: View {
         let tag = nav.kalenderTag ?? T
 
         Seite(titel: "Kalender", info: .kalender, neu: .termin) {
-            NaechsteLeiste()
+            NaechsteStapel()
 
             ModusWahl(modus: $nav.kalenderModus).padding(.top, Mass.abschnitt - 8)
 
@@ -29,94 +38,12 @@ struct KalenderAnsicht: View {
             case .jahr: JahresRaster(tag: tag)
             }
 
-            if nav.kalenderModus != .jahr { OffenesZumZiehen(tag: tag) }
+            if let b = empfehlungsBereich(nav.kalenderModus) { EmpfehlungStapel(bereich: b, tag: tag).padding(.top, Mass.abschnitt - 8) }
 
             if !(speicher.zustand.einstellungen.googleBeispiel || speicher.zustand.einstellungen.appleBeispiel || speicher.zustand.einstellungen.appleKalender) {
                 PfeilZeile(symbol: "calendar.badge.plus", text: "Apple- oder Google-Kalender verbinden") { nav.blatt = .einstellungen }
                     .padding(.top, Mass.abschnitt)
             }
-        }
-    }
-}
-
-// MARK: Als Nächstes
-
-/// Die nächsten drei Einträge mit Uhrzeit: erste Karte im Verlauf, die anderen weiß.
-struct NaechsteLeiste: View {
-    var titel = "Als Nächstes"
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-    @Environment(\.dynamicTypeSize) private var schrift
-
-    var body: some View {
-        let T = speicher.heute
-        let jetzt = speicher.jetztMinuten
-        let n = Tagesplan.naechste(zustand: speicher.zustand, heute: T, jetzt: jetzt, termine: speicher.termine(am:))
-        VStack(alignment: .leading, spacing: 10) {
-            Text(titel).font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
-            if n.isEmpty {
-                GruppierteListe { LeerZeile(text: "Nichts mit Uhrzeit in den nächsten 7 Tagen. Tipp auf „+ Neu“ oder zieh eine Aufgabe in den Tag.") }
-            } else {
-                if schrift >= .xxxLarge {
-                    VStack(spacing: 10) {
-                        ForEach(Array(n.enumerated()), id: \.element.id) { i, b in NaechsteKarte(block: b, erste: i == 0) }
-                    }
-                } else {
-                    HStack(alignment: .top, spacing: 10) {
-                        ForEach(Array(n.enumerated()), id: \.element.id) { i, b in
-                            NaechsteKarte(block: b, erste: i == 0)
-                        }
-                        ForEach(0..<max(0, 3 - n.count), id: \.self) { _ in Color.clear.frame(maxWidth: .infinity) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct NaechsteKarte: View {
-    var block: Tagesplan.Block
-    var erste: Bool
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let c = Color(hex: block.farbe)
-        let wann = Tagesplan.wannText(block, heute: speicher.heute, jetzt: speicher.jetztMinuten)
-        Button { KalenderAktion.oeffnen(block, nav: nav) } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 13, weight: .bold))
-                    .frame(width: 28, height: 28)
-                    .background(erste ? .white.opacity(0.22) : c.opacity(0.14), in: Circle())
-                    .foregroundStyle(erste ? .white : c)
-                Text(wann).font(.klein).foregroundStyle(erste ? .white.opacity(0.9) : c).lineLimit(1).minimumScaleFactor(0.8)
-                Text(block.titel).font(.kompass(.subheadline, .bold)).foregroundStyle(erste ? .white : Farbe.text)
-                    .lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .background {
-                if erste {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(LinearGradient(colors: Farbe.verlauf(block.farbe), startPoint: .bottomTrailing, endPoint: .topLeading))
-                        .shadow(color: c.opacity(0.35), radius: 10, y: 5)
-                } else {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Farbe.karte)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(block.titel), \(wann)")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    private var symbol: String {
-        switch block.art {
-        case .termin: "calendar"
-        case .aufgabe: "checkmark.circle"
-        case .habit: "repeat"
         }
     }
 }
@@ -134,6 +61,7 @@ private struct ModusWahl: View {
                         .padding(.horizontal, 4)
                         .frame(maxWidth: .infinity, minHeight: 40)
                         .background(an ? Farbe.karte : Color.clear, in: Capsule())
+                        .contentShape(Capsule())
                         .foregroundStyle(an ? Farbe.text : Farbe.zweitrangig)
                         .shadow(color: an ? .black.opacity(0.06) : .clear, radius: 4, y: 1)
                 }
@@ -685,90 +613,6 @@ private struct JahresRaster: View {
     private func anteil(_ d: Tag) -> Double {
         let b = Tagesplan.bloecke(am: d, zustand: speicher.zustand, termine: speicher.termine(am: d))
         return min(1, Tagesplan.auslastung(b).anteil)
-    }
-}
-
-// MARK: Offenes zum Hineinziehen
-
-private struct OffenesZumZiehen: View {
-    var tag: Tag
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let z = speicher.zustand
-        let ohne = Tagesplan.ohneZeit(am: tag, zustand: z)
-        let eingang = z.aufgaben.filter { $0.datum == nil && !$0.erledigt }.sorted { $0.reihenfolge < $1.reihenfolge }
-        let tagText = tag == speicher.heute ? "heute" : tag.datum().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))
-
-        AbschnittKopf(titel: "Ohne Uhrzeit") { Text(tagText).foregroundStyle(Farbe.zweitrangig) }
-        GruppierteListe {
-            if ohne.aufgaben.isEmpty && ohne.habits.isEmpty { LeerZeile(text: "Alles hat eine Uhrzeit.") }
-            ForEach(ohne.habits) { h in ZiehZeile(titel: h.titel, unter: HabitRechnung.mengenText(h, am: tag), farbe: h.farbe, symbol: h.symbol,
-                                                  erledigt: h.voll(am: tag), nutzlast: "habit:\(h.id.uuidString)") {
-                speicher.aendern { $0.habitUmschalten(h.id, am: tag) }
-            } oeffnen: { nav.oeffneHabit(h.id) } }
-            ForEach(ohne.aufgaben) { a in ZiehZeile(titel: a.titel, unter: "\(a.dauer) Min\(z.ziel(a.zielID).map { " · \($0.titel)" } ?? "")",
-                                                   farbe: Tagesplan.farbe(ziel: a.zielID, kategorie: a.kategorie, sonst: "#6B7285", in: z), symbol: "checkmark.circle",
-                                                   erledigt: a.erledigt, nutzlast: "aufgabe:\(a.id.uuidString)") {
-                speicher.aendern { $0.umschalten(a.id, jetzt: speicher.jetzt()) }
-            } oeffnen: { nav.blatt = .aufgabe(a.id) } }
-            AufgabeHinzufuegen(platzhalter: "Aufgabe für \(tagText)", datum: tag, prio: .normal)
-        }
-        .ablagezone { items, _ in KalenderAktion.ablegen(items, tag: tag, uhrzeit: nil, speicher: speicher) }
-        Text("Halten und ziehen: in den Kalender für eine Uhrzeit, zurück hierher ohne Uhrzeit.").font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
-
-        AbschnittKopf(titel: "Eingang") { Text("\(eingang.count)").foregroundStyle(Farbe.zweitrangig) }
-        GruppierteListe {
-            if eingang.isEmpty { LeerZeile(text: "Leer – gut so.") }
-            ForEach(eingang) { a in ZiehZeile(titel: a.titel, unter: "ohne Tag\(z.ziel(a.zielID).map { " · \($0.titel)" } ?? "")",
-                                             farbe: Tagesplan.farbe(ziel: a.zielID, kategorie: a.kategorie, sonst: "#6B7285", in: z), symbol: "tray",
-                                             erledigt: false, nutzlast: "aufgabe:\(a.id.uuidString)",
-                                             einplanen: ("Auf \(tagText) legen", { KalenderAktion.ablegen(["aufgabe:\(a.id.uuidString)"], tag: tag, uhrzeit: nil, speicher: speicher) })) {
-                speicher.aendern { $0.umschalten(a.id, jetzt: speicher.jetzt()) }
-            } oeffnen: { nav.blatt = .aufgabe(a.id) } }
-            AufgabeHinzufuegen(platzhalter: "Idee", datum: nil, prio: .normal)
-        }
-        .ablagezone { items, _ in KalenderAktion.ablegen(items, tag: nil, uhrzeit: nil, speicher: speicher) }
-    }
-}
-
-private struct ZiehZeile: View {
-    var titel: String
-    var unter: String
-    var farbe: String
-    var symbol: String
-    var erledigt: Bool
-    var nutzlast: String
-    /// Für VoiceOver statt Ziehen: Name und Aktion
-    var einplanen: (String, () -> Void)? = nil
-    var abhaken: () -> Void
-    var oeffnen: () -> Void
-
-    var body: some View {
-        let c = Color(hex: farbe)
-        HStack(spacing: 10) {
-            Haken(an: erledigt, farbe: c, beschriftung: titel, aktion: abhaken).padding(.leading, 4)
-            Button(action: oeffnen) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(titel).font(.zeile).foregroundStyle(erledigt ? Farbe.zweitrangig : Farbe.text).strikethrough(erledigt).lineLimit(1)
-                    Text(unter).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            Image(systemName: "line.3.horizontal").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil).padding(.trailing, 16)
-                .accessibilityHidden(true)
-        }
-        .frame(minHeight: Mass.zeileKompakt)
-        .draggable(nutzlast) {
-            Label(titel, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Farbe.karte, in: Capsule()).overlay(Capsule().strokeBorder(c, lineWidth: 2))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-        }
-        .accessibilityAction(named: "Öffnen", oeffnen)
-        .accessibilityAction(named: einplanen?.0 ?? "Öffnen") { (einplanen?.1 ?? oeffnen)() }
     }
 }
 

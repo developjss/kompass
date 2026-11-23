@@ -92,6 +92,14 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - Farben: nach Ziel (Standard) oder Kategorie (Einstellung).
 - Swift: `Kompass/Rechnung/Tagesplan.swift`, Tests `KompassTests/TagesplanTests.swift`.
 
+### 9.1 Empfehlung im Kalender [VORSCHLAG – 23.11.2026, wartet auf „Ja, mergen“]
+
+- **Was:** offene Aufgaben ohne Uhrzeit, die überfällig, im Zeitraum der Ansicht fällig oder ohne Tag (Eingang) sind; in der Tagesansicht zusätzlich Habits, die an dem Tag geplant, ohne Uhrzeit und noch nicht voll sind.
+- **Punkte:** überfällig 100 + Tage (max. 30) · im Zeitraum fällig 80 − Tage bis fällig · Eingang 30 · Habit 60 (+20 mit Ziel) · Aufgabe des nächsten Schritts eines Ziels (§1) +40 · Ziel hinterher/überfällig +20 · wichtig +25. Sortiert nach Punkten, dann Titel. Ein Grund je Karte (der stärkste).
+- **Platz, der Reihe nach** (jeder Vorschlag belegt seinen Platz): Tag → erste Lücke ≥ Dauer ab 8 Uhr (heute ab jetzt, auf Viertelstunden), bis 22 Uhr; passt nichts mehr, Aufgabe auf den nächsten Tag. Woche/Monat → der freieste Tag ab heute im Zeitraum, **nie nach der Frist**; bei Gleichstand der frühere. Vergangene Tage: kein Platz.
+- Assistent („Womit soll ich anfangen?“) nennt die ersten zwei mit Platz.
+- Swift: `Kompass/Rechnung/Empfehlung.swift`, Tests `KompassTests/EmpfehlungTests.swift`.
+
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

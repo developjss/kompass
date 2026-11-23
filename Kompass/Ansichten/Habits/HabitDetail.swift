@@ -340,7 +340,7 @@ struct HabitFeldBlatt: View {
                 }
             }
         } footer: {
-            Text(u == nil ? "Ohne Uhrzeit steht der Habit im Kalender unter „Ohne Uhrzeit“ – von dort ziehst du ihn in einen Tag." : "Steht an jedem geplanten Tag als Block im Kalender und unter „Als Nächstes“.")
+            Text(u == nil ? "Ohne Uhrzeit schlägt der Kalender ihn unter „Empfehlung“ vor – von dort ziehst du ihn in den Tag." : "Steht an jedem geplanten Tag als Block im Kalender und unter „Als Nächstes“.")
         }
     }
 
