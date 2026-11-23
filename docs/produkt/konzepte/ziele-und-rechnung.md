@@ -1,6 +1,6 @@
 # Ziele, Habits, Aufgaben, Termine – Analyse und Rechnung v2
 
-Stand: 23. November 2026 · Grundlage: Durchklicken der SwiftUI-App (Simulator) und `rechenregeln.md` v1. Umgesetzt in `Kompass/Rechnung/` und im Ziel-Detail; Regeln in `rechenregeln.md` (v2). [OFFEN] Freigabe durch den Gründer („Ja, mergen“).
+Stand: 23. November 2026 · Grundlage: Durchklicken der SwiftUI-App (Simulator) und `rechenregeln.md` v1. Umgesetzt in `Kompass/Rechnung/` und im Ziel-Detail; Regeln in `rechenregeln.md` (v2). [ENTSCHEIDUNG – 23.11.2026] vom Gründer freigegeben.
 
 ## 1. Was beim Durchklicken auffiel (v1)
 
@@ -73,12 +73,6 @@ Grundsatz: **Lernen ändert nie bestehende Prozente, nur Vorschläge und Prognos
 6. [VORSCHLAG] **Ziel-Vorlagen** (Führerschein, Halbmarathon …) mit typischen Meilensteinen; Übernahme-Quote lernt, welche Vorschläge passen (§7, schon gerechnet, noch ohne Oberfläche).
 7. [VORSCHLAG] **Habit „x-mal pro Woche an beliebigen Tagen“** zusätzlich zu festen Wochentagen.
 
-## 6. Offene Entscheidungen
+## 6. Entschieden
 
-| [OFFEN] | Vorschlag Claude |
-|---|---|
-| Modell v2 (nur Meilensteine zählen, Rest = Einsatz) | so übernehmen |
-| Termine zählen in Zahl (je 1) und Zeit (Dauer) | so übernehmen |
-| Habit-Wochen: Woche zählt nur, wenn **alle** geplanten Tage erledigt sind | so übernehmen; Alternative „≥ 80 % der Tage“ |
-| 90-%-Regel bei Abhaken-Meilensteinen | so lassen |
-| Meilenstein bei 100 % nicht automatisch abhaken | so lassen |
+[ENTSCHEIDUNG – 23.11.2026] Modell v2 wie oben, inkl. Termine, Habit-Wochen (alle geplanten Tage), 90-%-Regel, kein automatisches Abhaken. [VORSCHLAG] Alternative „≥ 80 % der Tage“ bei Habit-Wochen bleibt möglich, falls sich die strenge Regel im Alltag falsch anfühlt.

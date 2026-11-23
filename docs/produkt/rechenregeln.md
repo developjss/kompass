@@ -1,6 +1,6 @@
 # Rechenregeln – so rechnet Kompass
 
-Stand: 23. November 2026 · **Fassung 2** (Meilensteine). Quelle der Wahrheit für jede Zahl in der App. Umgesetzt in Swift (`Kompass/Rechnung/`, Tests in `KompassTests/`); der Klick-Dummy rechnet noch Fassung 1. Analyse und Begründung: `docs/produkt/konzepte/ziele-und-rechnung.md`. Jede Änderung hier braucht „Ja, mergen“ des Gründers.
+Stand: 23. November 2026 · **Fassung 2** (Meilensteine) [ENTSCHEIDUNG – 23.11.2026]. Quelle der Wahrheit für jede Zahl in der App. Umgesetzt in Swift (`Kompass/Rechnung/`, Tests in `KompassTests/`); der Klick-Dummy rechnet noch Fassung 1. Analyse und Begründung: `docs/produkt/konzepte/ziele-und-rechnung.md`. Jede Änderung hier braucht „Ja, mergen“ des Gründers.
 
 Grundsatz [ENTSCHEIDUNG – 23.11.2026]: Egal ob Vorschlag übernommen, geändert oder selbst angelegt – es wird immer gleich gerechnet. KI schlägt nur vor.
 
@@ -24,7 +24,7 @@ Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ �
 - Abgehakt („Geschafft“) = 100 %, egal welche Art. Ein Meilenstein bei 100 % wird nicht automatisch abgehakt.
 - Immer begrenzt auf 0–100 %. Ungültige Werte (Soll ≤ 0, Text, leer) → 0 %.
 - **Gewicht:** 1 klein, 2 mittel, 3 groß; alles andere zählt als 1. Standard 1.
-- **90-%-Regel** [VORSCHLAG, OFFEN]: verhindert, dass ein Meilenstein wie „Theorieprüfung“ durch eine einzige Vorbereitungsaufgabe auf 100 % springt.
+- **90-%-Regel** [ENTSCHEIDUNG – 23.11.2026]: verhindert, dass ein Meilenstein wie „Theorieprüfung“ durch eine einzige Vorbereitungsaufgabe auf 100 % springt.
 
 ## 3. Was in welche Zahl zählt
 
@@ -71,7 +71,7 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - **Fokus-Timer** in Abschnitten; beim Stoppen an Mitternacht geteilt und dem richtigen Tag gebucht. Mehr als 4 Stunden am Stück zählen nicht (vergessener Timer) – gebucht werden die ersten 4 Stunden, mit Hinweis.
 - **Wiederholung:** täglich +1 Tag; werktags nächster Mo–Fr; wöchentlich +7; monatlich gleicher Tag, sonst Monatsletzter, ohne Abrutschen (Anker-Tag, z. B. 31.). Nur eine offene Folge je Serie. „Nur diesen löschen“ lässt die Serie weiterlaufen, „Serie beenden“ stoppt sie.
 - **Kalenderwoche** nach ISO 8601 (KW 53 möglich).
-- Kalendertermine zählen in Zahl- und Zeit-Meilensteine (§2, §3) [VORSCHLAG – Fassung 2].
+- Kalendertermine zählen in Zahl- und Zeit-Meilensteine (§2, §3).
 
 ## 9. Prüfung
 
