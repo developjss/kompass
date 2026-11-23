@@ -15,7 +15,8 @@ enum Lotse {
         var antwort: LotseAntwort
         var aufruf = Verstehen.erkennen(text, zustand: speicher.zustand, heute: speicher.heute)
 
-        if let modell = Sprachmodelle.aktiv {
+        // Stufe 0: Trifft eine Regel, kostet die Antwort nichts – der Server wird nur bei freien Formulierungen gefragt.
+        if aufruf == nil, let modell = Sprachmodelle.aktiv {
             do {
                 let anfrage = SprachmodellAnfrage(wissen: AppWissen.text() + "\n\nStand:\n" + kurzstand(speicher), werkzeuge: Werkzeuge.alle,
                                                   verlauf: speicher.zustand.chat.suffix(12).map { ($0.rolle, $0.text) }, frage: text)
@@ -25,8 +26,14 @@ enum Lotse {
                     antwort = LotseAntwort(text: t, werkzeug: nil)
                     return abschliessen(antwort, frage: text, speicher: speicher)
                 }
+            } catch LotseFehler.kontingentErschoepft(let limit, let pro) {
+                let t = pro
+                    ? "Du hast heute die Obergrenze von \(limit) Fragen erreicht. Morgen geht es weiter – oder frag mich etwas, das ich ohne Server beantworten kann."
+                    : "Deine \(limit) freien Fragen für heute sind aufgebraucht. Mit Kompass Pro fragst du unbegrenzt – oder morgen wieder kostenlos."
+                return abschliessen(LotseAntwort(text: t, werkzeug: nil, aktion: pro ? nil : .pro), frage: text, speicher: speicher)
             } catch {
-                // Modell nicht erreichbar → Regeln; der Nutzer sieht trotzdem eine Antwort
+                // Server nicht erreichbar → Regeln; der Nutzer sieht trotzdem eine Antwort
+                LotseStand.geteilt.letzterFehler = "Server gerade nicht erreichbar – ich antworte mit Bordmitteln."
             }
         }
 

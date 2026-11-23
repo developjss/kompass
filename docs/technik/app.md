@@ -43,7 +43,7 @@ Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner
 - `heute` und `jetzt` werden übergeben, nie im Rechen-Code gelesen – so ist jede Lage testbar.
 - Speicherung vorläufig als JSON-Datei auf dem Gerät (Application Support, Dateischutz). [OFFEN] SwiftData (`s-speicher`), danach Sync.
 - Kalender: noch Beispieltermine. [OFFEN] EventKit (`s-eventkit`), Google.
-- Lotse: antwortet mit Regeln; `Sprachmodelle.aktiv` ist die Steckdose für den Anbieter [OFFEN]. Jeder neue Screen/Werkzeug muss ins `AppWissen` (Test erzwingt es).
+- Lotse: Regeln auf dem Gerät zuerst; freie Formulierungen gehen an den Kompass-Server (`ClaudeServer`, URL in `LotseKonfiguration`). Kein Schlüssel, kein Modellname in der App. Jeder neue Screen/Werkzeug muss ins `AppWissen` (Test erzwingt es). Betrieb: `lotse-server.md`.
 
 ## Noch nicht drin (gegenüber dem Klick-Dummy)
 

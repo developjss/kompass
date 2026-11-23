@@ -81,6 +81,7 @@ private struct BlattInhalt: View {
         case .aufgabeZuZiel(let z): AufgabeZuZielBlatt(zielID: z)
         case .terminZuZiel(let z): TerminZuZielBlatt(zielID: z)
         case .zielBearbeiten(let z): ZielBearbeitenBlatt(zielID: z)
+        case .pro: ProBlatt()
         }
     }
 }

@@ -19,3 +19,9 @@ prototyp/tests/*.png
 
 # Xcode legt das beim Öffnen an
 Kompass.xcodeproj/project.xcworkspace/
+
+# Supabase lokal
+supabase/.temp/
+supabase/.branches/
+.env
+.env.local

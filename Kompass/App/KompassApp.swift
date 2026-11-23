@@ -11,7 +11,11 @@ struct KompassApp: App {
             Hauptansicht()
                 .environment(speicher)
                 .environment(nav)
-                .task { await speicher.laden() }
+                .task {
+                    await speicher.laden()
+                    Sprachmodelle.einrichten(pro: speicher.zustand.einstellungen.pro)
+                }
+                .onChange(of: speicher.zustand.einstellungen.pro) { _, neu in Sprachmodelle.einrichten(pro: neu) }
                 .onChange(of: phase) { _, neu in
                     if neu != .active { speicher.speichernJetzt() }
                 }
@@ -101,6 +105,7 @@ final class Navigation {
         case aufgabeZuZiel(UUID)
         case terminZuZiel(UUID)
         case zielBearbeiten(UUID)
+        case pro
 
         var id: String {
             switch self {
@@ -117,6 +122,7 @@ final class Navigation {
             case .aufgabeZuZiel(let z): "aufgabezuziel-\(z)"
             case .terminZuZiel(let z): "terminzuziel-\(z)"
             case .zielBearbeiten(let z): "zielbearbeiten-\(z)"
+            case .pro: "pro"
             }
         }
     }

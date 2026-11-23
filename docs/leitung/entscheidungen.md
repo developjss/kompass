@@ -6,6 +6,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 23.11.2026 | [ENTSCHEIDUNG] Lotse-Sprachmodell Weg A: Claude über eigenen Server, gestuft (Regeln → Haiku 5.5 Werkzeugwahl → Sonnet 5.5 Gespräch); Modellnamen nur auf dem Server; Kontingent frei/Pro; Tester frei bis Store-Start | `docs/produkt/konzepte/lotse.md` §5, `docs/technik/lotse-server.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Rechnung Fassung 2: Ziele bestehen aus Meilensteinen (gewichtet 1/2/3), nur sie zählen in die Prozente; Termine zählen (Zahl je 1, Zeit Dauer); Habit als Anzahl oder Wochen (Woche = alle geplanten Tage); 90-%-Regel; Lernen nur in Vorschlägen | `docs/produkt/rechenregeln.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Technik-Weg A: SwiftUI zuerst (Auftrag des Gründers, das Xcode-Projekt anzulegen) | `docs/technik/app.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Kompass ist ein eigenes Projekt mit eigenem Repo und Ordner, Aufbau wie Gapless (Roter Faden, Fahrplan, Landkarte, Arbeitsweise) | `docs/team/arbeitsweise.md` §0 |
@@ -22,7 +23,8 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | Thema | Vorschlag Claude | Wo |
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
-| [OFFEN] Sprachmodell für den Lotsen: A Claude-API über eigenen Server · B Apple On-Device · C beides · D nur Regeln | A zuerst, B später | `konzepte/lotse.md` §5 |
+| [OFFEN] Ort des Lotse-Servers: Supabase Edge Functions (auch für späteren Abgleich) oder anderer Host | Supabase, Region EU | `docs/technik/lotse-server.md` |
+| [OFFEN] Kontingent: 5 freie Server-Fragen/Tag, Pro bis 300; Preis von Pro | so starten, Preis offen | `docs/technik/lotse-server.md` §5 |
 | [OFFEN] Namen „Fortschritt“ (Tab Ziele · Habits) und „Lotse“ (Assistent) | so lassen | `konzepte/lotse.md` |
 | [OFFEN] Sprache der App-Texte | Deutsch zuerst, Englisch zusätzlich ab Phase 3 | `CLAUDE.md` |
 | [OFFEN] Nur für dich oder Produkt mit Abo | Produkt mit Abo (B2C, passt zu deinen Ideen-Kriterien) | `fahrplan.md` §1 |
