@@ -37,7 +37,7 @@ struct EinstellungenBlatt: View {
                     Text("Zum Ausprobieren ohne echten Kalender.")
                 }
                 Section {
-                    LabeledContent("Antwortet mit", value: Sprachmodelle.aktiv == nil ? "Regeln auf dem Gerät" : "Regeln + Claude")
+                    LabeledContent("Antwortet mit", value: Sprachmodelle.aktiv == nil ? "Regeln auf dem Gerät" : "Claude (offline: Regeln)")
                     if let k = LotseStand.geteilt.kontingent {
                         LabeledContent("Heute frei", value: k.pro ? "unbegrenzt (Pro)" : "\(k.frei) von \(k.limit)")
                     }

@@ -85,11 +85,14 @@ struct ClaudeServer: Sprachmodell {
     private struct Anfrage: Encodable {
         struct Werkzeug: Encodable { var name: String; var beschreibung: String; var parameter: [String: String] }
         struct Zeile: Encodable { var rolle: String; var text: String }
+        struct Ergebnis: Encodable { var id: String; var text: String }
+        struct Schritt: Encodable { var inhalt: JSONWert; var ergebnisse: [Ergebnis] }
         var frage: String
         var wissen: String
         var kurzstand: String
         var werkzeuge: [Werkzeug]
         var verlauf: [Zeile]
+        var schritte: [Schritt]
         var nutzer: String
         var kanal: String
         var pro: Bool
@@ -97,11 +100,11 @@ struct ClaudeServer: Sprachmodell {
     }
 
     private struct Antwort: Decodable {
+        struct Aufruf: Decodable { var id: String; var name: String; var parameter: [String: String]? }
         var art: String?
-        var name: String?
-        var parameter: [String: String]?
+        var aufrufe: [Aufruf]?
+        var inhalt: JSONWert?
         var text: String?
-        var einleitung: String?
         var kontingent: Kontingent?
         var fehler: String?
         var limit: Int?
@@ -109,51 +112,41 @@ struct ClaudeServer: Sprachmodell {
     }
 
     func antworte(auf a: SprachmodellAnfrage) async throws -> SprachmodellAntwort {
-        // Wissen und Kurzstand kommen getrennt: Wissen ist bei allen gleich (Cache), der Stand nicht.
-        let teile = a.wissen.components(separatedBy: "\n\nStand:\n")
         let anfrage = Anfrage(
-            frage: a.frage, wissen: teile[0], kurzstand: teile.count > 1 ? teile[1] : "",
+            frage: a.frage, wissen: a.wissen, kurzstand: a.kurzstand,
             werkzeuge: a.werkzeuge.map { .init(name: $0.name.rawValue, beschreibung: $0.beschreibung, parameter: $0.parameter) },
             verlauf: a.verlauf.map { .init(rolle: $0.0.rawValue, text: $0.1) },
+            schritte: a.schritte.map { .init(inhalt: $0.inhalt, ergebnisse: $0.ergebnisse.map { .init(id: $0.id, text: $0.text) }) },
             nutzer: LotseKonfiguration.nutzerID, kanal: Kanal.aktuell.rawValue, pro: pro,
             zeitzone: TimeZone.current.identifier)
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
-        req.timeoutInterval = 30
+        req.timeoutInterval = 45
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if !LotseKonfiguration.appSchluessel.isEmpty { req.setValue(LotseKonfiguration.appSchluessel, forHTTPHeaderField: "X-Kompass-App") }
         req.httpBody = try JSONEncoder().encode(anfrage)
 
         let (daten, antwort) = try await URLSession.shared.data(for: req)
         let status = (antwort as? HTTPURLResponse)?.statusCode ?? 0
-        let geparst = try? JSONDecoder().decode(Antwort.self, from: daten)
-        if status == 429, let g = geparst, g.fehler == "kontingent" {
-            await MainActor.run { LotseStand.geteilt.kontingent = Kontingent(frei: 0, limit: g.limit ?? 0, pro: g.pro ?? false) }
-            throw LotseFehler.kontingentErschoepft(limit: g.limit ?? 0, pro: g.pro ?? false)
-        }
-        guard status == 200, let g = geparst else { throw LotseFehler.server(status) }
-        if let k = g.kontingent { await MainActor.run { LotseStand.geteilt.kontingent = k } }
-        switch g.art {
-        case "werkzeug":
-            guard let n = g.name, let werkzeug = Werkzeug.Name(rawValue: n) else { throw LotseFehler.antwort }
-            return .werkzeug(WerkzeugAufruf(name: werkzeug, parameter: g.parameter ?? [:]), einleitung: g.einleitung)
-        case "text":
-            guard let t = g.text, !t.isEmpty else { throw LotseFehler.antwort }
-            return .text(t)
-        default:
-            throw LotseFehler.antwort
+        do {
+            let (ergebnis, k) = try Self.lesen(daten, status: status)
+            if let k { await MainActor.run { LotseStand.geteilt.kontingent = k } }
+            return ergebnis
+        } catch LotseFehler.kontingentErschoepft(let limit, let pro) {
+            await MainActor.run { LotseStand.geteilt.kontingent = Kontingent(frei: 0, limit: limit, pro: pro) }
+            throw LotseFehler.kontingentErschoepft(limit: limit, pro: pro)
         }
     }
 
     /// Antwort des Servers lesen – getrennt testbar.
     static func lesen(_ daten: Data, status: Int) throws -> (SprachmodellAntwort, Kontingent?) {
-        let g = try JSONDecoder().decode(Antwort.self, from: daten)
-        if status == 429 { throw LotseFehler.kontingentErschoepft(limit: g.limit ?? 0, pro: g.pro ?? false) }
-        guard status == 200 else { throw LotseFehler.server(status) }
+        let g = try? JSONDecoder().decode(Antwort.self, from: daten)
+        if status == 429, let g, g.fehler == "kontingent" { throw LotseFehler.kontingentErschoepft(limit: g.limit ?? 0, pro: g.pro ?? false) }
+        guard status == 200, let g else { throw LotseFehler.server(status) }
         switch g.art {
-        case "werkzeug":
-            guard let n = g.name, let w = Werkzeug.Name(rawValue: n) else { throw LotseFehler.antwort }
-            return (.werkzeug(WerkzeugAufruf(name: w, parameter: g.parameter ?? [:]), einleitung: g.einleitung), g.kontingent)
+        case "werkzeuge":
+            guard let aufrufe = g.aufrufe, !aufrufe.isEmpty, let inhalt = g.inhalt else { throw LotseFehler.antwort }
+            return (.werkzeuge(aufrufe.map { ModellAufruf(id: $0.id, name: $0.name, parameter: $0.parameter ?? [:]) }, inhalt: inhalt), g.kontingent)
         case "text":
             guard let t = g.text, !t.isEmpty else { throw LotseFehler.antwort }
             return (.text(t), g.kontingent)

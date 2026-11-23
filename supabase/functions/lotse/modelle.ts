@@ -11,7 +11,7 @@ export type Rolle = "werkzeugwahl" | "gespraech";
 export const STANDARD_MODELLE: Record<Rolle, string[]> = {
   // günstig und schnell: wählt das Werkzeug (Preise Stand 03.11.2026: 0,10 $ / 0,50 $ je Mio. Token)
   werkzeugwahl: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"],
-  // abwägen und formulieren: Ziel-Konflikte, Beratung (2 $ / 10 $ je Mio. Token)
+  // Assistent (Fassung 2): beantwortet alles, ruft Werkzeuge der App (2 $ / 10 $ je Mio. Token)
   gespraech: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"],
 };
 

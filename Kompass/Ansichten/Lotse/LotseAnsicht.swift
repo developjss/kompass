@@ -154,7 +154,7 @@ private struct Begruessung: View {
             Text("Bereit, wenn du es bist.")
                 .font(.kompass(.title, .heavy)).foregroundStyle(Farbe.text)
                 .multilineTextAlignment(.center).padding(.top, 18)
-            Text("Ziele, Habits, Aufgaben, Termine – frag mich.")
+            Text("Zu deinem Tag, deinen Zielen – oder ganz allgemein.")
                 .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
             Spacer()
             VStack(alignment: .leading, spacing: 4) {
@@ -187,7 +187,7 @@ private struct Verlauf: View {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(speicher.zustand.chat) { n in Blase(nachricht: n) }
                     if denkt {
-                        HStack(spacing: 8) { ProgressView(); Text("Einen Moment …").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+                        HStack(spacing: 8) { ProgressView(); Text("Denkt nach …").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
                             .padding(.leading, 12)
                     }
                     Color.clear.frame(height: 1).id("ende")
@@ -275,11 +275,17 @@ private struct Blase: View {
         HStack(alignment: .top, spacing: 8) {
             if nutzer { Spacer(minLength: 48) } else { AssistentZeichen(groesse: 26).padding(.top, 8).accessibilityHidden(true) }
             VStack(alignment: .leading, spacing: 8) {
-                Text(nachricht.text)
-                    .font(.kompass(.body, nutzer ? .semibold : .medium))
-                    .foregroundStyle(nutzer ? .white : Farbe.text)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
+                if nutzer {
+                    Text(nachricht.text)
+                        .font(.kompass(.body, .semibold))
+                        .foregroundStyle(.white)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    AntwortText(text: nachricht.text)
+                        .font(.kompass(.body, .regular))
+                        .textSelection(.enabled)
+                }
                 if !nutzer, let a = nachricht.aktion {
                     Button(aktionText(a)) { ausfuehren(a) }
                         .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
@@ -297,7 +303,7 @@ private struct Blase: View {
             if !nutzer { Spacer(minLength: 24) }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(nutzer ? "Du: \(nachricht.text)" : "Assistent: \(nachricht.text)")
+        .accessibilityLabel(nutzer ? "Du: \(nachricht.text)" : "Assistent: \(AntwortText.ohneZeichen(nachricht.text))")
     }
 
     private func aktionText(_ a: ChatNachricht.Aktion) -> String {

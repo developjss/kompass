@@ -7,22 +7,32 @@ import Testing
 @Suite("Lotse · Server-Anbindung")
 struct ClaudeServerTests {
     @Test func werkzeugAntwortLesen() throws {
-        let json = #"{"art":"werkzeug","name":"aufgabeAnlegen","parameter":{"titel":"Oma anrufen","datum":"2026-11-24"},"kontingent":{"frei":4,"limit":5,"pro":false}}"#
+        let json = #"{"art":"werkzeuge","aufrufe":[{"id":"t1","name":"aufgabeAnlegen","parameter":{"titel":"Oma anrufen","datum":"2026-11-24"}}],"inhalt":[{"type":"tool_use","id":"t1","name":"aufgabeAnlegen","input":{"titel":"Oma anrufen"}}],"kontingent":{"frei":4,"limit":5,"pro":false}}"#
         let (a, k) = try ClaudeServer.lesen(Data(json.utf8), status: 200)
-        guard case .werkzeug(let w, _) = a else { Issue.record("kein Werkzeug"); return }
-        #expect(w.name == .aufgabeAnlegen && w.parameter["titel"] == "Oma anrufen")
+        guard case .werkzeuge(let w, let inhalt) = a else { Issue.record("kein Werkzeug"); return }
+        #expect(w.first?.name == "aufgabeAnlegen" && w.first?.parameter["titel"] == "Oma anrufen" && w.first?.id == "t1")
         #expect(k == Kontingent(frei: 4, limit: 5, pro: false))
+        // Inhalt geht unverändert zurück an den Server
+        let zurueck = try JSONDecoder().decode(JSONWert.self, from: JSONEncoder().encode(inhalt))
+        #expect(zurueck == inhalt)
     }
 
     @Test func textAntwortUndFehler() throws {
-        let (a, _) = try ClaudeServer.lesen(Data(#"{"art":"text","text":"Fang mit dem Führerschein an."}"#.utf8), status: 200)
+        let (a, _) = try ClaudeServer.lesen(Data(#"{"art":"text","text":"Fang mit dem **Führerschein** an."}"#.utf8), status: 200)
         guard case .text(let t) = a else { Issue.record("kein Text"); return }
         #expect(t.hasPrefix("Fang"))
         #expect(throws: LotseFehler.kontingentErschoepft(limit: 5, pro: false)) {
             try ClaudeServer.lesen(Data(#"{"fehler":"kontingent","limit":5,"pro":false}"#.utf8), status: 429)
         }
         #expect(throws: LotseFehler.server(503)) { try ClaudeServer.lesen(Data(#"{"fehler":"modell"}"#.utf8), status: 503) }
-        #expect(throws: LotseFehler.antwort) { try ClaudeServer.lesen(Data(#"{"art":"werkzeug","name":"gibtEsNicht"}"#.utf8), status: 200) }
+        #expect(throws: LotseFehler.antwort) { try ClaudeServer.lesen(Data(#"{"art":"werkzeuge","aufrufe":[]}"#.utf8), status: 200) }
+    }
+
+    @Test func antwortTextZerlegen() {
+        let b = AntwortText.bloecke("**Etwa 1 Stunde.**\n\n- **Auto:** 95 km\n- Zug: 1 h\n\n1. Erst\n2) Dann\n## Tipp\nZeile eins\nZeile zwei")
+        #expect(b == [.absatz("**Etwa 1 Stunde.**"), .punkt("•", "**Auto:** 95 km"), .punkt("•", "Zug: 1 h"),
+                      .punkt("1.", "Erst"), .punkt("2.", "Dann"), .absatz("**Tipp**"), .absatz("Zeile eins\nZeile zwei")])
+        #expect(AntwortText.ohneZeichen("**fett** und normal") == "fett und normal")
     }
 
     @Test func kanalUndNutzerID() {
@@ -32,21 +42,22 @@ struct ClaudeServerTests {
     }
 }
 
-/// Ein Sprachmodell für Tests: zählt Aufrufe und antwortet fest.
+/// Ein Sprachmodell für Tests: spielt Antworten der Reihe nach ab und merkt sich die Anfragen.
 final class ZaehlModell: Sprachmodell, @unchecked Sendable {
-    var aufrufe = 0
-    var antwort: SprachmodellAntwort
+    var anfragen: [SprachmodellAnfrage] = []
+    var antworten: [SprachmodellAntwort]
     var fehler: Error?
-    init(antwort: SprachmodellAntwort, fehler: Error? = nil) { self.antwort = antwort; self.fehler = fehler }
+    var aufrufe: Int { anfragen.count }
+    init(_ antworten: SprachmodellAntwort..., fehler: Error? = nil) { self.antworten = antworten; self.fehler = fehler }
     var name: String { "Test" }
     func antworte(auf anfrage: SprachmodellAnfrage) async throws -> SprachmodellAntwort {
-        aufrufe += 1
-        if let fehler { throw fehler }
-        return antwort
+        anfragen.append(anfrage)
+        if let fehler, anfragen.count > antworten.count { throw fehler }
+        return antworten[min(anfragen.count - 1, antworten.count - 1)]
     }
 }
 
-@Suite("Lotse · Stufen")
+@Suite("Lotse · Claude mit Werkzeugschleife")
 @MainActor
 struct LotseStufenTests {
     func speicher() -> Speicher {
@@ -56,36 +67,50 @@ struct LotseStufenTests {
         return s
     }
 
-    @Test func regelTrefferFragtDenServerNicht() async {
-        let m = ZaehlModell(antwort: .text("sollte nicht kommen"))
-        let a = await Lotse.fragen("Was steht heute an?", speicher: speicher(), modell: m)
-        #expect(m.aufrufe == 0 && a.werkzeug == .heute)
+    @Test func mitServerAntwortetClaudeAuchAufRegelFragen() async {
+        // Früher fing „Was steht heute an?“ eine Regel ab – jetzt antwortet Claude, mit Absätzen
+        let m = ZaehlModell(.text("**Heute** ist ruhig.\n\n- 2 Termine"))
+        let s = speicher()
+        let a = await Lotse.fragen("Was steht heute an?", speicher: s, modell: m)
+        #expect(m.aufrufe == 1 && a.text.hasPrefix("**Heute**"))
+        // Claude bekommt Wissen, Stand mit Datum, alle Werkzeuge und die Frage – der Verlauf ohne die Frage selbst
+        let anf = m.anfragen[0]
+        #expect(anf.kurzstand.hasPrefix("Jetzt: ") && anf.kurzstand.contains("Ziele: ") && anf.wissen.contains("Rechenregeln"))
+        #expect(anf.werkzeuge.count == Werkzeug.Name.allCases.count && anf.frage == "Was steht heute an?")
+        #expect(!anf.verlauf.contains { $0.1 == "Was steht heute an?" })
     }
 
-    @Test func freieFormulierungGehtAnDenServerUndWerkzeugWirdAusgefuehrt() async {
-        let m = ZaehlModell(antwort: .werkzeug(WerkzeugAufruf(name: .ziele), einleitung: "Schauen wir auf deine Ziele."))
-        let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
-        #expect(a.text.hasPrefix("Schauen wir auf deine Ziele."))
-        #expect(m.aufrufe == 1 && a.werkzeug == .ziele && !a.unbeantwortet)
+    @Test func werkzeugSchleifeLiefertErgebnisseZurueck() async {
+        let inhalt = JSONWert.liste([.objekt(["type": .text("tool_use"), "id": .text("t1")])])
+        let m = ZaehlModell(.werkzeuge([ModellAufruf(id: "t1", name: "ziele", parameter: [:]), ModellAufruf(id: "t2", name: "gibtsNicht", parameter: [:])], inhalt: inhalt),
+                            .text("Zwei deiner Ziele sind **auf Kurs**."))
+        let a = await Lotse.fragen("Wie stehen meine Ziele?", speicher: speicher(), modell: m)
+        #expect(m.aufrufe == 2 && a.text.contains("auf Kurs") && a.werkzeug == .ziele)
+        let schritt = m.anfragen[1].schritte.first
+        #expect(schritt?.inhalt == inhalt && schritt?.ergebnisse.map(\.id) == ["t1", "t2"])
+        #expect(schritt?.ergebnisse[0].text.contains("Führerschein") == true && schritt?.ergebnisse[1].text.contains("gibt es nicht") == true)
+    }
+
+    @Test func anlegenUeberClaudeUndKeinDoppeltesAnlegenBeiFehler() async {
+        let s = speicher()
+        let vorher = s.zustand.aufgaben.count
+        let m = ZaehlModell(.werkzeuge([ModellAufruf(id: "t1", name: "aufgabeAnlegen", parameter: ["titel": "Oma anrufen"])], inhalt: .liste([])),
+                            fehler: LotseFehler.server(503))
+        let a = await Lotse.fragen("Erstelle Aufgabe Oma anrufen", speicher: s, modell: m)
+        #expect(s.zustand.aufgaben.count == vorher + 1 && a.text.contains("Oma anrufen"))
     }
 
     @Test func kontingentErschoepftZeigtPro() async {
-        let m = ZaehlModell(antwort: .text(""), fehler: LotseFehler.kontingentErschoepft(limit: 5, pro: false))
+        let m = ZaehlModell(fehler: LotseFehler.kontingentErschoepft(limit: 5, pro: false))
         let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
         #expect(a.aktion == .pro && a.text.contains("5"))
     }
 
-    @Test func beratungsfrageGehtAnDenServerUndFaelltLokalZurueck() async {
-        let m = ZaehlModell(antwort: .text("Fang mit Fitness an."))
-        let a = await Lotse.fragen("Was soll ich diese Woche zuerst machen?", speicher: speicher(), modell: m)
-        #expect(m.aufrufe == 1 && a.text == "Fang mit Fitness an.")
+    @Test func ohneServerOderBeiFehlerAntwortenDieRegeln() async {
         let b = await Lotse.fragen("Was soll ich diese Woche zuerst machen?", speicher: speicher(), modell: nil)
         #expect(b.werkzeug == .empfehlen && b.text.contains("Fit: 75 kg & Halbmarathon")) // liegt hinterher → zuerst
-    }
-
-    @Test func serverFehlerFaelltAufRegelnZurueck() async {
-        let m = ZaehlModell(antwort: .text(""), fehler: LotseFehler.server(503))
-        let a = await Lotse.fragen("blubb trallala", speicher: speicher(), modell: m)
-        #expect(a.unbeantwortet && LotseStand.geteilt.letzterFehler != nil)
+        let m = ZaehlModell(fehler: LotseFehler.server(503))
+        let a = await Lotse.fragen("Was steht heute an?", speicher: speicher(), modell: m)
+        #expect(a.werkzeug == .heute && LotseStand.geteilt.letzterFehler != nil)
     }
 }

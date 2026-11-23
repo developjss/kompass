@@ -5,13 +5,18 @@ Stand: 23. November 2026 · Code: `supabase/functions/lotse/` · Konzept: `docs/
 ## 1. So funktioniert es
 
 ```
-App ──(Frage, App-Wissen, Werkzeuge, Kurzstand, Geräte-ID, Kanal, Pro)──▶ Server ──▶ Claude
-App ◀──(Werkzeugaufruf oder Text + Kontingent)───────────────────────── Server ◀──
+App ──(Frage, App-Wissen, Werkzeuge, Stand, Schritte, Geräte-ID, Kanal, Pro)──▶ Server ──▶ Claude
+App ◀──(Werkzeugaufrufe + Inhalt  oder  Text) + Kontingent──────────────────── Server ◀──
+      └─ App führt Werkzeuge aus (rechnet), schickt Ergebnisse als „schritte“ zurück – bis Text kommt (höchstens 6 Runden)
 ```
 
-1. **Stufe 0 – Regeln auf dem Gerät** (kostenlos): klare Fragen trifft `Verstehen`, der Server wird nicht gefragt.
-2. **Stufe 1 – Werkzeugwahl** (Rolle `werkzeugwahl`, Standard Claude Haiku 5.5): das Modell wählt eines der App-Werkzeuge oder „beraten“. Zahlen rechnet immer die App.
-3. **Stufe 2 – Gespräch** (Rolle `gespraech`, Standard Claude Sonnet 5.5): nur bei „beraten“ (Ziel-Konflikte, Priorisierung). Höchstens 120 Wörter, nur Zahlen aus dem Kurzstand.
+**Fassung 2 (23.11.2026, nach Test des Gründers: „Antworten machen keinen Sinn“):**
+1. **Mit Server beantwortet Claude jede Frage** (Rolle `gespraech`, Standard Claude Sonnet 5.5) – auch allgemeine Fragen (Wissen, Reisen, Rat). Vorher fingen Regeln auf dem Gerät viele Fragen falsch ab („Fahrt“ → Habit, „Zeit“ → Hilfe-Text) und Claude durfte Allgemeines nicht beantworten.
+2. **Werkzeugschleife:** Braucht Claude Daten oder soll etwas angelegt werden, ruft es Werkzeuge der App (auch mehrere). Die App rechnet und schickt die Ergebnisse zurück; Claude formuliert die Antwort. Zahlen stammen immer aus der App.
+3. **Stil:** Absätze, **fett**, Listen; die App stellt das dar (`AntwortText`).
+4. **Regeln auf dem Gerät** (`Verstehen`) nur noch ohne Server oder bei Fehler. Wurde schon etwas angelegt, springen sie nicht ein (kein doppeltes Anlegen).
+5. **Mitwachsen:** Claude bekommt bei jeder Frage `AppWissen.text()` (Bereiche, Fenster, Rechenregeln – Tests erzwingen Vollständigkeit) und alle `Werkzeuge.alle`. Neues Werkzeug oder neuer Bereich ist damit sofort bekannt, ohne Server-Deploy.
+6. Eine Frage zählt einmal im Kontingent, egal wie viele Runden.
 
 Der Server speichert **keine Fragen**. Gespeichert wird nur der Zähler je Geräte-ID und Tag (`lotse_kontingent`). Das App-Wissen ist bei allen gleich und wird als Prompt-Cache markiert.
 
@@ -71,7 +76,7 @@ Anthropic kündigt das Ende eines Modells vorher an. Der Server fragt die Modell
 
 ## 6. Kosten im Blick [SCHÄTZUNG]
 
-Je Server-Frage ≈ 0,03 Cent (Haiku) bzw. ≈ 0,8 Cent (Sonnet) bei ~2.500 Token App-Wissen (Cache günstiger). 1.000 aktive Nutzer × 10 Fragen/Tag, davon 50 % Regeln, 40 % Haiku, 10 % Sonnet → 40–60 $ im Monat. Nachrechnen: Console → Usage; nach einer Woche TestFlight die echten Zahlen in dieses Dokument.
+Fassung 2: jede Frage geht an Sonnet, oft 2 Runden → ≈ 1–2 Cent je Frage (App-Wissen und Werkzeuge im Prompt-Cache). 1.000 aktive Nutzer × 10 Fragen/Tag → **≈ 3.000–6.000 $ im Monat** (Fassung 1: 40–60 $). [RISIKO] Für den Store vor Preisentscheidung prüfen: günstigeres Modell per `LOTSE_MODELLE` (ohne Deploy), freie Fragen pro Tag (`LOTSE_FREI_PRO_TAG`), Pro-Preis. Nachrechnen: Console → Usage; nach einer Woche TestFlight die echten Zahlen in dieses Dokument.
 
 ## 6a. Erster Live-Test (23.11.2026)
 
