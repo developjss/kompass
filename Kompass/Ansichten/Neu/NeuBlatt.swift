@@ -129,7 +129,7 @@ struct NeuBlatt: View {
             if erinnerung != nil {
                 DatePicker("Uhrzeit", selection: Binding(get: { uhr(erinnerung ?? 0) }, set: { erinnerung = minuten($0) }), displayedComponents: .hourAndMinute)
             }
-        } footer: { Text("Mitteilungen werden im nächsten Schritt angeschaltet; die Uhrzeit wird schon gespeichert.") }
+        } footer: { Text("Zur Uhrzeit kommt eine Mitteilung, solange der Habit offen ist. Beim ersten Mal fragt die App um Erlaubnis.") }
         Section { zielPicker }
     }
 
@@ -187,7 +187,11 @@ struct NeuBlatt: View {
             let h = Habit(titel: t, farbe: farbe, symbol: vorschlagGenutzt ? symbol : (v.symbol == "star.fill" ? "star.fill" : v.symbol),
                           rhythmus: habitRhythmus, menge: mitMenge ? menge : nil, einheit: mitMenge ? habitEinheit : nil,
                           erinnerung: erinnerung, zielID: zielID, angelegt: heute)
-            speicher.aendern { $0.habits.append(h) }
+            if h.erinnerung != nil {
+                Task { await Erinnerungen.aktiv.erlaubnis(); speicher.aendern { $0.habits.append(h) } }
+            } else {
+                speicher.aendern { $0.habits.append(h) }
+            }
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
             var g = Ziel(titel: t, farbe: farbe, symbol: "target", bereich: "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)

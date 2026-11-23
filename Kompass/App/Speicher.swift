@@ -68,6 +68,7 @@ final class Speicher {
             termineAbgleichen()
             zustand.verlaufFortschreiben(heute: heute)
             lage = .bereit
+            erinnerungenPlanen()
         } catch {
             lage = .fehler("Deine Daten konnten nicht gelesen werden.")
         }
@@ -90,6 +91,7 @@ final class Speicher {
         aenderung(&zustand)
         termineAbgleichen()
         zustand.verlaufFortschreiben(heute: heute)
+        erinnerungenPlanen()
         speichernAufgabe?.cancel()
         speichernAufgabe = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(400))
@@ -116,6 +118,12 @@ final class Speicher {
         let e = zustand.einstellungen, T = heute
         guard e.googleBeispiel || e.appleBeispiel else { return }
         zustand.termineAbgleichen(heute: T) { Beispieltermine.termine(am: $0, google: e.googleBeispiel, apple: e.appleBeispiel, heute: T) }
+    }
+
+    /// Habit-Mitteilungen neu planen (nur in der echten App, nicht in Vorschau und Tests).
+    func erinnerungenPlanen() {
+        guard datei != nil else { return }
+        Erinnerungen.aktiv.planen(habits: zustand.habits, heute: heute, jetzt: jetzt(), kalender: kalender)
     }
 
     func demoZuruecksetzen() {

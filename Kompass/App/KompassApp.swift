@@ -12,6 +12,8 @@ struct KompassApp: App {
                 .environment(speicher)
                 .environment(nav)
                 .task {
+                    Erinnerungen.aktiv.oeffnen = { id in nav.oeffneHabit(id) }
+                    Erinnerungen.aktiv.starten()
                     await speicher.laden()
                     Sprachmodelle.einrichten(pro: speicher.zustand.einstellungen.pro)
                 }
@@ -59,6 +61,11 @@ enum NeuArt: String, Hashable, Identifiable {
     var id: String { rawValue }
 }
 
+/// Welche Zeile der Habit-Seite bearbeitet wird (je Zeile ein Editor, wie bei einer Gapless-Transaktion)
+enum HabitFeld: String, Hashable, CaseIterable {
+    case titel, menge, rhythmus, erinnerung, ziel, aussehen
+}
+
 enum InfoThema: String, Hashable, Identifiable, CaseIterable {
     case heute, kalender, habits, ziele, rueckblick, lotse
     var id: String { rawValue }
@@ -95,7 +102,6 @@ final class Navigation {
         case info(InfoThema)
         case einstellungen
         case aufgabe(UUID)
-        case habit(UUID)
         case fokus(UUID)
         case rechnung(UUID)
         case reflexion(woche: Bool)
@@ -108,6 +114,8 @@ final class Navigation {
         case pro
         /// Menge eines Habits für einen Tag eintragen (Tag als Text, damit der Fall Hashable bleibt)
         case habitMenge(UUID, tag: String)
+        /// Eine Zeile der Habit-Seite bearbeiten
+        case habitBearbeiten(UUID, HabitFeld)
 
         var id: String {
             switch self {
@@ -115,7 +123,6 @@ final class Navigation {
             case .info(let t): "info-\(t.rawValue)"
             case .einstellungen: "einstellungen"
             case .aufgabe(let i): "aufgabe-\(i)"
-            case .habit(let i): "habit-\(i)"
             case .fokus(let i): "fokus-\(i)"
             case .rechnung(let i): "rechnung-\(i)"
             case .reflexion(let w): "reflexion-\(w)"
@@ -126,6 +133,7 @@ final class Navigation {
             case .zielBearbeiten(let z): "zielbearbeiten-\(z)"
             case .pro: "pro"
             case .habitMenge(let h, let t): "habitmenge-\(h)-\(t)"
+            case .habitBearbeiten(let h, let f): "habitbearbeiten-\(h)-\(f.rawValue)"
             }
         }
     }
@@ -133,12 +141,22 @@ final class Navigation {
     var bereich: Bereich = .heute
     var fortschrittTeil: FortschrittTeil = .ziele
     var blatt: Blatt?
-    /// Navigationspfad im Tab Fortschritt (der Lotse öffnet darüber ein Ziel)
-    var fortschrittPfad: [ZielAuswahl] = []
+    /// Navigationspfad im Tab Fortschritt (Ziel- und Habit-Seiten; der Lotse öffnet darüber)
+    var fortschrittPfad = NavigationPath()
 
     func oeffneZiel(_ id: UUID) {
         zeige(.ziele)
-        fortschrittPfad = [ZielAuswahl(id: id)]
+        fortschrittPfad = NavigationPath([ZielAuswahl(id: id)])
+    }
+
+    /// Habit-Seite im Tab Fortschritt öffnen (auch aus Heute, Ziel oder Lotse)
+    func oeffneHabit(_ id: UUID) {
+        if bereich == .fortschritt, fortschrittTeil == .habits {
+            fortschrittPfad.append(HabitAuswahl(id: id))
+        } else {
+            zeige(.habits)
+            fortschrittPfad = NavigationPath([HabitAuswahl(id: id)])
+        }
     }
 
     func zeige(_ teil: FortschrittTeil) {
@@ -149,3 +167,5 @@ final class Navigation {
 
 /// Für NavigationLink(value:) auf ein Ziel
 struct ZielAuswahl: Hashable { var id: UUID }
+/// Für NavigationLink(value:) auf einen Habit
+struct HabitAuswahl: Hashable { var id: UUID }

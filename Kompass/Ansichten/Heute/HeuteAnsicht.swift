@@ -148,7 +148,7 @@ private struct HabitsHeute: View {
                         speicher.aendern { $0.habitUmschalten(h.id, am: T) }
                     }
                     .padding(.leading, 4)
-                    Button { nav.blatt = .habit(h.id) } label: {
+                    Button { nav.oeffneHabit(h.id) } label: {
                         Text(h.titel).font(.zeile).foregroundStyle(Farbe.text).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)

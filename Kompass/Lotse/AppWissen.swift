@@ -21,7 +21,8 @@ enum AppWissen {
         "info": "(i): kurze Erklärung der Seite.",
         "einstellungen": "Daten & Kalender: Beispielkalender ein/aus, Speicherort, Demo-Daten neu laden.",
         "aufgabe": "Aufgabe: Titel, erledigt, wichtig, Datum, Wiederholung, Ziel, Notizen, löschen oder Serie beenden.",
-        "habit": "Habit: Soll mit Einheit, Rhythmus (täglich, Wochentage, n-mal pro Woche), Erinnerung, Ziel, Serie, Quote, letzte 14 Tage, löschen.",
+        "habit": "Habit-Seite (im Tab Fortschritt): Kopfkarte mit Stand heute und Serie; Heute abhaken oder Menge eintragen; Stand (Serie, beste Serie, Quote 30 Tage); Fakten-Zeilen Titel, Menge, Rhythmus, Erinnerung, Ziel, Aussehen – jede Zeile antippen öffnet ihren Editor; letzte 14 Tage; „Zählt in“ (Meilensteine); löschen.",
+        "habitbearbeiten": "Habit bearbeiten: eine Zeile ändern – Titel, Menge mit Einheit (oder nur abhaken), Rhythmus (täglich, werktags, Wochentage, n-mal pro Woche), Erinnerung (aus oder Uhrzeit; beim ersten Mal fragt die App nach Erlaubnis für Mitteilungen), Ziel, Farbe und Symbol.",
         "fokus": "Fokus-Timer: läuft zur Aufgabe, Pause/Weiter, Fertig bucht die Zeit (an Mitternacht geteilt, höchstens 4 h am Stück).",
         "rechnung": "So wird gerechnet: ein Satz und je Meilenstein der Beitrag in Prozentpunkten.",
         "reflexion": "Tagesabschluss (3 Fragen) bzw. Wochenreflexion (3 Fragen).",
@@ -72,9 +73,9 @@ enum AppWissen {
     @MainActor
     static var blattPraefixe: [String] {
         let id = UUID()
-        let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .habit(id), .fokus(id), .rechnung(id),
+        let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id), .pro, .habitMenge(id, tag: "2026-01-01")]
+                                          .terminZuZiel(id), .zielBearbeiten(id), .pro, .habitMenge(id, tag: "2026-01-01"), .habitBearbeiten(id, .menge)]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

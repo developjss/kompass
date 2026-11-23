@@ -235,7 +235,7 @@ enum Werkzeuge {
             let t = "\(h.titel): Serie \(HabitRechnung.serie(h, heute: T)), beste \(HabitRechnung.besteSerie(h, heute: T)), Quote \(Zahl.prozent(HabitRechnung.quote(h, heute: T))) in 30 Tagen · \(HabitRechnung.haeufigkeit(h))"
                 + (HabitRechnung.geplant(h, am: T) ? (h.voll(am: T) ? " · heute erledigt" : " · heute noch offen") : " · heute nicht geplant")
                 + (z.ziel(h.zielID).map { " · Ziel: \($0.titel)" } ?? "")
-            return LotseAntwort(text: t, werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
+            return LotseAntwort(text: t, werkzeug: .habits, aktion: .habit(h.id))
         }
         guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: + Neu → Habit.", werkzeug: .habits) }
         let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }

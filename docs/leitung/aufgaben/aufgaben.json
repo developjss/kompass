@@ -581,24 +581,26 @@
       "id": "h-detail",
       "titel": "Habits v2 Block 2: Detail-Seite mit Bearbeiten je Zeile (Soll, Einheit, Rhythmus, Erinnerung, Ziel, Farbe), Verlauf",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "quelle": "docs/produkt/konzepte/habits-v2.md §7",
-      "landkarte": "habits"
+      "landkarte": "habits",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "h-erinnerung",
       "titel": "Habit-Erinnerungen als lokale Mitteilungen (UserNotifications, Erlaubnis, Planung je Wochentag)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "nach": [
         "h-detail"
       ],
       "quelle": "docs/produkt/konzepte/habits-v2.md §8",
-      "landkarte": "habits"
+      "landkarte": "habits",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "z-v2",

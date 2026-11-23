@@ -367,6 +367,7 @@ struct ChatNachricht: Identifiable, Codable, Sendable, Hashable {
     enum Aktion: Codable, Sendable, Hashable {
         case ziel(UUID)
         case aufgabe(UUID)
+        case habit(UUID)
         case bereich(String)
         /// Kompass Pro vorstellen (Kontingent aufgebraucht)
         case pro

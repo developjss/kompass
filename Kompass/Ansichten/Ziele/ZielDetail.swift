@@ -233,7 +233,7 @@ private struct ZielHabits: View {
                 }
                 .frame(minHeight: Mass.zeile)
                 .contentShape(Rectangle())
-                .onTapGesture { nav.blatt = .habit(h.id) }
+                .onTapGesture { nav.oeffneHabit(h.id) }
                 .contextMenu {
                     Button("Vom Ziel lösen", systemImage: "link.badge.minus") { speicher.aendern { $0.habitLoesen(h.id, ziel: ziel.id) } }
                 }

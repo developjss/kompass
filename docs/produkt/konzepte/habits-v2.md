@@ -1,6 +1,6 @@
 # Habits v2 – Konzept für den Tab „Fortschritt · Habits“
 
-Stand: 23. November 2026 · Grundlage: Screenshots der App (Simulator), Gapless (Harbor 2: `design.md`, Transaktions-Seite, Listen), Vorgaben des Gründers vom 23.11. [ENTSCHEIDUNG – 23.11.2026] „Ja, so bauen“. Block 1 gebaut (Modell, Rechnung, Habits-Seite, Menge eintragen, Anlegen mit Chips); Block 2 offen (Detail-Seite mit Bearbeiten je Zeile, Mitteilungen). Rechenregel §5 in `rechenregeln.md` §6 übernommen [ENTSCHEIDUNG – 23.11.2026, PR #11].
+Stand: 23. November 2026 · Grundlage: Screenshots der App (Simulator), Gapless (Harbor 2: `design.md`, Transaktions-Seite, Listen), Vorgaben des Gründers vom 23.11. [ENTSCHEIDUNG – 23.11.2026] „Ja, so bauen“. Block 1 gebaut (Modell, Rechnung, Habits-Seite, Menge eintragen, Anlegen mit Chips); Block 2 gebaut (Habit-Seite mit Fakten-Zeilen und Editor je Zeile, Verlauf, „Zählt in“; Erinnerungen als lokale Mitteilungen, `ErinnerungRechnung` + `Erinnerungen`). Rechenregel §5 in `rechenregeln.md` §6 übernommen [ENTSCHEIDUNG – 23.11.2026, PR #11].
 
 ## 1. Befund – so ist es heute
 
@@ -119,7 +119,7 @@ Zahl im Titel („20 Minuten lesen“, „300 g Erdnüsse“) → Menge und Einh
 
 ## 8. Erinnerungen
 
-`UserNotifications` (Apple, keine neue Abhängigkeit). Beim ersten Einschalten einer Erinnerung fragt die App um Erlaubnis. Je Habit eine wiederholende lokale Mitteilung je geplantem Wochentag (bei „n-mal pro Woche“: täglich bis die Woche voll ist – Planung neu beim Eintragen). Text: „20 Minuten lesen – heute noch offen.“ Tipp öffnet den Habit. [OFFEN] Ruhezeiten.
+`UserNotifications` (Apple, keine neue Abhängigkeit). Beim ersten Einschalten einer Erinnerung fragt die App um Erlaubnis. Je Habit eine wiederholende lokale Mitteilung je geplantem Wochentag (bei „n-mal pro Woche“: täglich bis die Woche voll ist – Planung neu beim Eintragen). Text: Titel des Habits, darunter „Heute noch offen: 20 min.“ Tipp öffnet die Habit-Seite. **Gebaut (Block 2):** statt wiederholender Mitteilungen werden die nächsten 7 Tage einzeln geplant (`ErinnerungRechnung.termine`, Test) – nur geplante, noch nicht volle Tage, heute nur vor der Uhrzeit; nach jeder Änderung neu, höchstens 60 (iOS-Grenze 64). Erlaubnis verweigert → Zeile „Erinnerung“ zeigt „Mitteilungen aus“ mit Sprung in die iOS-Einstellungen. [OFFEN] Ruhezeiten.
 
 ## 9. Ziele – erstes Screening (nächster Schritt)
 
