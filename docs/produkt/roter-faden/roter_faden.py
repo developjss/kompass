@@ -223,10 +223,10 @@ seite(K3, "Einstellungen & Kalender verbinden", "einstellungen", "Kalender verbi
 
 # =============================================================== 4 Habits
 K4 = kapitel("Habits", "kap4", ["Das Tägliche: kein Enddatum, sondern eine Serie."], [("Habits", "habits"), ("Ein Habit", "habit")])
-seite(K4, "Habits", "habits", "Oben „x von y heute“ mit der Quote der letzten 8 Wochen; je Habit die Woche als Punkte, Serie und 30-Tage-Quote.",
-      bilder=[("habits.jpg", "Habits")], klicks=["Punkt eines Tages → abhaken / zurücknehmen", "Name → [[Ein Habit|habit]]"], gespeichert=LOKAL)
-seite(K4, "Ein Habit", "habit", "Serie, beste Serie, Quote, Heatmap der letzten 16 Wochen; Wochentage, Farbe, Ziel.",
-      bilder=[("habit.jpg", "Habit")], klicks=["Wochentage ändern", "Ziel wählen (optional)", "Habit löschen"], gespeichert=LOKAL)
+seite(K4, "Habits", "habits", "Oben „x von y geschafft“ mit den letzten 7 Tagen; dann Heute (je Habit „12 von 20 min“), Diese Woche (Tage als Punkte, n-mal pro Woche als Balken) und Alle Habits (Soll, Quote, Serie). In der App hat ein Habit eine Menge mit Einheit (Minuten, Seiten, Gramm, km …) oder wird nur abgehakt; halb geschafft zählt halb.",
+      bilder=[("habits.jpg", "Habits")], klicks=["Zeile mit Menge → Menge eintragen (Schnellwahl ½, ganz …)", "Haken → ganz erledigt / zurücknehmen", "Name → [[Ein Habit|habit]]"], gespeichert=LOKAL)
+seite(K4, "Ein Habit", "habit", "Soll (Menge, Rhythmus täglich · Wochentage · n-mal pro Woche, Erinnerungszeit), Serie, beste Serie, Quote, die letzten 14 Tage; Farbe, Ziel.",
+      bilder=[("habit.jpg", "Habit")], klicks=["Heute eintragen / abhaken", "Ziel wählen (optional)", "Habit löschen"], gespeichert=LOKAL)
 
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],

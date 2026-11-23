@@ -103,7 +103,7 @@ enum Werkzeuge {
         let wichtig = offen.filter { $0.prio == .hoch }, weitere = offen.filter { $0.prio != .hoch }
         let erledigt = z.aufgaben.filter { a in a.erledigt && a.erledigtAm.map { Tag($0) == T } == true }.count
         let habits = z.habits.filter { HabitRechnung.geplant($0, am: T) }
-        let offeneHabits = habits.filter { !$0.erledigt.contains(T) }
+        let offeneHabits = habits.filter { !$0.voll(am: T) }
         let termine = termine(z, T, T).filter { $0.start != nil }
         let fokus = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: jetzt)
         var zeilen: [String] = []
@@ -233,12 +233,12 @@ enum Werkzeuge {
     static func habits(_ z: Zustand, _ T: Tag, name: String?) -> LotseAntwort {
         if let h = findeHabit(name, in: z) {
             let t = "\(h.titel): Serie \(HabitRechnung.serie(h, heute: T)), beste \(HabitRechnung.besteSerie(h, heute: T)), Quote \(Zahl.prozent(HabitRechnung.quote(h, heute: T))) in 30 Tagen · \(HabitRechnung.haeufigkeit(h))"
-                + (HabitRechnung.geplant(h, am: T) ? (h.erledigt.contains(T) ? " · heute erledigt" : " · heute noch offen") : " · heute nicht geplant")
+                + (HabitRechnung.geplant(h, am: T) ? (h.voll(am: T) ? " · heute erledigt" : " · heute noch offen") : " · heute nicht geplant")
                 + (z.ziel(h.zielID).map { " · Ziel: \($0.titel)" } ?? "")
             return LotseAntwort(text: t, werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
         }
         guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: + Neu → Habit.", werkzeug: .habits) }
-        let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.erledigt.contains(T) }
+        let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }
         let schwach = z.habits.filter { HabitRechnung.quote($0, heute: T) < 0.5 }
         let stark = z.habits.max { HabitRechnung.quote($0, heute: T) < HabitRechnung.quote($1, heute: T) }
         var zeilen: [String] = []
@@ -259,7 +259,7 @@ enum Werkzeuge {
         let erledigt = z.aufgaben.filter { a in a.erledigtAm.map { let d = Tag($0, kalender: kalender); return d >= von && d <= bis } == true }.count
         let anteil = gesamt > 0 ? Int((fuerZiele / gesamt * 100).rounded()) : 0
         var t = "\(letzte ? "Letzte" : "Diese") Woche hast du \(Zahl.dauer(gesamt)) fokussiert gearbeitet, davon \(anteil) % für deine Ziele. \(erledigt) Aufgabe\(erledigt == 1 ? "" : "n") erledigt"
-        t += h.geplant > 0 ? ", Habits zu \(Zahl.prozent(Double(h.erledigt) / Double(h.geplant))) (\(h.erledigt) von \(h.geplant))." : "."
+        t += h.geplant > 0 ? ", Habits zu \(Zahl.prozent(h.erledigt / Double(h.geplant))) (\(Zahl.text(h.erledigt, stellen: 1)) von \(h.geplant))." : "."
         if let erstes = jeZiel.first { t += "\nDie meiste Zeit ging in \(erstes.0) (\(Zahl.dauer(erstes.1)))" + (jeZiel.count > 1 ? ", dann " + Satz.liste(jeZiel.dropFirst().prefix(3).map { "\($0.0) (\(Zahl.dauer($0.1)))" }) + "." : ".") }
         if gesamt > 0 && fuerZiele / gesamt < 0.5 { t += "\nWeniger als die Hälfte zahlt auf Ziele ein – soll ich dir zeigen, welche Aufgaben noch kein Ziel haben?" }
         return LotseAntwort(text: t, werkzeug: .analyse, aktion: .bereich(Bereich.rueckblick.rawValue))
@@ -294,7 +294,7 @@ enum Werkzeuge {
             .filter { [.hinterher, .ueberfaellig].contains($0.1.lage) }
             .sorted { $0.1.fortschritt - $0.1.erwartet < $1.1.fortschritt - $1.1.erwartet }
         let wichtig = z.aufgaben.filter { $0.datum == T && !$0.erledigt && $0.prio == .hoch }.sorted { $0.reihenfolge < $1.reihenfolge }
-        let offeneHabits = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.erledigt.contains(T) }
+        let offeneHabits = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }
 
         if let (g, k) = hinten.first {
             var t = "Fang bei \(g.titel) an: Das Ziel liegt \(k.lage.text) (\(Zahl.prozent(k.fortschritt)) statt erwarteter \(Zahl.prozent(k.erwartet)))."

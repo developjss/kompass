@@ -25,6 +25,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Tabs und Lotse (23.11.2026, gemergt):** Fünf Tabs: Heute · Kalender · **Lotse** (Mitte) · **Fortschritt** (Ziele · Habits per Umschalter, getrennt) · Rückblick. Lotse = Chat-Assistent: App-Wissen aus dem Code, elf Werkzeuge, regelbasiertes Verstehen offline, Lernen aus Rückmeldungen, Steckdose für ein Sprachmodell. Sprachmodell entschieden (Weg A, Claude gestuft): Server-Code `supabase/functions/lotse/`, App-Anbindung mit Kontingent und Pro – Server läuft auf Supabase-Projekt „kompass“ (EU) und ist live gegen Claude geprüft (`docs/technik/lotse-server.md`).
 
+**Habits v2, Block 1 (23.11.2026, wartet auf „Ja, mergen“ – Rechenregel):** Habits mit Menge und Einheit (halb geschafft zählt halb), Rhythmus inkl. n-mal pro Woche, Erinnerungszeit, Vorschläge aus dem Titel; Habits-Seite neu nach Gapless-Vorbild (Heute · Diese Woche · Alle), Menge eintragen. Block 2 (Detail mit Bearbeiten je Zeile, Mitteilungen) folgt. Konzept: `docs/produkt/konzepte/habits-v2.md`.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte

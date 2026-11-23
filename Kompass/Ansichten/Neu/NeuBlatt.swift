@@ -14,6 +14,16 @@ struct NeuBlatt: View {
     @State private var zielID: UUID?
     @State private var wiederholung: Wiederholung = .nie
     @State private var tage: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
+    @State private var rhythmusArt: RhythmusArt = .taeglich
+    @State private var proWoche = 3
+    @State private var mitMenge = false
+    @State private var menge: Double = 20
+    @State private var habitEinheit: Einheit = .minuten
+    @State private var erinnerung: Int? = nil
+    @State private var vorschlagGenutzt = false
+    @State private var symbol = "star.fill"
+
+    enum RhythmusArt: String, CaseIterable { case taeglich = "Täglich", werktags = "Werktags", tage = "Wochentage", proWoche = "n-mal pro Woche" }
     @State private var faellig = Calendar.kompass.date(byAdding: .month, value: 6, to: Date()) ?? Date()
     @State private var alsZahl = false
     @State private var start = 0.0
@@ -47,17 +57,7 @@ struct NeuBlatt: View {
                         zielPicker
                     }
                 case .habit:
-                    Section("An welchen Tagen") {
-                        HStack {
-                            ForEach(1...7, id: \.self) { d in
-                                Button(namen[d - 1]) { if tage.contains(d) { tage.remove(d) } else { tage.insert(d) } }
-                                    .buttonStyle(.bordered)
-                                    .tint(tage.contains(d) ? Farbe.akzent : .gray)
-                                    .accessibilityAddTraits(tage.contains(d) ? .isSelected : [])
-                            }
-                        }
-                        zielPicker
-                    }
+                    habitTeil
                 case .ziel:
                     Section {
                         DatePicker("Bis wann", selection: $faellig, displayedComponents: .date)
@@ -77,9 +77,80 @@ struct NeuBlatt: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Anlegen", action: anlegen).disabled(titel.trimmingCharacters(in: .whitespaces).isEmpty || (art == .habit && tage.isEmpty))
+                    Button("Anlegen", action: anlegen).disabled(titel.trimmingCharacters(in: .whitespaces).isEmpty || (art == .habit && rhythmusArt == .tage && tage.isEmpty) || (art == .habit && mitMenge && menge <= 0))
                 }
             }
+        }
+    }
+
+    // MARK: Habit – Menge, Einheit, Rhythmus, Erinnerung als Chips (habits-v2.md §7)
+
+    private var vorschlag: HabitVorschlag.Vorschlag { HabitVorschlag.fuer(titel) }
+
+    @ViewBuilder private var habitTeil: some View {
+        let v = vorschlag
+        if !vorschlagGenutzt, !titel.trimmingCharacters(in: .whitespaces).isEmpty, v.einheit != nil || v.nurAbhaken {
+            Section {
+                Button {
+                    vorschlagUebernehmen(v)
+                } label: {
+                    Label(v.nurAbhaken ? "Vorschlag: einfach abhaken" : "Vorschlag: \(Zahl.text(v.menge ?? 0)) \(v.einheit?.name ?? "") pro Tag", systemImage: "sparkles")
+                }
+            } footer: { Text("Aus deinem Titel abgeleitet – antippen übernimmt.") }
+        }
+        Section {
+            Toggle("Mit Menge", isOn: $mitMenge)
+            if mitMenge {
+                LabeledContent("Soll pro Tag") {
+                    TextField("20", value: $menge, format: .number.locale(Locale(identifier: "de_DE"))).multilineTextAlignment(.trailing).keyboardType(.decimalPad)
+                }
+                ChipReihe(titel: "Einheit", auswahl: Einheit.allCases.map { ($0.name, $0 == habitEinheit) }) { habitEinheit = Einheit.allCases[$0] }
+            }
+        } footer: {
+            Text(mitMenge ? "Teilmengen zählen anteilig: 10 von 20 Minuten = halb." : "Ohne Menge hakst du den Habit einfach ab.")
+        }
+        Section {
+            ChipReihe(titel: "Wie oft", auswahl: RhythmusArt.allCases.map { ($0.rawValue, $0 == rhythmusArt) }) { rhythmusArt = RhythmusArt.allCases[$0] }
+            if rhythmusArt == .tage {
+                HStack(spacing: 6) {
+                    ForEach(1...7, id: \.self) { d in
+                        Button(namen[d - 1]) { if tage.contains(d) { tage.remove(d) } else { tage.insert(d) } }
+                            .buttonStyle(.bordered).tint(tage.contains(d) ? Farbe.akzent : .gray)
+                            .accessibilityAddTraits(tage.contains(d) ? .isSelected : [])
+                    }
+                }
+            }
+            if rhythmusArt == .proWoche { Stepper("\(proWoche)× pro Woche", value: $proWoche, in: 1...7) }
+        }
+        Section {
+            ChipReihe(titel: "Erinnerung", auswahl: [("aus", erinnerung == nil)] + [7, 12, 18, 21].map { ("\($0):00", erinnerung == $0 * 60) }) { i in
+                erinnerung = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
+            }
+            if erinnerung != nil {
+                DatePicker("Uhrzeit", selection: Binding(get: { uhr(erinnerung ?? 0) }, set: { erinnerung = minuten($0) }), displayedComponents: .hourAndMinute)
+            }
+        } footer: { Text("Mitteilungen werden im nächsten Schritt angeschaltet; die Uhrzeit wird schon gespeichert.") }
+        Section { zielPicker }
+    }
+
+    private func vorschlagUebernehmen(_ v: HabitVorschlag.Vorschlag) {
+        vorschlagGenutzt = true
+        symbol = v.symbol
+        if v.nurAbhaken { mitMenge = false; return }
+        mitMenge = true
+        if let m = v.menge { menge = m }
+        if let e = v.einheit { habitEinheit = e }
+    }
+
+    private func uhr(_ m: Int) -> Date { Calendar.kompass.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: m / 60, minute: m % 60)) ?? Date() }
+    private func minuten(_ d: Date) -> Int { let k = Calendar.kompass.dateComponents([.hour, .minute], from: d); return (k.hour ?? 0) * 60 + (k.minute ?? 0) }
+
+    private var habitRhythmus: Rhythmus {
+        switch rhythmusArt {
+        case .taeglich: .taeglich
+        case .werktags: .wochentage([1, 2, 3, 4, 5])
+        case .tage: .aus(tagen: tage)
+        case .proWoche: .proWoche(proWoche)
         }
     }
 
@@ -112,7 +183,10 @@ struct NeuBlatt: View {
             }
         case .habit:
             let farbe = Farbe.ziele[speicher.zustand.habits.count % Farbe.ziele.count]
-            let h = Habit(titel: t, farbe: farbe, symbol: "star.fill", wochentage: tage, zielID: zielID, angelegt: heute)
+            let v = vorschlag
+            let h = Habit(titel: t, farbe: farbe, symbol: vorschlagGenutzt ? symbol : (v.symbol == "star.fill" ? "star.fill" : v.symbol),
+                          rhythmus: habitRhythmus, menge: mitMenge ? menge : nil, einheit: mitMenge ? habitEinheit : nil,
+                          erinnerung: erinnerung, zielID: zielID, angelegt: heute)
             speicher.aendern { $0.habits.append(h) }
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
@@ -199,5 +273,61 @@ struct AufgabeBlatt: View {
             get: { speicher.zustand.aufgabe(id)![keyPath: pfad] },
             set: { neu in speicher.aendern { s in if let i = s.aufgaben.firstIndex(where: { $0.id == id }) { s.aufgaben[i][keyPath: pfad] = neu } } }
         )
+    }
+}
+
+
+/// Auswahl als Chips in einer Zeile (umbrechend) – wie „How often“ in Gapless statt Picker-Rad.
+struct ChipReihe: View {
+    var titel: String
+    /// (Text, gewählt)
+    var auswahl: [(String, Bool)]
+    var waehlen: (Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(titel).font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+            FliessLayout(abstand: 8) {
+                ForEach(Array(auswahl.enumerated()), id: \.offset) { i, a in
+                    Button { waehlen(i) } label: {
+                        Text(a.0).font(.kompass(.subheadline, .semibold))
+                            .padding(.horizontal, 12).frame(minHeight: 36)
+                            .background(a.1 ? Farbe.akzent : Farbe.akzentWeich, in: Capsule())
+                            .foregroundStyle(a.1 ? .white : Farbe.akzent)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(a.1 ? .isSelected : [])
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Einfaches umbrechendes Layout für Chips.
+struct FliessLayout: Layout {
+    var abstand: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let breite = proposal.width ?? 320
+        var x: CGFloat = 0, y: CGFloat = 0, zeile: CGFloat = 0
+        for s in subviews {
+            let g = s.sizeThatFits(.unspecified)
+            if x > 0, x + g.width > breite { x = 0; y += zeile + abstand; zeile = 0 }
+            x += g.width + abstand
+            zeile = max(zeile, g.height)
+        }
+        return CGSize(width: breite, height: y + zeile)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, zeile: CGFloat = 0
+        for s in subviews {
+            let g = s.sizeThatFits(.unspecified)
+            if x > bounds.minX, x + g.width > bounds.maxX { x = bounds.minX; y += zeile + abstand; zeile = 0 }
+            s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(g))
+            x += g.width + abstand
+            zeile = max(zeile, g.height)
+        }
     }
 }

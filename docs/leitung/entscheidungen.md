@@ -23,6 +23,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | Thema | Vorschlag Claude | Wo |
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
+| [OFFEN] Habits v2 Rechenregel: Tagesanteil = Menge ÷ Soll (halb zählt halb), Serie nur volle Tage, n-mal pro Woche | so übernehmen | `rechenregeln.md` §6, `konzepte/habits-v2.md` |
 | [OFFEN] Ort des Lotse-Servers: Supabase Edge Functions (auch für späteren Abgleich) oder anderer Host | Supabase, Region EU | `docs/technik/lotse-server.md` |
 | [OFFEN] Kontingent: 5 freie Server-Fragen/Tag, Pro bis 300; Preis von Pro | so starten, Preis offen | `docs/technik/lotse-server.md` §5 |
 | [OFFEN] Namen „Fortschritt“ (Tab Ziele · Habits) und „Lotse“ (Assistent) | so lassen | `konzepte/lotse.md` |

@@ -144,7 +144,7 @@ private struct HabitsHeute: View {
             else if faellig.isEmpty { LeerZeile(text: "Heute nichts geplant.") }
             ForEach(faellig) { h in
                 HStack(spacing: 10) {
-                    Haken(an: h.erledigt.contains(T), farbe: Color(hex: h.farbe), beschriftung: h.titel) {
+                    Haken(an: h.voll(am: T), farbe: Color(hex: h.farbe), beschriftung: h.titel) {
                         speicher.aendern { $0.habitUmschalten(h.id, am: T) }
                     }
                     .padding(.leading, 4)

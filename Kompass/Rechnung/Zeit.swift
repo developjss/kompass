@@ -104,7 +104,7 @@ extension LernRechnung {
         for k in 0..<8 {
             let m = start.plus(tage: 7 * k)
             let w = HabitRechnung.woche(h, montag: m, seit: h.angelegt, heute: heute)
-            if w.geplant > 0 && w.erledigt >= w.geplant { erfuellt += 1 }
+            if w.erfuellt { erfuellt += 1 }
         }
         let anteil = Double(erfuellt + 1) / 10
         return max(1, (Double(wochen) * anteil).rounded())

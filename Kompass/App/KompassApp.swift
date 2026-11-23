@@ -78,7 +78,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
         switch self {
         case .heute: "Oben steht die eine Aufgabe, die jetzt dran ist. „Wichtig“ zahlt auf deine Ziele ein, „Weitere“ nicht. Mit dem Auge zeigst du nur eine Aufgabe. Erledigtes landet unter „Geschafft“."
         case .kalender: "Termine aus Google oder Apple stehen neben deinen Aufgaben. Der Eingang sammelt Ideen ohne Datum. Kompass ergänzt deinen Kalender, ersetzt ihn aber nicht."
-        case .habits: "Habits sind das Tägliche: kein Enddatum, sondern eine Serie. Tippe einen Tag an, um ihn abzuhaken. Rechts stehen Serie und Quote der letzten 30 Tage. Der laufende Tag zählt erst, wenn er abgehakt ist."
+        case .habits: "Habits sind das Tägliche. Unter „Heute“ hakst du ab oder trägst eine Menge ein – halb geschafft zählt halb. „Diese Woche“ zeigt Tages- und Wochen-Habits, „Alle Habits“ Soll, Rhythmus, Quote und Serie. Die Serie zählt nur volle Tage."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
         case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
         case .lotse: "Der Lotse kennt deine Ziele, Habits, Aufgaben und Termine. Frag ihn, was heute ansteht, wann du Zeit hast oder warum ein Ziel bei 54 % steht – oder lass ihn eine Aufgabe anlegen. Er rechnet nie selbst: Zahlen kommen immer aus der App."
@@ -106,6 +106,8 @@ final class Navigation {
         case terminZuZiel(UUID)
         case zielBearbeiten(UUID)
         case pro
+        /// Menge eines Habits für einen Tag eintragen (Tag als Text, damit der Fall Hashable bleibt)
+        case habitMenge(UUID, tag: String)
 
         var id: String {
             switch self {
@@ -123,6 +125,7 @@ final class Navigation {
             case .terminZuZiel(let z): "terminzuziel-\(z)"
             case .zielBearbeiten(let z): "zielbearbeiten-\(z)"
             case .pro: "pro"
+            case .habitMenge(let h, let t): "habitmenge-\(h)-\(t)"
             }
         }
     }

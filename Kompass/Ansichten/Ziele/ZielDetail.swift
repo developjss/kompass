@@ -218,7 +218,7 @@ private struct ZielHabits: View {
             ForEach(habits) { h in
                 let zaehlt = ziel.schritte.contains { $0.art == .habit && $0.habitID == h.id }
                 HStack(spacing: 10) {
-                    Haken(an: h.erledigt.contains(T), farbe: Color(hex: h.farbe), beschriftung: h.titel) {
+                    Haken(an: h.voll(am: T), farbe: Color(hex: h.farbe), beschriftung: h.titel) {
                         speicher.aendern { $0.habitUmschalten(h.id, am: T) }
                     }
                     .padding(.leading, 4)

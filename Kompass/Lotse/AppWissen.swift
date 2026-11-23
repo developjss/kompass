@@ -10,7 +10,7 @@ enum AppWissen {
     static let bereiche: [Bereich: String] = [
         .heute: "Heute: die eine Aufgabe, die jetzt dran ist, dann Wichtig, Weitere, Geschafft, fällige Habits, Termine und die nächsten Ziele. Unten der Tagesabschluss.",
         .kalender: "Kalender: Wochenleiste, Termine aus Google/Apple neben deinen Aufgaben mit Uhrzeit, Aufgaben ohne Uhrzeit, Eingang für Ideen ohne Datum.",
-        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Prozent, Auf Kurs, Frist, Meilensteine) und Habits (Woche abhaken, Serie, Quote).",
+        .fortschritt: "Fortschritt: oben umschalten zwischen Zielen (Prozent, Auf Kurs, Frist, Meilensteine) und Habits (Heute abhaken oder Menge eintragen, Diese Woche, Alle Habits mit Soll, Rhythmus, Erinnerung, Quote, Serie).",
         .lotse: "Lotse: dieser Chat. Fragen zur App, zu Zielen, Habits, Aufgaben, Terminen und zur Analyse; Aufgaben anlegen. Klare Fragen beantwortet er auf dem Gerät, freie Formulierungen über Claude (Kontingent, Pro).",
         .rueckblick: "Rückblick: Fokuszeit der Woche mit Kurve über 12 Wochen, Zeit pro Ziel, Habit-Quote, Wochenreflexion.",
     ]
@@ -21,7 +21,7 @@ enum AppWissen {
         "info": "(i): kurze Erklärung der Seite.",
         "einstellungen": "Daten & Kalender: Beispielkalender ein/aus, Speicherort, Demo-Daten neu laden.",
         "aufgabe": "Aufgabe: Titel, erledigt, wichtig, Datum, Wiederholung, Ziel, Notizen, löschen oder Serie beenden.",
-        "habit": "Habit: Serie, beste Serie, Quote, Wochentage, Ziel, löschen.",
+        "habit": "Habit: Soll mit Einheit, Rhythmus (täglich, Wochentage, n-mal pro Woche), Erinnerung, Ziel, Serie, Quote, letzte 14 Tage, löschen.",
         "fokus": "Fokus-Timer: läuft zur Aufgabe, Pause/Weiter, Fertig bucht die Zeit (an Mitternacht geteilt, höchstens 4 h am Stück).",
         "rechnung": "So wird gerechnet: ein Satz und je Meilenstein der Beitrag in Prozentpunkten.",
         "reflexion": "Tagesabschluss (3 Fragen) bzw. Wochenreflexion (3 Fragen).",
@@ -30,6 +30,7 @@ enum AppWissen {
         "aufgabezuziel": "Aufgaben zum Ziel: bestehende Aufgaben einem Ziel und Meilenstein zuordnen.",
         "terminzuziel": "Termine zum Ziel: eine Termin-Serie zuordnen; zählt in Zahl (je 1) oder Zeit (Dauer) oder nur als Einsatz.",
         "zielbearbeiten": "Ziel bearbeiten: Titel, Warum, Bereich, Datum, Farbe, löschen (Aufgaben und Habits bleiben).",
+        "habitmenge": "Menge eintragen: wie viel vom Habit heute geschafft ist (z. B. 12 von 20 Minuten) – große Zahl, Schnellwahl halb/ganz.",
         "pro": "Kompass Pro: unbegrenzte Lotse-Fragen und Gespräche; ohne Pro einige freie Fragen pro Tag (Regeln auf dem Gerät immer kostenlos).",
     ]
 
@@ -41,7 +42,7 @@ enum AppWissen {
             "Alles ohne Meilenstein (Aufgaben, Habits, Termine, Fokuszeit) zählt als Einsatz und ändert die Prozente nicht.",
             "Auf Kurs vergleicht Fortschritt mit der verstrichenen Zeit: 5 Punkte darüber = voraus, 10 darunter = hinterher.",
             "Prognose: Tempo der letzten 4 Wochen, ab 7 Tagen Verlauf.",
-            "Habit-Serie: geplante Tage rückwärts bis zum ersten verpassten; heute zählt erst nach dem Abhaken. Quote = erledigte ÷ geplante Tage der letzten 30 Tage.",
+            "Habit: Tagesanteil = Menge ÷ Soll (halb geschafft zählt halb). Serie = geplante Tage rückwärts, nur volle Tage; bei „n-mal pro Woche“ erfüllte Wochen. Quote = Σ Anteile ÷ geplante Tage der letzten 30 Tage.",
             "Wiederkehrende Aufgaben zählen nicht in „erledigte ÷ alle“, sondern über Fokuszeit.",
             "Lernen ändert nie bestehende Prozente – nur Vorschläge (Soll-Stunden, Habit-Soll) und die Prognose.",
         ]
@@ -73,7 +74,7 @@ enum AppWissen {
         let id = UUID()
         let faelle: [Navigation.Blatt] = [.neu(nil), .info(.heute), .einstellungen, .aufgabe(id), .habit(id), .fokus(id), .rechnung(id),
                                           .reflexion(woche: false), .meilenstein(ziel: id, schritt: nil), .habitZuZiel(id), .aufgabeZuZiel(id),
-                                          .terminZuZiel(id), .zielBearbeiten(id), .pro]
+                                          .terminZuZiel(id), .zielBearbeiten(id), .pro, .habitMenge(id, tag: "2026-01-01")]
         return faelle.map { String($0.id.split(separator: "-")[0]) }
     }
 }

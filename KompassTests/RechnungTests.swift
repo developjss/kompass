@@ -233,7 +233,7 @@ struct HabitTests {
     let heute = Tag(2027, 5, 5) // Mittwoch
 
     func habit(_ tage: Set<Int>, _ erledigt: [Int], angelegt: Int = -60) -> Habit {
-        Habit(titel: "h", farbe: "#000000", symbol: "x", wochentage: tage, erledigt: Set(erledigt.map { heute.plus(tage: $0) }), angelegt: heute.plus(tage: angelegt))
+        Habit(titel: "h", farbe: "#000000", symbol: "x", rhythmus: .aus(tagen: tage), eintraege: Dictionary(uniqueKeysWithValues: erledigt.map { (heute.plus(tage: $0), 1.0) }), angelegt: heute.plus(tage: angelegt))
     }
 
     @Test func serieHeuteZaehltErstWennAbgehakt() {
@@ -276,7 +276,7 @@ struct DemoTests {
         let t = Tag(2026, 11, 23), j = zeit(2026, 11, 23, 12)
         let a = DemoDaten.zustand(heute: t, jetzt: j), b = DemoDaten.zustand(heute: t, jetzt: j)
         #expect(a.sitzungen.map(\.sekunden) == b.sitzungen.map(\.sekunden))
-        #expect(a.habits.map(\.erledigt) == b.habits.map(\.erledigt))
+        #expect(a.habits.map(\.eintraege) == b.habits.map(\.eintraege))
     }
 
     @Test func alleZahlenImGueltigenBereich() throws {
@@ -341,11 +341,11 @@ struct RechnungV2Tests {
         // Mo/Mi/Fr geplant; seit Mo 12.04.: Woche 1 komplett, Woche 2 Fr fehlt, Woche 3 komplett, Woche 4 (laufend) Mo erledigt, Mi offen
         var h = Habit(titel: "Sport", farbe: "#000000", symbol: "x", wochentage: [1, 3, 5], angelegt: Tag(2027, 4, 1))
         let w1 = Tag(2027, 4, 12)
-        for o in [0, 2, 4, 7, 9, 14, 16, 18, 21] { h.erledigt.insert(w1.plus(tage: o)) }
+        for o in [0, 2, 4, 7, 9, 14, 16, 18, 21] { h.eintragen(1, am: w1.plus(tage: o)) }
         #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute) == 2)
-        h.erledigt.insert(heute)
+        h.eintragen(1, am: heute)
         #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute) == 2) // Fr fehlt noch
-        h.erledigt.insert(heute.plus(tage: 2))
+        h.eintragen(1, am: heute.plus(tage: 2))
         #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute.plus(tage: 2)) == 3)
         // Start mitten in der Woche: nur geplante Tage ab „seit“ zählen (Do 15.04. → Fr 16.04. reicht für Woche 1)
         #expect(HabitRechnung.erfuellteWochen(h, seit: Tag(2027, 4, 15), heute: heute) == 2)
@@ -356,7 +356,7 @@ struct RechnungV2Tests {
         var z = Zustand()
         var h = Habit(titel: "Sport", farbe: "#000000", symbol: "x", wochentage: [1, 3, 5], angelegt: Tag(2027, 4, 1))
         let w1 = Tag(2027, 4, 12)
-        for o in [0, 2, 4, 14, 16, 18] { h.erledigt.insert(w1.plus(tage: o)) }
+        for o in [0, 2, 4, 14, 16, 18] { h.eintragen(1, am: w1.plus(tage: o)) }
         z.habits = [h]
         let g = ziel([
             Schritt(titel: "Gewicht", art: .zahl, gewicht: 2, soll: 75, start: 86, aktuell: 81),
@@ -400,7 +400,7 @@ struct RechnungV2Tests {
         #expect(LernRechnung.vorschlagWochen(h, heute: heute, bis: heute.plus(tage: 70)) == 1)
         // alle 8 letzten Wochen erfüllt: (8 + 1) ÷ 10 = 90 % von 10 Wochen = 9
         var d = heute.montag.plus(tage: -56)
-        while d < heute.montag { if HabitRechnung.geplant(h, am: d) { h.erledigt.insert(d) }; d = d.plus(tage: 1) }
+        while d < heute.montag { if HabitRechnung.geplant(h, am: d) { h.eintragen(1, am: d) }; d = d.plus(tage: 1) }
         #expect(LernRechnung.vorschlagWochen(h, heute: heute, bis: heute.plus(tage: 70)) == 9)
     }
 

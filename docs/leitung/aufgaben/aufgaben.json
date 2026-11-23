@@ -228,7 +228,7 @@
     },
     {
       "id": "s-habits",
-      "titel": "Habits in SwiftUI",
+      "titel": "Habits in SwiftUI (v2: Mengen, Rhythmus, Erinnerungszeit, neue Seite)",
       "wer": "claude",
       "status": "erledigt",
       "prio": 2,
@@ -576,6 +576,42 @@
       ],
       "quelle": "docs/technik/lotse-server.md §6",
       "landkarte": "lotse-server"
+    },
+    {
+      "id": "h-detail",
+      "titel": "Habits v2 Block 2: Detail-Seite mit Bearbeiten je Zeile (Soll, Einheit, Rhythmus, Erinnerung, Ziel, Farbe), Verlauf",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/habits-v2.md §7",
+      "landkarte": "habits"
+    },
+    {
+      "id": "h-erinnerung",
+      "titel": "Habit-Erinnerungen als lokale Mitteilungen (UserNotifications, Erlaubnis, Planung je Wochentag)",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "nach": [
+        "h-detail"
+      ],
+      "quelle": "docs/produkt/konzepte/habits-v2.md §8",
+      "landkarte": "habits"
+    },
+    {
+      "id": "z-v2",
+      "titel": "Ziele v2: Zusammenfassung oben, Fakten-Zeilen mit Chevron im Ziel-Detail, Satz „so wird gerechnet“, Meilenstein-Vorlagen",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "nach": [
+        "h-detail"
+      ],
+      "quelle": "docs/produkt/konzepte/habits-v2.md §9",
+      "landkarte": "ziele"
     }
   ]
 }
