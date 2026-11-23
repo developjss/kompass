@@ -260,10 +260,11 @@ extension Zustand {
         aufgaben[i].uhrzeit = tag == nil ? nil : uhrzeit.map { min(max($0, 0), 24 * 60 - 5) }
     }
 
-    /// Habit an einem Tag zu einer Uhrzeit planen (nur dieser Tag); nil = Uhrzeit für den Tag entfernen.
+    /// Habit an einem Tag zu einer Uhrzeit planen (nur dieser Tag); nil = an diesem Tag ohne Uhrzeit (auch wenn eine feste Uhrzeit gilt).
     mutating func habitEinplanen(_ id: UUID, tag: Tag, uhrzeit: Int?) {
         guard let i = habits.firstIndex(where: { $0.id == id }) else { return }
-        habits[i].planZeiten[tag] = uhrzeit.map { min(max($0, 0), 24 * 60 - 5) }
+        if let u = uhrzeit { habits[i].planZeiten[tag] = min(max(u, 0), 24 * 60 - 5) }
+        else { habits[i].planZeiten[tag] = habits[i].uhrzeit == nil ? nil : -1 }
     }
 
     /// Eigenen Termin anlegen oder ändern; zählt er für ein Ziel, wird die Serie verknüpft (Einsatz bzw. Meilenstein Zeit/Zahl).

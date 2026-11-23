@@ -153,3 +153,28 @@ struct TagesplanBefundTests {
         #expect(h.filter { $0.art == .ueberschneidung }.count == 2) // Training+Training, Training+Call
     }
 }
+
+@Suite("Kalender · Herausziehen")
+struct HerausziehenTests {
+    @Test func habitMitFesterUhrzeitEinenTagOhneUhrzeit() {
+        let heute = Tag(2027, 5, 5)
+        var z = Zustand()
+        var h = Habit(titel: "Lesen", farbe: "#000000", symbol: "x", angelegt: heute.plus(tage: -5))
+        h.uhrzeit = 21 * 60
+        z.habits = [h]
+        z.habitEinplanen(h.id, tag: heute, uhrzeit: nil)          // aus dem Kalender gezogen
+        #expect(z.habit(h.id)?.zeit(am: heute) == nil && z.habit(h.id)?.zeit(am: heute.plus(tage: 1)) == 21 * 60)
+        #expect(Tagesplan.ohneZeit(am: heute, zustand: z).habits.count == 1)
+        z.habitEinplanen(h.id, tag: heute, uhrzeit: 8 * 60)      // wieder hinein
+        #expect(z.habit(h.id)?.zeit(am: heute) == 8 * 60)
+        let wieder = try? JSONDecoder.kompass.decode(Zustand.self, from: JSONEncoder.kompass.encode(z))
+        #expect(wieder?.habit(h.id)?.zeit(am: heute) == 8 * 60)
+        // Aufgabe: aus der Zeitleiste zurück nach „Ohne Uhrzeit“, dann in den Eingang
+        z.aufgaben = [Aufgabe(titel: "a", datum: heute, uhrzeit: 10 * 60)]
+        let a = z.aufgaben[0].id
+        z.aufgabeEinplanen(a, tag: heute, uhrzeit: nil)
+        #expect(z.aufgabe(a)?.uhrzeit == nil && z.aufgabe(a)?.datum == heute)
+        z.aufgabeEinplanen(a, tag: nil, uhrzeit: nil)
+        #expect(z.aufgabe(a)?.datum == nil)
+    }
+}

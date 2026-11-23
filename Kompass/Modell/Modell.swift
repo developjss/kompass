@@ -208,8 +208,11 @@ struct Habit: Identifiable, Codable, Sendable, Hashable {
 
     func voll(am tag: Tag) -> Bool { anteil(am: tag) >= 1 }
 
-    /// Uhrzeit an einem Tag: in den Tag gezogen, sonst die feste Uhrzeit.
-    func zeit(am tag: Tag) -> Int? { planZeiten[tag] ?? uhrzeit }
+    /// Uhrzeit an einem Tag: in den Tag gezogen (−1 = an diesem Tag ausdrücklich ohne Uhrzeit), sonst die feste Uhrzeit.
+    func zeit(am tag: Tag) -> Int? {
+        if let p = planZeiten[tag] { return p < 0 ? nil : p }
+        return uhrzeit
+    }
 
     /// Wie lange der Habit im Kalender dauert.
     var dauerMinuten: Int {
@@ -459,7 +462,16 @@ struct LotseLernen: Codable, Sendable, Hashable {
     var genutzt: [String: Int] = [:]
 }
 
-/// Eine Nachricht im Lotsen-Chat.
+/// Ein früherer Chat mit dem Assistenten (Verlauf oben links).
+struct Chat: Identifiable, Codable, Sendable, Hashable {
+    var id = UUID()
+    var start: Date
+    var nachrichten: [ChatNachricht]
+    /// Erste Frage als Titel
+    var titel: String { nachrichten.first { $0.rolle == .nutzer }?.text ?? "Chat" }
+}
+
+/// Eine Nachricht im Chat mit dem Assistenten.
 struct ChatNachricht: Identifiable, Codable, Sendable, Hashable {
     enum Rolle: String, Codable, Sendable { case nutzer, lotse }
     enum Aktion: Codable, Sendable, Hashable {
@@ -529,8 +541,10 @@ struct Zustand: Codable, Sendable, Hashable {
     var termine: [TerminVerknuepfung] = []
     /// Termine, die in Kompass angelegt wurden
     var eigeneTermine: [EigenerTermin] = []
-    /// Chat mit dem Lotsen (die letzten 200 Nachrichten)
+    /// Laufender Chat mit dem Assistenten (die letzten 200 Nachrichten)
     var chat: [ChatNachricht] = []
+    /// Frühere Chats, neueste zuerst (höchstens 30)
+    var chatVerlauf: [Chat] = []
 
     init(ziele: [Ziel] = [], habits: [Habit] = [], aufgaben: [Aufgabe] = [], sitzungen: [FokusSitzung] = []) {
         self.ziele = ziele
@@ -555,6 +569,7 @@ struct Zustand: Codable, Sendable, Hashable {
         termine = try c.decodeIfPresent([TerminVerknuepfung].self, forKey: .termine) ?? []
         chat = try c.decodeIfPresent([ChatNachricht].self, forKey: .chat) ?? []
         eigeneTermine = try c.decodeIfPresent([EigenerTermin].self, forKey: .eigeneTermine) ?? []
+        chatVerlauf = try c.decodeIfPresent([Chat].self, forKey: .chatVerlauf) ?? []
     }
 
     func ziel(_ id: UUID?) -> Ziel? { id.flatMap { i in ziele.first { $0.id == i } } }

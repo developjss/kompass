@@ -19,6 +19,7 @@ struct KompassApp: App {
                 }
                 .onChange(of: speicher.zustand.einstellungen.pro) { _, neu in Sprachmodelle.einrichten(pro: neu) }
                 .onChange(of: phase) { _, neu in
+                    if neu == .background { Lotse.neuerChat(speicher: speicher) }
                     if neu != .active { speicher.speichernJetzt() } else if speicher.lage == .bereit { speicher.appleKalenderLesen() }
                 }
         }
@@ -34,7 +35,7 @@ enum Bereich: String, Hashable, CaseIterable {
         case .heute: "Home"
         case .kalender: "Kalender"
         case .fortschritt: "Fortschritt"
-        case .lotse: "Lotse"
+        case .lotse: "Assistent"
         case .rueckblick: "Rückblick"
         }
     }
@@ -44,7 +45,7 @@ enum Bereich: String, Hashable, CaseIterable {
         case .heute: "house"
         case .kalender: "calendar"
         case .fortschritt: "target"
-        case .lotse: "sparkles.rectangle.stack"
+        case .lotse: "sparkles"
         case .rueckblick: "chart.bar"
         }
     }
@@ -95,7 +96,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
         case .habits: "Habits"
         case .ziele: "Ziele"
         case .rueckblick: "Rückblick"
-        case .lotse: "Lotse"
+        case .lotse: "Assistent"
         }
     }
 
@@ -106,7 +107,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
         case .habits: "Habits sind das Tägliche. Unter „Heute“ hakst du ab oder trägst eine Menge ein – halb geschafft zählt halb. „Diese Woche“ zeigt Tages- und Wochen-Habits, „Alle Habits“ Soll, Rhythmus, Quote und Serie. Die Serie zählt nur volle Tage."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
         case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
-        case .lotse: "Der Lotse kennt deine Ziele, Habits, Aufgaben und Termine. Frag ihn, was heute ansteht, wann du Zeit hast oder warum ein Ziel bei 54 % steht – oder lass ihn eine Aufgabe anlegen. Er rechnet nie selbst: Zahlen kommen immer aus der App."
+        case .lotse: "Der Assistent kennt deine Ziele, Habits, Aufgaben und Termine. Frag ihn, was als Nächstes ansteht, wie voll dein Tag ist oder warum ein Ziel bei 54 % steht – oder lass ihn Aufgaben und Termine anlegen. Jeder Start der App beginnt einen neuen Chat; frühere findest du oben links. Er rechnet nie selbst: Zahlen kommen immer aus der App."
         }
     }
 }
@@ -135,6 +136,8 @@ final class Navigation {
         case habitMenge(UUID, tag: String)
         /// Eine Zeile der Habit-Seite bearbeiten
         case habitBearbeiten(UUID, HabitFeld)
+        /// Frühere Chats mit dem Assistenten
+        case chats
         /// Termin anlegen (id nil) oder bearbeiten; Tag als Text, Start in Minuten
         case termin(UUID?, tag: String, start: Int?)
 
@@ -155,6 +158,7 @@ final class Navigation {
             case .pro: "pro"
             case .habitMenge(let h, let t): "habitmenge-\(h)-\(t)"
             case .habitBearbeiten(let h, let f): "habitbearbeiten-\(h)-\(f.rawValue)"
+            case .chats: "chats"
             case .termin(let i, let t, let s): "termin-\(i?.uuidString ?? "neu")-\(t)-\(s ?? -1)"
             }
         }

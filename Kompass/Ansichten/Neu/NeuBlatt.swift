@@ -1,193 +1,547 @@
 import SwiftUI
 
-/// Anlegen: Aufgabe, Termin, Habit oder Ziel – ein Bildschirm, Chips statt Räder (Struktur v3).
+/// Anlegen, geführt wie der „Personal check“ in Gapless: eine Frage je Schritt, Fortschrittsbalken oben,
+/// großer Weiter-Knopf unten. Was → Titel → Wann → Details → Fertig. Aufgabe, Termin, Habit oder Ziel.
 struct NeuBlatt: View {
-    @State var art: NeuArt
+    @State private var art: NeuArt?
+    @State private var schritt: Schritt
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var titelFokus: Bool
+
+    enum Schritt: Int, CaseIterable { case was, titel, wann, details, fertig }
+
+    init(art: NeuArt?) {
+        _art = State(initialValue: art)
+        _schritt = State(initialValue: art == nil ? .was : .titel)
+    }
+
+    // Gemeinsam
+    @State private var titel = ""
+    @State private var zielID: UUID?
+    @State private var kategorie: Kategorie?
+    // Aufgabe
+    @State private var wannWahl: WannWahl = .heute
+    @State private var datum = Date()
+    @State private var wichtig = false
+    @State private var wiederholung: Wiederholung = .nie
     @State private var mitUhrzeit = false
     @State private var uhrzeit = 9 * 60
     @State private var dauer = 60
-    @State private var kategorie: Kategorie?
-    @State private var habitUhrzeit: Int?
-
-    @State private var titel = ""
-    @State private var datum = Date()
-    @State private var mitDatum = true
-    @State private var wichtig = false
-    @State private var zielID: UUID?
-    @State private var wiederholung: Wiederholung = .nie
-    @State private var tage: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
+    // Termin
+    @State private var terminStart = 15 * 60
+    @State private var terminEnde = 16 * 60
+    @State private var terminHabitID: UUID?
+    // Habit
     @State private var rhythmusArt: RhythmusArt = .taeglich
+    @State private var tage: Set<Int> = [1, 2, 3, 4, 5]
     @State private var proWoche = 3
     @State private var mitMenge = false
     @State private var menge: Double = 20
     @State private var habitEinheit: Einheit = .minuten
-    @State private var erinnerung: Int? = nil
+    @State private var erinnerung: Int?
+    @State private var habitUhrzeit: Int?
     @State private var vorschlagGenutzt = false
     @State private var symbol = "star.fill"
-
-    enum RhythmusArt: String, CaseIterable { case taeglich = "Täglich", werktags = "Werktags", tage = "Wochentage", proWoche = "n-mal pro Woche" }
+    // Ziel
+    @State private var fristWahl = 1
     @State private var faellig = Calendar.kompass.date(byAdding: .month, value: 6, to: Date()) ?? Date()
-    /// Gewählte Meilenstein-Vorlage (Index in `ZielVorschlag.fuer(titel)`); nil = ohne Meilensteine
     @State private var vorlage: Int? = 0
     @State private var start = 0.0
     @State private var zielwert = 100.0
     @State private var einheit = ""
     @State private var zahlAngefasst = false
 
+    enum WannWahl: String, CaseIterable { case heute = "Heute", morgen = "Morgen", datum = "Datum", eingang = "Ohne Datum" }
+    enum RhythmusArt: String, CaseIterable { case taeglich = "Täglich", werktags = "Werktags", tage = "Wochentage", proWoche = "n-mal pro Woche" }
     private let namen = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Picker("Was", selection: $art) {
-                    Text("Aufgabe").tag(NeuArt.aufgabe)
-                    Text("Termin").tag(NeuArt.termin)
-                    Text("Habit").tag(NeuArt.habit)
-                    Text("Ziel").tag(NeuArt.ziel)
+        VStack(spacing: 0) {
+            kopf
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text(frage).font(.kompass(.title, .heavy)).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                    if let u = unterfrage { Text(u).font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+                    inhalt
                 }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .onChange(of: art) { _, neu in
-                    if neu == .termin { nav.blatt = .termin(nil, tag: speicher.heute.text, start: nil) }
+                .padding(.horizontal, Mass.rand).padding(.top, 8).padding(.bottom, 24)
+                .frame(maxWidth: 720).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            fuss
+        }
+        .background(Farbe.grund.ignoresSafeArea())
+        .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
+        .onChange(of: schritt) { _, neu in titelFokus = neu == .titel }
+        .onAppear { if schritt == .titel { titelFokus = true } }
+    }
+
+    // MARK: Kopf und Fuß
+
+    private var schritte: [Schritt] { Schritt.allCases }
+    private var position: Int { schritte.firstIndex(of: schritt) ?? 0 }
+
+    private var kopf: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Button { zurueck() } label: {
+                    Image(systemName: schritt == .was || (schritt == .titel && artVorgegeben) ? "xmark" : "chevron.left")
+                        .font(.body.weight(.semibold)).frame(width: 44, height: 44)
+                        .background(Farbe.karte, in: Circle()).foregroundStyle(Farbe.text)
                 }
+                .accessibilityLabel(schritt == .was || (schritt == .titel && artVorgegeben) ? "Abbrechen" : "Zurück")
+                Spacer()
+                Text(art.map { "Neu: \($0.name)" } ?? "Neu").font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig)
+                Spacer()
+                Button("Abbrechen") { dismiss() }.font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent).frame(minHeight: 44)
+                    .opacity(schritt == .was ? 0 : 1)
+            }
+            HStack(spacing: 6) {
+                ForEach(Array(schritte.enumerated()), id: \.offset) { i, _ in
+                    Capsule().fill(i <= position ? Farbe.akzent : Farbe.akzentWeich).frame(height: 5)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Schritt \(position + 1) von \(schritte.count)")
+        }
+        .padding(.horizontal, Mass.rand).padding(.top, 12).padding(.bottom, 6)
+    }
 
-                Section { TextField(platzhalter, text: $titel) }
+    @ViewBuilder private var fuss: some View {
+        if schritt != .was {
+            VStack(spacing: 8) {
+                Button(action: weiter) {
+                    Text(schritt == .fertig ? "Anlegen" : "Weiter").font(.kompass(.headline, .bold))
+                        .frame(maxWidth: .infinity, minHeight: 54)
+                        .background(gueltig ? Farbe.akzent : Farbe.akzent.opacity(0.35), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .disabled(!gueltig)
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("neu.weiter")
+                if schritt != .fertig {
+                    Text(hinweisUnten).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(2).multilineTextAlignment(.center)
+                }
+            }
+            .padding(.horizontal, Mass.rand).padding(.vertical, 10)
+            .background(Farbe.grund)
+        }
+    }
 
-                switch art {
-                case .aufgabe:
-                    Section {
-                        Toggle("Mit Datum", isOn: $mitDatum)
-                        if mitDatum {
-                            DatePicker("Datum", selection: $datum, displayedComponents: .date)
-                            Toggle("Mit Uhrzeit", isOn: $mitUhrzeit)
-                            if mitUhrzeit {
-                                DatePicker("Uhrzeit", selection: Binding(get: { uhr(uhrzeit) }, set: { uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute)
-                                ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { (dauerText($0), $0 == dauer) }) { dauer = [15, 30, 60, 90, 120][$0] }
-                            }
-                        }
-                    } footer: { Text(mitDatum ? (mitUhrzeit ? "Steht als Block im Kalender." : "Steht am Tag unter „Ohne Uhrzeit“ – ziehbar in den Kalender.") : "Landet im Eingang.") }
-                    Section {
-                        Toggle("Wichtig", isOn: $wichtig)
-                        Picker("Wiederholen", selection: $wiederholung) {
-                            ForEach(Wiederholung.allCases, id: \.self) { Text($0.name).tag($0) }
-                        }
-                        zielPicker
-                        ChipReihe(titel: "Kategorie", auswahl: Kategorie.allCases.map { ($0.name, $0 == kategorie) }) { i in
-                            let k = Kategorie.allCases[i]; kategorie = kategorie == k ? nil : k
+    private var artVorgegeben: Bool { art != nil && schritt == .titel && !kamVonWas }
+    @State private var kamVonWas = false
+
+    private func zurueck() {
+        switch schritt {
+        case .was: dismiss()
+        case .titel: if kamVonWas { schritt = .was } else { dismiss() }
+        case .wann: schritt = .titel
+        case .details: schritt = .wann
+        case .fertig: schritt = .details
+        }
+    }
+
+    private func weiter() {
+        guard gueltig else { return }
+        switch schritt {
+        case .was: schritt = .titel
+        case .titel: schritt = .wann
+        case .wann: schritt = .details
+        case .details: schritt = .fertig
+        case .fertig: anlegen()
+        }
+    }
+
+    private var gueltig: Bool {
+        switch schritt {
+        case .was: return art != nil
+        case .titel: return !titel.trimmingCharacters(in: .whitespaces).isEmpty
+        case .wann:
+            if art == .habit { return rhythmusArt != .tage || !tage.isEmpty }
+            if art == .termin { return terminEnde > terminStart }
+            return true
+        case .details: return art != .habit || !mitMenge || menge > 0
+        case .fertig: return true
+        }
+    }
+
+    private var hinweisUnten: String {
+        switch schritt {
+        case .titel: return art == .habit ? "Aus dem Titel schlägt Kompass Menge und Einheit vor." : art == .ziel ? "Aus dem Titel kommen Meilenstein-Vorlagen." : "Kurz und klar – du kannst alles später ändern."
+        case .wann: return art == .aufgabe ? "Ohne Uhrzeit landet sie am Tag unter „Ohne Uhrzeit“ – ziehbar in den Kalender." : art == .habit ? "Mit fester Uhrzeit steht der Habit als Block im Kalender." : ""
+        case .details: return "Alles hier ist optional."
+        default: return ""
+        }
+    }
+
+    // MARK: Fragen
+
+    private var frage: String {
+        switch schritt {
+        case .was: return "Was möchtest du anlegen?"
+        case .titel:
+            switch art {
+            case .aufgabe: return "Was ist zu tun?"
+            case .termin: return "Wie heißt der Termin?"
+            case .habit: return "Was willst du regelmäßig tun?"
+            case .ziel: return "Wohin willst du?"
+            case nil: return ""
+            }
+        case .wann:
+            switch art {
+            case .aufgabe: return "Wann?"
+            case .termin: return "Wann findet er statt?"
+            case .habit: return "Wie oft?"
+            case .ziel: return "Bis wann?"
+            case nil: return ""
+            }
+        case .details:
+            switch art {
+            case .aufgabe: return "Noch Details?"
+            case .termin: return "Zählt er für etwas?"
+            case .habit: return "Mit Menge?"
+            case .ziel: return "Meilensteine"
+            case nil: return ""
+            }
+        case .fertig: return "Passt das so?"
+        }
+    }
+
+    private var unterfrage: String? {
+        switch (schritt, art) {
+        case (.was, _): return "Eine Sache, ein Schritt nach dem anderen."
+        case (.details, .habit): return "Halb geschafft zählt halb – zum Beispiel 10 von 20 Minuten."
+        case (.details, .ziel): return gewaehlteVorlage.map { "Vorlage: \($0.kurz)" }
+        case (.wann, .ziel): return "„Auf Kurs“ vergleicht den Fortschritt mit der Zeit bis dahin."
+        default: return nil
+        }
+    }
+
+    // MARK: Inhalt je Schritt
+
+    @ViewBuilder private var inhalt: some View {
+        switch schritt {
+        case .was: wasTeil
+        case .titel: titelTeil
+        case .wann: wannTeil
+        case .details: detailsTeil
+        case .fertig: fertigTeil
+        }
+    }
+
+    private var wasTeil: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach([NeuArt.aufgabe, .termin, .habit, .ziel], id: \.self) { a in
+                Button { art = a; kamVonWas = true; schritt = .titel } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Image(systemName: a.symbol).font(.system(size: 18, weight: .bold))
+                            .frame(width: 40, height: 40).background(.white.opacity(0.22), in: Circle())
+                            .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                        Spacer(minLength: 4)
+                        Text(a.name).font(.kompass(.headline, .bold))
+                        Text(a.erklaerung).font(.klein).opacity(0.9).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, minHeight: 136, alignment: .topLeading)
+                    .background {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(LinearGradient(colors: a.verlauf, startPoint: .bottomTrailing, endPoint: .topLeading))
+                            .overlay(alignment: .topLeading) { Circle().fill(.white.opacity(0.18)).frame(width: 120).blur(radius: 30).offset(x: -30, y: -40) }
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .shadow(color: a.verlauf[0].opacity(0.3), radius: 10, y: 5)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(a.name): \(a.erklaerung)")
+            }
+        }
+    }
+
+    @ViewBuilder private var titelTeil: some View {
+        TextField(platzhalter, text: $titel, axis: .vertical)
+            .font(.kompass(.title2, .bold)).lineLimit(1...3)
+            .focused($titelFokus)
+            .submitLabel(.next)
+            .onSubmit { if gueltig { weiter() } }
+            .padding(16)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Farbe.akzent.opacity(titelFokus ? 0.6 : 0), lineWidth: 2))
+            .accessibilityIdentifier("neu.titel")
+        if art == .habit {
+            let v = vorschlag
+            if !titel.trimmingCharacters(in: .whitespaces).isEmpty, v.einheit != nil || v.nurAbhaken {
+                Vorschlagskarte(text: v.nurAbhaken ? "Einfach abhaken – ohne Menge" : "\(Zahl.text(v.menge ?? 0)) \(v.einheit?.name ?? "") pro Tag", an: vorschlagGenutzt) {
+                    vorschlagUebernehmen(v)
+                }
+            }
+        }
+        if art == .ziel, !titel.trimmingCharacters(in: .whitespaces).isEmpty {
+            let v = vorlagen
+            ChipReihe(titel: "Meilenstein-Vorlage", auswahl: v.enumerated().map { ($0.element.name, vorlage == $0.offset) } + [("Ohne", vorlage == nil)]) { i in
+                vorlage = i < v.count ? i : nil; zahlAngefasst = false
+            }
+            if let g = gewaehlteVorlage { Text(g.kurz).font(.klein).foregroundStyle(Farbe.zweitrangig) }
+        }
+        if art == .aufgabe || art == .termin {
+            let beispiele = art == .aufgabe ? ["Flugschule anrufen", "Paket zur Post", "Kapitel 4 lesen"] : ["Fahrstunde", "Zahnarzt", "Training"]
+            ChipReihe(titel: "Zum Beispiel", auswahl: beispiele.map { ($0, titel == $0) }) { titel = beispiele[$0] }
+        }
+    }
+
+    @ViewBuilder private var wannTeil: some View {
+        switch art {
+        case .aufgabe:
+            Karte {
+                ChipReihe(titel: "Tag", auswahl: WannWahl.allCases.map { ($0.rawValue, $0 == wannWahl) }) { wannWahl = WannWahl.allCases[$0] }
+                if wannWahl == .datum { DatePicker("Datum", selection: $datum, displayedComponents: .date).font(.zeile) }
+            }
+            if wannWahl != .eingang {
+                Karte {
+                    ChipReihe(titel: "Uhrzeit", auswahl: [("keine", !mitUhrzeit)] + [9, 12, 15, 18].map { ("\($0):00", mitUhrzeit && uhrzeit == $0 * 60) }) { i in
+                        mitUhrzeit = i > 0; if i > 0 { uhrzeit = [9, 12, 15, 18][i - 1] * 60 }
+                    }
+                    if mitUhrzeit {
+                        DatePicker("Genau", selection: Binding(get: { uhr(uhrzeit) }, set: { uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
+                        ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { (dauerText($0), $0 == dauer) }) { dauer = [15, 30, 60, 90, 120][$0] }
+                    }
+                }
+            }
+        case .termin:
+            Karte {
+                DatePicker("Tag", selection: $datum, displayedComponents: .date).font(.zeile)
+                DatePicker("Von", selection: Binding(get: { uhr(terminStart) }, set: { let d = terminEnde - terminStart; terminStart = minuten($0); terminEnde = min(24 * 60 - 1, terminStart + max(d, 15)) }), displayedComponents: .hourAndMinute).font(.zeile)
+                DatePicker("Bis", selection: Binding(get: { uhr(terminEnde) }, set: { terminEnde = max(terminStart + 5, minuten($0)) }), displayedComponents: .hourAndMinute).font(.zeile)
+                ChipReihe(titel: "Dauer", auswahl: [30, 60, 90, 120].map { (dauerText($0), terminEnde - terminStart == $0) }) { terminEnde = min(24 * 60 - 1, terminStart + [30, 60, 90, 120][$0]) }
+            }
+        case .habit:
+            Karte {
+                ChipReihe(titel: "Rhythmus", auswahl: RhythmusArt.allCases.map { ($0.rawValue, $0 == rhythmusArt) }) { rhythmusArt = RhythmusArt.allCases[$0] }
+                if rhythmusArt == .tage {
+                    ChipReihe(titel: "Tage", auswahl: (1...7).map { (namen[$0 - 1], tage.contains($0)) }) { i in let d = i + 1; if tage.contains(d) { tage.remove(d) } else { tage.insert(d) } }
+                }
+                if rhythmusArt == .proWoche { Stepper("\(proWoche)× pro Woche", value: $proWoche, in: 1...7).font(.zeile) }
+            }
+            Karte {
+                ChipReihe(titel: "Feste Uhrzeit im Kalender", auswahl: [("keine", habitUhrzeit == nil)] + [7, 12, 18, 21].map { ("\($0):00", habitUhrzeit == $0 * 60) }) { i in
+                    habitUhrzeit = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
+                }
+                if habitUhrzeit != nil {
+                    DatePicker("Genau", selection: Binding(get: { uhr(habitUhrzeit ?? 0) }, set: { habitUhrzeit = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
+                }
+            }
+        case .ziel:
+            Karte {
+                let fristen = ["In 3 Monaten", "In 6 Monaten", "In 1 Jahr", "Datum"]
+                ChipReihe(titel: "Frist", auswahl: fristen.enumerated().map { ($0.element, fristWahl == $0.offset) }) { i in
+                    fristWahl = i
+                    let monate = [3, 6, 12]
+                    if i < 3 { faellig = Calendar.kompass.date(byAdding: .month, value: monate[i], to: speicher.heute.datum()) ?? faellig }
+                }
+                if fristWahl == 3 { DatePicker("Bis wann", selection: $faellig, displayedComponents: .date).font(.zeile) }
+                else { Text(faellig.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE")))).font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+            }
+        case nil: EmptyView()
+        }
+    }
+
+    @ViewBuilder private var detailsTeil: some View {
+        switch art {
+        case .aufgabe:
+            Karte {
+                ChipReihe(titel: "Wichtigkeit", auswahl: [("Wichtig", wichtig), ("Normal", !wichtig)]) { wichtig = $0 == 0 }
+                ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
+            }
+            zielKarte
+            kategorieKarte
+        case .termin:
+            zielKarte
+            Karte {
+                let habits = speicher.zustand.habits
+                if !habits.isEmpty {
+                    ChipReihe(titel: "Erfüllt einen Habit", auswahl: [("Keinen", terminHabitID == nil)] + habits.map { ($0.titel, $0.id == terminHabitID) }) { i in
+                        terminHabitID = i == 0 ? nil : habits[i - 1].id
+                    }
+                }
+                ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
+            }
+            kategorieKarte
+        case .habit:
+            Karte {
+                ChipReihe(titel: "Menge", auswahl: [("Nur abhaken", !mitMenge), ("Mit Menge", mitMenge)]) { mitMenge = $0 == 1 }
+                if mitMenge {
+                    HStack {
+                        Text("Soll pro Tag").font(.zeile)
+                        Spacer()
+                        TextField("20", value: $menge, format: .number.locale(Locale(identifier: "de_DE"))).multilineTextAlignment(.trailing).keyboardType(.decimalPad)
+                            .font(.kompass(.title3, .bold)).frame(width: 90).padding(8).background(Farbe.grund, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    ChipReihe(titel: "Einheit", auswahl: Einheit.allCases.map { ($0.name, $0 == habitEinheit) }) { habitEinheit = Einheit.allCases[$0] }
+                }
+            }
+            Karte {
+                ChipReihe(titel: "Erinnerung", auswahl: [("aus", erinnerung == nil)] + [7, 12, 18, 21].map { ("\($0):00", erinnerung == $0 * 60) }) { i in
+                    erinnerung = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
+                }
+                if erinnerung != nil {
+                    DatePicker("Genau", selection: Binding(get: { uhr(erinnerung ?? 0) }, set: { erinnerung = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
+                }
+            }
+            zielKarte
+        case .ziel:
+            if let zs = zahlSchritt {
+                Karte {
+                    Text("Zahl-Meilenstein „\(zs.titel)“").font(.zeile)
+                    HStack(spacing: 10) {
+                        zahlFeld("Start", wert: Binding(get: { zahlAngefasst ? start : (zs.start ?? 0) }, set: { zahlAnfassen(zs); start = $0 }))
+                        zahlFeld("Ziel", wert: Binding(get: { zahlAngefasst ? zielwert : (zs.soll ?? 100) }, set: { zahlAnfassen(zs); zielwert = $0 }))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Einheit").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                            TextField("kg", text: Binding(get: { zahlAngefasst ? einheit : (zs.einheit ?? "") }, set: { zahlAnfassen(zs); einheit = $0 }))
+                                .font(.kompass(.title3, .bold)).padding(8).background(Farbe.grund, in: RoundedRectangle(cornerRadius: 10))
                         }
                     }
-                case .termin:
-                    EmptyView()
-                case .habit:
-                    habitTeil
-                case .ziel:
-                    zielTeil
+                }
+            } else {
+                Karte { Text(gewaehlteVorlage.map { "Meilensteine: \($0.kurz)" } ?? "Ohne Vorlage – Meilensteine legst du im Ziel an.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+            }
+            Karte {
+                let bereiche = ["Lernen", "Gesundheit", "Finanzen", "Arbeit", "Familie", "Allgemein"]
+                ChipReihe(titel: "Bereich", auswahl: bereiche.map { ($0, $0 == (zielBereich ?? gewaehlteVorlage?.bereich ?? "Allgemein")) }) { zielBereich = bereiche[$0] }
+            }
+        case nil: EmptyView()
+        }
+    }
+    @State private var zielBereich: String?
+
+    private var zielKarte: some View {
+        Karte {
+            let ziele = speicher.zustand.ziele.filter { $0.status == .aktiv }
+            if ziele.isEmpty {
+                Text("Noch kein Ziel – später zuordnen.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+            } else {
+                ChipReihe(titel: art == .termin ? "Zählt für ein Ziel" : "Gehört zu einem Ziel", auswahl: [("Keins", zielID == nil)] + ziele.map { ($0.titel, $0.id == zielID) }) { i in
+                    zielID = i == 0 ? nil : ziele[i - 1].id
                 }
             }
-            .navigationTitle("Neu")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Anlegen", action: anlegen).disabled(titel.trimmingCharacters(in: .whitespaces).isEmpty || (art == .habit && rhythmusArt == .tage && tage.isEmpty) || (art == .habit && mitMenge && menge <= 0))
+        }
+    }
+
+    private var kategorieKarte: some View {
+        Karte {
+            ChipReihe(titel: "Kategorie (Farbe ohne Ziel)", auswahl: Kategorie.allCases.map { ($0.name, $0 == kategorie) }) { i in
+                let k = Kategorie.allCases[i]; kategorie = kategorie == k ? nil : k
+            }
+        }
+    }
+
+    private var fertigTeil: some View {
+        let farben = art?.verlauf ?? Farbe.indigo
+        return VStack(alignment: .leading, spacing: 12) {
+            Verlaufskarte(farben: farben) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        KartenLabel(text: art?.name ?? "Neu")
+                        Text(titel.trimmingCharacters(in: .whitespaces)).font(.kompass(.title2, .heavy)).fixedSize(horizontal: false, vertical: true)
+                        ForEach(zusammenfassung, id: \.self) { Text($0).font(.unterzeile).opacity(0.92) }
+                    }
+                    Spacer()
+                    Image(systemName: art?.symbol ?? "plus").font(.system(size: 20, weight: .semibold))
+                        .frame(width: 44, height: 44).background(.white.opacity(0.2), in: Circle())
                 }
             }
+            Text("Alles lässt sich später auf der Seite ändern.").font(.klein).foregroundStyle(Farbe.zweitrangig)
         }
     }
 
-    // MARK: Ziel – Datum und Meilenstein-Vorlagen aus dem Titel (habits-v2.md §9)
-
-    private var vorlagen: [ZielVorschlag.Vorlage] { ZielVorschlag.fuer(titel) }
-    private var gewaehlteVorlage: ZielVorschlag.Vorlage? { vorlage.flatMap { $0 < vorlagen.count ? vorlagen[$0] : nil } }
-    private var zahlSchritt: Schritt? { gewaehlteVorlage?.schritte.first { $0.art == .zahl } }
-
-    @ViewBuilder private var zielTeil: some View {
-        let v = vorlagen
-        Section {
-            DatePicker("Bis wann", selection: $faellig, displayedComponents: .date)
+    private var zusammenfassung: [String] {
+        let z = speicher.zustand
+        var t: [String] = []
+        switch art {
+        case .aufgabe:
+            t.append(wannWahl == .eingang ? "Ohne Datum (Eingang)" : "\(wannWahl == .datum ? datum.formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "de_DE"))) : wannWahl.rawValue)" + (mitUhrzeit ? " · \(Tagesplan.uhr(uhrzeit)) · \(dauerText(dauer))" : ""))
+            if wichtig { t.append("Wichtig") }
+            if wiederholung != .nie { t.append("Wiederholt sich \(wiederholung.name.lowercased())") }
+        case .termin:
+            t.append("\(datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))) · \(Tagesplan.uhr(terminStart))–\(Tagesplan.uhr(terminEnde))")
+            if wiederholung != .nie { t.append("Wiederholt sich \(wiederholung.name.lowercased())") }
+            if let h = z.habit(terminHabitID) { t.append("Erfüllt „\(h.titel)“") }
+        case .habit:
+            t.append(mitMenge ? "\(Zahl.text(menge, stellen: 1)) \(habitEinheit.name) · \(rhythmusText)" : rhythmusText)
+            if let u = habitUhrzeit { t.append("Im Kalender um \(Tagesplan.uhr(u))") }
+            if let e = erinnerung { t.append("Erinnerung \(Tagesplan.uhr(e))") }
+        case .ziel:
+            t.append("Bis \(faellig.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE"))))")
+            if let g = gewaehlteVorlage { t.append(g.kurz) }
+        case nil: break
         }
-        Section {
-            ChipReihe(titel: "Meilensteine", auswahl: v.map { ($0.name, false) }.enumerated().map { ($0.element.0, vorlage == $0.offset) } + [("Ohne", vorlage == nil)]) { i in
-                vorlage = i < v.count ? i : nil
-                zahlAngefasst = false
+        if let g = z.ziel(zielID), art != .ziel { t.append("Ziel: \(g.titel)") }
+        if let k = kategorie, zielID == nil, art != .ziel, art != .habit { t.append("Kategorie: \(k.name)") }
+        return t
+    }
+
+    private var rhythmusText: String {
+        switch rhythmusArt {
+        case .taeglich: "täglich"
+        case .werktags: "werktags"
+        case .tage: tage.sorted().map { namen[$0 - 1] }.joined(separator: ", ")
+        case .proWoche: "\(proWoche)× pro Woche"
+        }
+    }
+
+    // MARK: Bausteine
+
+    private struct Karte<Inhalt: View>: View {
+        @ViewBuilder var inhalt: Inhalt
+        var body: some View {
+            VStack(alignment: .leading, spacing: 12) { inhalt }
+                .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        }
+    }
+
+    private struct Vorschlagskarte: View {
+        var text: String
+        var an: Bool
+        var aktion: () -> Void
+        var body: some View {
+            Button(action: aktion) {
+                HStack(spacing: 12) {
+                    AssistentZeichen(groesse: 32)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Vorschlag").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                        Text(text).font(.zeile).foregroundStyle(Farbe.text)
+                    }
+                    Spacer()
+                    Image(systemName: an ? "checkmark.circle.fill" : "plus.circle").font(.title3).foregroundStyle(an ? Farbe.freude : Farbe.akzent)
+                }
+                .padding(14)
+                .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(an ? Farbe.freude : Farbe.akzentWeich, lineWidth: 1.5))
             }
-            if let zs = zahlSchritt {
-                let e = zahlAngefasst ? einheit : (zs.einheit ?? "")
-                LabeledContent("Start") { TextField("0", value: Binding(get: { zahlAngefasst ? start : (zs.start ?? 0) }, set: { zahlAnfassen(zs); start = $0 }), format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
-                LabeledContent("Ziel") { TextField("100", value: Binding(get: { zahlAngefasst ? zielwert : (zs.soll ?? 100) }, set: { zahlAnfassen(zs); zielwert = $0 }), format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
-                TextField("Einheit (z. B. kg, €)", text: Binding(get: { e }, set: { zahlAnfassen(zs); einheit = $0 }))
-            }
-        } footer: {
-            Text(gewaehlteVorlage.map { "\(vorlagen.count > 1 ? "Aus deinem Titel" : "Vorlage"): \($0.kurz). Im Ziel änderst du alles." } ?? "Meilensteine legst du danach im Ziel an.")
+            .buttonStyle(.plain)
+            .accessibilityLabel("Vorschlag übernehmen: \(text)")
         }
     }
 
-    private func zahlAnfassen(_ zs: Schritt) {
-        guard !zahlAngefasst else { return }
-        zahlAngefasst = true
-        start = zs.start ?? 0; zielwert = zs.soll ?? 100; einheit = zs.einheit ?? ""
+    private func zahlFeld(_ titel: String, wert: Binding<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(titel).font(.klein).foregroundStyle(Farbe.zweitrangig)
+            TextField("0", value: wert, format: .number.locale(Locale(identifier: "de_DE"))).keyboardType(.decimalPad)
+                .font(.kompass(.title3, .bold)).padding(8).background(Farbe.grund, in: RoundedRectangle(cornerRadius: 10))
+        }
     }
 
-    // MARK: Habit – Menge, Einheit, Rhythmus, Erinnerung als Chips (habits-v2.md §7)
+    // MARK: Vorschläge und Vorlagen
 
     private var vorschlag: HabitVorschlag.Vorschlag { HabitVorschlag.fuer(titel) }
-
-    @ViewBuilder private var habitTeil: some View {
-        let v = vorschlag
-        if !vorschlagGenutzt, !titel.trimmingCharacters(in: .whitespaces).isEmpty, v.einheit != nil || v.nurAbhaken {
-            Section {
-                Button {
-                    vorschlagUebernehmen(v)
-                } label: {
-                    Label(v.nurAbhaken ? "Vorschlag: einfach abhaken" : "Vorschlag: \(Zahl.text(v.menge ?? 0)) \(v.einheit?.name ?? "") pro Tag", systemImage: "sparkles")
-                }
-            } footer: { Text("Aus deinem Titel abgeleitet – antippen übernimmt.") }
-        }
-        Section {
-            Toggle("Mit Menge", isOn: $mitMenge)
-            if mitMenge {
-                LabeledContent("Soll pro Tag") {
-                    TextField("20", value: $menge, format: .number.locale(Locale(identifier: "de_DE"))).multilineTextAlignment(.trailing).keyboardType(.decimalPad)
-                }
-                ChipReihe(titel: "Einheit", auswahl: Einheit.allCases.map { ($0.name, $0 == habitEinheit) }) { habitEinheit = Einheit.allCases[$0] }
-            }
-        } footer: {
-            Text(mitMenge ? "Teilmengen zählen anteilig: 10 von 20 Minuten = halb." : "Ohne Menge hakst du den Habit einfach ab.")
-        }
-        Section {
-            ChipReihe(titel: "Wie oft", auswahl: RhythmusArt.allCases.map { ($0.rawValue, $0 == rhythmusArt) }) { rhythmusArt = RhythmusArt.allCases[$0] }
-            if rhythmusArt == .tage {
-                HStack(spacing: 6) {
-                    ForEach(1...7, id: \.self) { d in
-                        Button(namen[d - 1]) { if tage.contains(d) { tage.remove(d) } else { tage.insert(d) } }
-                            .buttonStyle(.bordered).tint(tage.contains(d) ? Farbe.akzent : .gray)
-                            .accessibilityAddTraits(tage.contains(d) ? .isSelected : [])
-                    }
-                }
-            }
-            if rhythmusArt == .proWoche { Stepper("\(proWoche)× pro Woche", value: $proWoche, in: 1...7) }
-        }
-        Section {
-            ChipReihe(titel: "Feste Uhrzeit im Kalender", auswahl: [("keine", habitUhrzeit == nil)] + [7, 12, 18, 21].map { ("\($0):00", habitUhrzeit == $0 * 60) }) { i in
-                habitUhrzeit = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
-            }
-            if habitUhrzeit != nil {
-                DatePicker("Uhrzeit", selection: Binding(get: { uhr(habitUhrzeit ?? 0) }, set: { habitUhrzeit = minuten($0) }), displayedComponents: .hourAndMinute)
-            }
-        } footer: { Text(habitUhrzeit == nil ? "Ohne Uhrzeit steht der Habit am Tag unter „Ohne Uhrzeit“." : "Steht als Block im Kalender und unter „Als Nächstes“.") }
-        Section {
-            ChipReihe(titel: "Erinnerung", auswahl: [("aus", erinnerung == nil)] + [7, 12, 18, 21].map { ("\($0):00", erinnerung == $0 * 60) }) { i in
-                erinnerung = i == 0 ? nil : [7, 12, 18, 21][i - 1] * 60
-            }
-            if erinnerung != nil {
-                DatePicker("Uhrzeit", selection: Binding(get: { uhr(erinnerung ?? 0) }, set: { erinnerung = minuten($0) }), displayedComponents: .hourAndMinute)
-            }
-        } footer: { Text("Zur Uhrzeit kommt eine Mitteilung, solange der Habit offen ist. Beim ersten Mal fragt die App um Erlaubnis.") }
-        Section { zielPicker }
-    }
+    private var vorlagen: [ZielVorschlag.Vorlage] { ZielVorschlag.fuer(titel) }
+    private var gewaehlteVorlage: ZielVorschlag.Vorlage? { vorlage.flatMap { $0 < vorlagen.count ? vorlagen[$0] : nil } }
+    private var zahlSchritt: Kompass.Schritt? { gewaehlteVorlage?.schritte.first { $0.art == .zahl } }
 
     private func vorschlagUebernehmen(_ v: HabitVorschlag.Vorschlag) {
         vorschlagGenutzt = true
@@ -198,8 +552,15 @@ struct NeuBlatt: View {
         if let e = v.einheit { habitEinheit = e }
     }
 
+    private func zahlAnfassen(_ zs: Kompass.Schritt) {
+        guard !zahlAngefasst else { return }
+        zahlAngefasst = true
+        start = zs.start ?? 0; zielwert = zs.soll ?? 100; einheit = zs.einheit ?? ""
+    }
+
     private func uhr(_ m: Int) -> Date { Calendar.kompass.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: m / 60, minute: m % 60)) ?? Date() }
     private func minuten(_ d: Date) -> Int { let k = Calendar.kompass.dateComponents([.hour, .minute], from: d); return (k.hour ?? 0) * 60 + (k.minute ?? 0) }
+    private func dauerText(_ m: Int) -> String { m < 60 ? "\(m) Min" : m % 60 == 0 ? "\(m / 60) h" : "1,5 h" }
 
     private var habitRhythmus: Rhythmus {
         switch rhythmusArt {
@@ -210,23 +571,17 @@ struct NeuBlatt: View {
         }
     }
 
-    private func dauerText(_ m: Int) -> String { m < 60 ? "\(m) Min" : m % 60 == 0 ? "\(m / 60) h" : "\(m / 60),5 h" }
-
     private var platzhalter: String {
         switch art {
-        case .termin: "Termin"
-        case .aufgabe: "Was ist zu tun?"
+        case .termin: "z. B. Fahrstunde"
+        case .aufgabe: "z. B. Flugschule anrufen"
         case .habit: "z. B. 20 Minuten lesen"
         case .ziel: "z. B. Halbmarathon laufen"
+        case nil: ""
         }
     }
 
-    private var zielPicker: some View {
-        Picker("Ziel", selection: $zielID) {
-            Text("Keins").tag(UUID?.none)
-            ForEach(speicher.zustand.ziele.filter { $0.status == .aktiv }) { Text($0.titel).tag(UUID?.some($0.id)) }
-        }
-    }
+    // MARK: Anlegen
 
     private func anlegen() {
         let t = titel.trimmingCharacters(in: .whitespaces)
@@ -234,15 +589,26 @@ struct NeuBlatt: View {
         let heute = speicher.heute
         switch art {
         case .aufgabe:
-            let tag = mitDatum ? Tag(datum, kalender: k) : nil
+            let tag: Tag? = switch wannWahl {
+            case .heute: heute
+            case .morgen: heute.plus(tage: 1)
+            case .datum: Tag(datum, kalender: k)
+            case .eingang: nil
+            }
             let w = wiederholung, z = zielID, p: Prioritaet = wichtig ? .hoch : .normal
-            let u = mitDatum && mitUhrzeit ? uhrzeit : nil, du = dauer, k = kategorie
+            let u = tag != nil && mitUhrzeit ? uhrzeit : nil, du = dauer, kat = kategorie
             speicher.aendern { s in
                 let a = s.aufgabeAnlegen(t, datum: tag, prio: p, zielID: z, heute: heute)
                 if let i = s.aufgaben.firstIndex(where: { $0.id == a.id }) {
-                    s.aufgaben[i].wiederholung = w; s.aufgaben[i].uhrzeit = u; s.aufgaben[i].dauer = du; s.aufgaben[i].kategorie = k
+                    s.aufgaben[i].wiederholung = w; s.aufgaben[i].uhrzeit = u; s.aufgaben[i].dauer = du; s.aufgaben[i].kategorie = kat
                 }
             }
+        case .termin:
+            let g = speicher.zustand.ziel(zielID)
+            let schritt = g?.schritte.first { $0.art == .zeit || $0.art == .zahl }
+            let neu = EigenerTermin(titel: t, tag: Tag(datum, kalender: k), start: terminStart, ende: terminEnde, kategorie: kategorie,
+                                    zielID: g?.id, schrittID: schritt?.id, habitID: terminHabitID, wiederholung: wiederholung)
+            speicher.aendern { $0.terminSpeichern(neu) }
         case .habit:
             let farbe = Farbe.ziele[speicher.zustand.habits.count % Farbe.ziele.count]
             let v = vorschlag
@@ -255,12 +621,10 @@ struct NeuBlatt: View {
             } else {
                 speicher.aendern { $0.habits.append(h) }
             }
-        case .termin:
-            break
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
             let vl = gewaehlteVorlage
-            var g = Ziel(titel: t, farbe: farbe, symbol: vl?.symbol ?? "target", bereich: vl?.bereich ?? "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)
+            var g = Ziel(titel: t, farbe: farbe, symbol: vl?.symbol ?? "target", bereich: zielBereich ?? vl?.bereich ?? "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)
             g.schritte = (vl?.schritte ?? []).map { s in
                 var s = s
                 if s.art == .zahl {
@@ -272,8 +636,44 @@ struct NeuBlatt: View {
                 return s
             }
             speicher.aendern { $0.ziele.append(g) }
+        case nil: break
         }
         dismiss()
+    }
+}
+
+extension NeuArt {
+    var name: String {
+        switch self {
+        case .aufgabe: "Aufgabe"
+        case .termin: "Termin"
+        case .habit: "Habit"
+        case .ziel: "Ziel"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .aufgabe: "checkmark.circle"
+        case .termin: "calendar"
+        case .habit: "repeat"
+        case .ziel: "target"
+        }
+    }
+    var erklaerung: String {
+        switch self {
+        case .aufgabe: "Einmal erledigen"
+        case .termin: "Feste Zeit im Kalender"
+        case .habit: "Regelmäßig tun"
+        case .ziel: "Wohin du willst"
+        }
+    }
+    var verlauf: [Color] {
+        switch self {
+        case .aufgabe: Farbe.indigo
+        case .termin: [Color(hex: "#0E5A8A"), Color(hex: "#2F8FD6")]
+        case .habit: Farbe.violett
+        case .ziel: Farbe.gruen
+        }
     }
 }
 

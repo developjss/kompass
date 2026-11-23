@@ -70,3 +70,11 @@ Eine Aussage oben („Diese Woche: 62 % deiner Pläne geschafft“), dann weiße
 - Glas-Kreis mit Symbol auf Verlaufskarten; breiter weißer Kapsel-Knopf mit Pfeil.
 - Helle Hinweis-Karte mit Symbol-Kreis links und Link-Zeile.
 - Segment-Umschalter als Kapsel; Zeilen 52–64 pt; Text ≤ 35 Wörter je Bildschirm.
+
+## 10. Geführt v4 (23.11.2026, Nachtrag nach Test des Gründers auf dem iPhone)
+
+- **Assistent** statt „Lotse“ (Name mit KI-Bezug), eigenes Zeichen (Verlauf Indigo → Violett, Glasring, Funken) in Tab, Kopf und Blasen. Jeder Start der App beginnt einen neuen Chat (beim Verlassen wandert der laufende in den Verlauf, höchstens 30); frühere Chats oben links.
+- **Anlegen geführt** wie der Personal check in Gapless: Was (vier Verlaufs-Kacheln) → Titel (mit Vorschlag aus dem Titel) → Wann → Details → „Passt das so?“ → Anlegen. Fortschrittsbalken oben, ein großer Knopf unten, Chips statt Räder. Gilt für Aufgabe, Termin, Habit, Ziel.
+- **Home als Reel**: Karte „Dein Tag im Blick“ (wie „Your November ahead“) öffnet Slides: Jetzt · Danach · wie voll der Tag ist · Heute offen · Ziele · Los. Home selbst schlanker: Jetzt-Karte, Reel, Hinweise, Heute offen, Liegen geblieben, Tagesabschluss.
+- **Kalender**: Zielzonen leuchten beim Darüberziehen, kurze Vibration beim Ablegen; Aufgaben und Habits lassen sich aus der Zeitleiste zurück nach „Ohne Uhrzeit“ und in den Eingang ziehen (Habit mit fester Uhrzeit: an diesem Tag ohne Uhrzeit, `planZeiten = −1`).
+- **Fortschritt**: eine Seite für Ziele · Habits (Umschalter wechselt beim ersten Tipp); Habits: Heute nur Offenes, Erledigtes eingeklappt „n erledigt ⌄“, „Alle Habits“ mit Wochenpunkten; der Abschnitt „Diese Woche“ ist darin aufgegangen.

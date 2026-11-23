@@ -50,9 +50,9 @@ struct EinstellungenBlatt: View {
                         Toggle("Pro zum Testen", isOn: schalter(\.pro))
                     }
                 } header: {
-                    Text("Lotse")
+                    Text("Assistent")
                 } footer: {
-                    Text("Klare Fragen beantwortet der Lotse auf dem Gerät – kostenlos. Freie Formulierungen gehen an den Kompass-Server (Claude). Fragen werden dort nicht gespeichert.")
+                    Text("Klare Fragen beantwortet der Assistent auf dem Gerät – kostenlos. Freie Formulierungen gehen an den Kompass-Server (Claude). Fragen werden dort nicht gespeichert.")
                 }
                 Section {
                     LabeledContent("Speicherort", value: "Nur auf diesem Gerät")
