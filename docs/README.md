@@ -16,7 +16,7 @@ Stand: 23. November 2026. `docs/` ist gegliedert **wie die Landkarte**: Jeder As
 |---|---|---|
 | `leitung/` | Leitung & Strategie | `fahrplan.md` (Phasen, Bausteine, Plattformen) · `entscheidungen.md` (Register) · `aufgaben/` (`/fahrplan`) |
 | `produkt/` | Produkt & Design | **`roter-faden/kompass-roter-faden.docx` (zentrales Dokument)** · `grundlage.md` (Idee, 6 Prinzipien, Zielgruppe, Funktionen) · `rechenregeln.md` (alle Formeln) · `design.md` (Harbor 2 nach Gapless) · `inhalte-und-assets.md` · `konzepte/` (noch nicht gebaut) |
-| `technik/` | Technik | `bauprotokoll.md` (jede gemergte Änderung) · `plattformen-und-speicherung.md` (SwiftUI, Sync, Kalender-APIs) · `berichte/` (Personen-Test) |
+| `technik/` | Technik | `app.md` (SwiftUI-App: öffnen, Aufbau) · `bauprotokoll.md` (jede gemergte Änderung) · `plattformen-und-speicherung.md` (SwiftUI, Sync, Kalender-APIs) · `berichte/` (Personen-Test) |
 | `marketing/` | Marketing & Wachstum | Store-Texte, Website (kommt) |
 | `support/` | Support | FAQ, Hilfetexte (kommt) |
 | `finanzen/` | Finanzen & Umsatz | Kosten, Preise (kommt) |

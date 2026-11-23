@@ -1,7 +1,7 @@
 {
  "meta": {
   "title": "Landkarte",
-  "stand": "23.11.2026 · Kompass: Klick-Dummy fertig, App noch nicht gebaut",
+  "stand": "23.11.2026 · Kompass: Klick-Dummy fertig, erste SwiftUI-Fassung angelegt",
   "hinweis": "Ein Baum für App und Projekt. Felder: t Titel, k Art, s Status (built|partial|planned|idea), o wer (founder|ai|ext|later), who, when, f Datei, n Notiz, to Querverweise, c Kinder. Gleiches Format wie Gapless."
  },
  "root": {
@@ -91,7 +91,7 @@
       "k": "area",
       "s": "partial",
       "f": "docs/leitung/entscheidungen.md",
-      "n": "Name, Technik-Weg, Sprache, Geschäftsmodell offen."
+      "n": "Technik-Weg A entschieden; Name, Sprache, Geschäftsmodell, Rechenregeln offen."
      },
      {
       "id": "plan",
@@ -119,7 +119,7 @@
       "t": "Die App",
       "k": "app",
       "s": "partial",
-      "n": "Klick-Dummy fertig, echte App ab Phase 2.",
+      "n": "Klick-Dummy fertig; erste SwiftUI-Fassung (grob) in Kompass/.",
       "c": [
        {
         "id": "heute",
@@ -188,8 +188,8 @@
       "t": "Rechen-Logik",
       "k": "logic",
       "s": "partial",
-      "f": "docs/produkt/rechenregeln.md",
-      "n": "Im Klick-Dummy gebaut und geprüft; Swift-Port in Phase 2."
+      "f": "docs/produkt/rechenregeln.md · Kompass/Rechnung/",
+      "n": "Klick-Dummy gebaut und geprüft; Swift-Port in Kompass/Rechnung/ mit Tests (KompassTests/)."
      },
      {
       "id": "suggest",
@@ -232,15 +232,17 @@
       "id": "swift",
       "t": "SwiftUI-App",
       "k": "area",
-      "s": "planned",
-      "n": "Phase 2: Kompass/ (Xcode)."
+      "s": "partial",
+      "n": "Kompass.xcodeproj: Schemes Kompass (Debug) und Kompass Beta; fünf Bereiche grob wie im Klick-Dummy.",
+      "f": "Kompass/ · docs/technik/app.md"
      },
      {
       "id": "store-local",
       "t": "Speicherung lokal",
       "k": "area",
-      "s": "planned",
-      "f": "docs/technik/plattformen-und-speicherung.md"
+      "s": "partial",
+      "f": "docs/technik/plattformen-und-speicherung.md",
+      "n": "Vorläufig JSON-Datei auf dem Gerät; SwiftData folgt (s-speicher)."
      },
      {
       "id": "sync",

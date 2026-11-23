@@ -79,7 +79,7 @@ d.image(B("heute.jpg"), 4.6, "Die Startseite „Heute“ im Klick-Dummy (erfunde
 d.box("So liest du dieses Dokument", [
     "Jede Seite hier ist **eine Seite der App**. Oben steht, wo du bist (blaue Wörter führen zurück), unten „↑ Inhalt“.",
     "→ sagt, wohin ein Tipp führt. **Gespeichert** sagt, wo das Ergebnis liegt. **Kommt noch** zeigt, was die echte App zusätzlich braucht.",
-    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App wird ab Phase 2 danach gebaut.",
+    f"Stand ist der **Klick-Dummy** ([[Desktop|{KLICKDUMMY}]] · [[iPhone|{KLICKDUMMY_IPHONE}]]). Die SwiftUI-App ist als erste, grobe Fassung angelegt (" + doc("docs/technik/app.md", "Die App") + ") und wird danach weitergebaut.",
 ])
 INHALT_POS = len(d.body)
 
@@ -151,11 +151,10 @@ def _landkarte():
 
 seite(K0, "Landkarte", "landkarte", "App und Projekt als ein Baum: jeder Baustein mit Status und wer zuständig ist. Die Aufgaben im Fahrplan zeigen auf ihre Knoten.", extra=_landkarte)
 
-seite(K0, "Offene Entscheidungen", "offen", "Was du entscheidest, bevor die echte App gebaut wird. Ausführlich: " + doc("docs/leitung/entscheidungen.md", "Entscheidungen") + ".",
+seite(K0, "Offene Entscheidungen", "offen", "Was du noch entscheidest. Technik-Weg A (SwiftUI zuerst) ist entschieden. Ausführlich: " + doc("docs/leitung/entscheidungen.md", "Entscheidungen") + ".",
       extra=lambda: d.table([
           ["Thema", "Vorschlag Claude"],
           ["App-Name (Arbeitstitel Kompass)", "–"],
-          ["Technik-Weg", "A: SwiftUI zuerst (iPhone, Mac), dann Web für Windows/Android"],
           ["Sprache der App-Texte", "Deutsch zuerst, Englisch ab Phase 3"],
           ["Nur für dich oder Abo-Produkt", "Abo-Produkt (B2C)"],
           ["90-%-Regel bei Schritten", "so lassen"],

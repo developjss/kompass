@@ -2,7 +2,7 @@
   "meta": {
     "titel": "Fahrplan – Aufgaben",
     "stand": "2026-11-23",
-    "phase": 1,
+    "phase": 2,
     "hinweis": "Eine Quelle für alle Aufgaben: Bausteine, Rhythmus, Stichtage, Ereignisse. Felder: id, titel, wer (Team-id), helfer, status (offen|laeuft|wartet|erledigt), prio (1 hoch – 3), faellig (JJJJ-MM-TT), phase (ab wann), wiederholung {art: woechentlich (tag 1=Mo) | monatlich (tag) | quartal (monate, tag) | jaehrlich (monat, tag)}, ausloeser (wartet auf Ereignis), seit (wiederkehrend: zählt erst ab diesem Tag), nach (erst nach diesen ids), warum, quelle, landkarte (Knoten-id; daraus folgt der Bereich wie in der Landkarte), erledigtAm. Prüfen: python3 scripts/fahrplan.py check"
   },
   "team": [
@@ -109,11 +109,12 @@
       "id": "e-technik",
       "titel": "Technik-Weg entscheiden: A SwiftUI zuerst oder B Flutter",
       "wer": "ceo",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "landkarte": "decide",
       "phase": 1,
-      "quelle": "docs/leitung/fahrplan.md §3"
+      "quelle": "docs/leitung/fahrplan.md §3",
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "e-sprache",
@@ -176,26 +177,28 @@
       "id": "s-xcode",
       "titel": "Xcode-Projekt Kompass/ anlegen (Schemes Debug/Beta wie Gapless)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "landkarte": "swift",
       "phase": 2,
       "nach": [
         "e-technik"
-      ]
+      ],
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "s-rechnung",
       "titel": "Rechen-Logik in Swift (reine Funktionen) + Tests",
       "wer": "claude",
-      "status": "offen",
+      "status": "laeuft",
       "prio": 1,
       "landkarte": "engine",
       "phase": 2,
       "nach": [
         "s-xcode",
         "e-rechnung"
-      ]
+      ],
+      "warum": "Swift-Port steht (Kompass/Rechnung/, 42 Tests); fertig, sobald e-rechnung bestätigt ist."
     },
     {
       "id": "s-personentest",

@@ -3,7 +3,6 @@
 DerivedData/
 *.xcuserstate
 xcuserdata/
-Kompass.xcodeproj/xcshareddata/
 *.xcresult
 
 # Claude Code: lokale Einstellungen bleiben lokal

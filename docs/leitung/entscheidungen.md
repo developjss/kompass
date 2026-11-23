@@ -6,6 +6,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 23.11.2026 | [ENTSCHEIDUNG] Technik-Weg A: SwiftUI zuerst (Auftrag des Gründers, das Xcode-Projekt anzulegen) | `docs/technik/app.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] Kompass ist ein eigenes Projekt mit eigenem Repo und Ordner, Aufbau wie Gapless (Roter Faden, Fahrplan, Landkarte, Arbeitsweise) | `docs/team/arbeitsweise.md` §0 |
 | 23.11.2026 | [ENTSCHEIDUNG] Design wie Gapless (Harbor 2): Textmenge, Abstände, Schrift, Verläufe, Icons | `docs/produkt/design.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] App soll veröffentlicht werden; iPhone/Mac zuerst, später Windows und Android | `docs/leitung/fahrplan.md` |
@@ -20,7 +21,6 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | Thema | Vorschlag Claude | Wo |
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
-| [OFFEN] Technik-Weg | Weg A: SwiftUI zuerst | `fahrplan.md` §3 |
 | [OFFEN] Sprache der App-Texte | Deutsch zuerst, Englisch zusätzlich ab Phase 3 | `CLAUDE.md` |
 | [OFFEN] Nur für dich oder Produkt mit Abo | Produkt mit Abo (B2C, passt zu deinen Ideen-Kriterien) | `fahrplan.md` §1 |
 | [OFFEN] 90-%-Regel: Schritt erst durch Abhaken 100 % | so lassen | `rechenregeln.md` §2 |
