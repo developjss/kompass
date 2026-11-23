@@ -73,8 +73,8 @@ struct RueckblickAnsicht: View {
                     KartenLabel(text: "Habits")
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(habits.geplant > 0 ? Zahl.prozent(Double(habits.erledigt) / Double(habits.geplant)) : "0 %").font(.grosseZahl)
-                            Text("\(habits.erledigt) von \(habits.geplant) · \(erledigt) Aufgaben erledigt").font(.unterzeile).opacity(0.9)
+                            Text(habits.geplant > 0 ? Zahl.prozent(habits.erledigt / Double(habits.geplant)) : "0 %").font(.grosseZahl)
+                            Text("\(Zahl.text(habits.erledigt, stellen: 1)) von \(habits.geplant) · \(erledigt) Aufgaben erledigt").font(.unterzeile).opacity(0.9)
                         }
                         Spacer()
                         MiniSaeulen(werte: proTag, hoehe: 52, hervor: versatz == 0 ? T.wochentag - 1 : nil)

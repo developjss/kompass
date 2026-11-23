@@ -73,9 +73,20 @@ extension Zustand {
 
     // MARK: Habits und Schritte
 
+    /// Abhaken = ganze Menge; bei vollem Tag wieder leeren.
     mutating func habitUmschalten(_ id: UUID, am tag: Tag) {
         guard let i = habits.firstIndex(where: { $0.id == id }) else { return }
-        if habits[i].erledigt.contains(tag) { habits[i].erledigt.remove(tag) } else { habits[i].erledigt.insert(tag) }
+        habits[i].umschalten(am: tag)
+    }
+
+    /// Teilmenge eintragen (z. B. 12 von 20 Minuten).
+    mutating func habitEintragen(_ id: UUID, menge: Double, am tag: Tag) {
+        guard let i = habits.firstIndex(where: { $0.id == id }) else { return }
+        habits[i].eintragen(menge, am: tag)
+    }
+
+    mutating func habitSpeichern(_ h: Habit) {
+        if let i = habits.firstIndex(where: { $0.id == h.id }) { habits[i] = h } else { habits.append(h) }
     }
 
     /// Abhaken / wieder öffnen. Ein abgehakter Zeit-Meilenstein wird gelernt: tatsächlich ÷ geplant (§7).

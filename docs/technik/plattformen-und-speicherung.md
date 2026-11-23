@@ -8,7 +8,7 @@ Zuerst iPhone und Mac (SwiftUI, Weg A [ENTSCHEIDUNG – 23.11.2026]), danach Win
 ## Datenmodell (aus dem Klick-Dummy, so übernehmen)
 - **Ziel:** id, Titel, Farbe, Symbol, Bereich, Fälligkeit, Warum, Status (aktiv|erreicht), Anlage, Messart (Schritte | Zahl mit Start/Aktuell/Ziel/Einheit/Verlauf), Schritte.
 - **Schritt:** id, Titel, Art (auto|time|habit|number), Gewicht 1–3, geschafft, seit, Soll, Start/Aktuell/Einheit (Zahl), habitId (Habit).
-- **Habit:** id, Titel, Farbe, Symbol, Wochentage 1–7, Ziel (optional), Protokoll {Datum: 1}, Anlage.
+- **Habit:** id, Titel, Farbe, Symbol, Rhythmus (täglich | Wochentage | n-mal pro Woche), Soll-Menge + Einheit (optional), Erinnerung (Uhrzeit, optional), Ziel (optional), Einträge {Datum: Menge}, Anlage. Alte Felder `wochentage`/`erledigt` werden beim Lesen übernommen.
 - **Aufgabe:** id, Titel, Datum (leer = Eingang), Uhrzeit, Dauer, Priorität (hoch|normal), Reihenfolge, Ziel, Schritt, erledigt/Zeitpunkt, Fokuszeit, Notizen, Wiederholung, Serie, Anker-Tag.
 - **Fokus-Sitzung:** Aufgabe, Ziel, Schritt, Datum, Dauer (an Mitternacht geteilt).
 - **Termin-Verknüpfung:** Serie (Quelle:Schlüssel) → Ziel oder Habit, seit.

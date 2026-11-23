@@ -60,23 +60,27 @@ enum DemoDaten {
             Schritt(titel: "Halbmarathon laufen", gewicht: 2),
         ]
 
-        func hb(_ titel: String, _ farbe: String, _ symbol: String, _ tage: Set<Int>, _ ziel: UUID?, _ p: Double) -> Habit {
-            var h = Habit(titel: titel, farbe: farbe, symbol: symbol, wochentage: tage, zielID: ziel, angelegt: T.plus(tage: -70))
+        // Habits mit Menge und Einheit; Einträge der letzten 70 Tage mit festem Zufall (teils Teilmengen)
+        func hb(_ titel: String, _ farbe: String, _ symbol: String, _ rhythmus: Rhythmus, _ menge: Double?, _ einheit: Einheit?, _ ziel: UUID?, _ p: Double, erinnerung: Int? = nil) -> Habit {
+            var h = Habit(titel: titel, farbe: farbe, symbol: symbol, rhythmus: rhythmus, menge: menge, einheit: einheit, erinnerung: erinnerung, zielID: ziel, angelegt: T.plus(tage: -70))
             for i in 1...70 {
                 let d = T.plus(tage: -i)
-                if tage.contains(d.wochentag) && r.zahl() < p { h.erledigt.insert(d) }
+                guard h.wochentage.contains(d.wochentag) else { continue }
+                if case .proWoche(let n) = rhythmus, HabitRechnung.summe(h, von: d.montag, bis: d) >= Double(n) { continue }
+                let w = r.zahl()
+                if w < p { h.eintragen(menge ?? 1, am: d) }
+                else if let m = menge, w < p + 0.1 { h.eintragen((m * 0.5).rounded(), am: d) }
             }
             return h
         }
-        let alle: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
         var habits = [
-            hb("20 Minuten Buch lesen", "#7A4FD6", "book.fill", alle, nil, 0.78),
-            hb("LAPL-Theorie lernen", "#3B4CCA", "airplane", [1, 2, 3, 4, 5], flug.id, 0.7),
-            hb("Führerschein-Fragen (30 Stk.)", "#1F7AC2", "car.fill", alle, auto.id, 0.82),
-            hb("Sport / Laufen", "#15803D", "figure.run", [1, 3, 5], fit.id, 0.75),
-            hb("Kein Handy nach 22 Uhr", "#B8456E", "moon.fill", alle, nil, 0.55),
+            hb("Buch lesen", "#7A4FD6", "book.fill", .taeglich, 20, .minuten, nil, 0.78, erinnerung: 21 * 60),
+            hb("LAPL-Theorie lernen", "#3B4CCA", "airplane", .wochentage([1, 2, 3, 4, 5]), 30, .minuten, flug.id, 0.7, erinnerung: 18 * 60),
+            hb("Führerschein-Fragen", "#1F7AC2", "car.fill", .taeglich, 30, .mal, auto.id, 0.82),
+            hb("Sport", "#15803D", "figure.run", .proWoche(3), 45, .minuten, fit.id, 0.75, erinnerung: 17 * 60 + 30),
+            hb("Kein Handy nach 22 Uhr", "#B8456E", "moon.fill", .taeglich, nil, nil, nil, 0.55),
         ]
-        habits[0].erledigt.insert(T)
+        habits[0].eintragen(12, am: T)
         auto.schritte.insert(Schritt(titel: "Prüfungsfragen üben", art: .habit, seit: T.plus(tage: -70), soll: 60, habitID: habits[2].id), at: 4)
         fit.schritte.insert(Schritt(titel: "Sport 3× pro Woche, 8 Wochen", art: .habit, seit: T.plus(tage: -70), soll: 8,
                                     habitID: habits[3].id, habitModus: .wochen), at: 1)

@@ -88,16 +88,163 @@ struct Ziel: Identifiable, Codable, Sendable, Hashable {
     var schritte: [Schritt] = []
 }
 
+/// Einheit einer Habit-Menge. `kurz` für Zeilen („12 von 20 min“), `name` für Auswahl.
+enum Einheit: String, Codable, Sendable, CaseIterable {
+    case minuten, stunden, sekunden, gramm, kilogramm, milliliter, liter, seiten, mal, kilometer, schritte
+
+    var kurz: String {
+        switch self {
+        case .minuten: "min"
+        case .stunden: "h"
+        case .sekunden: "s"
+        case .gramm: "g"
+        case .kilogramm: "kg"
+        case .milliliter: "ml"
+        case .liter: "l"
+        case .seiten: "Seiten"
+        case .mal: "×"
+        case .kilometer: "km"
+        case .schritte: "Schritte"
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .minuten: "Minuten"
+        case .stunden: "Stunden"
+        case .sekunden: "Sekunden"
+        case .gramm: "Gramm"
+        case .kilogramm: "Kilogramm"
+        case .milliliter: "Milliliter"
+        case .liter: "Liter"
+        case .seiten: "Seiten"
+        case .mal: "Mal"
+        case .kilometer: "Kilometer"
+        case .schritte: "Schritte"
+        }
+    }
+}
+
+/// Wann ein Habit geplant ist.
+enum Rhythmus: Codable, Sendable, Hashable {
+    case taeglich
+    /// 1 = Montag … 7 = Sonntag
+    case wochentage(Set<Int>)
+    /// n-mal pro Woche, egal an welchen Tagen
+    case proWoche(Int)
+
+    private enum K: String, CodingKey { case art, tage, n }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: K.self)
+        switch try c.decode(String.self, forKey: .art) {
+        case "wochentage": self = .wochentage(Set(try c.decodeIfPresent([Int].self, forKey: .tage) ?? []))
+        case "proWoche": self = .proWoche(max(1, try c.decodeIfPresent(Int.self, forKey: .n) ?? 3))
+        default: self = .taeglich
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: K.self)
+        switch self {
+        case .taeglich: try c.encode("taeglich", forKey: .art)
+        case .wochentage(let t): try c.encode("wochentage", forKey: .art); try c.encode(t.sorted(), forKey: .tage)
+        case .proWoche(let n): try c.encode("proWoche", forKey: .art); try c.encode(n, forKey: .n)
+        }
+    }
+
+    /// Aus Wochentagen: alle sieben = täglich.
+    static func aus(tagen t: Set<Int>) -> Rhythmus { t.count >= 7 ? .taeglich : .wochentage(t) }
+}
+
 struct Habit: Identifiable, Codable, Sendable, Hashable {
     var id = UUID()
     var titel: String
     var farbe: String
     var symbol: String
-    /// 1 = Montag … 7 = Sonntag
-    var wochentage: Set<Int>
+    var rhythmus: Rhythmus = .taeglich
+    /// Soll je Tag (z. B. 20); nil = einfach abhaken
+    var menge: Double?
+    var einheit: Einheit?
+    /// Erinnerung als Minuten seit Mitternacht; nil = keine
+    var erinnerung: Int?
+    var notiz = ""
     var zielID: UUID?
-    var erledigt: Set<Tag> = []
+    /// Eingetragene Menge je Tag. Ohne Soll: 1 = abgehakt.
+    var eintraege: [Tag: Double] = [:]
     var angelegt: Tag
+
+    init(id: UUID = UUID(), titel: String, farbe: String, symbol: String, rhythmus: Rhythmus = .taeglich, menge: Double? = nil,
+         einheit: Einheit? = nil, erinnerung: Int? = nil, notiz: String = "", zielID: UUID? = nil, eintraege: [Tag: Double] = [:], angelegt: Tag) {
+        self.id = id; self.titel = titel; self.farbe = farbe; self.symbol = symbol; self.rhythmus = rhythmus; self.menge = menge
+        self.einheit = einheit; self.erinnerung = erinnerung; self.notiz = notiz; self.zielID = zielID; self.eintraege = eintraege; self.angelegt = angelegt
+    }
+
+    /// Alte Schreibweise (Wochentage) – bleibt für Aufrufer und Tests.
+    init(titel: String, farbe: String, symbol: String, wochentage: Set<Int>, zielID: UUID? = nil, angelegt: Tag) {
+        self.init(titel: titel, farbe: farbe, symbol: symbol, rhythmus: .aus(tagen: wochentage), zielID: zielID, angelegt: angelegt)
+    }
+
+    /// Geplante Wochentage (bei „n-mal pro Woche“ alle sieben).
+    var wochentage: Set<Int> {
+        switch rhythmus {
+        case .taeglich, .proWoche: [1, 2, 3, 4, 5, 6, 7]
+        case .wochentage(let t): t
+        }
+    }
+
+    /// Anteil eines Tages 0…1: Menge ÷ Soll (ohne Soll: 0 oder 1).
+    func anteil(am tag: Tag) -> Double {
+        guard let e = eintraege[tag], e > 0 else { return 0 }
+        guard let soll = menge, soll > 0 else { return 1 }
+        return min(1, e / soll)
+    }
+
+    func voll(am tag: Tag) -> Bool { anteil(am: tag) >= 1 }
+
+    /// Tage, die voll geschafft sind (für ältere Rechenwege).
+    var erledigt: Set<Tag> { Set(eintraege.filter { anteil(am: $0.key) >= 1 }.map(\.key)) }
+
+    /// Ganze Menge eintragen (Abhaken); bei vollem Tag wieder leeren.
+    mutating func umschalten(am tag: Tag) {
+        if voll(am: tag) { eintraege[tag] = nil } else { eintraege[tag] = menge ?? 1 }
+    }
+
+    mutating func eintragen(_ wert: Double, am tag: Tag) {
+        eintraege[tag] = wert > 0 ? wert : nil
+    }
+
+    /// Codable: Einträge als Text-Schlüssel; alte Felder `wochentage` und `erledigt` werden gelesen.
+    private enum K: String, CodingKey { case id, titel, farbe, symbol, rhythmus, menge, einheit, erinnerung, notiz, zielID, eintraege, angelegt, wochentage, erledigt }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: K.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        titel = try c.decode(String.self, forKey: .titel)
+        farbe = try c.decode(String.self, forKey: .farbe)
+        symbol = try c.decode(String.self, forKey: .symbol)
+        if let r = try c.decodeIfPresent(Rhythmus.self, forKey: .rhythmus) { rhythmus = r }
+        else { rhythmus = .aus(tagen: Set(try c.decodeIfPresent([Int].self, forKey: .wochentage) ?? [1, 2, 3, 4, 5, 6, 7])) }
+        menge = try c.decodeIfPresent(Double.self, forKey: .menge)
+        einheit = try c.decodeIfPresent(Einheit.self, forKey: .einheit)
+        erinnerung = try c.decodeIfPresent(Int.self, forKey: .erinnerung)
+        notiz = try c.decodeIfPresent(String.self, forKey: .notiz) ?? ""
+        zielID = try c.decodeIfPresent(UUID.self, forKey: .zielID)
+        angelegt = try c.decode(Tag.self, forKey: .angelegt)
+        var e: [Tag: Double] = [:]
+        for (k, v) in try c.decodeIfPresent([String: Double].self, forKey: .eintraege) ?? [:] { if let t = Tag(text: k) { e[t] = v } }
+        for t in try c.decodeIfPresent([Tag].self, forKey: .erledigt) ?? [] where e[t] == nil { e[t] = menge ?? 1 }
+        eintraege = e
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: K.self)
+        try c.encode(id, forKey: .id); try c.encode(titel, forKey: .titel); try c.encode(farbe, forKey: .farbe); try c.encode(symbol, forKey: .symbol)
+        try c.encode(rhythmus, forKey: .rhythmus)
+        try c.encodeIfPresent(menge, forKey: .menge); try c.encodeIfPresent(einheit, forKey: .einheit); try c.encodeIfPresent(erinnerung, forKey: .erinnerung)
+        try c.encode(notiz, forKey: .notiz); try c.encodeIfPresent(zielID, forKey: .zielID); try c.encode(angelegt, forKey: .angelegt)
+        try c.encode(Dictionary(uniqueKeysWithValues: eintraege.map { ($0.key.text, $0.value) }), forKey: .eintraege)
+    }
 }
 
 enum Prioritaet: String, Codable, Sendable { case hoch, normal }

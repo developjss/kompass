@@ -18,7 +18,7 @@ Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ �
 | Abhaken | mit Aufgaben: **90 % × erledigte ÷ alle einmaligen Aufgaben** dieses Meilensteins; ohne Aufgaben 0 %. Die letzten 10 % durch Abhaken. |
 | Zahl | (Ist − Start) ÷ (Ziel − Start), in beide Richtungen (86 → 75 kg). Ist = zuletzt eingetragener Stand **+ 1 je zugeordnetem, stattgefundenem Termin**. Start = Ziel → 100 % wenn erreicht. |
 | Zeit | (Fokusstunden dieses Meilensteins **+ Dauer zugeordneter, stattgefundener Termine**) ÷ Soll-Stunden |
-| Habit · Anzahl | erledigte Male des Habits seit Anlage des Meilensteins ÷ Soll-Anzahl |
+| Habit · Anzahl | Σ Tagesanteile des Habits seit Anlage des Meilensteins ÷ Soll-Anzahl (halb geschafft zählt halb) |
 | Habit · Wochen | erfüllte Wochen seit Anlage ÷ Soll-Wochen. **Woche erfüllt** = an allen geplanten Tagen dieser Woche (ab Anlage) erledigt; Wochen ohne geplanten Tag zählen nicht; die laufende Woche zählt erst, wenn sie erfüllt ist. |
 
 - Abgehakt („Geschafft“) = 100 %, egal welche Art. Ein Meilenstein bei 100 % wird nicht automatisch abgehakt.
@@ -48,12 +48,19 @@ Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ �
 
 Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute − Stand vor ~28 Tagen) ÷ Tage. Weniger als 7 Tage Verlauf → keine Prognose. Tempo ≤ 0 → „kein messbarer Fortschritt“. Sonst `Rest-Tage = (1 − Fortschritt) ÷ Tempo` → voraussichtliches Datum.
 
-## 6. Habits
+## 6. Habits (Habits v2, 23.11.2026 – braucht „Ja, mergen“)
 
-- **Serie:** geplante Tage rückwärts bis zum ersten verpassten; der heutige Tag zählt erst, wenn abgehakt. Keine Obergrenze.
+- **Menge und Einheit:** Ein Habit kann ein Soll je Tag haben (20 Minuten, 300 g, 5 km, 30 Mal). Ohne Soll ist er ein Abhaken.
+- **Tagesanteil** = eingetragene Menge ÷ Soll, begrenzt auf 0–1 („halb geschafft zählt halb“). Abhaken = ganze Menge = 1. Ohne Soll: 0 oder 1.
+- **Rhythmus:** täglich · feste Wochentage · **n-mal pro Woche** (jeder Tag gilt als geplant, bis die Woche voll ist).
+- **Serie:** Tages-Habits – geplante Tage rückwärts bis zum ersten nicht vollen Tag (nur Anteil ≥ 1 zählt; heute erst, wenn voll). „n-mal pro Woche“ – erfüllte Wochen rückwärts. Keine Obergrenze.
 - **Beste Serie:** über die ganze Historie seit Anlage.
-- **Quote:** erledigte ÷ geplante Tage (letzte 30 Tage bzw. Woche); Tage vor der Anlage zählen nicht; der heutige Tag erst, wenn abgehakt.
-- [RISIKO] Werden die Wochentage eines Habits geändert, rechnet die Historie mit dem neuen Plan.
+- **Quote (30 Tage / Woche):** Σ Tagesanteile ÷ geplante Tage; Tage vor der Anlage zählen nicht; heute erst, wenn etwas eingetragen ist. „n-mal pro Woche“: Mittel der Wochen-Anteile (Σ ÷ n, höchstens 1); die laufende Woche nur, wenn erfüllt.
+- **Woche erfüllt** (für Meilenstein „Wochen“): alle geplanten Tage voll bzw. n erreicht.
+- **Meilenstein „Habit · Anzahl“:** Σ Tagesanteile seit Anlage des Meilensteins ÷ Soll.
+- **Erinnerung:** Uhrzeit je Habit; nur Hinweis, keine Rechnung.
+- [RISIKO] Werden Rhythmus oder Soll eines Habits geändert, rechnet die Historie mit dem neuen Plan.
+- Vorschläge für Einheit und Menge aus dem Titel sind Regeln (`HabitVorschlag`), keine Rechnung – der Nutzer übernimmt oder ändert sie.
 
 ## 7. Lernen
 

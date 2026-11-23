@@ -82,6 +82,7 @@ private struct BlattInhalt: View {
         case .terminZuZiel(let z): TerminZuZielBlatt(zielID: z)
         case .zielBearbeiten(let z): ZielBearbeitenBlatt(zielID: z)
         case .pro: ProBlatt()
+        case .habitMenge(let h, let t): HabitMengeBlatt(habitID: h, tag: Tag(text: t) ?? Tag(Date()))
         }
     }
 }

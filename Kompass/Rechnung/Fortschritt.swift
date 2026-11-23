@@ -43,13 +43,13 @@ enum Fortschritt {
         (s.aktuell ?? s.start ?? 0) + Double(termine(von: s, in: z, heute: heute).count)
     }
 
-    /// Habit: erledigte Male bzw. erfüllte Wochen seit Anlage des Meilensteins.
-    static func habitWert(von s: Schritt, in z: Zustand, heute: Tag) -> Int {
+    /// Habit: Summe der Tagesanteile (halb geschafft zählt halb) bzw. erfüllte Wochen seit Anlage des Meilensteins.
+    static func habitWert(von s: Schritt, in z: Zustand, heute: Tag) -> Double {
         guard let h = z.habit(s.habitID) else { return 0 }
         let ab = max(s.seit ?? h.angelegt, h.angelegt)
         switch s.modus {
-        case .anzahl: return h.erledigt.filter { $0 >= ab && $0 <= heute }.count
-        case .wochen: return HabitRechnung.erfuellteWochen(h, seit: ab, heute: heute)
+        case .anzahl: return HabitRechnung.summe(h, von: ab, bis: heute)
+        case .wochen: return Double(HabitRechnung.erfuellteWochen(h, seit: ab, heute: heute))
         }
     }
 
@@ -74,12 +74,12 @@ enum Fortschritt {
         case .habit:
             let n = habitWert(von: s, in: z, heute: heute)
             let soll = s.soll ?? 0
-            p = soll > 0 ? Double(n) / soll : 0
+            p = soll > 0 ? n / soll : 0
             if let h = z.habit(s.habitID) {
                 let name = h.titel == s.titel ? "" : " · \(h.titel)"
                 text = s.modus == .wochen
-                    ? "\(n) von \(Zahl.text(max(soll, 0))) Wochen\(name)"
-                    : "\(n) von \(Zahl.text(max(soll, 0)))×\(name)"
+                    ? "\(Zahl.text(n)) von \(Zahl.text(max(soll, 0))) Wochen\(name)"
+                    : "\(Zahl.text(n, stellen: 1)) von \(Zahl.text(max(soll, 0)))×\(name)"
             } else {
                 text = "kein Habit gewählt"
                 hinweis = "Habit wählen"
