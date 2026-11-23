@@ -72,7 +72,7 @@ final class KompassUITests: XCTestCase {
     func testKalenderAnsichtenUmschalten() {
         let app = starten()
         tab(app, "Kalender")
-        for (knopf, erwartet) in [("Woche", "Ohne Uhrzeit"), ("Monat", "Tag ›"), ("Jahr", "Je dunkler"), ("Tag", "Ohne Uhrzeit")] {
+        for (knopf, erwartet) in [("Woche", "Empfehlung"), ("Monat", "Tag ›"), ("Jahr", "Je dunkler"), ("Tag", "Empfehlung")] {
             app.buttons[knopf].firstMatch.tap()
             XCTAssertTrue(sichtbar(app, erwartet), "\(knopf): „\(erwartet)“ fehlt")
             foto(app, "Kalender \(knopf)")

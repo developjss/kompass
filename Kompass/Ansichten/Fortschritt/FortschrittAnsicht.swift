@@ -31,6 +31,7 @@ struct FortschrittWahl: View {
                         .font(.kompass(.subheadline, .bold)).lineLimit(1).minimumScaleFactor(0.6)
                         .frame(maxWidth: .infinity, minHeight: 40)
                         .background(an ? Farbe.karte : Color.clear, in: Capsule())
+                        .contentShape(Capsule())
                         .foregroundStyle(an ? Farbe.text : Farbe.zweitrangig)
                         .shadow(color: an ? .black.opacity(0.06) : .clear, radius: 4, y: 1)
                 }

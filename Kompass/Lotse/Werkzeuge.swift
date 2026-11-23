@@ -93,7 +93,7 @@ enum Werkzeuge {
         case .habits: return habits(z, T, name: a.parameter["habit"])
         case .analyse: return analyse(z, T, kalender, letzte: a.parameter["zeitraum"] == "letzte")
         case .hilfe: return hilfe(a.parameter["thema"] ?? "")
-        case .empfehlen: return empfehlen(z, T, woche: a.parameter["zeitraum"] == "woche")
+        case .empfehlen: return empfehlen(z, T, woche: a.parameter["zeitraum"] == "woche", jetzt: minuten(jetzt, kalender))
         }
     }
 
@@ -331,7 +331,7 @@ enum Werkzeuge {
     }
 
     /// Empfehlung ohne Sprachmodell: deterministische Reihenfolge – Liegengebliebenes, Ziel hinterher mit größtem Hebel, wichtigste Aufgabe heute, offene Habits.
-    static func empfehlen(_ z: Zustand, _ T: Tag, woche: Bool) -> LotseAntwort {
+    static func empfehlen(_ z: Zustand, _ T: Tag, woche: Bool, jetzt: Int = 8 * 60) -> LotseAntwort {
         var zeilen: [String] = []
         let liegen = z.aufgaben.filter { a in a.datum.map { $0 < T } == true && !a.erledigt }
         let hinten = z.ziele.filter { $0.status == .aktiv }
@@ -359,6 +359,11 @@ enum Werkzeuge {
         if hinten.first != nil, let a = wichtig.first { zeilen.append("Heute konkret: „\(a.titel)“.") }
         if !offeneHabits.isEmpty { zeilen.append("Und die kleinen Dinge nicht vergessen: " + Satz.liste(offeneHabits.prefix(3).map(\.titel)) + ".") }
         if woche && hinten.count > 1 { zeilen.append("In der Woche danach: " + Satz.liste(hinten.dropFirst().map(\.0.titel)) + ".") }
+        // Dieselben Vorschläge wie im Kalender unter „Empfehlung“ (rechenregeln.md §9.1)
+        let b: Empfehlung.Bereich = woche ? .woche : .tag
+        let plan = Empfehlung.fuer(b, tag: T, zustand: z, heute: T, jetzt: jetzt, termine: { termine(z, $0, T) }).prefix(2)
+            .compactMap { v in Empfehlung.platzText(v, bereich: b, heute: T).map { "„\(v.titel)“ \(b == .tag && !v.verschoben ? "um" : "am") \($0)" } }
+        if !plan.isEmpty { zeilen.append("Zum Einplanen passt: " + Satz.liste(plan) + " – im Kalender unter „Empfehlung“.") }
         let aktion: ChatNachricht.Aktion = hinten.first.map { .ziel($0.0.id) } ?? .bereich(Bereich.heute.rawValue)
         return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .empfehlen, aktion: aktion)
     }
