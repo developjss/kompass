@@ -1,0 +1,419 @@
+<title>Kompass Fahrplan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: task app – sidebar (person + views) left, list in the middle, details slide in from the right.
+   On a phone the views become a scrolling tab row on top and details open as a sheet. Harbor 2 colours of the app. */
+:root {
+  --bg: #F4F5FA; --side: #ECEEF6; --card: #FFFFFF; --ink: #18233F; --muted: #5A6380; --faint: #8A91AA; --line: #E1E4EF; --chip: #E8EBF5;
+  --accent: #3B4CCA; --on-accent: #FFFFFF; --accent-soft: #E6E9FC; --hover: #F1F3FB;
+  --critical: #B4322B; --critical-soft: #FBE6E4; --warn: #9A5B00; --warn-soft: #FCEFD9; --good: #2B7349; --good-soft: #E0F2E6;
+  --shadow: 0 1px 2px rgba(24,35,63,.06), 0 8px 24px rgba(24,35,63,.08); --scrim: rgba(14,18,34,.28);
+  --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1323; --side: #131829; --card: #181E33; --ink: #E8EBF7; --muted: #A3AAC4; --faint: #7A82A0; --line: #262D47; --chip: #232A45;
+  --accent: #9AA6FF; --on-accent: #0B0F2A; --accent-soft: #262D57; --hover: #1E2540;
+  --critical: #FF8F85; --critical-soft: #3A1E22; --warn: #F2B65A; --warn-soft: #33281A; --good: #84D6A2; --good-soft: #1B3326;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); --scrim: rgba(0,0,0,.5); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0F1323; --side: #131829; --card: #181E33; --ink: #E8EBF7; --muted: #A3AAC4; --faint: #7A82A0; --line: #262D47; --chip: #232A45;
+  --accent: #9AA6FF; --on-accent: #0B0F2A; --accent-soft: #262D57; --hover: #1E2540;
+  --critical: #FF8F85; --critical-soft: #3A1E22; --warn: #F2B65A; --warn-soft: #33281A; --good: #84D6A2; --good-soft: #1B3326;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); --scrim: rgba(0,0,0,.5); color-scheme: dark }
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px }
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100% }
+
+/* sidebar */
+.side { background: var(--side); border-right: 1px solid var(--line); padding-block: 20px; padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: 14px;
+  display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100vh; overflow-y: auto }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 800 }
+.brand b { font-size: 17px } .brand small { display: block; color: var(--muted); font-size: 12px; font-weight: 500 }
+.who label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 6px 6px }
+.who select { width: 100%; font: inherit; font-weight: 600; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); min-height: 40px }
+nav.views { display: grid; gap: 2px }
+.nav { display: flex; align-items: center; gap: 10px; border: 0; background: none; text-align: left; padding: 9px 10px; border-radius: 10px; cursor: pointer; font-weight: 600; min-height: 40px; white-space: nowrap }
+.nav:hover { background: var(--hover) }
+.nav[aria-current="page"] { background: var(--card); box-shadow: var(--shadow) }
+.nav svg { width: 18px; height: 18px; flex: none; color: var(--muted) }
+.nav[aria-current="page"] svg { color: var(--accent) }
+.nav .count { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums }
+.nav .count.alert { color: var(--critical) }
+.side .foot { margin-top: auto; font-size: 12px; color: var(--faint); padding: 0 6px; line-height: 1.5 }
+
+/* main */
+main { min-width: 0; padding-block: 28px 64px; padding-left: max(16px, 3vw); padding-right: max(16px, env(safe-area-inset-right, 0px), 3vw) }
+.wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 20px }
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px }
+h1 { font-size: 30px; line-height: 1.15; margin: 0; letter-spacing: -.01em; text-wrap: balance }
+.sub { color: var(--muted); margin-top: 4px }
+.search { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; min-height: 40px; min-width: 0; flex: 0 1 260px }
+.search svg { width: 16px; height: 16px; color: var(--faint); flex: none }
+.search input { border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); width: 100%; min-width: 0; padding: 8px 0 }
+.kbd { font-family: var(--mono); font-size: 11px; color: var(--faint); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px }
+.summary { display: flex; flex-wrap: wrap; gap: 8px }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: var(--chip); color: var(--muted); border: 0; cursor: pointer }
+.pill.crit { background: var(--critical-soft); color: var(--critical) } .pill.acc { background: var(--accent-soft); color: var(--accent) }
+.pill.warn { background: var(--warn-soft); color: var(--warn) } .pill.good { background: var(--good-soft); color: var(--good) }
+.progress { display: grid; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px }
+.progress .row1 { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted) } .progress b { color: var(--ink) }
+.bar { height: 8px; background: var(--chip); border-radius: 99px; overflow: hidden } .bar i { display: block; height: 100%; width: 0; background: var(--good); border-radius: 99px; transition: width .7s cubic-bezier(.2,.8,.2,1) }
+.areas { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none } .areas::-webkit-scrollbar { display: none }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 34px }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none }
+
+/* sections and rows */
+section.group { display: grid; gap: 8px }
+.gtitle { display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 4px 0 }
+.gtitle.crit { color: var(--critical) } .gtitle .n { font-weight: 600; letter-spacing: 0 }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden }
+.task { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; text-align: left; border: 0; background: none; padding: 12px 14px; cursor: pointer; border-top: 1px solid var(--line) }
+.task:first-child { border-top: 0 }
+.task:hover { background: var(--hover) }
+.task[aria-expanded="true"] { background: var(--accent-soft) }
+.ring { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--faint); margin-top: 1px; display: grid; place-items: center }
+.ring.ueberfaellig { border-color: var(--critical); background: var(--critical-soft) } .ring.heute { border-color: var(--accent) }
+.ring.bald { border-color: var(--warn) } .ring.erledigt { border-color: var(--good); background: var(--good) }
+.ring.erledigt::after { content: ""; width: 6px; height: 10px; border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px) }
+.ring.wait { border-style: dashed }
+.ttl { font-weight: 600; overflow-wrap: anywhere }
+.ttl .bang { color: var(--critical); font-weight: 800; margin-right: 4px }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; font-size: 13px; color: var(--muted) }
+.meta .m { display: inline-flex; align-items: center; gap: 5px }
+.meta svg { width: 14px; height: 14px }
+.when { font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); padding-top: 1px }
+.when.ueberfaellig { color: var(--critical) } .when.heute { color: var(--accent) } .when.bald { color: var(--warn) }
+.av { width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; flex: none }
+.empty { background: var(--card); border: 1px dashed var(--line); border-radius: 14px; padding: 28px; text-align: center; color: var(--muted) }
+.empty b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px }
+
+/* upcoming strip */
+.strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(52px, 1fr); gap: 6px; overflow-x: auto; padding-bottom: 4px }
+.day { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 8px 4px; display: grid; gap: 3px; justify-items: center; cursor: pointer; min-height: 72px }
+.day small { font-size: 11px; color: var(--muted); font-weight: 600 } .day b { font-size: 17px; font-variant-numeric: tabular-nums }
+.day.today { border-color: var(--accent) } .day.today small { color: var(--accent) }
+.day.weekend { background: transparent }
+.day[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) } .day[aria-pressed="true"] small { color: inherit }
+.day .dots { display: flex; gap: 3px; min-height: 7px } .day .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--warn) } .day .dots i.p1 { background: var(--critical) }
+
+/* team overview */
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px }
+.person { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; text-align: left; cursor: pointer }
+.person:hover { box-shadow: var(--shadow) }
+.person .top { display: flex; gap: 10px; align-items: center } .person .av { width: 34px; height: 34px; font-size: 13px }
+.person small { color: var(--muted); display: block; font-size: 12px }
+.stack { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--chip) }
+.stack i { display: block; height: 100% }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted) } .legend span { display: inline-flex; align-items: center; gap: 4px }
+
+/* table */
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.btn { border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 14px; padding: 9px 14px; cursor: pointer; min-height: 40px }
+.btn.ghost { background: var(--chip); color: var(--ink) }
+.scroll { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px }
+table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 720px }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; background: var(--card) }
+th[aria-sort="ascending"]::after { content: " ↑" } th[aria-sort="descending"]::after { content: " ↓" }
+tbody tr { cursor: pointer } tbody tr:hover { background: var(--hover) }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; box-shadow: var(--shadow); z-index: 40 }
+
+/* details drawer */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20 }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--card); box-shadow: var(--shadow); z-index: 30; display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
+.drawer header { display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 10px; min-width: 0 }
+.cmd .btn { flex: none }
+.drawer h2 { font-size: 19px; line-height: 1.3; margin: 0; flex: 1; overflow-wrap: anywhere }
+.x { border: 0; background: var(--chip); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex: none; font-size: 18px; line-height: 1 }
+.dbody { padding: 0 18px 24px; overflow-y: auto; overflow-x: hidden; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start }
+.dbody > *, .box > * { min-width: 0 }
+.facts { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px 12px; font-size: 14px }
+.facts dt { color: var(--muted) } .facts dd { margin: 0; overflow-wrap: anywhere }
+.box { background: var(--bg); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; font-size: 14px }
+.box h3 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 700 }
+.cmd { display: flex; gap: 8px; align-items: center } .cmd code { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; overflow-x: auto; white-space: nowrap }
+.link { border: 0; background: none; color: var(--accent); font-weight: 600; cursor: pointer; padding: 0; text-align: left }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr) }
+  .side { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding-block: 10px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-right: 0; border-bottom: 1px solid var(--line) }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--side); z-index: 11 }
+  .brand small, .side .foot, .who label { display: none }
+  .who { flex: 1; min-width: 150px }
+  nav.views { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; width: 100%; scrollbar-width: none } nav.views::-webkit-scrollbar { display: none }
+  .nav .count { margin-left: 4px }
+  main { padding-top: 18px }
+  h1 { font-size: 25px }
+  .search { flex: 1 1 100% }
+  .drawer { top: auto; width: 100%; max-height: 86%; border-radius: 18px 18px 0 0 }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: slide .22s cubic-bezier(.2,.8,.2,1) } .scrim { animation: fadein .2s ease } .wrap > * { animation: fadein .25s ease both }
+  @media (max-width: 760px) { .drawer { animation: up .24s cubic-bezier(.2,.8,.2,1) } }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none } }
+@keyframes slide { from { transform: translateX(24px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes up { from { transform: translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="logo" aria-hidden="true">G</span><span><b>Fahrplan</b><small id="stand">Lädt …</small></span></div>
+    <div class="who"><label for="who">Ansicht für</label><select id="who" aria-label="Ansicht für"></select></div>
+    <nav class="views" id="nav" aria-label="Ansichten"></nav>
+    <p class="foot">Ändern, abhaken und zuweisen: in Claude <b>/fahrplan</b>.<br>Quelle: docs/leitung/aufgaben/aufgaben.json</p>
+  </aside>
+  <main><div class="wrap" id="main"></div></main>
+</div>
+<div id="layer"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const ICON = {
+  heute: '<path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4"/>',
+  demnaechst: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  offen: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+  wartet: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  spaeter: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  erledigt: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
+  team: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.3 4.4 2 5 5"/>',
+  alle: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M9 10v10"/>',
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>', repeat: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>', link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'
+};
+const svg = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+const VIEWS = [
+  { id: "heute", titel: "Heute", sub: "Was jetzt dran ist" },
+  { id: "demnaechst", titel: "Demnächst", sub: "Termine der nächsten 14 Tage" },
+  { id: "offen", titel: "Offen", sub: "Ohne festen Termin – nach Wichtigkeit" },
+  { id: "wartet", titel: "Wartet", sub: "Kommt erst nach anderen Aufgaben oder wenn etwas passiert" },
+  { id: "spaeter", titel: "Später", sub: "Spätere Termine und nächste Phasen" },
+  { id: "erledigt", titel: "Erledigt", sub: "Abgeschlossen" },
+  { id: "team", titel: "Team", sub: "Wer hat wie viel – der Überblick" },
+  { id: "alle", titel: "Alle", sub: "Tabelle zum Sortieren, Suchen und Kopieren nach Excel" },
+];
+const AREAS = ["Leitung", "Produkt & Design", "Technik", "Marketing", "Support", "Finanzen", "Recht", "Team"];
+const AREA_COLOR = ["#3B4CCA", "#8B5CF6", "#0E7C86", "#D9467A", "#C2410C", "#2B7349", "#9A5B00", "#5A6380"];
+const PERSON_COLOR = ["#3B4CCA", "#0E7C86", "#B4322B", "#7C3AED", "#9A5B00", "#2B7349", "#5A6380", "#C2410C"];
+const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], WDL = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+let V = null, sel = null;
+const state = { wer: "alle", view: "heute", bereich: "", tag: "", q: "", sort: { key: "wann", dir: 1 } };
+try { const s = JSON.parse(localStorage.getItem("fahrplan.v2") || "{}"); if (s.wer) state.wer = s.wer; if (s.view) state.view = s.view } catch (e) {}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const save = () => { try { localStorage.setItem("fahrplan.v2", JSON.stringify({ wer: state.wer, view: state.view })) } catch (e) {} };
+const person = (id) => V.team.find((p) => p.id === id) || { id, name: id, rolle: "" };
+const initials = (n) => n.replace(/[^A-Za-zÄÖÜäöü ]/g, "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+const pColor = (id) => PERSON_COLOR[Math.max(0, V.team.findIndex((p) => p.id === id)) % PERSON_COLOR.length];
+const av = (id) => `<span class="av" style="background:${pColor(id)}" title="${esc(person(id).name)}" aria-hidden="true">${esc(initials(person(id).name))}</span>`;
+const aColor = (b) => AREA_COLOR[Math.max(0, AREAS.indexOf(b))];
+const forWho = (a) => state.wer === "alle" || a.wer === state.wer || (a.helfer || []).includes(state.wer);
+const visible = (a) => forWho(a) && (!state.bereich || a.bereich === state.bereich) && (!state.q || (a.titel + " " + a.id + " " + (a.ausloeser || "") + " " + a.bereich).toLowerCase().includes(state.q.toLowerCase()));
+const date = (iso) => new Date(iso + "T12:00:00");
+const daysFrom = (iso) => Math.round((date(iso) - date(V.stand)) / 864e5);
+
+function whenText(iso, long) {
+  if (!iso) return "";
+  const n = daysFrom(iso), d = date(iso);
+  if (n === 0) return "Heute"; if (n === 1) return "Morgen"; if (n === -1) return "Gestern";
+  const base = (long ? WDL : WD)[d.getDay()] + ", " + d.getDate() + "." + (d.getMonth() + 1) + ".";
+  if (n < 0) return "seit " + -n + " Tagen";
+  return n < 7 ? (long ? WDL : WD)[d.getDay()] : base + (d.getFullYear() !== date(V.stand).getFullYear() ? d.getFullYear() : "");
+}
+function taskTitle(a) { return a.topf === "ereignis" ? "Wenn " + a.ausloeser + ": " + a.titel : a.titel }
+
+// ---------- what each view shows ----------
+function pick(view) {
+  const L = V.aufgaben.filter(visible);
+  switch (view) {
+    case "heute": return [
+      ["Überfällig", L.filter((a) => a.topf === "ueberfaellig"), "crit"],
+      ["Heute", L.filter((a) => a.topf === "heute")],
+      ["Wichtig, ohne Termin", L.filter((a) => a.topf === "naechstes" && a.prio === 1).slice(0, 5)]];
+    case "demnaechst": {
+      const list = L.filter((a) => a.topf === "bald" || a.topf === "heute").filter((a) => !state.tag || a.datum === state.tag);
+      const days = [...new Set(list.map((a) => a.datum))].sort();
+      return days.map((d) => [whenText(d, true) + (daysFrom(d) > 1 ? "" : " · " + date(d).getDate() + "." + (date(d).getMonth() + 1) + "."), list.filter((a) => a.datum === d)]);
+    }
+    case "offen": return [["Wichtig", L.filter((a) => a.topf === "naechstes" && a.prio === 1)], ["Danach", L.filter((a) => a.topf === "naechstes" && a.prio !== 1)]];
+    case "wartet": return [["Wartet auf andere Aufgaben", L.filter((a) => a.topf === "blockiert")], ["Wenn etwas passiert", L.filter((a) => a.topf === "ereignis")]];
+    case "spaeter": {
+      const dated = L.filter((a) => a.topf === "spaeter" && a.datum).sort((x, y) => x.datum.localeCompare(y.datum));
+      const months = [...new Set(dated.map((a) => a.datum.slice(0, 7)))];
+      const label = (m) => date(m + "-15").toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+      const phases = [...new Set(L.filter((a) => a.topf === "spaeter" && !a.datum).map((a) => a.phase))].sort();
+      return months.map((m) => [label(m), dated.filter((a) => a.datum.startsWith(m))])
+        .concat(phases.map((p) => ["Ab Phase " + p, L.filter((a) => a.topf === "spaeter" && !a.datum && a.phase === p)]));
+    }
+    case "erledigt": return [["Erledigt", V.erledigt.filter(visible).sort((x, y) => (y.erledigtAm || "").localeCompare(x.erledigtAm || ""))]];
+  }
+  return [];
+}
+function count(view) { return pick(view).reduce((n, g) => n + g[1].length, 0) }
+
+// ---------- rendering ----------
+function renderSide() {
+  const who = $("who");
+  const people = V.team.filter((p) => V.aufgaben.some((a) => a.wer === p.id || (a.helfer || []).includes(p.id)));
+  who.innerHTML = `<option value="alle">Alle (Gesamtüberblick)</option>` + people.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  who.value = state.wer;
+  who.onchange = () => { state.wer = who.value; state.tag = ""; save(); render() };
+  $("nav").innerHTML = VIEWS.map((v) => {
+    const n = ["team", "alle"].includes(v.id) ? "" : count(v.id);
+    const alert = v.id === "heute" && pick("heute")[0][1].length;
+    return `<button class="nav" id="nav-${v.id}" data-v="${v.id}" ${state.view === v.id ? 'aria-current="page"' : ""}>${svg(v.id)}<span>${v.titel}</span><span class="count${alert ? " alert" : ""}">${n === 0 ? "" : n}</span></button>`;
+  }).join("");
+  $("nav").querySelectorAll("button").forEach((b) => (b.onclick = () => { state.view = b.dataset.v; state.tag = ""; save(); render(); window.scrollTo({ top: 0 }) }));
+  $("stand").textContent = "Stand " + date(V.stand).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) + " · Phase " + V.phase;
+}
+
+function header() {
+  const v = VIEWS.find((x) => x.id === state.view);
+  const who = state.wer === "alle" ? "" : " · " + person(state.wer).name;
+  return `<div class="head"><div><h1>${v.titel}</h1><div class="sub">${esc(v.sub + who)}</div></div>
+    <label class="search">${svg("search")}<input id="q" type="search" placeholder="Suchen" value="${esc(state.q)}" aria-label="Aufgaben suchen"><span class="kbd" aria-hidden="true">/</span></label></div>`;
+}
+function areaChips() {
+  const present = AREAS.filter((b) => V.aufgaben.some((a) => forWho(a) && a.bereich === b));
+  return `<div class="areas" role="group" aria-label="Bereich">${[""].concat(present).map((b) => `<button class="chip" data-b="${esc(b)}" aria-pressed="${state.bereich === b}">${b ? `<span class="dot" style="background:${aColor(b)}"></span>` : ""}${b ? esc(b) : "Alle Bereiche"}</button>`).join("")}</div>`;
+}
+function todayIntro() {
+  const L = V.aufgaben.filter(forWho);
+  const over = L.filter((a) => a.topf === "ueberfaellig").length, today = L.filter((a) => a.topf === "heute").length, soon = L.filter((a) => a.topf === "bald").length;
+  const done = V.erledigt.filter(forWho).length, open = L.filter((a) => !a.rhythmus && a.topf !== "ereignis" && (a.phase || 0) <= V.phase).length;
+  const pct = done + open ? Math.round(done / (done + open) * 100) : 0;
+  const pills = [over ? `<button class="pill crit" data-go="heute">${over} überfällig</button>` : "", today ? `<button class="pill acc" data-go="heute">${today} heute</button>` : "",
+    soon ? `<button class="pill warn" data-go="demnaechst">${soon} in 14 Tagen</button>` : "", `<button class="pill" data-go="wartet">${L.filter((a) => a.topf === "blockiert").length} warten</button>`].join("");
+  return `<div class="summary">${pills}</div>
+    <div class="progress" aria-label="Phase ${V.phase}: ${done} von ${done + open} erledigt"><div class="row1"><span>Phase ${V.phase} – fertig bis auf Plaid</span><span><b>${done}</b> von ${done + open} erledigt</span></div><div class="bar"><i data-w="${pct}"></i></div></div>`;
+}
+function strip() {
+  const cells = [];
+  for (let i = 0; i <= V.tage; i++) {
+    const d = date(V.stand); d.setDate(d.getDate() + i);
+    const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const list = V.aufgaben.filter((a) => visible(a) && a.datum === key && (a.topf === "heute" || a.topf === "bald"));
+    cells.push(`<button class="day${i === 0 ? " today" : ""}${[0, 6].includes(d.getDay()) ? " weekend" : ""}" data-tag="${key}" aria-pressed="${state.tag === key}" aria-label="${WDL[d.getDay()]}, ${d.getDate()}.${d.getMonth() + 1}.: ${list.length} Aufgaben"><small>${i === 0 ? "Heute" : WD[d.getDay()]}</small><b>${d.getDate()}</b><span class="dots">${list.slice(0, 4).map((a) => `<i class="${a.prio === 1 ? "p1" : ""}"></i>`).join("")}</span></button>`);
+  }
+  return `<div class="strip" role="group" aria-label="Nächste 14 Tage">${cells.join("")}</div>`;
+}
+function row(a) {
+  const ring = a.status === "erledigt" ? "erledigt" : ["blockiert", "ereignis"].includes(a.topf) ? "wait" : a.topf;
+  const metas = [`<span class="m">${av(a.wer)}${esc(person(a.wer).name)}${(a.helfer || []).length ? " + " + a.helfer.length : ""}</span>`,
+    `<span class="m"><span class="dot" style="background:${aColor(a.bereich)}"></span>${esc(a.bereich)}</span>`];
+  if (a.rhythmus) metas.push(`<span class="m">${svg("repeat")}${esc(a.rhythmus.replace(/ \(.*/, ""))}</span>`);
+  if (a.topf === "blockiert" && a.blockiertDurch?.length) metas.push(`<span class="m">${svg("link")}nach ${a.blockiertDurch.length === 1 ? esc(short(a.blockiertDurch[0])) : a.blockiertDurch.length + " Aufgaben"}</span>`);
+  if (a.topf === "spaeter" && !a.datum && a.phase) metas.push(`<span class="m">ab Phase ${a.phase}</span>`);
+  const when = a.status === "erledigt" ? (a.erledigtAm ? date(a.erledigtAm).getDate() + "." + (date(a.erledigtAm).getMonth() + 1) + "." : "") : whenText(a.datum);
+  return `<button class="task" data-id="${a.id}" aria-expanded="${sel === a.id}"><span class="ring ${ring}" aria-hidden="true"></span>
+    <span><div class="ttl">${a.prio === 1 && a.status !== "erledigt" ? '<span class="bang" aria-label="wichtig">!</span>' : ""}${esc(taskTitle(a))}</div><div class="meta">${metas.join("")}</div></span>
+    <span class="when ${a.topf || ""}">${esc(when)}</span></button>`;
+}
+function short(id) { const t = V.aufgaben.find((x) => x.id === id) || V.erledigt.find((x) => x.id === id); return t ? (t.titel.length > 34 ? t.titel.slice(0, 33) + "…" : t.titel) : id }
+function groups(gs) {
+  const shown = gs.filter((g) => g[1].length);
+  if (!shown.length) return emptyState();
+  return shown.map(([t, l, cls]) => `<section class="group"><div class="gtitle ${cls || ""}">${esc(t)} <span class="n">${l.length}</span></div><div class="list">${l.map(row).join("")}</div></section>`).join("");
+}
+function emptyState() {
+  const msg = { heute: ["Alles erledigt für heute", "Schau in „Demnächst“, was als Nächstes kommt."], demnaechst: ["Keine Termine", state.tag ? "An diesem Tag ist nichts fällig." : "In den nächsten 14 Tagen ist nichts fällig."],
+    wartet: ["Nichts wartet", ""], erledigt: ["Noch nichts erledigt", ""] }[state.view] || ["Nichts gefunden", state.q || state.bereich ? "Suche oder Bereich ändern." : ""];
+  return `<div class="empty"><b>${msg[0]}</b>${msg[1]}</div>`;
+}
+function team() {
+  const keys = [["ueberfaellig", "var(--critical)", "überfällig"], ["heute", "var(--accent)", "heute"], ["bald", "var(--warn)", "bald"], ["naechstes", "var(--good)", "offen"], ["blockiert", "var(--faint)", "wartet"]];
+  const people = V.team.filter((p) => V.aufgaben.some((a) => a.wer === p.id));
+  return `<div class="people">${people.map((p) => {
+    const L = V.aufgaben.filter((a) => a.wer === p.id && (!state.bereich || a.bereich === state.bereich));
+    const c = keys.map(([k]) => L.filter((a) => a.topf === k).length), total = c.reduce((x, y) => x + y, 0) || 1;
+    return `<button class="person" data-wer="${p.id}"><span class="top">${av(p.id)}<span><b>${esc(p.name)}</b><small>${esc(p.rolle)}</small></span></span>
+      <span class="stack">${keys.map(([k, col], i) => `<i style="width:${c[i] / total * 100}%;background:${col}"></i>`).join("")}</span>
+      <span class="legend">${keys.map(([k, col, t], i) => c[i] ? `<span><span class="dot" style="background:${col}"></span>${c[i]} ${t}</span>` : "").join("")}</span></button>`;
+  }).join("")}</div>`;
+}
+const COLS = [["titel", "Aufgabe"], ["wer", "Wer"], ["bereich", "Bereich"], ["wann", "Wann"], ["prio", "Prio"], ["rhythmus", "Rhythmus"]];
+const ORDER = ["ueberfaellig", "heute", "bald", "naechstes", "blockiert", "ereignis", "spaeter"];
+function tableRows() {
+  const { key, dir } = state.sort;
+  const val = (a) => key === "wann" ? ORDER.indexOf(a.topf) * 1e6 + (a.datum ? daysFrom(a.datum) + 5e5 : 9e5) : key === "wer" ? person(a.wer).name : key === "prio" ? (a.prio || 9) : (a[key] || "￿");
+  return V.aufgaben.filter(visible).sort((x, y) => (val(x) > val(y) ? 1 : val(x) < val(y) ? -1 : 0) * dir);
+}
+function table() {
+  const rows = tableRows();
+  return `<div class="tools"><button class="btn" id="copy">Für Excel kopieren</button><span class="sub">${rows.length} Aufgaben · Kopf antippen zum Sortieren · Excel-Datei: in Claude „/fahrplan exportieren“</span></div>
+    <div class="scroll"><table><thead><tr>${COLS.map(([k, t]) => `<th scope="col" tabindex="0" data-k="${k}" aria-sort="${state.sort.key === k ? (state.sort.dir > 0 ? "ascending" : "descending") : "none"}">${t}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map((a) => `<tr data-id="${a.id}"><td>${a.prio === 1 ? '<b style="color:var(--critical)">! </b>' : ""}${esc(taskTitle(a))}</td><td>${esc(person(a.wer).name)}</td><td>${esc(a.bereich)}</td><td class="num">${esc(a.datum ? whenText(a.datum) : (VIEWS.find((v) => v.id === { naechstes: "offen", blockiert: "wartet", ereignis: "wartet", spaeter: "spaeter" }[a.topf]) || { titel: "" }).titel)}</td><td class="num">${a.prio || ""}</td><td>${esc(a.rhythmus || "")}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function render() {
+  if (state.wer !== "alle" && !V.team.some((p) => p.id === state.wer)) state.wer = "alle";
+  renderSide();
+  let body = header();
+  if (state.view === "heute") body += todayIntro();
+  if (!["erledigt"].includes(state.view)) body += areaChips();
+  if (state.view === "demnaechst") body += strip();
+  if (state.view === "team") body += team();
+  else if (state.view === "alle") body += table();
+  else body += groups(pick(state.view));
+  $("main").innerHTML = body;
+  wire();
+  requestAnimationFrame(() => { const b = document.querySelector(".bar i"); if (b) b.style.width = b.dataset.w + "%" });
+  renderDrawer();
+}
+function wire() {
+  const q = $("q");
+  q.oninput = () => { const pos = q.selectionStart; state.q = q.value; render(); const n = $("q"); n.focus(); n.setSelectionRange(pos, pos) };
+  document.querySelectorAll("[data-b]").forEach((b) => (b.onclick = () => { state.bereich = b.dataset.b; render() }));
+  document.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => { state.view = b.dataset.go; save(); render() }));
+  document.querySelectorAll(".day").forEach((b) => (b.onclick = () => { state.tag = state.tag === b.dataset.tag ? "" : b.dataset.tag; render() }));
+  document.querySelectorAll(".task, tbody tr").forEach((b) => (b.onclick = () => { sel = b.dataset.id; render() }));
+  document.querySelectorAll(".person").forEach((b) => (b.onclick = () => { state.wer = b.dataset.wer; state.view = "heute"; save(); render() }));
+  document.querySelectorAll("th").forEach((th) => { const go = () => { const k = th.dataset.k; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : 1 }; render() }; th.onclick = go; th.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go() } } });
+  const copy = $("copy"); if (copy) copy.onclick = () => {
+    const rows = tableRows(); const tsv = [COLS.map((c) => c[1]).concat(["id"]).join("\t")].concat(rows.map((a) => [taskTitle(a), person(a.wer).name, a.bereich, a.datum || "", a.prio || "", a.rhythmus || "", a.id].map((v) => String(v).replace(/[\t\n]/g, " ")).join("\t"))).join("\n");
+    clip(tsv, "Kopiert – in Excel oder Google Sheets einfügen");
+  };
+}
+
+// ---------- details ----------
+function renderDrawer() {
+  const a = sel && (V.aufgaben.find((x) => x.id === sel) || V.erledigt.find((x) => x.id === sel));
+  if (!a) { $("layer").innerHTML = ""; return }
+  const deps = (a.nach || []).map((id) => `<button class="link" data-open="${id}">${esc(short(id))}</button>`).join("<br>");
+  const status = a.status === "erledigt" ? "Erledigt" + (a.erledigtAm ? " am " + date(a.erledigtAm).toLocaleDateString("de-DE") : "") : { ueberfaellig: "Überfällig", heute: "Heute fällig", bald: "Demnächst", naechstes: "Offen", blockiert: "Wartet auf andere Aufgaben", ereignis: "Wartet auf ein Ereignis", spaeter: "Später" }[a.topf];
+  const facts = [["Status", status], ["Fällig", a.datum ? whenText(a.datum, true) + " (" + date(a.datum).toLocaleDateString("de-DE") + ")" : ""], ["Wer", person(a.wer).name + (a.helfer?.length ? " – mit " + a.helfer.map((h) => person(h).name).join(", ") : "")],
+    ["Bereich", a.bereich], ["Rhythmus", a.rhythmus || ""], ["Wenn", a.ausloeser || ""], ["Ab Phase", a.phase && a.phase > V.phase ? a.phase : ""], ["Wichtig", a.prio === 1 ? "ja" : ""], ["Warum", a.warum || ""], ["Quelle", a.quelle || ""]].filter((f) => f[1]);
+  const done = a.status === "erledigt" ? "" : `<div class="box"><h3>So geht es weiter</h3>
+    <div>Erledigt? In Claude eingeben:</div><div class="cmd"><code>/fahrplan erledigt ${esc(a.id)}</code><button class="btn ghost" data-copy="/fahrplan erledigt ${esc(a.id)}">Kopieren</button></div>
+    <div>Jemand anderem geben:</div><div class="cmd"><code>/fahrplan zuweisen ${esc(a.id)} &lt;name&gt;</code><button class="btn ghost" data-copy="/fahrplan zuweisen ${esc(a.id)} ">Kopieren</button></div></div>`;
+  $("layer").innerHTML = `<div class="scrim" id="scrim"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dtitle">
+    <header><h2 id="dtitle">${esc(taskTitle(a))}</h2><button class="x" id="close" aria-label="Schließen">×</button></header>
+    <div class="dbody"><dl class="facts">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${deps ? `<div class="box"><h3>Kommt nach</h3>${deps}</div>` : ""}${done}<div class="sub">Kennung: <code>${esc(a.id)}</code>${a.landkarte ? " · Landkarte: " + esc(a.landkarte) : ""}</div></div></aside>`;
+  $("close").onclick = $("scrim").onclick = () => { sel = null; render() };
+  document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { sel = b.dataset.open; render() }));
+  document.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => clip(b.dataset.copy, "Kopiert")));
+  $("close").focus({ preventScroll: true });
+}
+function clip(text, msg) {
+  const done = (m) => { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(clip.t); clip.t = setTimeout(() => (t.hidden = true), 1800) };
+  navigator.clipboard.writeText(text).then(() => done(msg), () => done("Kopieren nicht erlaubt – Text markieren und kopieren"));
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && sel) { sel = null; render() }
+  if (e.key === "/" && document.activeElement?.tagName !== "INPUT") { e.preventDefault(); $("q")?.focus() }
+});
+
+fetch("view.json").then((r) => { if (!r.ok) throw new Error(r.status); return r.json() }).then((v) => { V = v; render() })
+  .catch(() => { $("stand").textContent = ""; $("main").innerHTML = `<div class="empty"><b>Die Aufgaben konnten nicht geladen werden</b>In Claude /fahrplan neu ausführen.</div>` });
+</script>

@@ -1,0 +1,19 @@
+# macOS / Xcode
+.DS_Store
+DerivedData/
+*.xcuserstate
+xcuserdata/
+Kompass.xcodeproj/xcshareddata/
+*.xcresult
+
+# Claude Code: lokale Einstellungen bleiben lokal
+.claude/settings.local.json
+.claude/worktrees
+
+# Python
+__pycache__/
+*.pyc
+
+# Test-Ausgaben des Personen-Tests
+prototyp/tests/ergebnis.json
+prototyp/tests/*.png

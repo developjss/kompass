@@ -1,0 +1,449 @@
+{
+ "meta": {
+  "titel": "Fahrplan – Aufgaben",
+  "stand": "2026-11-23",
+  "phase": 1,
+  "hinweis": "Eine Quelle für alle Aufgaben: Bausteine, Rhythmus, Stichtage, Ereignisse. Felder: id, titel, wer (Team-id), helfer, status (offen|laeuft|wartet|erledigt), prio (1 hoch – 3), faellig (JJJJ-MM-TT), phase (ab wann), wiederholung {art: woechentlich (tag 1=Mo) | monatlich (tag) | quartal (monate, tag) | jaehrlich (monat, tag)}, ausloeser (wartet auf Ereignis), seit (wiederkehrend: zählt erst ab diesem Tag), nach (erst nach diesen ids), warum, quelle, landkarte (Knoten-id; daraus folgt der Bereich wie in der Landkarte), erledigtAm. Prüfen: python3 scripts/fahrplan.py check"
+ },
+ "team": [
+  {
+   "id": "ceo",
+   "name": "Gründer",
+   "rolle": "Inhaber – letzte Freigabe",
+   "art": "intern"
+  },
+  {
+   "id": "claude",
+   "name": "Claude",
+   "rolle": "KI-Mitentwickler (baut, prüft, bereitet vor)",
+   "art": "ki"
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "p0-klickdummy",
+   "titel": "Klick-Dummy Desktop + iPhone",
+   "wer": "claude",
+   "status": "erledigt",
+   "prio": 2,
+   "landkarte": "proto",
+   "erledigtAm": "2026-11-23"
+  },
+  {
+   "id": "p0-rechnung",
+   "titel": "Rechenregeln mit Schritten, Auf Kurs, Prognose, Lernen",
+   "wer": "claude",
+   "status": "erledigt",
+   "prio": 2,
+   "landkarte": "engine",
+   "erledigtAm": "2026-11-23"
+  },
+  {
+   "id": "p0-personentest",
+   "titel": "Personen-Test 4 × 2 Jahre, 13 Fehler behoben",
+   "wer": "claude",
+   "status": "erledigt",
+   "prio": 2,
+   "landkarte": "qa",
+   "erledigtAm": "2026-11-23"
+  },
+  {
+   "id": "p0-design",
+   "titel": "Design wie Gapless (Textmenge, Abstände, Verläufe)",
+   "wer": "claude",
+   "status": "erledigt",
+   "prio": 2,
+   "landkarte": "design",
+   "erledigtAm": "2026-11-23"
+  },
+  {
+   "id": "p0-org",
+   "titel": "Projekt wie Gapless angelegt (Roter Faden, Fahrplan, Landkarte)",
+   "wer": "claude",
+   "status": "erledigt",
+   "prio": 2,
+   "landkarte": "plan",
+   "erledigtAm": "2026-11-23"
+  },
+  {
+   "id": "repo-anlegen",
+   "titel": "Leeres privates GitHub-Repo „kompass“ anlegen und Claude Zugriff geben",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "plan",
+   "faellig": "2026-11-24",
+   "warum": "Damit Kompass getrennt von Gapless in Claude Code läuft"
+  },
+  {
+   "id": "ordner-mac",
+   "titel": "Repo nach ~/Developer/Kompass klonen; Gapless bleibt in ~/Developer/UpcomingAPP-git",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "plan",
+   "nach": [
+    "repo-anlegen"
+   ]
+  },
+  {
+   "id": "claude-projekt",
+   "titel": "claude.ai-Projekt „Kompass“ anlegen (Chats getrennt von Gapless)",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "plan",
+   "faellig": "2026-11-25"
+  },
+  {
+   "id": "e-name",
+   "titel": "App-Name festlegen (Arbeitstitel Kompass)",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "decide",
+   "phase": 1
+  },
+  {
+   "id": "e-technik",
+   "titel": "Technik-Weg entscheiden: A SwiftUI zuerst oder B Flutter",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "decide",
+   "phase": 1,
+   "quelle": "docs/leitung/fahrplan.md §3"
+  },
+  {
+   "id": "e-sprache",
+   "titel": "Sprache der App-Texte (Deutsch / Englisch)",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "decide",
+   "phase": 1
+  },
+  {
+   "id": "e-modell",
+   "titel": "Nur für dich oder Produkt mit Abo",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "decide",
+   "phase": 1
+  },
+  {
+   "id": "e-rechnung",
+   "titel": "Rechenregeln bestätigen: 90-%-Regel, Habit-Zählung, Gewichte",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "engine",
+   "phase": 1,
+   "quelle": "docs/produkt/rechenregeln.md"
+  },
+  {
+   "id": "t-nutzen",
+   "titel": "Klick-Dummy eine Woche selbst nutzen, Funde notieren",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "proto",
+   "faellig": "2026-11-30"
+  },
+  {
+   "id": "t-funde",
+   "titel": "Funde aus der Testwoche einarbeiten",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "proto",
+   "nach": [
+    "t-nutzen"
+   ]
+  },
+  {
+   "id": "w-wettbewerb",
+   "titel": "Wettbewerbs-Überblick To-do/Habits/Ziele (ohne Nachbauen)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 3,
+   "landkarte": "market",
+   "phase": 1
+  },
+  {
+   "id": "s-xcode",
+   "titel": "Xcode-Projekt Kompass/ anlegen (Schemes Debug/Beta wie Gapless)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "swift",
+   "phase": 2,
+   "nach": [
+    "e-technik"
+   ]
+  },
+  {
+   "id": "s-rechnung",
+   "titel": "Rechen-Logik in Swift (reine Funktionen) + Tests",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "engine",
+   "phase": 2,
+   "nach": [
+    "s-xcode",
+    "e-rechnung"
+   ]
+  },
+  {
+   "id": "s-personentest",
+   "titel": "Personen-Test als Swift-Test (unabhängige Referenz)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "qa",
+   "phase": 2,
+   "nach": [
+    "s-rechnung"
+   ]
+  },
+  {
+   "id": "s-heute",
+   "titel": "Heute-Ansicht in SwiftUI",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "heute",
+   "phase": 2,
+   "nach": [
+    "s-rechnung"
+   ]
+  },
+  {
+   "id": "s-habits",
+   "titel": "Habits in SwiftUI",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "habits",
+   "phase": 2,
+   "nach": [
+    "s-rechnung"
+   ]
+  },
+  {
+   "id": "s-ziele",
+   "titel": "Ziele, Schritte, So wird gerechnet in SwiftUI",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "ziele",
+   "phase": 2,
+   "nach": [
+    "s-rechnung"
+   ]
+  },
+  {
+   "id": "s-fokus",
+   "titel": "Fokus-Timer (Segmente, Mitternacht, 4-h-Grenze)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "fokus",
+   "phase": 2,
+   "nach": [
+    "s-rechnung"
+   ]
+  },
+  {
+   "id": "s-speicher",
+   "titel": "Lokale Speicherung (SwiftData)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "store-local",
+   "phase": 2,
+   "nach": [
+    "s-xcode"
+   ]
+  },
+  {
+   "id": "s-eventkit",
+   "titel": "Apple-Kalender lesen (EventKit)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "cal",
+   "phase": 2,
+   "nach": [
+    "s-xcode"
+   ]
+  },
+  {
+   "id": "v-mac",
+   "titel": "Mac-App",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "swift",
+   "phase": 3
+  },
+  {
+   "id": "v-google",
+   "titel": "Google-Kalender (OAuth)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "cal",
+   "phase": 3
+  },
+  {
+   "id": "v-google-pruefung",
+   "titel": "Google-Prüfung für Kalender-Zugriff beantragen",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 1,
+   "landkarte": "law",
+   "ausloeser": "Google-Kalender ist gebaut",
+   "helfer": [
+    "claude"
+   ],
+   "phase": 3
+  },
+  {
+   "id": "v-widgets",
+   "titel": "Widgets: Jetzt dran, Habits heute",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "app",
+   "phase": 3
+  },
+  {
+   "id": "v-ki",
+   "titel": "Vorschläge mit KI in der App (Anbieter freigeben)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "suggest",
+   "phase": 3
+  },
+  {
+   "id": "v-testflight",
+   "titel": "TestFlight mit Freunden",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "app",
+   "phase": 3,
+   "helfer": [
+    "claude"
+   ]
+  },
+  {
+   "id": "x-sync",
+   "titel": "Konto und Sync (Server)",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "sync",
+   "phase": 4
+  },
+  {
+   "id": "x-web",
+   "titel": "Web-App für Windows und Android",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "app",
+   "phase": 4
+  },
+  {
+   "id": "x-lernen",
+   "titel": "Lernen über alle Nutzer",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "suggest",
+   "phase": 6
+  },
+  {
+   "id": "st-datenschutz",
+   "titel": "Datenschutzerklärung und Prüffragen klären",
+   "wer": "ceo",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "law",
+   "phase": 5,
+   "helfer": [
+    "claude"
+   ]
+  },
+  {
+   "id": "st-texte",
+   "titel": "Store-Texte nach Textregeln",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 2,
+   "landkarte": "mkt",
+   "phase": 5
+  },
+  {
+   "id": "r-aufraeumen",
+   "titel": "Ordner aufräumen: python3 scripts/ordnung.py, Funde beheben",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 3,
+   "landkarte": "plan",
+   "phase": 0,
+   "wiederholung": {
+    "art": "monatlich",
+    "tag": 1
+   },
+   "seit": "2026-12-01"
+  },
+  {
+   "id": "r-stand",
+   "titel": "docs/stand.md und Landkarte prüfen und aktualisieren",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 3,
+   "landkarte": "plan",
+   "phase": 0,
+   "wiederholung": {
+    "art": "woechentlich",
+    "tag": 1
+   },
+   "seit": "2026-11-30"
+  },
+  {
+   "id": "r-roterfaden",
+   "titel": "/roterfaden: Roten Faden gegen Klick-Dummy/Code prüfen",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 3,
+   "landkarte": "rf",
+   "phase": 0,
+   "wiederholung": {
+    "art": "woechentlich",
+    "tag": 5
+   },
+   "seit": "2026-11-27"
+  },
+  {
+   "id": "r-personentest",
+   "titel": "Personen-Test laufen lassen und Bericht schreiben",
+   "wer": "claude",
+   "status": "offen",
+   "prio": 3,
+   "landkarte": "qa",
+   "phase": 1,
+   "wiederholung": {
+    "art": "monatlich",
+    "tag": 15
+   },
+   "seit": "2026-12-15"
+  }
+ ]
+}
