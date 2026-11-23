@@ -26,7 +26,7 @@ xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS
 
 | Ordner | Was |
 |---|---|
-| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag` (Kalendertag, sommerzeitfest), Fortschritt, Auf Kurs, Prognose, Habits, Erinnerungen (welche Mitteilungen anstehen), Wiederholung, Fokus-Timer, Lernen, Aktionen |
+| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag` (Kalendertag, sommerzeitfest), Fortschritt, Auf Kurs, Prognose, Habits, Erinnerungen (welche Mitteilungen anstehen), Ziel-Vorlagen aus dem Titel, Wiederholung, Fokus-Timer, Lernen, Aktionen |
 | `Kompass/Modell/` | Datenmodell (Ziel, Schritt, Habit, Aufgabe, Fokus-Sitzung, Zustand) |
 | `Kompass/App/` | Start, Navigation, Speicher (Laden/Speichern, Lade- und Fehlerzustand) |
 | `Kompass/Design/` | Farben, Maße, Schrift, Bausteine (Seitenkopf, gruppierte Liste, Verlaufskarte, Haken …) nach `docs/produkt/design.md` |

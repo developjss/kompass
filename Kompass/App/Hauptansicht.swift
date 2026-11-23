@@ -80,7 +80,7 @@ private struct BlattInhalt: View {
         case .habitZuZiel(let z): HabitZuZielBlatt(zielID: z)
         case .aufgabeZuZiel(let z): AufgabeZuZielBlatt(zielID: z)
         case .terminZuZiel(let z): TerminZuZielBlatt(zielID: z)
-        case .zielBearbeiten(let z): ZielBearbeitenBlatt(zielID: z)
+        case .zielBearbeiten(let z, let f): ZielBearbeitenBlatt(zielID: z, feld: f)
         case .pro: ProBlatt()
         case .habitMenge(let h, let t): HabitMengeBlatt(habitID: h, tag: Tag(text: t) ?? Tag(Date()))
         case .habitBearbeiten(let h, let f): HabitFeldBlatt(habitID: h, feld: f)

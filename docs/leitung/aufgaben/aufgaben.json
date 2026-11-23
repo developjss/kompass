@@ -606,14 +606,15 @@
       "id": "z-v2",
       "titel": "Ziele v2: Zusammenfassung oben, Fakten-Zeilen mit Chevron im Ziel-Detail, Satz „so wird gerechnet“, Meilenstein-Vorlagen",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "phase": 2,
       "nach": [
         "h-detail"
       ],
       "quelle": "docs/produkt/konzepte/habits-v2.md §9",
-      "landkarte": "ziele"
+      "landkarte": "ziele",
+      "erledigtAm": "2026-11-23"
     }
   ]
 }

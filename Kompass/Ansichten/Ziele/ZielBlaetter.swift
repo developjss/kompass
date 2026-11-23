@@ -445,65 +445,102 @@ struct TerminZuZielBlatt: View {
 
 // MARK: Ziel bearbeiten
 
+/// Editor für genau eine Fakten-Zeile der Ziel-Seite (Titel, Bis wann, Bereich, Warum, Aussehen).
 struct ZielBearbeitenBlatt: View {
     var zielID: UUID
+    var feld: ZielFeld
     @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
     @Environment(\.dismiss) private var dismiss
     @State private var g: Ziel?
-    @State private var loeschenFragen = false
+
+    private let symbole = ["target", "graduationcap.fill", "car.fill", "airplane", "figure.run", "eurosign.circle.fill", "book.fill", "house.fill",
+                           "heart.fill", "briefcase.fill", "hammer.fill", "character.book.closed.fill", "globe.europe.africa.fill", "music.note", "star.fill", "leaf.fill"]
 
     var body: some View {
         NavigationStack {
             Form {
                 if g != nil {
-                    Section {
-                        TextField("Titel", text: Binding(get: { g?.titel ?? "" }, set: { g?.titel = $0 }))
-                        TextField("Warum ist dir das wichtig?", text: Binding(get: { g?.warum ?? "" }, set: { g?.warum = $0 }), axis: .vertical)
-                        TextField("Bereich", text: Binding(get: { g?.bereich ?? "" }, set: { g?.bereich = $0 }))
-                        DatePicker("Bis wann", selection: Binding(get: { g?.faellig.datum() ?? Date() }, set: { g?.faellig = Tag($0, kalender: speicher.kalender) }), displayedComponents: .date)
-                    }
-                    Section("Farbe") {
-                        HStack(spacing: 8) {
-                            ForEach(Farbe.ziele, id: \.self) { f in
-                                Button { g?.farbe = f } label: {
-                                    Circle().fill(Color(hex: f)).frame(width: 26, height: 26)
-                                        .overlay(Circle().strokeBorder(.white, lineWidth: g?.farbe == f ? 3 : 0))
-                                        .frame(minWidth: 30, minHeight: 44)
+                    switch feld {
+                    case .titel:
+                        Section { TextField("Titel", text: Binding(get: { g?.titel ?? "" }, set: { g?.titel = $0 })) }
+                    case .faellig:
+                        Section {
+                            DatePicker("Bis wann", selection: Binding(get: { g?.faellig.datum() ?? Date() }, set: { g?.faellig = Tag($0, kalender: speicher.kalender) }), displayedComponents: .date)
+                        } footer: { Text("„Auf Kurs“ vergleicht den Fortschritt mit der Zeit von der Anlage bis zu diesem Datum.") }
+                    case .bereich:
+                        Section {
+                            TextField("Bereich", text: Binding(get: { g?.bereich ?? "" }, set: { g?.bereich = $0 }))
+                            ChipReihe(titel: "Häufig", auswahl: ["Lernen", "Gesundheit", "Finanzen", "Arbeit", "Familie", "Allgemein"].map { ($0, $0 == g?.bereich) }) { i in
+                                g?.bereich = ["Lernen", "Gesundheit", "Finanzen", "Arbeit", "Familie", "Allgemein"][i]
+                            }
+                        }
+                    case .warum:
+                        Section {
+                            TextField("Warum ist dir das wichtig?", text: Binding(get: { g?.warum ?? "" }, set: { g?.warum = $0 }), axis: .vertical).lineLimit(3...6)
+                        } footer: { Text("Steht unter der Kopfkarte – ein Satz reicht.") }
+                    case .aussehen:
+                        Section("Farbe") {
+                            FliessLayout(abstand: 8) {
+                                ForEach(Farbe.ziele, id: \.self) { f in
+                                    Button { g?.farbe = f } label: {
+                                        Circle().fill(Color(hex: f)).frame(width: 30, height: 30)
+                                            .overlay(Circle().strokeBorder(.white, lineWidth: g?.farbe == f ? 3 : 0))
+                                            .frame(width: 44, height: 44)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Farbe \(f)")
+                                    .accessibilityAddTraits(g?.farbe == f ? .isSelected : [])
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Farbe \(f)")
-                                .accessibilityAddTraits(g?.farbe == f ? .isSelected : [])
+                            }
+                        }
+                        Section("Symbol") {
+                            FliessLayout(abstand: 8) {
+                                ForEach(symbole, id: \.self) { sy in
+                                    let an = g?.symbol == sy
+                                    let c = Color(hex: g?.farbe ?? "#3B4CCA")
+                                    Button { g?.symbol = sy } label: {
+                                        Image(systemName: sy).font(.system(size: 17, weight: .semibold))
+                                            .foregroundStyle(an ? .white : c)
+                                            .frame(width: 44, height: 44)
+                                            .background(an ? c : c.opacity(0.14), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(sy)
+                                    .accessibilityAddTraits(an ? .isSelected : [])
+                                }
                             }
                         }
                     }
-                    Section {
-                        Button("Ziel löschen", role: .destructive) { loeschenFragen = true }
-                    } footer: {
-                        Text("Aufgaben, Habits und Termine bleiben erhalten.")
-                    }
                 }
             }
-            .navigationTitle("Ziel bearbeiten")
+            .navigationTitle(titel)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") {
-                        if let neu = g { speicher.aendern { s in if let i = s.ziele.firstIndex(where: { $0.id == neu.id }) { s.ziele[i] = neu } } }
+                        if var neu = g {
+                            neu.titel = neu.titel.trimmingCharacters(in: .whitespaces)
+                            let fertig = neu
+                            speicher.aendern { s in if let i = s.ziele.firstIndex(where: { $0.id == fertig.id }) { s.ziele[i] = fertig } }
+                        }
                         dismiss()
                     }
                     .disabled((g?.titel.trimmingCharacters(in: .whitespaces) ?? "").isEmpty)
                 }
             }
-            .confirmationDialog("Ziel wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) {
-                    let id = zielID
-                    speicher.aendern { $0.zielLoeschen(id) }
-                    dismiss()
-                }
-            }
             .onAppear { if g == nil { g = speicher.zustand.ziel(zielID) } }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var titel: String {
+        switch feld {
+        case .titel: "Titel"
+        case .faellig: "Bis wann"
+        case .bereich: "Bereich"
+        case .warum: "Warum"
+        case .aussehen: "Aussehen"
         }
     }
 }

@@ -231,10 +231,10 @@ seite(K4, "Ein Habit", "habit", "Eigene Seite wie eine Gapless-Transaktion: Kopf
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],
              [("Ziele", "ziele"), ("Ein Ziel", "ziel"), ("So wird gerechnet", "rechnung"), ("Ein Schritt", "schritt"), ("Vorschläge", "vorschlaege")])
-seite(K5, "Ziele", "ziele", "Zeitachse, nach Jahr sortiert. Jede Karte: Prozent, „voraus / im Plan / hinterher“, restliche Zeit, Fokuszeit der letzten Wochen.",
-      bilder=[("ziele.jpg", "Ziele")], klicks=["Karte → [[Ein Ziel|ziel]]", "Sortieren: Jahr, Fortschritt, Zeit, Bereich", "Erreicht › → erreichte Ziele"], gespeichert=LOKAL)
-seite(K5, "Ein Ziel", "ziel", "Fortschritt, Auf Kurs, Prognose; Messart (Schritte oder Zahl); Schritte; Warum, Datum, Farbe; Zeit der letzten 12 Wochen; Habits und Aufgaben.",
-      bilder=[("ziel.jpg", "Ziel")], klicks=["„So wird gerechnet“ → [[aufklappen|rechnung]]", "Schritt → [[Ein Schritt|schritt]]", "✨ Schritte vorschlagen → [[Vorschläge|vorschlaege]]", "✓ Ziel erreicht"], gespeichert=LOKAL)
+seite(K5, "Ziele", "ziele", "Oben eine Aussage-Karte („2 von 3 auf Kurs“, wo es hakt, Schnitt). Darunter die Ziele (nach Jahr nur, wenn es mehrere Jahre gibt). Jede Karte: Prozent, „voraus / im Plan / hinterher“, restliche Zeit, Fokuszeit der letzten Wochen.",
+      bilder=[("ziele.jpg", "Ziele")], klicks=["Karte → [[Ein Ziel|ziel]]", "Erreicht › → erreichte Ziele", "+ Neu → Ziel: Meilenstein-Vorlagen aus dem Titel (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte)"], gespeichert=LOKAL)
+seite(K5, "Ein Ziel", "ziel", "Kopfkarte mit Prozent, Auf Kurs, Prognose; direkt darunter ein Satz „so wird gerechnet“ (z. B. „32 % = gewichteter Durchschnitt von 4 Meilensteinen · am meisten fehlt bei …“). Dann Meilensteine (schlanke Zeilen mit Pfeil), Aufgaben, Habits, Termine, Einsatz und Fakten-Zeilen (Titel, Bis wann, Bereich, Warum, Aussehen – jede öffnet ihren Editor), erreicht, löschen.",
+      bilder=[("ziel.jpg", "Ziel")], klicks=["Satz oder (i) → [[So wird gerechnet|rechnung]]", "Meilenstein → [[Ein Schritt|schritt]]", "Fakten-Zeile → Editor (Sichern)", "✓ Ziel erreicht"], gespeichert=LOKAL)
 seite(K5, "So wird gerechnet", "rechnung", "Die Rechnung mit echten Zahlen, für jedes Ziel aufklappbar: Tabelle der Schritte, Auf Kurs, Prognose, gelernter Zeitfaktor.",
       bilder=[("rechnung.jpg", "Rechnung")], gespeichert="Formeln: " + doc("docs/produkt/rechenregeln.md") + " (Kapitel [[Rechenregeln|kap7]])")
 seite(K5, "Ein Schritt", "schritt", "Wie der Schritt gemessen wird (Abhaken/Aufgaben, Zeit, Habit, Zahl), Zielwert, Gewicht (klein/mittel/groß), geschafft, Aufgaben im Schritt.",

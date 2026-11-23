@@ -25,10 +25,12 @@ struct NeuBlatt: View {
 
     enum RhythmusArt: String, CaseIterable { case taeglich = "Täglich", werktags = "Werktags", tage = "Wochentage", proWoche = "n-mal pro Woche" }
     @State private var faellig = Calendar.kompass.date(byAdding: .month, value: 6, to: Date()) ?? Date()
-    @State private var alsZahl = false
+    /// Gewählte Meilenstein-Vorlage (Index in `ZielVorschlag.fuer(titel)`); nil = ohne Meilensteine
+    @State private var vorlage: Int? = 0
     @State private var start = 0.0
     @State private var zielwert = 100.0
     @State private var einheit = ""
+    @State private var zahlAngefasst = false
 
     private let namen = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
@@ -59,17 +61,7 @@ struct NeuBlatt: View {
                 case .habit:
                     habitTeil
                 case .ziel:
-                    Section {
-                        DatePicker("Bis wann", selection: $faellig, displayedComponents: .date)
-                        Toggle("Als Zahl messen", isOn: $alsZahl)
-                        if alsZahl {
-                            LabeledContent("Start") { TextField("0", value: $start, format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
-                            LabeledContent("Ziel") { TextField("100", value: $zielwert, format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
-                            TextField("Einheit (z. B. kg, €)", text: $einheit)
-                        }
-                    } footer: {
-                        Text(alsZahl ? "Wird ein Zahl-Meilenstein. Weitere Meilensteine fügst du im Ziel hinzu." : "Meilensteine legst du danach im Ziel an.")
-                    }
+                    zielTeil
                 }
             }
             .navigationTitle("Neu")
@@ -81,6 +73,39 @@ struct NeuBlatt: View {
                 }
             }
         }
+    }
+
+    // MARK: Ziel – Datum und Meilenstein-Vorlagen aus dem Titel (habits-v2.md §9)
+
+    private var vorlagen: [ZielVorschlag.Vorlage] { ZielVorschlag.fuer(titel) }
+    private var gewaehlteVorlage: ZielVorschlag.Vorlage? { vorlage.flatMap { $0 < vorlagen.count ? vorlagen[$0] : nil } }
+    private var zahlSchritt: Schritt? { gewaehlteVorlage?.schritte.first { $0.art == .zahl } }
+
+    @ViewBuilder private var zielTeil: some View {
+        let v = vorlagen
+        Section {
+            DatePicker("Bis wann", selection: $faellig, displayedComponents: .date)
+        }
+        Section {
+            ChipReihe(titel: "Meilensteine", auswahl: v.map { ($0.name, false) }.enumerated().map { ($0.element.0, vorlage == $0.offset) } + [("Ohne", vorlage == nil)]) { i in
+                vorlage = i < v.count ? i : nil
+                zahlAngefasst = false
+            }
+            if let zs = zahlSchritt {
+                let e = zahlAngefasst ? einheit : (zs.einheit ?? "")
+                LabeledContent("Start") { TextField("0", value: Binding(get: { zahlAngefasst ? start : (zs.start ?? 0) }, set: { zahlAnfassen(zs); start = $0 }), format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
+                LabeledContent("Ziel") { TextField("100", value: Binding(get: { zahlAngefasst ? zielwert : (zs.soll ?? 100) }, set: { zahlAnfassen(zs); zielwert = $0 }), format: .number).multilineTextAlignment(.trailing).keyboardType(.decimalPad) }
+                TextField("Einheit (z. B. kg, €)", text: Binding(get: { e }, set: { zahlAnfassen(zs); einheit = $0 }))
+            }
+        } footer: {
+            Text(gewaehlteVorlage.map { "\(vorlagen.count > 1 ? "Aus deinem Titel" : "Vorlage"): \($0.kurz). Im Ziel änderst du alles." } ?? "Meilensteine legst du danach im Ziel an.")
+        }
+    }
+
+    private func zahlAnfassen(_ zs: Schritt) {
+        guard !zahlAngefasst else { return }
+        zahlAngefasst = true
+        start = zs.start ?? 0; zielwert = zs.soll ?? 100; einheit = zs.einheit ?? ""
     }
 
     // MARK: Habit – Menge, Einheit, Rhythmus, Erinnerung als Chips (habits-v2.md §7)
@@ -194,9 +219,17 @@ struct NeuBlatt: View {
             }
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
-            var g = Ziel(titel: t, farbe: farbe, symbol: "target", bereich: "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)
-            if alsZahl {
-                g.schritte = [Schritt(titel: einheit.isEmpty ? "Stand" : "Stand in \(einheit)", art: .zahl, gewicht: 3, soll: zielwert, start: start, aktuell: start, einheit: einheit)]
+            let vl = gewaehlteVorlage
+            var g = Ziel(titel: t, farbe: farbe, symbol: vl?.symbol ?? "target", bereich: vl?.bereich ?? "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)
+            g.schritte = (vl?.schritte ?? []).map { s in
+                var s = s
+                if s.art == .zahl {
+                    if zahlAngefasst { s.start = start; s.soll = zielwert; s.einheit = einheit.isEmpty ? nil : einheit }
+                    s.aktuell = s.start
+                    s.verlauf = s.start.map { [VerlaufPunkt(tag: heute, wert: $0)] }
+                }
+                if s.art == .habit { s.seit = heute }
+                return s
             }
             speicher.aendern { $0.ziele.append(g) }
         }

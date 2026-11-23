@@ -121,7 +121,11 @@ Zahl im Titel („20 Minuten lesen“, „300 g Erdnüsse“) → Menge und Einh
 
 `UserNotifications` (Apple, keine neue Abhängigkeit). Beim ersten Einschalten einer Erinnerung fragt die App um Erlaubnis. Je Habit eine wiederholende lokale Mitteilung je geplantem Wochentag (bei „n-mal pro Woche“: täglich bis die Woche voll ist – Planung neu beim Eintragen). Text: Titel des Habits, darunter „Heute noch offen: 20 min.“ Tipp öffnet die Habit-Seite. **Gebaut (Block 2):** statt wiederholender Mitteilungen werden die nächsten 7 Tage einzeln geplant (`ErinnerungRechnung.termine`, Test) – nur geplante, noch nicht volle Tage, heute nur vor der Uhrzeit; nach jeder Änderung neu, höchstens 60 (iOS-Grenze 64). Erlaubnis verweigert → Zeile „Erinnerung“ zeigt „Mitteilungen aus“ mit Sprung in die iOS-Einstellungen. [OFFEN] Ruhezeiten.
 
-## 9. Ziele – erstes Screening (nächster Schritt)
+## 9. Ziele – erstes Screening (gebaut als Ziele v2, 23.11.2026)
+
+**Gebaut:** Aussage-Karte oben („x von y auf Kurs“, Hinterher-Namen, Schnitt; Jahr-Gruppen nur bei mehreren Jahren), Satz „so wird gerechnet“ unter der Kopfkarte (`Fortschritt.satz`, Test), schlanke Meilenstein-Zeilen mit Pfeil (Gewicht im Text statt Badge, kein Balken), Fakten-Zeilen mit Editor je Zeile (`ZielBearbeitenBlatt(feld:)`), Löschen auf der Seite, Meilenstein-Vorlagen beim Anlegen aus dem Titel (`ZielVorschlag`, Regeln, Test). Offen: Zahl-Stand direkt aus der Liste, Prognose je Meilenstein.
+
+Befund davor:
 
 - Die Ziel-Karten sind gut (Verlauf, Prozent, Kurs), aber die Seite hat **keine Zusammenfassung** oben (Gapless: eine Aussage-Karte); Jahr-Gruppen wirken leer bei 1 Ziel.
 - Ziel-Detail: Meilenstein-Zeilen tragen zu viel (Titel, ×2, Prozent, Text, Balken); Bearbeiten nur über langes Drücken (unsichtbar) oder das Blatt – **Fakten-Zeilen mit Chevron wie bei Gapless** fehlen.
