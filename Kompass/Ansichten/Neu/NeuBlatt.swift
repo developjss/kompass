@@ -68,7 +68,7 @@ struct NeuBlatt: View {
                             TextField("Einheit (z. B. kg, €)", text: $einheit)
                         }
                     } footer: {
-                        Text(alsZahl ? "Fortschritt = (aktuell − Start) ÷ (Ziel − Start)." : "Schritte legst du danach im Ziel an.")
+                        Text(alsZahl ? "Wird ein Zahl-Meilenstein. Weitere Meilensteine fügst du im Ziel hinzu." : "Meilensteine legst du danach im Ziel an.")
                     }
                 }
             }
@@ -117,7 +117,9 @@ struct NeuBlatt: View {
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
             var g = Ziel(titel: t, farbe: farbe, symbol: "target", bereich: "Allgemein", faellig: Tag(faellig, kalender: k), angelegt: heute)
-            if alsZahl { g.zahl = ZahlMessung(start: start, aktuell: start, ziel: zielwert, einheit: einheit) }
+            if alsZahl {
+                g.schritte = [Schritt(titel: einheit.isEmpty ? "Stand" : "Stand in \(einheit)", art: .zahl, gewicht: 3, soll: zielwert, start: start, aktuell: start, einheit: einheit)]
+            }
             speicher.aendern { $0.ziele.append(g) }
         }
         dismiss()

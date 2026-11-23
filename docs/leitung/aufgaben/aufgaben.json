@@ -136,13 +136,13 @@
     },
     {
       "id": "e-rechnung",
-      "titel": "Rechenregeln bestätigen: 90-%-Regel, Habit-Zählung, Gewichte",
+      "titel": "Rechenregeln Fassung 2 bestätigen (Meilensteine, Termine, Habit-Wochen, 90-%-Regel)",
       "wer": "ceo",
       "status": "offen",
       "prio": 1,
       "landkarte": "engine",
       "phase": 1,
-      "quelle": "docs/produkt/rechenregeln.md"
+      "quelle": "docs/produkt/konzepte/ziele-und-rechnung.md"
     },
     {
       "id": "t-nutzen",
@@ -240,7 +240,7 @@
       "id": "s-ziele",
       "titel": "Ziele, Schritte, So wird gerechnet in SwiftUI",
       "wer": "claude",
-      "status": "offen",
+      "status": "laeuft",
       "prio": 2,
       "landkarte": "ziele",
       "phase": 2,

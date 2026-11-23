@@ -30,7 +30,7 @@ enum DemoDaten {
             Schritt(titel: "Theorieunterricht besuchen", art: .zahl, soll: 14, start: 0, aktuell: 12, einheit: "Doppelstd."),
             Schritt(titel: "Theorie lernen", art: .zeit, gewicht: 2, soll: 25),
             Schritt(titel: "Theorieprüfung", gewicht: 2),
-            Schritt(titel: "Fahrstunden", art: .zahl, gewicht: 3, soll: 30, start: 0, aktuell: 6, einheit: "Std."),
+            Schritt(titel: "Fahrstunden", art: .zahl, gewicht: 3, soll: 30, start: 0, aktuell: 6, einheit: "Fahrstunden"),
             Schritt(titel: "Praktische Prüfung", gewicht: 2),
         ]
         var flug = Ziel(titel: "LAPL(A) bestehen", farbe: "#3B4CCA", symbol: "airplane", bereich: "Fliegen",
@@ -39,20 +39,26 @@ enum DemoDaten {
             s("Tauglichkeitszeugnis", true),
             Schritt(titel: "Theorie: 9 Fächer lernen", art: .zeit, gewicht: 3, soll: 120),
             Schritt(titel: "Theorieprüfung", gewicht: 2),
-            Schritt(titel: "Flugstunden", art: .zahl, gewicht: 3, soll: 45, start: 0, aktuell: 0, einheit: "Std."),
+            Schritt(titel: "Flugstunden", art: .zahl, gewicht: 3, soll: 45, start: 0, aktuell: 0, einheit: "h"),
             Schritt(titel: "Erster Alleinflug"),
             Schritt(titel: "Praktische Prüfung", gewicht: 2),
         ]
         var geld = Ziel(titel: "Millionär werden", farbe: "#9A6700", symbol: "eurosign.circle.fill", bereich: "Finanzen",
                         faellig: Tag(Y + 6, 12, 31), warum: "Finanzielle Freiheit", angelegt: T.plus(monate: -12))
-        geld.zahl = ZahlMessung(start: 0, aktuell: 18_500, ziel: 1_000_000, einheit: "€",
-                                verlauf: (0...12).map { i in VerlaufPunkt(tag: T.plus(monate: i - 12), wert: i == 12 ? 18_500 : (6000 + Double(i) * 1000 + sin(Double(i) * 1.7) * 900).rounded()) })
-        geld.schritte = [s("Notgroschen 10.000 €", true), s("Erstes Business mit Umsatz"), s("100.000 € Vermögen"), s("500.000 € Vermögen")]
+        // Ziel „als Zahl“ = ein Zahl-Meilenstein; Zwischenstände werden automatisch erreicht
+        geld.schritte = [
+            Schritt(titel: "Vermögen", art: .zahl, gewicht: 3, soll: 1_000_000, start: 0, aktuell: 18_500, einheit: "€",
+                    schwellen: [10_000, 100_000, 500_000],
+                    verlauf: (0...12).map { i in VerlaufPunkt(tag: T.plus(monate: i - 12), wert: i == 12 ? 18_500 : (6000 + Double(i) * 1000 + sin(Double(i) * 1.7) * 900).rounded()) }),
+        ]
         var fit = Ziel(titel: "Fit: 75 kg & Halbmarathon", farbe: "#15803D", symbol: "figure.run", bereich: "Gesundheit",
                        faellig: Tag(Y + 1, 6, 30), warum: "Energie für alles andere", angelegt: T.plus(monate: -6))
-        fit.zahl = ZahlMessung(start: 86, aktuell: 81, ziel: 75, einheit: "kg",
-                               verlauf: (0...12).map { i in VerlaufPunkt(tag: T.plus(tage: (i - 12) * 14), wert: i == 12 ? 81 : ((86 - Double(i) * 0.42 + sin(Double(i)) * 0.4) * 10).rounded() / 10) })
-        fit.schritte = [s("3× pro Woche Sport, 2 Monate lang", true), s("10 km unter 60 min"), s("Halbmarathon laufen")]
+        fit.schritte = [
+            Schritt(titel: "Gewicht", art: .zahl, gewicht: 2, soll: 75, start: 86, aktuell: 81, einheit: "kg",
+                    verlauf: (0...12).map { i in VerlaufPunkt(tag: T.plus(tage: (i - 12) * 14), wert: i == 12 ? 81 : ((86 - Double(i) * 0.42 + sin(Double(i)) * 0.4) * 10).rounded() / 10) }),
+            s("10 km unter 60 min"),
+            Schritt(titel: "Halbmarathon laufen", gewicht: 2),
+        ]
 
         func hb(_ titel: String, _ farbe: String, _ symbol: String, _ tage: Set<Int>, _ ziel: UUID?, _ p: Double) -> Habit {
             var h = Habit(titel: titel, farbe: farbe, symbol: symbol, wochentage: tage, zielID: ziel, angelegt: T.plus(tage: -70))
@@ -72,6 +78,10 @@ enum DemoDaten {
         ]
         habits[0].erledigt.insert(T)
         auto.schritte.insert(Schritt(titel: "Prüfungsfragen üben", art: .habit, seit: T.plus(tage: -70), soll: 60, habitID: habits[2].id), at: 4)
+        fit.schritte.insert(Schritt(titel: "Sport 3× pro Woche, 8 Wochen", art: .habit, seit: T.plus(tage: -70), soll: 8,
+                                    habitID: habits[3].id, habitModus: .wochen), at: 1)
+        flug.schritte.insert(Schritt(titel: "Theorie-Routine 12 Wochen", art: .habit, seit: T.plus(tage: -70), soll: 12,
+                                     habitID: habits[1].id, habitModus: .wochen), at: 2)
 
         var o = 0.0
         func tk(_ titel: String, _ datum: Tag?, _ ziel: UUID?, _ prio: Prioritaet, uhr: Int? = nil, dauer: Int = 60,
@@ -120,6 +130,14 @@ enum DemoDaten {
 
         var z = Zustand(ziele: ziele, habits: habits, aufgaben: aufgaben, sitzungen: sitzungen)
         z.lernen.zeitVerhaeltnisse = [1.2, 1.35]
+        z.einstellungen.googleBeispiel = true
+        z.einstellungen.appleBeispiel = true
+        // Termine: jede Fahrstunde zählt in „Fahrstunden“, der Schnupperflug als Einsatz für LAPL
+        let fahrstunden = auto.schritte.first { $0.titel == "Fahrstunden" }?.id
+        z.terminVerknuepfen(serie: "google:fahr", titel: "Fahrstunde (Do)", ziel: auto.id, schritt: fahrstunden, seit: T.plus(tage: -21))
+        z.terminVerknuepfen(serie: "google:fahr2", titel: "Fahrstunde (Di)", ziel: auto.id, schritt: fahrstunden, seit: T.plus(tage: -21))
+        z.terminVerknuepfen(serie: "google:flug", titel: "Schnupperflug", ziel: flug.id, schritt: nil, seit: T.plus(tage: -30))
+        z.termineAbgleichen(heute: T) { Beispieltermine.termine(am: $0, google: true, apple: true, heute: T) }
         // Demo-Verlauf: wöchentliche Stände von der Anlage bis heute (damit „Auf Kurs“ und Prognose etwas zeigen)
         for g in ziele {
             let jetztP = Fortschritt.ziel(g, in: z, heute: T)

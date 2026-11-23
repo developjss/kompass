@@ -66,6 +66,12 @@ final class Navigation {
         case fokus(UUID)
         case rechnung(UUID)
         case reflexion(woche: Bool)
+        /// Meilenstein eines Ziels bearbeiten (nil = neu)
+        case meilenstein(ziel: UUID, schritt: UUID?)
+        case habitZuZiel(UUID)
+        case aufgabeZuZiel(UUID)
+        case terminZuZiel(UUID)
+        case zielBearbeiten(UUID)
 
         var id: String {
             switch self {
@@ -77,6 +83,11 @@ final class Navigation {
             case .fokus(let i): "fokus-\(i)"
             case .rechnung(let i): "rechnung-\(i)"
             case .reflexion(let w): "reflexion-\(w)"
+            case .meilenstein(let z, let s): "meilenstein-\(z)-\(s?.uuidString ?? "neu")"
+            case .habitZuZiel(let z): "habitzuziel-\(z)"
+            case .aufgabeZuZiel(let z): "aufgabezuziel-\(z)"
+            case .terminZuZiel(let z): "terminzuziel-\(z)"
+            case .zielBearbeiten(let z): "zielbearbeiten-\(z)"
             }
         }
     }

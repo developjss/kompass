@@ -139,7 +139,7 @@ struct FortschrittTests {
 
     func zahlZiel(_ s: Double, _ c: Double, _ t: Double) -> Double {
         var g = Ziel(titel: "x", farbe: "#000000", symbol: "x", bereich: "", faellig: heute, angelegt: heute)
-        g.zahl = ZahlMessung(start: s, aktuell: c, ziel: t, einheit: "")
+        g.schritte = [Schritt(titel: "Zahl", art: .zahl, soll: t, start: s, aktuell: c)]
         return Fortschritt.ziel(g, in: Zustand(), heute: heute)
     }
 
@@ -169,7 +169,7 @@ struct FortschrittTests {
         #expect(theorie.hinweis != nil)
         // (1 × 0,9 + 3 × 0,5) ÷ 4 = 0,6
         #expect(abs(Fortschritt.ziel(z.ziele[0], in: z, heute: heute) - 0.6) < 1e-12)
-        z.schrittUmschalten(ziel: g.id, schritt: g.schritte[0].id)
+        z.schrittUmschalten(ziel: g.id, schritt: g.schritte[0].id, heute: heute)
         #expect(abs(Fortschritt.ziel(z.ziele[0], in: z, heute: heute) - 0.625) < 1e-12)
     }
 
@@ -290,5 +290,161 @@ struct DemoTests {
         // Speichern und Laden ergibt denselben Zustand
         let wieder = try JSONDecoder.kompass.decode(Zustand.self, from: JSONEncoder.kompass.encode(z))
         #expect(wieder.ziele == z.ziele && wieder.habits == z.habits && wieder.aufgaben.count == z.aufgaben.count)
+    }
+}
+
+
+// MARK: - Rechnung v2: Meilensteine, Termine, Habit-Wochen, Zwischenstände, Lernen
+
+@Suite("Rechnung v2")
+struct RechnungV2Tests {
+    let heute = Tag(2027, 5, 5) // Mittwoch
+
+    func ziel(_ schritte: [Schritt]) -> Ziel {
+        var g = Ziel(titel: "z", farbe: "#000000", symbol: "x", bereich: "", faellig: heute.plus(tage: 100), angelegt: heute.plus(tage: -100))
+        g.schritte = schritte
+        return g
+    }
+
+    @Test func termineZaehlenInZahlUndZeit() {
+        var z = Zustand()
+        let zahl = Schritt(titel: "Fahrstunden", art: .zahl, soll: 30, start: 0, aktuell: 6)
+        let zeit = Schritt(titel: "Fliegen", art: .zeit, soll: 10)
+        let g = ziel([zahl, zeit])
+        z.ziele = [g]
+        // Fahrstunde jeden Dienstag 90 min, Flug jeden Samstag 120 min
+        let quelle: (Tag) -> [Termin] = { d in
+            var out: [Termin] = []
+            if d.wochentag == 2 { out.append(Termin(quelle: .google, schluessel: "fahr", titel: "Fahrstunde", tag: d, start: 960, ende: 1050)) }
+            if d.wochentag == 6 { out.append(Termin(quelle: .google, schluessel: "flug", titel: "Flug", tag: d, start: 660, ende: 780)) }
+            return out
+        }
+        z.terminVerknuepfen(serie: "google:fahr", titel: "Fahrstunde", ziel: g.id, schritt: zahl.id, seit: heute.plus(tage: -21))
+        z.terminVerknuepfen(serie: "google:flug", titel: "Flug", ziel: g.id, schritt: zeit.id, seit: heute.plus(tage: -21))
+        z.termineAbgleichen(heute: heute, quelle: quelle)
+        z.termineAbgleichen(heute: heute, quelle: quelle) // zweimal = gleich (keine Doppelten)
+        // Dienstage seit 14.04.: 20.04., 27.04., 04.05. → 3 Termine; Samstage: 17.04., 24.04., 01.05. → 3 × 2 h
+        #expect(Fortschritt.ist(von: zahl, in: z, heute: heute) == 9)
+        #expect(Fortschritt.stand(zahl, in: z, heute: heute).anteil == 0.3)
+        #expect(Fortschritt.stunden(von: zeit, in: z, heute: heute) == 6)
+        // Einsatz des Ziels: 3 × 1,5 h + 3 × 2 h
+        #expect(Fortschritt.zeit(ziel: g.id, in: z) == 10.5 * 3600)
+        // zukünftige Termine zählen nicht
+        z.termineAbgleichen(heute: heute.plus(tage: 6), quelle: quelle) // bis Di 11.05.
+        #expect(Fortschritt.ist(von: zahl, in: z, heute: heute.plus(tage: 6)) == 10)
+        // Lösen: zählt nicht mehr
+        z.terminLoesen(z.termine[0].id)
+        #expect(Fortschritt.ist(von: zahl, in: z, heute: heute) == 6)
+    }
+
+    @Test func habitWochen() {
+        // Mo/Mi/Fr geplant; seit Mo 12.04.: Woche 1 komplett, Woche 2 Fr fehlt, Woche 3 komplett, Woche 4 (laufend) Mo erledigt, Mi offen
+        var h = Habit(titel: "Sport", farbe: "#000000", symbol: "x", wochentage: [1, 3, 5], angelegt: Tag(2027, 4, 1))
+        let w1 = Tag(2027, 4, 12)
+        for o in [0, 2, 4, 7, 9, 14, 16, 18, 21] { h.erledigt.insert(w1.plus(tage: o)) }
+        #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute) == 2)
+        h.erledigt.insert(heute)
+        #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute) == 2) // Fr fehlt noch
+        h.erledigt.insert(heute.plus(tage: 2))
+        #expect(HabitRechnung.erfuellteWochen(h, seit: w1, heute: heute.plus(tage: 2)) == 3)
+        // Start mitten in der Woche: nur geplante Tage ab „seit“ zählen (Do 15.04. → Fr 16.04. reicht für Woche 1)
+        #expect(HabitRechnung.erfuellteWochen(h, seit: Tag(2027, 4, 15), heute: heute) == 2)
+    }
+
+    @Test func gemischtesZiel() {
+        // Fit: Gewicht 86 → 75 (jetzt 81, ×2) · Sport 8 Wochen (2 erfüllt) · 10 km (offen) · Halbmarathon (×2, offen)
+        var z = Zustand()
+        var h = Habit(titel: "Sport", farbe: "#000000", symbol: "x", wochentage: [1, 3, 5], angelegt: Tag(2027, 4, 1))
+        let w1 = Tag(2027, 4, 12)
+        for o in [0, 2, 4, 14, 16, 18] { h.erledigt.insert(w1.plus(tage: o)) }
+        z.habits = [h]
+        let g = ziel([
+            Schritt(titel: "Gewicht", art: .zahl, gewicht: 2, soll: 75, start: 86, aktuell: 81),
+            Schritt(titel: "Sport", art: .habit, seit: w1, soll: 8, habitID: h.id, habitModus: .wochen),
+            Schritt(titel: "10 km"),
+            Schritt(titel: "Halbmarathon", gewicht: 2),
+        ])
+        z.ziele = [g]
+        // (2 × 5/11 + 1 × 2/8 + 0 + 0) ÷ 6
+        let erwartet = (2.0 * 5 / 11 + 2.0 / 8) / 6
+        #expect(abs(Fortschritt.ziel(g, in: z, heute: heute) - erwartet) < 1e-12)
+        // Beiträge ergeben zusammen den Fortschritt
+        let summe = g.schritte.reduce(0) { $0 + Fortschritt.beitrag($1, in: g, z: z, heute: heute) }
+        #expect(abs(summe - erwartet) < 1e-12)
+    }
+
+    @Test func zwischenstaende() {
+        let z = Zustand()
+        let auf = Schritt(titel: "Vermögen", art: .zahl, soll: 1_000_000, start: 0, aktuell: 118_500, schwellen: [10_000, 100_000, 500_000])
+        #expect(Fortschritt.erreichteSchwellen(auf, in: z, heute: heute) == [10_000, 100_000])
+        let ab = Schritt(titel: "Gewicht", art: .zahl, soll: 75, start: 86, aktuell: 81, schwellen: [84, 80, 78])
+        #expect(Fortschritt.erreichteSchwellen(ab, in: z, heute: heute) == [84])
+    }
+
+    @Test func lernenAusZeitMeilenstein() {
+        var z = Zustand()
+        let s = Schritt(titel: "Theorie", art: .zeit, soll: 20)
+        let g = ziel([s])
+        z.ziele = [g]
+        z.sitzungen = [FokusSitzung(schrittID: s.id, tag: heute, sekunden: 26 * 3600)]
+        z.schrittUmschalten(ziel: g.id, schritt: s.id, heute: heute)
+        #expect(z.lernen.zeitVerhaeltnisse == [1.3])
+        // Prozent bleibt deterministisch (abgehakt = 100 %), Lernen ändert nur Vorschläge
+        #expect(Fortschritt.ziel(z.ziele[0], in: z, heute: heute) == 1)
+        #expect(LernRechnung.vorschlagStunden(20, verhaeltnisse: z.lernen.zeitVerhaeltnisse) == 22) // 20 × (1,3 + 3) ÷ 4 = 21,5 → 22
+    }
+
+    @Test func vorschlagHabit() {
+        var h = Habit(titel: "Sport", farbe: "#000000", symbol: "x", wochentage: [1, 3, 5], angelegt: heute.plus(tage: -100))
+        // keine Erfahrung (nichts erledigt): Anteil (0 + 1) ÷ 10 → 10 % der verbleibenden Wochen
+        #expect(LernRechnung.vorschlagWochen(h, heute: heute, bis: heute.plus(tage: 70)) == 1)
+        // alle 8 letzten Wochen erfüllt: (8 + 1) ÷ 10 = 90 % von 10 Wochen = 9
+        var d = heute.montag.plus(tage: -56)
+        while d < heute.montag { if HabitRechnung.geplant(h, am: d) { h.erledigt.insert(d) }; d = d.plus(tage: 1) }
+        #expect(LernRechnung.vorschlagWochen(h, heute: heute, bis: heute.plus(tage: 70)) == 9)
+    }
+
+    @Test func verknuepfenUndLoesen() {
+        var z = Zustand()
+        let h = Habit(titel: "Lesen", farbe: "#000000", symbol: "x", wochentage: [1, 2, 3, 4, 5, 6, 7], angelegt: heute)
+        z.habits = [h]
+        let g = ziel([])
+        z.ziele = [g]
+        z.habitVerknuepfen(h.id, ziel: g.id, alsMeilenstein: .anzahl, soll: 10, heute: heute)
+        #expect(z.ziele[0].schritte.count == 1 && z.habits[0].zielID == g.id)
+        z.habitLoesen(h.id, ziel: g.id)
+        #expect(z.ziele[0].schritte.isEmpty && z.habits[0].zielID == nil)
+
+        let a = z.aufgabeAnlegen("Buch kaufen", datum: nil, heute: heute)
+        z.schrittSpeichern(Schritt(titel: "Erstes Buch"), ziel: g.id)
+        z.aufgabeZuordnen(a.id, ziel: g.id, heute: heute)
+        #expect(z.aufgaben[0].schrittID == z.ziele[0].schritte[0].id) // fällt in den nächsten offenen Meilenstein
+        z.zielLoeschen(g.id)
+        #expect(z.ziele.isEmpty && z.aufgaben[0].zielID == nil && z.aufgaben[0].schrittID == nil)
+    }
+
+    @Test func zahlEintragenEinWertProTag() {
+        var z = Zustand()
+        let s = Schritt(titel: "Gewicht", art: .zahl, soll: 75, start: 86, aktuell: 86)
+        let g = ziel([s])
+        z.ziele = [g]
+        z.zahlEintragen(84, ziel: g.id, schritt: s.id, heute: heute)
+        z.zahlEintragen(83.5, ziel: g.id, schritt: s.id, heute: heute)
+        #expect(z.ziele[0].schritte[0].verlauf == [VerlaufPunkt(tag: heute, wert: 83.5)])
+        #expect(abs(Fortschritt.ziel(z.ziele[0], in: z, heute: heute) - 2.5 / 11) < 1e-12)
+    }
+
+    @Test func alteDatenLesen() throws {
+        // Version 1: Ziel mit „zahl“, ohne „termine“ – darf nicht zum Lesefehler führen
+        let alt = """
+        {"version":1,"ziele":[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","titel":"Alt","farbe":"#000000","symbol":"x","bereich":"",
+        "faellig":"2027-12-31","warum":"","status":"aktiv","angelegt":"2027-01-01","zahl":{"start":0,"aktuell":5,"ziel":10,"einheit":"","verlauf":[]},
+        "schritte":[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FE","titel":"S","art":"aufgaben","gewicht":1,"geschafft":true}]}],
+        "habits":[],"aufgaben":[],"sitzungen":[],"verlauf":[],"lernen":{"zeitVerhaeltnisse":[],"vorschlaege":{}},
+        "einstellungen":{"nurEineAufgabe":false,"weitereAusblenden":false,"googleBeispiel":false,"appleBeispiel":false},"reflexionen":{}}
+        """
+        let z = try JSONDecoder.kompass.decode(Zustand.self, from: Data(alt.utf8))
+        #expect(z.version == 1 && z.ziele.count == 1 && z.termine.isEmpty)
+        #expect(z.ziele[0].schritte[0].modus == .anzahl)
     }
 }

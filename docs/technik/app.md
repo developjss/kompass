@@ -45,4 +45,6 @@ Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner
 
 ## Noch nicht drin (gegenüber dem Klick-Dummy)
 
-Stundenraster mit Ziehen & Ablegen im Kalender, Zeitachse auf der Ziele-Seite, Vorschläge (Vorlagen + KI) beim Anlegen, Schritte anlegen/bearbeiten, Termine Zielen/Habits zuordnen, Zahl-Stand eines Ziels eintragen, Hochzählen der Zahlen. Personen-Test als Swift-Test (`s-personentest`).
+Stundenraster mit Ziehen & Ablegen im Kalender, Zeitachse auf der Ziele-Seite, Vorschläge (Vorlagen + KI) beim Anlegen eines Ziels, Termine direkt im Kalender zuordnen, Hochzählen der Zahlen. Personen-Test als Swift-Test (`s-personentest`).
+
+Seit Rechnung Fassung 2: Meilensteine, Aufgaben, Habits und Termine lassen sich im Ziel hinzufügen, abhaken und lösen (`Kompass/Ansichten/Ziele/ZielDetail.swift`, `ZielBlaetter.swift`). Gespeicherte Daten der Fassung 1 werden beim Start durch die neue Demo ersetzt (es gab nur Demo-Daten).

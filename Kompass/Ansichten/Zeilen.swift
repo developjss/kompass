@@ -58,6 +58,9 @@ struct AufgabeHinzufuegen: View {
     var platzhalter: String
     var datum: Tag?
     var prio: Prioritaet
+    var zielID: UUID? = nil
+    /// gesetzt = genau dieser Meilenstein (sonst der nächste offene des Ziels)
+    var schrittID: UUID? = nil
     @Environment(Speicher.self) private var speicher
     @State private var text = ""
     @FocusState private var fokus: Bool
@@ -78,7 +81,11 @@ struct AufgabeHinzufuegen: View {
     private func anlegen() {
         let t = text.trimmingCharacters(in: .whitespaces)
         guard !t.isEmpty else { return }
-        speicher.aendern { $0.aufgabeAnlegen(t, datum: datum, prio: prio, heute: speicher.heute) }
+        let h = speicher.heute, z = zielID, s = schrittID, d = datum, p = prio
+        speicher.aendern { st in
+            let a = st.aufgabeAnlegen(t, datum: d, prio: p, zielID: z, heute: h)
+            if let s { st.aufgabeZuordnen(a.id, ziel: z, schritt: s, heute: h) }
+        }
         text = ""
         fokus = true
     }

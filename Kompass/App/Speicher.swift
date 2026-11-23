@@ -41,8 +41,6 @@ final class Speicher {
     static func vorschau() -> Speicher {
         let s = Speicher(datei: nil)
         s.zustand = DemoDaten.zustand(heute: s.heute)
-        s.zustand.einstellungen.googleBeispiel = true
-        s.zustand.einstellungen.appleBeispiel = true
         s.lage = .bereit
         return s
     }
@@ -58,10 +56,16 @@ final class Speicher {
             if FileManager.default.fileExists(atPath: datei.path) {
                 let daten = try Data(contentsOf: datei)
                 zustand = try JSONDecoder.kompass.decode(Zustand.self, from: daten)
+                if zustand.version < 2 {
+                    // Version 1 kannte „Ziel als Zahl“ noch ohne Meilensteine; bisher gab es nur Demo-Daten → neu aufsetzen.
+                    zustand = DemoDaten.zustand(heute: heute, jetzt: jetzt())
+                    speichernJetzt()
+                }
             } else {
                 zustand = DemoDaten.zustand(heute: heute, jetzt: jetzt())
                 speichernJetzt()
             }
+            termineAbgleichen()
             zustand.verlaufFortschreiben(heute: heute)
             lage = .bereit
         } catch {
@@ -84,6 +88,7 @@ final class Speicher {
     /// Ändert den Zustand und speichert gebündelt (viele Änderungen kurz hintereinander = ein Schreibvorgang).
     func aendern(_ aenderung: (inout Zustand) -> Void) {
         aenderung(&zustand)
+        termineAbgleichen()
         zustand.verlaufFortschreiben(heute: heute)
         speichernAufgabe?.cancel()
         speichernAufgabe = Task { [weak self] in
@@ -104,6 +109,13 @@ final class Speicher {
             speicherText = "Nicht gespeichert"
             speicherFehler = true
         }
+    }
+
+    /// Stattgefundene Termine verknüpfter Serien übernehmen (Beispielkalender; später EventKit/Google).
+    func termineAbgleichen() {
+        let e = zustand.einstellungen, T = heute
+        guard e.googleBeispiel || e.appleBeispiel else { return }
+        zustand.termineAbgleichen(heute: T) { Beispieltermine.termine(am: $0, google: e.googleBeispiel, apple: e.appleBeispiel, heute: T) }
     }
 
     func demoZuruecksetzen() {

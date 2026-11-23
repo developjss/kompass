@@ -1,37 +1,41 @@
 # Rechenregeln – so rechnet Kompass
 
-Stand: 23. November 2026 · Quelle der Wahrheit für jede Zahl in der App. Umgesetzt im Klick-Dummy (`prototyp/index.html`, Abschnitt „Fortschritts-Rechnung“), geprüft durch `prototyp/tests/` (unabhängige zweite Rechnung). In Swift genauso umsetzen; jede Änderung hier braucht „Ja, mergen“ des Gründers.
+Stand: 23. November 2026 · **Fassung 2** (Meilensteine). Quelle der Wahrheit für jede Zahl in der App. Umgesetzt in Swift (`Kompass/Rechnung/`, Tests in `KompassTests/`); der Klick-Dummy rechnet noch Fassung 1. Analyse und Begründung: `docs/produkt/konzepte/ziele-und-rechnung.md`. Jede Änderung hier braucht „Ja, mergen“ des Gründers.
 
 Grundsatz [ENTSCHEIDUNG – 23.11.2026]: Egal ob Vorschlag übernommen, geändert oder selbst angelegt – es wird immer gleich gerechnet. KI schlägt nur vor.
 
 ## 1. Ziel-Fortschritt
 
-**Ziel mit Schritten:** `Fortschritt = Σ(Gewicht × Stand) ÷ Σ Gewicht`
-**Ziel als Zahl:** `Fortschritt = (aktuell − Start) ÷ (Ziel − Start)`, begrenzt auf 0–100 %. Start = Ziel → 100 %, wenn erreicht, sonst 0 %. Schritte sind dann nur Planungshilfe.
-**Als erreicht markiert:** 100 %. **Keine Schritte:** 0 % und Hinweis „Wie misst du das?“.
+Ein Ziel besteht aus **Meilensteinen**. `Fortschritt = Σ(Gewicht × Stand) ÷ Σ Gewicht` über alle Meilensteine.
+- **Als erreicht markiert:** 100 %. **Keine Meilensteine:** 0 % und Hinweis „Wie misst du das?“.
+- **Ziel als Zahl** (Vermögen, Gewicht) = ein Zahl-Meilenstein. **Zwischenstände** (z. B. 100.000 €) gehören zum Zahl-Meilenstein, werden automatisch erreicht, sobald der Stand sie erreicht, und zählen nicht extra.
+- „So wird gerechnet“ zeigt je Meilenstein den Beitrag in Prozentpunkten: `Gewicht × Stand ÷ Σ Gewicht`. Die Beiträge ergeben zusammen den Fortschritt.
 
-## 2. Stand eines Schritts (0–100 %)
+## 2. Stand eines Meilensteins (0–100 %)
 
 | Art | Stand |
 |---|---|
-| Aufgaben / abhaken | mit Aufgaben: **90 % × erledigte ÷ alle einmaligen Aufgaben** dieses Schritts; ohne Aufgaben 0 %. Die letzten 10 % durch Abhaken. |
-| Zeit | Fokusstunden dieses Schritts ÷ Soll-Stunden |
-| Habit | erledigte Male des Habits seit Anlage des Schritts ÷ Soll-Anzahl |
-| Zahl | (aktuell − Start) ÷ (Ziel − Start); Start = Ziel → 100 % wenn erreicht |
+| Abhaken | mit Aufgaben: **90 % × erledigte ÷ alle einmaligen Aufgaben** dieses Meilensteins; ohne Aufgaben 0 %. Die letzten 10 % durch Abhaken. |
+| Zahl | (Ist − Start) ÷ (Ziel − Start), in beide Richtungen (86 → 75 kg). Ist = zuletzt eingetragener Stand **+ 1 je zugeordnetem, stattgefundenem Termin**. Start = Ziel → 100 % wenn erreicht. |
+| Zeit | (Fokusstunden dieses Meilensteins **+ Dauer zugeordneter, stattgefundener Termine**) ÷ Soll-Stunden |
+| Habit · Anzahl | erledigte Male des Habits seit Anlage des Meilensteins ÷ Soll-Anzahl |
+| Habit · Wochen | erfüllte Wochen seit Anlage ÷ Soll-Wochen. **Woche erfüllt** = an allen geplanten Tagen dieser Woche (ab Anlage) erledigt; Wochen ohne geplanten Tag zählen nicht; die laufende Woche zählt erst, wenn sie erfüllt ist. |
 
-- Abgehakt („Geschafft“) = 100 %, egal welche Art.
+- Abgehakt („Geschafft“) = 100 %, egal welche Art. Ein Meilenstein bei 100 % wird nicht automatisch abgehakt.
 - Immer begrenzt auf 0–100 %. Ungültige Werte (Soll ≤ 0, Text, leer) → 0 %.
 - **Gewicht:** 1 klein, 2 mittel, 3 groß; alles andere zählt als 1. Standard 1.
-- **90-%-Regel** [VORSCHLAG, OFFEN]: verhindert, dass ein Schritt wie „Theorieprüfung“ durch eine einzige Vorbereitungsaufgabe auf 100 % springt.
+- **90-%-Regel** [VORSCHLAG, OFFEN]: verhindert, dass ein Meilenstein wie „Theorieprüfung“ durch eine einzige Vorbereitungsaufgabe auf 100 % springt.
 
 ## 3. Was in welche Zahl zählt
 
-- **Aufgaben** fallen beim Anlegen automatisch in den **nächsten offenen Schritt** ihres Ziels (Art Aufgaben oder Zeit, noch nicht 100 %). Umstellbar; „Keiner – nur Einsatz“ möglich.
+**Grundsatz:** In die Prozente zählt nur, was über einen Meilenstein einfließt. Alles andere am Ziel (Aufgaben ohne Meilenstein, verknüpfte Habits ohne Habit-Meilenstein, Termine „nur Einsatz“, Fokuszeit) ist **Einsatz**: sichtbar im Ziel und im Rückblick, ohne die Prozente zu ändern.
+
+- **Aufgaben** fallen beim Anlegen automatisch in den **nächsten offenen Meilenstein** ihres Ziels (Art Abhaken oder Zeit, noch nicht 100 %). Im Ziel bzw. Meilenstein angelegte Aufgaben gehören genau dorthin. Umstellbar; „Keiner – nur Einsatz“ möglich.
 - **Wiederkehrende Aufgaben** zählen nicht in „erledigte ÷ alle“ (sonst sinkt der Stand bei jeder neuen Wiederholung), sondern über Fokuszeit und „Auf Kurs“.
-- **Habits** zählen über Habit-Schritte in die Prozente; immer in „Auf Kurs“ und die Wochen-Quote [VORSCHLAG, OFFEN].
-- **Fokuszeit** einer Aufgabe zählt in ihren Zeit-Schritt und in die investierte Zeit des Ziels.
-- **Kalendertermine**, die einem Ziel zugeordnet sind (ganze Serie, ab Zuordnung, nur stattgefundene), zählen in die investierte Zeit des Ziels – noch nicht in Schritte (§8).
-- Gelöschte Aufgaben fallen aus der Rechnung; erledigte bleiben. Gelöschter Schritt: seine Aufgaben werden „Keiner – nur Einsatz“.
+- **Habits** zählen über Habit-Meilensteine (Anzahl oder Wochen) in die Prozente; beim Verknüpfen mit einem Ziel ist „zählt in die Prozente“ vorausgewählt.
+- **Fokuszeit** einer Aufgabe zählt in ihren Zeit-Meilenstein und in die investierte Zeit des Ziels.
+- **Kalendertermine:** Eine Serie wird einem Ziel zugeordnet (Einsatz: Dauer) und optional einem Zahl- oder Zeit-Meilenstein (je 1 bzw. Dauer). Es zählen nur stattgefundene Termine ab der Zuordnung (wahlweise 4 Wochen rückwirkend). Gespeichert werden nur Tag und Dauer.
+- Gelöschte Aufgaben fallen aus der Rechnung; erledigte bleiben. Gelöschter Meilenstein: seine Aufgaben, Fokuszeiten und Termine werden „nur Einsatz“. Habit vom Ziel lösen entfernt seine Habit-Meilensteine in diesem Ziel. Gelöschtes Ziel: Aufgaben, Habits und Fokuszeiten bleiben ohne Zuordnung.
 
 ## 4. Auf Kurs
 
@@ -53,9 +57,13 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 
 ## 7. Lernen
 
-- **Zeitfaktor** `r = (Σ tatsächlich÷geplant + 3) ÷ (Anzahl + 3)` aus abgeschlossenen Zeit-Schritten (die letzten 30). Neue Zeit-Vorschläge × r. Die „+3“ ziehen bei wenig Erfahrung Richtung 1.
+**Grundsatz:** Lernen ändert nie bestehende Prozente – nur Vorschläge beim Anlegen und die Prognose.
+
+- **Zeitfaktor** `r = (Σ tatsächlich÷geplant + 3) ÷ (Anzahl + 3)` aus abgehakten Zeit-Meilensteinen (die letzten 30; gespeichert beim Abhaken). Vorschlag für neue Zeit-Meilensteine: Schätzung × r, auf ganze Stunden. Die „+3“ ziehen bei wenig Erfahrung Richtung 1.
+- **Habit-Soll (Anzahl):** geplante Tage bis zur Fälligkeit des Ziels × 30-Tage-Quote des Habits (ohne Verlauf × 1), mindestens 1.
+- **Habit-Soll (Wochen):** Wochen bis zur Fälligkeit × (erfüllte der letzten 8 Wochen + 1) ÷ 10, mindestens 1.
 - **Übernahme-Quote** je Vorschlag `q = (übernommen + 1) ÷ (gezeigt + 2)`; vorausgewählt, wenn q ≥ 40 %.
-- **Eigene Schritte**, die zu einer Vorlage ergänzt werden, werden beim nächsten ähnlichen Ziel mit vorgeschlagen.
+- **Eigene Meilensteine**, die zu einer Vorlage ergänzt werden, werden beim nächsten ähnlichen Ziel mit vorgeschlagen.
 - Über alle Nutzer: gleiche Formeln mit anonymen Summen – Konzept `docs/produkt/konzepte/lernen-ueber-alle-nutzer.md`.
 
 ## 8. Zeit, Termine, Wiederholungen
@@ -63,8 +71,8 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - **Fokus-Timer** in Abschnitten; beim Stoppen an Mitternacht geteilt und dem richtigen Tag gebucht. Mehr als 4 Stunden am Stück zählen nicht (vergessener Timer) – gebucht werden die ersten 4 Stunden, mit Hinweis.
 - **Wiederholung:** täglich +1 Tag; werktags nächster Mo–Fr; wöchentlich +7; monatlich gleicher Tag, sonst Monatsletzter, ohne Abrutschen (Anker-Tag, z. B. 31.). Nur eine offene Folge je Serie. „Nur diesen löschen“ lässt die Serie weiterlaufen, „Serie beenden“ stoppt sie.
 - **Kalenderwoche** nach ISO 8601 (KW 53 möglich).
-- [OFFEN] Kalendertermine direkt in Zeit-/Zahl-Schritte zählen (z. B. jede Fahrstunde → „Fahrstunden 6 von 30“).
+- Kalendertermine zählen in Zahl- und Zeit-Meilensteine (§2, §3) [VORSCHLAG – Fassung 2].
 
 ## 9. Prüfung
 
-`prototyp/tests/run.py` (4 Personen × 2 Jahre, zufällige Eingriffe, unabhängige Referenz) und `prototyp/tests/unit.py` (Randfälle) müssen grün sein. Letzter Lauf: `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`.
+Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).
