@@ -29,6 +29,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Ziele v2 (23.11.2026, PR #14):** Aussage-Karte über alle Ziele, Satz „so wird gerechnet“ unter der Kopfkarte, schlanke Meilenstein-Zeilen, Fakten-Zeilen mit Editor je Zeile, Ziel löschen auf der Seite, Meilenstein-Vorlagen aus dem Titel beim Anlegen (Regeln, keine KI). Befund und Stand: `docs/produkt/konzepte/habits-v2.md` §9.
 
+**Struktur v3 (23.11.2026, PR #15):** Home statt Heute (Jetzt-Karte für Termin, Aufgabe oder Habit; Hinweise bei engen Tagen, Überschneidungen, zu wenig Zeit), Kalender neu (Als Nächstes, Tag · Woche · Monat · Jahr, Ziehen in die Zeitleiste, eigene Termine mit Ziel/Habit, Farben nach Ziel oder Kategorie), Rückblick neu (Plan geschafft, Auslastung), Apple-Kalender lesen (EventKit, nach Zustimmung), Lotse mit „Als Nächstes“, „Wie voll ist mein Tag?“, „Termin eintragen“. Neue Rechenregel §9 Tagesplan (Gründer: „allem selber zustimmen“). Personen-Test (6 Personen × 3,5 Jahre) als Swift-Test, UI-Tests über die ganze App. Konzept: `docs/produkt/konzepte/struktur-v3.md`.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte
@@ -36,4 +38,4 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 Reihenfolge: `/fahrplan` (Phase 1).
 1. **Entscheidungen des Gründers** (`docs/leitung/entscheidungen.md`, [OFFEN]): App-Name, Sprache der App-Texte, nur für sich oder verkaufen (Abo), Ort des Lotse-Servers, Preis von Pro.
 2. Klick-Dummy eine Woche selbst nutzen, Funde in `/fahrplan` sammeln.
-3. Phase 2 weiter: Personen-Test als Swift-Test, SwiftData, dann Heute, Habits, Ziele fein ausbauen (Design und Funktionen ändern sich noch).
+3. Phase 2 weiter: SwiftData, Google-Kalender (braucht Google-Cloud-Projekt des Gründers), Termine in den Apple-Kalender schreiben, Onboarding, StoreKit für Pro.

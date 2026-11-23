@@ -44,6 +44,7 @@ enum AppWissen {
             "Alles ohne Meilenstein (Aufgaben, Habits, Termine, Fokuszeit) zählt als Einsatz und ändert die Prozente nicht.",
             "Auf Kurs vergleicht Fortschritt mit der verstrichenen Zeit: 5 Punkte darüber = voraus, 10 darunter = hinterher.",
             "Prognose: Tempo der letzten 4 Wochen, ab 7 Tagen Verlauf.",
+            "Tagesplan: wache Zeit 7–22 Uhr; enger Tag = mindestens 75 % verplant oder weniger als 90 Minuten frei; Überschneidung ab 5 Minuten; zu wenig Zeit, wenn Offenes ohne Uhrzeit länger dauert als die freie Zeit. Eigene Termine zählen für ein Ziel wie Termin-Serien und erfüllen einen Habit, sobald sie vorbei sind.",
             "Habit: Tagesanteil = Menge ÷ Soll (halb geschafft zählt halb). Serie = geplante Tage rückwärts, nur volle Tage; bei „n-mal pro Woche“ erfüllte Wochen. Quote = Σ Anteile ÷ geplante Tage der letzten 30 Tage.",
             "Wiederkehrende Aufgaben zählen nicht in „erledigte ÷ alle“, sondern über Fokuszeit.",
             "Lernen ändert nie bestehende Prozente – nur Vorschläge (Soll-Stunden, Habit-Soll) und die Prognose.",

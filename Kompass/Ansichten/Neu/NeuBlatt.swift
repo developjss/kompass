@@ -302,6 +302,20 @@ struct AufgabeBlatt: View {
                                 let t = Tag(neu, kalender: speicher.kalender)
                                 speicher.aendern { s in setze(&s) { $0.datum = t } }
                             }), displayedComponents: .date)
+                            Toggle("Mit Uhrzeit", isOn: Binding(get: { a.uhrzeit != nil }, set: { neu in
+                                speicher.aendern { s in setze(&s) { $0.uhrzeit = neu ? 9 * 60 : nil } }
+                            }))
+                            if let u = a.uhrzeit {
+                                DatePicker("Uhrzeit", selection: Binding(get: { Calendar.kompass.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: u / 60, minute: u % 60)) ?? Date() }, set: { neu in
+                                    let k = Calendar.kompass.dateComponents([.hour, .minute], from: neu)
+                                    let m = (k.hour ?? 0) * 60 + (k.minute ?? 0)
+                                    speicher.aendern { s in setze(&s) { $0.uhrzeit = m } }
+                                }), displayedComponents: .hourAndMinute)
+                                ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { ($0 < 60 ? "\($0) Min" : $0 % 60 == 0 ? "\($0 / 60) h" : "1,5 h", $0 == a.dauer) }) { i in
+                                    let du = [15, 30, 60, 90, 120][i]
+                                    speicher.aendern { s in setze(&s) { $0.dauer = du } }
+                                }
+                            }
                         }
                         Picker("Wiederholen", selection: feld(\.wiederholung)) {
                             ForEach(Wiederholung.allCases, id: \.self) { Text($0.name).tag($0) }
@@ -315,6 +329,10 @@ struct AufgabeBlatt: View {
                         })) {
                             Text("Keins").tag(UUID?.none)
                             ForEach(speicher.zustand.ziele) { Text($0.titel).tag(UUID?.some($0.id)) }
+                        }
+                        ChipReihe(titel: "Kategorie", auswahl: Kategorie.allCases.map { ($0.name, $0 == a.kategorie) }) { i in
+                            let k = Kategorie.allCases[i]
+                            speicher.aendern { s in setze(&s) { $0.kategorie = $0.kategorie == k ? nil : k } }
                         }
                         if a.fokusSekunden > 0 { LabeledContent("Fokuszeit", value: Zahl.dauer(a.fokusSekunden)) }
                     }

@@ -139,3 +139,17 @@ struct WochenbilanzTests {
         #expect(w.termine == 1 && w.verplant[0] == 180 && w.geplantJeTag[4] == 0)
     }
 }
+
+@Suite("Tagesplan · Befunde aus dem Personen-Test")
+struct TagesplanBefundTests {
+    /// Befund Ahmet/Mia: zwei gleich benannte Termine überschneiden sich mit demselben Block → nur ein Hinweis (eindeutige ids).
+    @Test func gleicheTitelGebenEinenHinweis() {
+        let heute = Tag(2027, 5, 5)
+        var z = Zustand()
+        z.eigeneTermine = [EigenerTermin(titel: "Training", tag: heute, start: 600, ende: 660), EigenerTermin(titel: "Training", tag: heute, start: 610, ende: 670),
+                           EigenerTermin(titel: "Call", tag: heute, start: 620, ende: 640)]
+        let h = Tagesplan.hinweise(zustand: z, heute: heute, jetzt: 0, termine: { Kalenderquelle.termine(am: $0, zustand: z, heute: heute) }, tage: 1)
+        #expect(Set(h.map(\.id)).count == h.count)
+        #expect(h.filter { $0.art == .ueberschneidung }.count == 2) // Training+Training, Training+Call
+    }
+}

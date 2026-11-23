@@ -206,13 +206,14 @@
       "id": "s-personentest",
       "titel": "Personen-Test als Swift-Test (unabhängige Referenz)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "landkarte": "qa",
       "phase": 2,
       "nach": [
         "s-rechnung"
-      ]
+      ],
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "s-heute",
@@ -280,13 +281,14 @@
       "id": "s-eventkit",
       "titel": "Apple-Kalender lesen (EventKit)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "landkarte": "cal",
       "phase": 2,
       "nach": [
         "s-xcode"
-      ]
+      ],
+      "erledigtAm": "2026-11-23"
     },
     {
       "id": "v-mac",
@@ -615,6 +617,26 @@
       "quelle": "docs/produkt/konzepte/habits-v2.md §9",
       "landkarte": "ziele",
       "erledigtAm": "2026-11-23"
+    },
+    {
+      "id": "k-google",
+      "titel": "Google-Kalender anbinden (OAuth, Google-Cloud-Projekt mit Prüfung)",
+      "wer": "ceo",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/struktur-v3.md §7",
+      "landkarte": "cal"
+    },
+    {
+      "id": "k-schreiben",
+      "titel": "Kompass-Termine und Habits auf Wunsch in den Apple-Kalender schreiben",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 3,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/struktur-v3.md §7",
+      "landkarte": "cal"
     }
   ]
 }

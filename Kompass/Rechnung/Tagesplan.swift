@@ -149,13 +149,15 @@ enum Tagesplan {
     /// Hinweise für heute und die nächsten Tage: enger Tag, Überschneidung (≥ 5 Min), kein Platz für Offenes ohne Uhrzeit.
     static func hinweise(zustand z: Zustand, heute: Tag, jetzt: Int, termine: (Tag) -> [Termin], tage: Int = 7) -> [Hinweis] {
         var out: [Hinweis] = []
+        var gesehen = Set<String>()
+        func neu(_ h: Hinweis) { if gesehen.insert(h.id).inserted { out.append(h) } } // gleiche Titel doppelt → ein Hinweis
         for i in 0..<tage {
             let d = heute.plus(tage: i)
             let b = bloecke(am: d, zustand: z, termine: termine(d)).filter { !$0.erledigt && (i > 0 || $0.ende > jetzt) }
             // Überschneidungen
             for x in 0..<b.count {
                 for y in (x + 1)..<b.count where min(b[x].ende, b[y].ende) - max(b[x].start, b[y].start) >= 5 {
-                    out.append(Hinweis(art: .ueberschneidung, tag: d, text: "„\(b[x].titel)“ und „\(b[y].titel)“ überschneiden sich"))
+                    neu(Hinweis(art: .ueberschneidung, tag: d, text: "\(b[x].titel) und \(b[y].titel) gleichzeitig"))
                 }
             }
             let ab = i == 0 ? max(jetzt, wachVon) : wachVon
@@ -167,9 +169,9 @@ enum Tagesplan {
             let braucht = brauchtA + brauchtH
             let frei = i == 0 ? freiAb(b, ab: ab) : a.frei
             if braucht > 0 && braucht > frei {
-                out.append(Hinweis(art: .keinPlatz, tag: d, text: "\(braucht) Min offen, frei sind noch \(max(0, frei)) Min"))
+                neu(Hinweis(art: .keinPlatz, tag: d, text: "\(braucht) Min offen, frei sind noch \(max(0, frei)) Min"))
             } else if a.eng && i <= 2 {
-                out.append(Hinweis(art: .eng, tag: d, text: "Enger Tag: \(a.verplant / 60) h \(a.verplant % 60) Min verplant"))
+                neu(Hinweis(art: .eng, tag: d, text: "Enger Tag: \(a.verplant / 60) h \(a.verplant % 60) Min verplant"))
             }
         }
         return out

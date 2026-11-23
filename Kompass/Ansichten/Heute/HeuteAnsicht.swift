@@ -142,8 +142,9 @@ private struct JetztKarte: View {
     private var unter: String? {
         let z = speicher.zustand
         if let b = fokus.block {
-            if Tagesplan.laeuft(b, heute: speicher.heute, jetzt: speicher.jetztMinuten) { return "\(b.unter) · noch \(b.ende - speicher.jetztMinuten) Min" }
-            return [b.unter, z.ziel(b.zielID)?.titel].compactMap { $0 }.joined(separator: " · ")
+            let zeit = "\(Tagesplan.uhr(b.start))–\(Tagesplan.uhr(b.ende))"
+            if Tagesplan.laeuft(b, heute: speicher.heute, jetzt: speicher.jetztMinuten) { return "\(zeit) · noch \(b.ende - speicher.jetztMinuten) Min" }
+            return [zeit, z.ziel(b.zielID)?.titel].compactMap { $0 }.joined(separator: " · ")
         }
         if let a = fokus.aufgabe { return z.ziel(a.zielID)?.titel }
         if let h = fokus.habit { return HabitRechnung.mengenText(h, am: speicher.heute) }

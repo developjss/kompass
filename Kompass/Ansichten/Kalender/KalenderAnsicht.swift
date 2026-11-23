@@ -46,6 +46,7 @@ struct NaechsteLeiste: View {
     var titel = "Als Nächstes"
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
         let T = speicher.heute
@@ -56,11 +57,17 @@ struct NaechsteLeiste: View {
             if n.isEmpty {
                 GruppierteListe { LeerZeile(text: "Nichts mit Uhrzeit in den nächsten 7 Tagen. Tipp auf „+ Neu“ oder zieh eine Aufgabe in den Tag.") }
             } else {
-                HStack(alignment: .top, spacing: 10) {
-                    ForEach(Array(n.enumerated()), id: \.element.id) { i, b in
-                        NaechsteKarte(block: b, erste: i == 0)
+                if schrift >= .xxxLarge {
+                    VStack(spacing: 10) {
+                        ForEach(Array(n.enumerated()), id: \.element.id) { i, b in NaechsteKarte(block: b, erste: i == 0) }
                     }
-                    ForEach(0..<max(0, 3 - n.count), id: \.self) { _ in Color.clear.frame(maxWidth: .infinity) }
+                } else {
+                    HStack(alignment: .top, spacing: 10) {
+                        ForEach(Array(n.enumerated()), id: \.element.id) { i, b in
+                            NaechsteKarte(block: b, erste: i == 0)
+                        }
+                        ForEach(0..<max(0, 3 - n.count), id: \.self) { _ in Color.clear.frame(maxWidth: .infinity) }
+                    }
                 }
             }
         }
@@ -88,7 +95,7 @@ private struct NaechsteKarte: View {
                 Spacer(minLength: 0)
             }
             .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
             .background {
                 if erste {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -123,7 +130,8 @@ private struct ModusWahl: View {
             ForEach(KalenderModus.allCases, id: \.self) { m in
                 let an = modus == m
                 Button { withAnimation(.snappy(duration: 0.2)) { modus = m } } label: {
-                    Text(m.titel).font(.kompass(.subheadline, .bold))
+                    Text(m.titel).font(.kompass(.subheadline, .bold)).lineLimit(1).minimumScaleFactor(0.6)
+                        .padding(.horizontal, 4)
                         .frame(maxWidth: .infinity, minHeight: 40)
                         .background(an ? Farbe.karte : Color.clear, in: Capsule())
                         .foregroundStyle(an ? Farbe.text : Farbe.zweitrangig)
@@ -236,6 +244,7 @@ struct Wochenleiste: View {
                     VStack(spacing: 4) {
                         Text(namen[i]).font(.klein).foregroundStyle(an ? .white.opacity(0.85) : Farbe.zweitrangig)
                         Text("\(d.tag)").font(.kompass(.title3, .bold)).foregroundStyle(an ? .white : (d == heute ? Farbe.akzent : Farbe.text))
+                            .lineLimit(1).minimumScaleFactor(0.6)
                         HStack(spacing: 2) {
                             ForEach(Array(b.prefix(3).enumerated()), id: \.offset) { _, x in
                                 Circle().fill(an ? .white : Color(hex: x.farbe)).frame(width: 5, height: 5)
@@ -293,7 +302,8 @@ struct TagZeitleiste: View {
                     VStack(spacing: 0) {
                         ForEach(von..<bis, id: \.self) { h in
                             HStack(alignment: .top, spacing: 8) {
-                                Text(String(format: "%02d", h)).font(.caption2.weight(.semibold).monospacedDigit()).foregroundStyle(Farbe.pfeil)
+                                Text(String(format: "%02d", h)).font(.system(size: 11, weight: .semibold).monospacedDigit()).foregroundStyle(Farbe.pfeil)
+                                    .lineLimit(1).fixedSize()
                                     .frame(width: 22, alignment: .trailing).offset(y: -6)
                                 Rectangle().fill(Farbe.linie).frame(height: 0.5)
                             }
@@ -708,7 +718,8 @@ private struct OffenesZumZiehen: View {
             if eingang.isEmpty { LeerZeile(text: "Leer – gut so.") }
             ForEach(eingang) { a in ZiehZeile(titel: a.titel, unter: "ohne Tag\(z.ziel(a.zielID).map { " · \($0.titel)" } ?? "")",
                                              farbe: Tagesplan.farbe(ziel: a.zielID, kategorie: a.kategorie, sonst: "#6B7285", in: z), symbol: "tray",
-                                             erledigt: false, nutzlast: "aufgabe:\(a.id.uuidString)") {
+                                             erledigt: false, nutzlast: "aufgabe:\(a.id.uuidString)",
+                                             einplanen: ("Auf \(tagText) legen", { KalenderAktion.ablegen(["aufgabe:\(a.id.uuidString)"], tag: tag, uhrzeit: nil, speicher: speicher) })) {
                 speicher.aendern { $0.umschalten(a.id, jetzt: speicher.jetzt()) }
             } oeffnen: { nav.blatt = .aufgabe(a.id) } }
             AufgabeHinzufuegen(platzhalter: "Idee", datum: nil, prio: .normal)
@@ -724,6 +735,8 @@ private struct ZiehZeile: View {
     var symbol: String
     var erledigt: Bool
     var nutzlast: String
+    /// Für VoiceOver statt Ziehen: Name und Aktion
+    var einplanen: (String, () -> Void)? = nil
     var abhaken: () -> Void
     var oeffnen: () -> Void
 
@@ -749,6 +762,7 @@ private struct ZiehZeile: View {
                 .background(c.opacity(0.2), in: Capsule())
         }
         .accessibilityAction(named: "Öffnen", oeffnen)
+        .accessibilityAction(named: einplanen?.0 ?? "Öffnen") { (einplanen?.1 ?? oeffnen)() }
     }
 }
 

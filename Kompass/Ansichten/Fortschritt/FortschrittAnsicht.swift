@@ -24,7 +24,7 @@ struct FortschrittWahl: View {
                     withAnimation(.snappy(duration: 0.2)) { nav.fortschrittTeil = teil }
                 } label: {
                     Text(teil.titel)
-                        .font(.kompass(.subheadline, .bold))
+                        .font(.kompass(.subheadline, .bold)).lineLimit(1).minimumScaleFactor(0.6)
                         .frame(maxWidth: .infinity, minHeight: 40)
                         .background(an ? Farbe.karte : Color.clear, in: Capsule())
                         .foregroundStyle(an ? Farbe.text : Farbe.zweitrangig)
