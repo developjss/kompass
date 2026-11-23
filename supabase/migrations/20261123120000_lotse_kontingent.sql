@@ -23,6 +23,10 @@ $$;
 
 revoke all on function public.lotse_zaehlen(text, date) from public, anon, authenticated;
 revoke all on function public.lotse_stand(text, date) from public, anon, authenticated;
+-- Nur die Edge Function (service_role) darf zählen
+grant execute on function public.lotse_zaehlen(text, date) to service_role;
+grant execute on function public.lotse_stand(text, date) to service_role;
+grant select, insert, update on table public.lotse_kontingent to service_role;
 
 -- Aufräumen: Zähler älter als 60 Tage löschen (per Cron oder von Hand)
 -- delete from public.lotse_kontingent where tag < current_date - 60;

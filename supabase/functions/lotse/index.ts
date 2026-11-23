@@ -10,11 +10,21 @@ import { modelleAusUmgebung, Modellwahl } from "./modelle.ts";
 
 const env = (k: string) => Deno.env.get(k);
 
-const client = new Anthropic(); // liest ANTHROPIC_API_KEY
-const modelle = new Modellwahl(client, modelleAusUmgebung(env("LOTSE_MODELLE")));
 const zaehler = env("SUPABASE_URL") && env("SUPABASE_SERVICE_ROLE_KEY")
   ? new PostgresZaehler(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!)
   : new SpeicherZaehler();
 const regeln = regelnAusUmgebung(env);
 
-Deno.serve((req) => behandle(req, { client, modelle, zaehler, regeln, appSchluessel: env("LOTSE_APP_SCHLUESSEL") }));
+// Client erst bei der ersten Anfrage – ohne Schlüssel startet die Funktion trotzdem und antwortet 503 statt abzustürzen.
+let client: Anthropic | null = null;
+let modelle: Modellwahl | null = null;
+
+Deno.serve((req) => {
+  if (!env("ANTHROPIC_API_KEY")) {
+    return new Response(JSON.stringify({ fehler: "schluessel", hinweis: "ANTHROPIC_API_KEY fehlt – Dashboard → Edge Functions → Secrets" }),
+      { status: 503, headers: { "Content-Type": "application/json" } });
+  }
+  client ??= new Anthropic();
+  modelle ??= new Modellwahl(client, modelleAusUmgebung(env("LOTSE_MODELLE")));
+  return behandle(req, { client, modelle, zaehler, regeln, appSchluessel: env("LOTSE_APP_SCHLUESSEL") });
+});

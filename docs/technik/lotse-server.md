@@ -36,7 +36,7 @@ supabase secrets set LOTSE_APP_SCHLUESSEL=<zufälliger Text>   # optional; derse
 supabase functions deploy lotse
 ```
 
-Die Funktion ist dann unter `https://<projekt-ref>.supabase.co/functions/v1/lotse` erreichbar. Diese URL in `Kompass/Lotse/ClaudeServer.swift` → `LotseKonfiguration.standardURL` eintragen (je Kanal; für Tests zuerst nur `debug`/`beta`). Im Debug/Beta-Build geht es auch ohne Build: Einstellungen → Lotse → Server-URL.
+Bereitgestellt am 23.11.2026 (über die Supabase-Anbindung dieser Sitzung, ohne CLI): Projekt **kompass**, Region EU (Irland), URL `https://wvjgdyazlbevofyolanu.supabase.co/functions/v1/lotse`. Secrets setzt der Gründer im Dashboard: Projekt → Edge Functions → Secrets → `ANTHROPIC_API_KEY`. Diese URL in `Kompass/Lotse/ClaudeServer.swift` → `LotseKonfiguration.standardURL` eintragen (je Kanal; für Tests zuerst nur `debug`/`beta`). Im Debug/Beta-Build geht es auch ohne Build: Einstellungen → Lotse → Server-URL.
 
 ### Prüfen
 ```bash
@@ -72,6 +72,16 @@ Anthropic kündigt das Ende eines Modells vorher an. Der Server fragt die Modell
 ## 6. Kosten im Blick [SCHÄTZUNG]
 
 Je Server-Frage ≈ 0,03 Cent (Haiku) bzw. ≈ 0,8 Cent (Sonnet) bei ~2.500 Token App-Wissen (Cache günstiger). 1.000 aktive Nutzer × 10 Fragen/Tag, davon 50 % Regeln, 40 % Haiku, 10 % Sonnet → 40–60 $ im Monat. Nachrechnen: Console → Usage; nach einer Woche TestFlight die echten Zahlen in dieses Dokument.
+
+## 6a. Erster Live-Test (23.11.2026)
+
+| Frage | Ergebnis | Dauer |
+|---|---|---|
+| „Ich muss übermorgen unbedingt den Fahrlehrer wegen der Prüfung anrufen“ | Werkzeug `aufgabeAnlegen`: Titel, Datum 25.11., wichtig ja, Ziel Führerschein | 3,5 s |
+| „Soll ich mich eher auf den Führerschein oder auf Fitness konzentrieren?“ | Stufe 2 (Sonnet): Empfehlung Fitness mit Begründung aus dem Kurzstand, nennt fehlende Zahlen | 5,0 s |
+| „hey, danke dir!“ | kurzer Satz, kein Werkzeug | 1,6 s |
+
+Gelernt: Leere Textblöcke lehnt die API ab (400) → Server lässt leeres Wissen weg. `service_role` braucht ausdrücklich `grant execute` auf die Zähler-Funktionen (403 sonst).
 
 ## 7. Störfälle
 
