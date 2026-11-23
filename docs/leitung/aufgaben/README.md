@@ -4,4 +4,4 @@ Eine Quelle für alle Aufgaben, Pflichten und Stichtage: `aufgaben.json`. Gerech
 
 - Prüfen: `python3 scripts/fahrplan.py check`
 - Heute: `python3 scripts/fahrplan.py heute --wer alle`
-- Seite: noch nicht veröffentlicht – beim ersten `/fahrplan` anlegen und die URL hier eintragen.
+- Seite: https://claude.ai/artifact/74nLwvh7fudLLqPDMNEEmF (privat; neu veröffentlichen mit `/fahrplan`, Link bleibt gleich)

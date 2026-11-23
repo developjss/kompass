@@ -17,7 +17,7 @@ ALT_KONZEPT_TAGE = 45        # Konzept so lange ungebaut → noch aktuell?
 ERLEDIGT_ARCHIV_TAGE = 90    # erledigte Aufgaben so lange her → aus der Liste nehmen?
 HISTORIE = ("docs/archiv/", "docs/technik/bauprotokoll.md")   # alte Pfade dort sind Geschichte, kein Fehler
 GEWOLLT_FEHLEND = ("Kompass/", "KompassTests/", ".claude/settings.local.json", ".claude/settings.json",
-                   ".claude/worktrees")   # nur lokal oder noch nicht angelegt – darf fehlen
+                   ".claude/worktrees", "prototyp/tests/ergebnis.json")   # nur lokal, Test-Ausgabe oder noch nicht angelegt – darf fehlen
 PATH_RE = re.compile(r"(?<![\w/.-])((?:docs|scripts|prototyp|Kompass|KompassTests|KompassUITests|\.claude)/[\w./-]*[\w/])")
 MONATE = {m: i + 1 for i, m in enumerate(["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"])}
 
