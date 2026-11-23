@@ -92,7 +92,7 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - Farben: nach Ziel (Standard) oder Kategorie (Einstellung).
 - Swift: `Kompass/Rechnung/Tagesplan.swift`, Tests `KompassTests/TagesplanTests.swift`.
 
-### 9.1 Empfehlung im Kalender [VORSCHLAG – 23.11.2026, wartet auf „Ja, mergen“]
+### 9.1 Empfehlung im Kalender [ENTSCHEIDUNG – 23.11.2026, Gründer: „Ja, mergen“]
 
 - **Was:** offene Aufgaben ohne Uhrzeit, die überfällig, im Zeitraum der Ansicht fällig oder ohne Tag (Eingang) sind; in der Tagesansicht zusätzlich Habits, die an dem Tag geplant, ohne Uhrzeit und noch nicht voll sind.
 - **Punkte:** überfällig 100 + Tage (max. 30) · im Zeitraum fällig 80 − Tage bis fällig · Eingang 30 · Habit 60 (+20 mit Ziel) · Aufgabe des nächsten Schritts eines Ziels (§1) +40 · Ziel hinterher/überfällig +20 · wichtig +25. Sortiert nach Punkten, dann Titel. Ein Grund je Karte (der stärkste).
