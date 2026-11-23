@@ -168,7 +168,7 @@ td.num { font-variant-numeric: tabular-nums; white-space: nowrap }
 
 <div class="app">
   <aside class="side">
-    <div class="brand"><span class="logo" aria-hidden="true">G</span><span><b>Fahrplan</b><small id="stand">Lädt …</small></span></div>
+    <div class="brand"><span class="logo" aria-hidden="true">K</span><span><b>Fahrplan</b><small id="stand">Lädt …</small></span></div>
     <div class="who"><label for="who">Ansicht für</label><select id="who" aria-label="Ansicht für"></select></div>
     <nav class="views" id="nav" aria-label="Ansichten"></nav>
     <p class="foot">Ändern, abhaken und zuweisen: in Claude <b>/fahrplan</b>.<br>Quelle: docs/leitung/aufgaben/aufgaben.json</p>
@@ -295,7 +295,7 @@ function todayIntro() {
   const pills = [over ? `<button class="pill crit" data-go="heute">${over} überfällig</button>` : "", today ? `<button class="pill acc" data-go="heute">${today} heute</button>` : "",
     soon ? `<button class="pill warn" data-go="demnaechst">${soon} in 14 Tagen</button>` : "", `<button class="pill" data-go="wartet">${L.filter((a) => a.topf === "blockiert").length} warten</button>`].join("");
   return `<div class="summary">${pills}</div>
-    <div class="progress" aria-label="Phase ${V.phase}: ${done} von ${done + open} erledigt"><div class="row1"><span>Phase ${V.phase} – fertig bis auf Plaid</span><span><b>${done}</b> von ${done + open} erledigt</span></div><div class="bar"><i data-w="${pct}"></i></div></div>`;
+    <div class="progress" aria-label="Phase ${V.phase}: ${done} von ${done + open} erledigt"><div class="row1"><span>Phase ${V.phase}</span><span><b>${done}</b> von ${done + open} erledigt</span></div><div class="bar"><i data-w="${pct}"></i></div></div>`;
 }
 function strip() {
   const cells = [];
