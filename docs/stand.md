@@ -39,6 +39,8 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Assistent mit Claude (23./24.11.2026, PR #19, #20):** Mit Server beantwortet Claude jede Frage – auch allgemeine und aktuelle (Websuche mit Quellen). Werkzeugschleife: Claude holt Daten über die Werkzeuge der App (die App rechnet) und formuliert selbst; Antworten mit Absätzen, Überschriften, Listen. Werkzeuge sehen den Apple-Kalender. „merken“: Vorlieben nur auf dem Gerät, in den Einstellungen löschbar. Ladeanzeige wie Gemini (Frage oben, animiertes Zeichen, Status). Regeln auf dem Gerät nur noch offline. [RISIKO] Kosten ≈ 1–2 Cent je Frage plus Websuche (`docs/technik/lotse-server.md` §6). [OFFEN] Lernen über alle Nutzer (anonyme Rückmeldungen mit Einwilligung) – Datenschutz-Entscheidung des Gründers.
 
+**Ziele neu (24.11.2026, PR #22–#25):** Übersicht mit Filter-Kacheln (Weiß → Farbe) und Sortieren (Frist, Jahr, Fortschritt, Hinterher zuerst, Bereich, Name), Zielkarten nur mit Ring und vollem Titel, umlaufender Lichtrand. Ziel-Seite: Stand minimal (Analyse im Rückblick), Einstellungs-Kacheln, Meilensteine als Karten. Meilensteine geführt (Fragen statt Formular, Live-Anteil, Neuverteilung beim Löschen). Rechnung unverändert (Anteil = Gewicht ÷ Σ Gewicht, §1).
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte
