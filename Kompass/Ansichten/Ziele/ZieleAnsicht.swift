@@ -82,7 +82,7 @@ private struct FilterKachel: View {
         Button(action: aktion) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top) {
-                    Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                    Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
                         .frame(width: 38, height: 38).background(c.gradient, in: Circle())
                         .shadow(color: c.opacity(0.35), radius: 6, y: 3)
                     Spacer()
@@ -151,7 +151,7 @@ struct ZielKarte: View {
                 Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text)
                     .lineLimit(3).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
-                Image(systemName: "arrow.right").font(.footnote.weight(.heavy)).foregroundStyle(.white)
+                Image(systemName: "arrow.right").font(.footnote.weight(.heavy)).foregroundStyle(Farbe.aufFarbe)
                     .frame(width: 30, height: 30).background(c.gradient, in: Circle())
             }
             .padding(16)

@@ -83,7 +83,7 @@ private struct HabitStandKarte: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle().stroke(.white.opacity(0.25), lineWidth: 8)
-                    if anteil > 0 { Circle().trim(from: 0, to: anteil).stroke(.white, style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90)) }
+                    if anteil > 0 { Circle().trim(from: 0, to: anteil).stroke(Farbe.gold, style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90)) }
                     Image(systemName: voll ? "checkmark" : habit.symbol).font(.system(size: 22, weight: .bold))
                 }
                 .frame(width: 78, height: 78)
@@ -102,8 +102,8 @@ private struct HabitStandKarte: View {
                     } label: {
                         Label(habit.menge != nil ? "Menge eintragen" : (voll ? "Rückgängig" : "Abhaken"),
                               systemImage: habit.menge != nil ? "plus" : (voll ? "arrow.uturn.backward" : "checkmark"))
-                            .font(.kompass(.subheadline, .bold)).foregroundStyle(Color(hex: habit.farbe))
-                            .padding(.horizontal, 16).frame(minHeight: 40).background(.white, in: Capsule())
+                            .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.nacht)
+                            .padding(.horizontal, 16).frame(minHeight: 40).background(Farbe.seladon, in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
@@ -143,7 +143,7 @@ struct HabitTeilSeite: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 12) {
-                        Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                        Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
                             .frame(width: 40, height: 40).background(c.gradient, in: Circle())
                         Text(teil == .verfeinern ? "Alles Weitere zu deinem Habit – antippen zum Ändern." : "Vergessen abzuhaken? Tipp auf einen Tag, um ihn nachzutragen.")
                             .font(.unterzeile).foregroundStyle(Farbe.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)

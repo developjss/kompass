@@ -13,23 +13,29 @@ Stand: 23. November 2026. Vorbild ist das Designsystem von Gapless (`Tokens.swif
 
 Gemessen 23.11.2026 (iPhone, Wörter je Bildschirm): Gapless Insights 32, Net worth 35, Bills 37, Overview 56 · Kompass nach Umbau: Heute ~44, Kalender 40, Habits 40, Ziele 33, Rückblick 29.
 
-## 2. Farben (hell / dunkel)
+## 2. Farben „Nachtflug“ (hell / dunkel) [ENTSCHEIDUNG – 24.11.2026]
+
+Indigo trägt, Seladon ist die Handlung, Gold zeigt, was zählt. Entwurf: https://claude.ai/artifact/DfYjA5AX77ed6CfnVLANHe (Code: `Kompass/Design/Farben.swift`).
 
 | Token | Hell | Dunkel | Verwendung |
 |---|---|---|---|
-| background | #F2F2F7 | #000000 | Grund |
-| ground (oben) | #D9DFFA | #171D4D | Verlauf oben, läuft bei ~64 % in den Grund |
-| card | #FFFFFF | #1C1C1E | Karten, Listen |
-| ink | #18233F | #F2F2F7 | Text |
-| secondary | #4D5262 | #A1A1A6 | Unterzeilen |
-| chevron | #7E8391 | #8E8E93 | Pfeile, Hinweise |
-| accent | #3B4CCA | #9AA6FF | Aktionen, Links, Auswahl (nie Daten) |
-| accentSoft | #E6E9FC | #262D63 | „+ Neu“, weiche Chips |
-| joy / ok | #1F9D55 | #5EE0B5 | gute Momente (erledigt) – nie Text |
-| warning | #8A5300 / #FFF3DC | #FFC266 / #2E2614 | „hinterher“ |
-| critical | #BA3228 | #FF7A6E | „überfällig“ |
+| grund | #F3F6F4 | #0B1325 | Grund |
+| grundOben | #E1ECE7 | #1A2950 | Verlauf oben |
+| karte | #FFFFFF | #121D38 | Karten, Listen |
+| text | #0B1325 | #EAF1EE | Text |
+| zweitrangig | #56657A | #93A3B8 | Unterzeilen |
+| akzent (Seladon) | #3A7262 | #A9CDBE | Handlung, Auswahl |
+| akzentWeich | #DCEBE4 | #22364A | „+ Neu“, Chips |
+| aufFarbe | #FFFFFF | #0B1325 | Schrift/Zeichen auf Akzent- und Palette-Flächen |
+| gold / goldText | #F2B53A / #855B00 | #F2B53A | Ring, Prozent, Erfolg (Text hell nur tief) |
+| warnung | #855B00 | #F2B53A | „hinterher“ |
+| kritisch | #BA3228 | #FF7A6E | „überfällig“ |
 
-Ziel-Farben (Reihe wie Gapless `chartSeries`): Indigo #3B4CCA, Violett #7A4FD6, Himmel #1F7AC2, Petrol #0E8580, Rose #B8456E, Bernstein #9A6700, Orange #C2410C, Grün #15803D, Fuchsia #A21CAF, Schiefer #6B7285.
+Stand-Karten (Home, Ziel, Habit, Rückblick): in beiden Modi nachtblau (#24396E → #0F1A35) mit Goldschein oben rechts und Goldrand; Ring und Prozent in Gold, Knöpfe Seladon mit Nacht-Schrift.
+
+Ziel-, Habit- und Kalenderfarben: nur Abstufungen der Palette – `Farbe.tonArt` legt jede bunte Hex-Farbe nach Farbton auf Seladon, Seladon tief, Indigo hell, Gold, Gold hell oder Gold tief (je hell/dunkel). Auswahl beim Anlegen: 6 Familien. Unterschieden wird vor allem am Symbol.
+
+Kontraste (WCAG): dunkel Text 16:1, Seladon 10,7:1, Gold 10:1; hell Gold-Text #855B00 5,5:1, Seladon #3A7262 5,1:1.
 
 ## 3. Maße
 
@@ -45,7 +51,7 @@ Ziel-Farben (Reihe wie Gapless `chartSeries`): Indigo #3B4CCA, Violett #7A4FD6, 
 
 ## 4. Schrift
 
-SF Pro Rounded (Dynamic Type): Large Title 34 heavy · Abschnitt (Title 2) 22 bold · Text 17 semibold/medium · Unterzeile 15 · Klein 13 semibold. Im Web/Windows/Android: Nunito als Ersatz.
+Seitentitel und große Zahlen in Serif (New York, Dynamic Type); sonst SF Pro Rounded: Large Title 34 · Abschnitt (Title 2) 22 bold · Text 17 semibold/medium · Unterzeile 15 · Klein 13 semibold. Im Web/Windows/Android: Nunito als Ersatz.
 
 ## 5. Bausteine
 

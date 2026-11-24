@@ -143,7 +143,7 @@ struct NeuBlatt: View {
                     Text(schritt == .fertig ? "Anlegen" : "Weiter").font(.kompass(.headline, .bold))
                         .frame(maxWidth: .infinity, minHeight: 54)
                         .background(gueltig ? Farbe.akzent : Farbe.akzent.opacity(0.35), in: Capsule())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Farbe.aufFarbe)
                 }
                 .disabled(!gueltig)
                 .buttonStyle(.plain)
@@ -847,7 +847,7 @@ extension NeuArt {
     var verlauf: [Color] {
         switch self {
         case .aufgabe: Farbe.indigo
-        case .termin: [Color(hex: "#0E5A8A"), Color(hex: "#2F8FD6")]
+        case .termin: [Color(roh: "#0E1A2F"), Color(roh: "#1F4560")]
         case .habit: Farbe.violett
         case .ziel: Farbe.gruen
         }

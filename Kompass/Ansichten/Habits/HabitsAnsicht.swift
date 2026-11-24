@@ -33,13 +33,13 @@ struct HabitsAnsicht: View {
                 }
             } else {
                 HStack(spacing: 12) {
-                    HabitKachel(titel: "Heute", farbe: Color(hex: "#14A38B"), an: ansicht == .heute,
+                    HabitKachel(titel: "Heute", farbe: Farbe.TonArt.seladon.farbe, an: ansicht == .heute,
                                 zahl: heute.isEmpty ? "frei" : "\(geschafft.count)/\(heute.count)",
                                 unter: heute.isEmpty ? "nichts geplant" : (offen.isEmpty ? "alles geschafft" : "\(offen.count) offen"),
                                 anteil: heute.isEmpty ? nil : Double(geschafft.count) / Double(heute.count), woche: nil) {
                         withAnimation(ruhig ? nil : .snappy) { ansichtRoh = Ansicht.heute.rawValue }
                     }
-                    HabitKachel(titel: "Alle Habits", farbe: Color(hex: "#4A6FE0"), an: ansicht == .alle,
+                    HabitKachel(titel: "Alle Habits", farbe: Farbe.TonArt.gold.farbe, an: ansicht == .alle,
                                 zahl: "\(z.habits.count)", unter: "diese Woche", anteil: nil, woche: woche) {
                         withAnimation(ruhig ? nil : .snappy) { ansichtRoh = Ansicht.alle.rawValue }
                     }

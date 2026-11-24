@@ -340,7 +340,7 @@ struct BlockKachel: View {
             if !mini {
                 if let ziel {
                     // Zählt für ein Ziel: kleines Ziel-Zeichen
-                    Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(.white)
+                    Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
                         .frame(width: 16, height: 16).background(Color(hex: ziel.farbe), in: Circle())
                         .padding(.top, 1)
                         .accessibilityHidden(true)

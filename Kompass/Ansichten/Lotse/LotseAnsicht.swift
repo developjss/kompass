@@ -77,7 +77,7 @@ struct LotseAnsicht: View {
                 } else {
                     Button { senden(eingabe) } label: {
                         Image(systemName: "arrow.up").font(.body.weight(.bold))
-                            .frame(width: 34, height: 34).background(Farbe.akzent, in: Circle()).foregroundStyle(.white)
+                            .frame(width: 34, height: 34).background(Farbe.akzent, in: Circle()).foregroundStyle(Farbe.aufFarbe)
                             .frame(width: 40, height: 40)
                     }
                     .disabled(denkt)
@@ -320,7 +320,7 @@ private struct Blase: View {
                 if nutzer {
                     Text(nachricht.text)
                         .font(.kompass(.body, .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Farbe.aufFarbe)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
@@ -395,10 +395,11 @@ struct AssistentZeichen: View {
     var schein = false
     var body: some View {
         ZStack {
-            Circle().fill(LinearGradient(colors: [Farbe.indigo[0], Farbe.violett[1]], startPoint: .bottomLeading, endPoint: .topTrailing))
-            Circle().strokeBorder(.white.opacity(0.45), lineWidth: max(1, groesse / 28))
+            // Nachtflug: Seladon-Kugel mit goldenem Ring (wie die Klangschale im Vorbild)
+            Circle().fill(LinearGradient(colors: [Color(roh: "#4F8A76"), Color(roh: "#CFE6DC")], startPoint: .bottomLeading, endPoint: .topTrailing))
+            Circle().strokeBorder(Farbe.gold.opacity(0.9), lineWidth: max(1, groesse / 22))
             Circle().fill(.white.opacity(0.18)).frame(width: groesse * 0.7, height: groesse * 0.7).blur(radius: groesse / 6).offset(x: -groesse / 6, y: -groesse / 6)
-            Image(systemName: "sparkles").font(.system(size: groesse * 0.46, weight: .bold)).foregroundStyle(.white)
+            Image(systemName: "sparkles").font(.system(size: groesse * 0.46, weight: .bold)).foregroundStyle(Farbe.nacht)
         }
         .frame(width: groesse, height: groesse)
         .shadow(color: schein ? Farbe.violett[0].opacity(0.45) : .clear, radius: groesse / 4, y: groesse / 8)
