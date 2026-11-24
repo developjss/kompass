@@ -106,11 +106,22 @@ struct TerminSeite: View {
                         .padding(Mass.rand).padding(.bottom, 24)
                     }
                     .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                        Button("Löschen", role: .destructive) {
-                            if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
-                            dismiss()
+                        if eigener?.wiederholung ?? .nie != .nie {
+                            Button("Nur diesen Termin löschen", role: .destructive) {
+                                if let id = eigener?.id { let d = tag; speicher.aendern { $0.terminAuslassen(id, am: d) } }
+                                dismiss()
+                            }
+                            Button("Alle Termine der Serie löschen", role: .destructive) {
+                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                                dismiss()
+                            }
+                        } else {
+                            Button("Löschen", role: .destructive) {
+                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                                dismiss()
+                            }
                         }
-                    } message: { Text(eigener?.wiederholung == .nie ? "" : "Die ganze Serie wird gelöscht.") }
+                    } message: { Text(eigener?.wiederholung ?? .nie == .nie ? "" : "Der Termin wiederholt sich.") }
                 } else {
                     ContentUnavailableView("Termin nicht gefunden", systemImage: "calendar", description: Text("Er wurde vielleicht verschoben oder gelöscht."))
                 }

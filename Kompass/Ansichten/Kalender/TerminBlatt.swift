@@ -10,6 +10,13 @@ struct TerminBlatt: View {
     @Environment(\.dismiss) private var dismiss
     @State private var t: EigenerTermin?
     @State private var loeschenFragen = false
+    @State private var serienAuftrag: SerienAuftrag?
+
+    /// Bearbeitet wird ein Vorkommen einer bestehenden Serie (dann fragen: nur dieser oder alle)
+    private var istSerie: Bool {
+        guard let id = terminID, let alt = speicher.zustand.eigenerTermin(id) else { return false }
+        return alt.wiederholung != .nie
+    }
     @FocusState private var titelFokus: Bool
 
     private let dauern = [30, 60, 90, 120]
@@ -59,11 +66,17 @@ struct TerminBlatt: View {
                 }
             }
             .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) {
-                    if let id = terminID { speicher.aendern { $0.terminLoeschen(id) } }
-                    dismiss()
+                if let d = tag, let id = terminID, istSerie {
+                    Button("Nur diesen Termin löschen", role: .destructive) { speicher.aendern { $0.terminAuslassen(id, am: d) }; dismiss() }
+                    Button("Alle Termine der Serie löschen", role: .destructive) { speicher.aendern { $0.terminLoeschen(id) }; dismiss() }
+                } else {
+                    Button("Löschen", role: .destructive) {
+                        if let id = terminID { speicher.aendern { $0.terminLoeschen(id) } }
+                        dismiss()
+                    }
                 }
-            } message: { Text(t?.wiederholung == .nie ? "" : "Die ganze Serie wird gelöscht.") }
+            } message: { Text(istSerie ? "Der Termin wiederholt sich." : "") }
+            .serienFrage($serienAuftrag)
             .onAppear(perform: laden)
         }
         .presentationDetents([.large])
@@ -127,6 +140,21 @@ struct TerminBlatt: View {
         neu.titel = neu.titel.trimmingCharacters(in: .whitespaces)
         neu.habitBis = nil
         let fertig = neu
+        if istSerie, let d = tag, let id = terminID, fertig.wiederholung != .nie {
+            serienAuftrag = SerienAuftrag(titel: fertig.titel, allesText: "Alle Termine der Serie") { nur in
+                if nur {
+                    // Dieses Vorkommen wird ein eigener Termin mit den Änderungen, die Serie lässt den Tag aus
+                    var kopie = fertig
+                    kopie.id = UUID(); kopie.wiederholung = .nie; kopie.ausgelassen = nil
+                    if kopie.tag == speicher.zustand.eigenerTermin(id)?.tag { kopie.tag = d }
+                    speicher.aendern { $0.terminAuslassen(id, am: d); $0.terminSpeichern(kopie) }
+                } else {
+                    speicher.aendern { $0.terminSpeichern(fertig) }
+                }
+                dismiss()
+            }
+            return
+        }
         speicher.aendern { $0.terminSpeichern(fertig) }
         dismiss()
     }

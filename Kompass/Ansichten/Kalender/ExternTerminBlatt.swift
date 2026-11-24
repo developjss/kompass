@@ -1,37 +1,61 @@
 import SwiftUI
 
-/// Termin aus dem Apple- oder Google-Kalender in Kompass bearbeiten: Titel, Tag, Von, Bis, löschen.
-/// Gespeichert wird direkt im Kalender des Geräts (bei Serien nur dieses Vorkommen).
+/// Termin aus dem Apple- oder Google-Kalender in Kompass bearbeiten – mit denselben Eigenschaften wie in der
+/// Kalender-App: Titel, Ort, ganztägig, Beginn/Ende, Wiederholung, Kalender, Erinnerungen, URL, Notizen.
+/// Bei Serien wird gefragt: nur dieser Termin oder dieser und alle folgenden. Gespeichert wird im Kalender des Geräts.
 struct ExternTerminBlatt: View {
     var id: String
     var tag: Tag
     @Environment(Speicher.self) private var speicher
     @Environment(\.dismiss) private var dismiss
-    @State private var titel = ""
-    @State private var start = Date()
-    @State private var ende = Date()
-    @State private var kalenderName = ""
-    @State private var serie = false
-    @State private var geladen = false
+    @State private var d = AppleKalender.Details()
+    @State private var original: AppleKalender.Details?
     @State private var fehler: String?
     @State private var loeschenFragen = false
+    @State private var serie: SerienAuftrag?
+
+    private let erinnerungsWahl: [(String, Int)] = [("Zum Termin", 0), ("5 Min", 5), ("15 Min", 15), ("30 Min", 30), ("1 Std", 60), ("1 Tag", 1440)]
 
     var body: some View {
         NavigationStack {
             Form {
-                if geladen {
+                if original != nil {
                     Section {
-                        TextField("Titel", text: $titel).font(.kompass(.title3, .bold))
+                        TextField("Titel", text: $d.titel).font(.kompass(.title3, .bold))
+                        TextField("Ort", text: $d.ort)
                     }
                     Section {
-                        DatePicker("Beginn", selection: $start)
-                        DatePicker("Ende", selection: $ende, in: start...)
-                    } footer: {
-                        Text(serie ? "Gehört zu einer Serie – geändert wird nur dieser Termin." : "Wird in „\(kalenderName)“ gespeichert.")
+                        Toggle("Ganztägig", isOn: $d.ganztaegig)
+                        DatePicker("Beginn", selection: $d.start, displayedComponents: d.ganztaegig ? .date : [.date, .hourAndMinute])
+                        DatePicker("Ende", selection: $d.ende, in: d.start..., displayedComponents: d.ganztaegig ? .date : [.date, .hourAndMinute])
+                        Picker("Wiederholen", selection: $d.wiederholung) {
+                            ForEach(AppleKalender.Details.Wiederholung.allCases, id: \.self) { Text($0.name).tag($0) }
+                        }
+                    }
+                    Section {
+                        let kalender = AppleKalender.aktiv.beschreibbareKalender()
+                        Picker("Kalender", selection: $d.kalenderID) {
+                            ForEach(kalender) { c in Text("\(c.google ? "Google · " : "")\(c.titel)").tag(c.id) }
+                        }
+                        ChipReihe(titel: "Erinnerung", auswahl: erinnerungsWahl.map { ($0.0, d.erinnerungen.contains($0.1)) }) { i in
+                            let m = erinnerungsWahl[i].1
+                            if let j = d.erinnerungen.firstIndex(of: m) { d.erinnerungen.remove(at: j) } else { d.erinnerungen.append(m); d.erinnerungen.sort() }
+                        }
+                    }
+                    Section {
+                        TextField("URL", text: $d.url).keyboardType(.URL).textInputAutocapitalization(.never)
+                        TextField("Notizen", text: $d.notizen, axis: .vertical).lineLimit(3...8)
+                    }
+                    if !d.teilnehmer.isEmpty {
+                        Section {
+                            ForEach(d.teilnehmer, id: \.self) { Text($0) }
+                        } header: { Text("Teilnehmer") } footer: { Text("Einladungen verwaltet der \(d.kalenderName)-Kalender.") }
                     }
                     if let fehler { Section { Text(fehler).foregroundStyle(Farbe.kritisch) } }
                     Section {
                         Button("Termin löschen", role: .destructive) { loeschenFragen = true }
+                    } footer: {
+                        Text("Änderungen landen direkt in „\(d.kalenderName)“ und erscheinen überall, wo der Kalender synchronisiert.")
                     }
                 } else {
                     ContentUnavailableView("Termin nicht gefunden", systemImage: "calendar", description: Text("Er wurde vielleicht im Kalender gelöscht."))
@@ -42,26 +66,40 @@ struct ExternTerminBlatt: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Sichern", action: sichern).disabled(!geladen || titel.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button("Sichern", action: sichernFragen).disabled(original == nil || d.titel.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) { loeschen() }
-            } message: { Text("Er wird auch im \(kalenderName)-Kalender gelöscht\(serie ? " (nur dieser Termin der Serie)" : "").") }
+                if original?.serie == true {
+                    Button("Nur diesen Termin löschen", role: .destructive) { loeschen(alle: false) }
+                    Button("Diesen und alle folgenden löschen", role: .destructive) { loeschen(alle: true) }
+                } else {
+                    Button("Löschen", role: .destructive) { loeschen(alle: false) }
+                }
+            } message: { Text("Er wird auch im \(d.kalenderName)-Kalender gelöscht.") }
+            .serienFrage($serie)
             .onAppear(perform: laden)
         }
     }
 
     private func laden() {
-        guard !geladen, let a = AppleKalender.aktiv.angaben(id, am: tag, kalender: speicher.kalender) else { return }
-        titel = a.titel; start = a.start; ende = a.ende; kalenderName = a.kalender; serie = a.serie
-        geladen = true
+        guard original == nil, let x = AppleKalender.aktiv.details(id, am: tag, kalender: speicher.kalender) else { return }
+        d = x; original = x
     }
 
-    private func sichern() {
+    private func sichernFragen() {
+        d.titel = d.titel.trimmingCharacters(in: .whitespaces)
+        if original?.serie == true {
+            serie = SerienAuftrag(titel: d.titel, allesText: "Diesen und alle folgenden") { nur in sichern(alle: !nur) }
+        } else {
+            sichern(alle: false)
+        }
+    }
+
+    private func sichern(alle: Bool) {
         do {
-            try AppleKalender.aktiv.speichern(id: id, am: tag, titel: titel.trimmingCharacters(in: .whitespaces), start: start, ende: ende,
-                                              kalenderID: nil, kalender: speicher.kalender)
+            // Wiederholung ändern betrifft immer die Serie ab hier
+            try AppleKalender.aktiv.speichern(id, am: tag, details: d, alle: alle || d.wiederholung != original?.wiederholung, kalender: speicher.kalender)
             speicher.appleKalenderLesen()
             dismiss()
         } catch {
@@ -69,9 +107,9 @@ struct ExternTerminBlatt: View {
         }
     }
 
-    private func loeschen() {
+    private func loeschen(alle: Bool) {
         do {
-            try AppleKalender.aktiv.loeschen(id, am: tag, kalender: speicher.kalender)
+            try AppleKalender.aktiv.loeschen(id, am: tag, alle: alle, kalender: speicher.kalender)
             speicher.appleKalenderLesen()
             dismiss()
         } catch {

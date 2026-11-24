@@ -144,3 +144,33 @@ extension View {
         }
     }
 }
+
+// MARK: Wiederkehrende Termine: nur dieser oder alle?
+
+/// Eine Änderung an einem wiederkehrenden Termin, die noch gefragt werden muss.
+struct SerienAuftrag: Identifiable {
+    let id = UUID()
+    var titel: String
+    /// Kompass: „Alle Termine der Serie“; Apple/Google: „Diesen und alle folgenden“ (so arbeitet der Kalender)
+    var allesText: String
+    var ausfuehren: (_ nurDieser: Bool) -> Void
+
+    @MainActor
+    static func fuer(_ b: Tagesplan.Block, ausfuehren: @escaping (Bool) -> Void) -> SerienAuftrag {
+        SerienAuftrag(titel: b.titel, allesText: b.eigenID != nil ? "Alle Termine der Serie" : "Diesen und alle folgenden", ausfuehren: ausfuehren)
+    }
+}
+
+extension View {
+    /// Fragt bei wiederkehrenden Terminen: nur dieser Termin oder die Serie.
+    func serienFrage(_ auftrag: Binding<SerienAuftrag?>) -> some View {
+        confirmationDialog("Wiederkehrender Termin", isPresented: Binding(get: { auftrag.wrappedValue != nil }, set: { if !$0 { auftrag.wrappedValue = nil } }),
+                           titleVisibility: .visible, presenting: auftrag.wrappedValue) { a in
+            Button("Nur dieser Termin") { a.ausfuehren(true) }
+            Button(a.allesText) { a.ausfuehren(false) }
+            Button("Abbrechen", role: .cancel) {}
+        } message: { a in
+            Text("„\(a.titel)“ wiederholt sich. Soll die Änderung nur für diesen Termin gelten?")
+        }
+    }
+}

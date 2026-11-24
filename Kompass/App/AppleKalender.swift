@@ -45,7 +45,7 @@ final class AppleKalender {
             if e.isAllDay {
                 var d = Tag(e.startDate, kalender: k)
                 let letzter = Tag(e.endDate.addingTimeInterval(-1), kalender: k)
-                while d <= letzter { if d >= von && d <= bis { out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, kalenderFarbe: farbe)) }; d = d.plus(tage: 1) }
+                while d <= letzter { if d >= von && d <= bis { out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, kalenderFarbe: farbe, wiederkehrend: e.hasRecurrenceRules)) }; d = d.plus(tage: 1) }
                 continue
             }
             // Mehrtägige Termine: je Tag der passende Abschnitt
@@ -55,7 +55,7 @@ final class AppleKalender {
                 let s = d == Tag(e.startDate, kalender: k) ? Self.minuten(e.startDate, k) : 0
                 let en = d == letzter ? max(s + 5, Self.minuten(e.endDate, k) == 0 ? 24 * 60 - 1 : Self.minuten(e.endDate, k)) : 24 * 60 - 1
                 if d >= von && d <= bis {
-                    out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, start: s, ende: min(en, 24 * 60 - 1), kalenderFarbe: farbe))
+                    out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, start: s, ende: min(en, 24 * 60 - 1), kalenderFarbe: farbe, wiederkehrend: e.hasRecurrenceRules))
                 }
                 d = d.plus(tage: 1)
             }
@@ -116,6 +116,93 @@ final class AppleKalender {
         vorkommen(id, am: tag, kalender: k)?.calendar.allowsContentModifications ?? false
     }
 
+    /// Alle Eigenschaften eines Termins, wie die Kalender-App sie kennt.
+    struct Details: Equatable, Sendable {
+        enum Wiederholung: String, CaseIterable, Sendable {
+            case nie, taeglich, woechentlich, zweiwoechentlich, monatlich, jaehrlich
+            var name: String {
+                switch self {
+                case .nie: "Nie"
+                case .taeglich: "Täglich"
+                case .woechentlich: "Wöchentlich"
+                case .zweiwoechentlich: "Alle 2 Wochen"
+                case .monatlich: "Monatlich"
+                case .jaehrlich: "Jährlich"
+                }
+            }
+        }
+        var titel = ""
+        var ort = ""
+        var ganztaegig = false
+        var start = Date()
+        var ende = Date()
+        var wiederholung: Wiederholung = .nie
+        /// Erinnerungen in Minuten vor Beginn (0 = zum Termin)
+        var erinnerungen: [Int] = []
+        var url = ""
+        var notizen = ""
+        var kalenderID = ""
+        var kalenderName = ""
+        var teilnehmer: [String] = []
+        var serie: Bool { wiederholung != .nie }
+    }
+
+    /// Liest alle Eigenschaften eines Vorkommens.
+    func details(_ id: String, am tag: Tag, kalender k: Calendar) -> Details? {
+        guard let e = vorkommen(id, am: tag, kalender: k), let s = e.startDate, let en = e.endDate else { return nil }
+        var d = Details()
+        d.titel = e.title ?? ""; d.ort = e.location ?? ""; d.ganztaegig = e.isAllDay
+        d.start = s; d.ende = en
+        d.wiederholung = Self.wiederholung(e.recurrenceRules?.first)
+        d.erinnerungen = (e.alarms ?? []).compactMap { a in a.absoluteDate == nil ? Int((-a.relativeOffset / 60).rounded()) : nil }.sorted()
+        d.url = e.url?.absoluteString ?? ""; d.notizen = e.notes ?? ""
+        d.kalenderID = e.calendar.calendarIdentifier; d.kalenderName = e.calendar.title
+        d.teilnehmer = (e.attendees ?? []).compactMap { $0.name }
+        return d
+    }
+
+    /// Speichert alle Eigenschaften; `alle` = dieses und alle folgenden Vorkommen (wie in der Kalender-App).
+    func speichern(_ id: String, am tag: Tag, details d: Details, alle: Bool, kalender k: Calendar) throws {
+        guard let e = vorkommen(id, am: tag, kalender: k) else { throw Fehler.nichtGefunden }
+        guard e.calendar.allowsContentModifications else { throw Fehler.nurLesen }
+        e.title = d.titel
+        e.location = d.ort.isEmpty ? nil : d.ort
+        e.isAllDay = d.ganztaegig
+        e.startDate = d.start
+        e.endDate = max(d.ende, d.start.addingTimeInterval(d.ganztaegig ? 0 : 5 * 60))
+        e.notes = d.notizen.isEmpty ? nil : d.notizen
+        e.url = URL(string: d.url.trimmingCharacters(in: .whitespaces))
+        e.alarms = d.erinnerungen.map { EKAlarm(relativeOffset: TimeInterval(-$0 * 60)) }
+        if let c = store.calendar(withIdentifier: d.kalenderID), c.allowsContentModifications { e.calendar = c }
+        let alt = Self.wiederholung(e.recurrenceRules?.first)
+        if d.wiederholung != alt {
+            e.recurrenceRules = Self.regel(d.wiederholung).map { [$0] }
+        }
+        try store.save(e, span: alle ? .futureEvents : .thisEvent, commit: true)
+    }
+
+    nonisolated static func wiederholung(_ r: EKRecurrenceRule?) -> Details.Wiederholung {
+        guard let r else { return .nie }
+        switch r.frequency {
+        case .daily: return .taeglich
+        case .weekly: return r.interval == 2 ? .zweiwoechentlich : .woechentlich
+        case .monthly: return .monatlich
+        case .yearly: return .jaehrlich
+        @unknown default: return .nie
+        }
+    }
+
+    nonisolated static func regel(_ w: Details.Wiederholung) -> EKRecurrenceRule? {
+        switch w {
+        case .nie: nil
+        case .taeglich: EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil)
+        case .woechentlich: EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil)
+        case .zweiwoechentlich: EKRecurrenceRule(recurrenceWith: .weekly, interval: 2, end: nil)
+        case .monatlich: EKRecurrenceRule(recurrenceWith: .monthly, interval: 1, end: nil)
+        case .jaehrlich: EKRecurrenceRule(recurrenceWith: .yearly, interval: 1, end: nil)
+        }
+    }
+
     /// Angaben eines Termins fürs Bearbeiten.
     func angaben(_ id: String, am tag: Tag, kalender k: Calendar) -> (titel: String, start: Date, ende: Date, kalender: String, serie: Bool)? {
         guard let e = vorkommen(id, am: tag, kalender: k) else { return nil }
@@ -124,7 +211,7 @@ final class AppleKalender {
     }
 
     /// Verschiebt dieses Vorkommen (Dauer bleibt) auf Tag und Uhrzeit.
-    func verschieben(_ id: String, von alt: Tag, nach neu: Tag, start: Int, kalender k: Calendar) throws {
+    func verschieben(_ id: String, von alt: Tag, nach neu: Tag, start: Int, alle: Bool = false, kalender k: Calendar) throws {
         guard let e = vorkommen(id, am: alt, kalender: k) else { throw Fehler.nichtGefunden }
         guard e.calendar.allowsContentModifications else { throw Fehler.nurLesen }
         guard let alterStart = e.startDate, let altesEnde = e.endDate else { throw Fehler.nichtGefunden }
@@ -132,7 +219,7 @@ final class AppleKalender {
         let beginn = k.date(byAdding: .minute, value: start, to: neu.datum(kalender: k)) ?? alterStart
         e.startDate = beginn
         e.endDate = beginn.addingTimeInterval(dauer)
-        try store.save(e, span: .thisEvent, commit: true)
+        try store.save(e, span: alle ? .futureEvents : .thisEvent, commit: true)
     }
 
     /// Ändert Titel und Zeit (dieses Vorkommen) oder legt einen neuen Termin an. Gibt die Kennung zurück.
@@ -156,10 +243,10 @@ final class AppleKalender {
     }
 
     /// Löscht dieses Vorkommen.
-    func loeschen(_ id: String, am tag: Tag, kalender k: Calendar) throws {
+    func loeschen(_ id: String, am tag: Tag, alle: Bool = false, kalender k: Calendar) throws {
         guard let e = vorkommen(id, am: tag, kalender: k) else { throw Fehler.nichtGefunden }
         guard e.calendar.allowsContentModifications else { throw Fehler.nurLesen }
-        try store.remove(e, span: .thisEvent, commit: true)
+        try store.remove(e, span: alle ? .futureEvents : .thisEvent, commit: true)
     }
 
     private static func minuten(_ d: Date, _ k: Calendar) -> Int {

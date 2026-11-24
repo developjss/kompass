@@ -34,6 +34,8 @@ struct Termin: Identifiable, Hashable, Sendable {
     var zielID: UUID? = nil
     var habitID: UUID? = nil
     var kalenderFarbe: String? = nil
+    /// Teil einer Serie (Apple/Google: Wiederholungsregel; Kompass: Wiederholung)
+    var wiederkehrend = false
 }
 
 enum Beispieltermine {
