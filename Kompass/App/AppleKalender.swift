@@ -45,7 +45,7 @@ final class AppleKalender {
             if e.isAllDay {
                 var d = Tag(e.startDate, kalender: k)
                 let letzter = Tag(e.endDate.addingTimeInterval(-1), kalender: k)
-                while d <= letzter { if d >= von && d <= bis { out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, kalenderFarbe: farbe, wiederkehrend: e.hasRecurrenceRules)) }; d = d.plus(tage: 1) }
+                while d <= letzter { if d >= von && d <= bis { out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, kalenderFarbe: farbe, kalenderName: e.calendar.title, wiederkehrend: e.hasRecurrenceRules)) }; d = d.plus(tage: 1) }
                 continue
             }
             // Mehrtägige Termine: je Tag der passende Abschnitt
@@ -55,7 +55,7 @@ final class AppleKalender {
                 let s = d == Tag(e.startDate, kalender: k) ? Self.minuten(e.startDate, k) : 0
                 let en = d == letzter ? max(s + 5, Self.minuten(e.endDate, k) == 0 ? 24 * 60 - 1 : Self.minuten(e.endDate, k)) : 24 * 60 - 1
                 if d >= von && d <= bis {
-                    out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, start: s, ende: min(en, 24 * 60 - 1), kalenderFarbe: farbe, wiederkehrend: e.hasRecurrenceRules))
+                    out[d, default: []].append(Termin(quelle: quelle, schluessel: id, titel: e.title ?? "Termin", tag: d, start: s, ende: min(en, 24 * 60 - 1), kalenderFarbe: farbe, kalenderName: e.calendar.title, wiederkehrend: e.hasRecurrenceRules))
                 }
                 d = d.plus(tage: 1)
             }

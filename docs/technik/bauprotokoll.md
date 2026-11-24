@@ -4,6 +4,10 @@ Neueste oben. Je gemergtem Block eine Zeile: Datum · Kürzel · was · Tests.
 
 | Datum | Kürzel | Was | Tests |
 |---|---|---|---|
+| 24.11.2026 | P2-RK1 | Rückblick neu, Schritt 1: `Rueckblick` (Zeiträume, Kennzahlen mit Vereinigung, dein Normal = Median ± 1,5·MAD, Reife, 4 Tower-Muster, Rang/Nutzen, Ausblenden 8 Wochen; **Rechenregeln §11, Freigabe nötig**), `RueckblickTests`; Ansicht nach Entwurf 4: Zeitraum oben, Flugbericht in der Bordkarte (Vergleich Vorwoche gleiche Stufe), Tower, Flugplan-Routen, Details-Taste, Logbuch, Debriefing, Warum-Blatt mit Hilfreich/Passt nicht; `Lernen.rueckblick` | Swift-Tests grün, Simulator hell |
+| 24.11.2026 | P2-HK | Konzepte: Rückblick-Analysen (Fassung 2: Normal, Reife, Muster-Bibliothek, Lernen je Nutzer), Hick’s Law für die ganze App; Rückblick-Entwurf 4; PR #39–#41 | Doku |
+| 24.11.2026 | P2-K8 | Kalender: Serien-Frage „nur dieser / alle“ für Apple, Google und eigene Serien (`EigenerTermin.ausgelassen`, `terminVerschieben(nurDieser:)`), Apple/Google mit allen Eigenschaften (`ExternTerminBlatt`), Wochen-Wischen, Aufgabe anlegen/bearbeiten mit „Zählt für“ (`Einordnung`); PR #37, #38 | Swift-Tests grün (`SerienTests`, `EinordnungTests`, `KalenderSyncTests`), Simulator, iPhone |
+| 24.11.2026 | P2-K7 | Kalender: „Läuft gerade“ auf Home, Kalender oben, Apple/Google schreiben (`AppleKalender.speichern/verschieben/loeschen`, live über `EKEventStoreChanged`), Tag/Woche lesbar, Ziehen mit Vorschau am Zielort (`Ziehen.swift`); PR #35, #36 | Swift-Tests grün (`ZiehenTests`), Simulator |
 | 24.11.2026 | P2-RB | Rückblick als Bordkarte: `Bordkarte` (Abschnitt ziehen/antippen reißt ab, je Woche gemerkt), `BordkarteTests`; PR #34 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-FF | Fokus als Flug: `FlugRechnung` (Strecke, Phasen, FL, Rest, Kürzel) + `FlugTests`, `FokusBlatt` mit `FlugHimmel`, Instrumenten, Haptik; Buchung unverändert; PR #33 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-NF | Design Nachtflug: Tokens Indigo/Seladon/Gold hell+dunkel, `Farbe.tonArt` (bunte Farben → Palette) + `NachtflugTests`, Stand-Karten mit Goldschein, Serif-Titel; PR #32 | Swift-Tests grün, Simulator hell/dunkel |

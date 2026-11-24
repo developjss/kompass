@@ -157,6 +157,11 @@ struct AppWissenTests {
         #expect(a.text.contains("Erinnerung") && a.text.contains("Mitteilung"))
     }
 
+    @Test func hilfeZumTowerNenntMusterUndWarum() {
+        let a = Werkzeuge.hilfe("Was bedeutet der Tower im Rückblick?")
+        #expect(a.text.contains("Tower") && a.text.contains("Warum"))
+    }
+
     @Test func jedesFensterIstBeschrieben() {
         for p in AppWissen.blattPraefixe { #expect(!(AppWissen.fenster[p] ?? "").isEmpty, "Fenster „\(p)“ fehlt im App-Wissen") }
     }
