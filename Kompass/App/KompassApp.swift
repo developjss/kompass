@@ -195,6 +195,20 @@ final class Navigation {
         }
     }
 
+    /// Stapel im Tab Rückblick (Analyse eines Habits oder Ziels)
+    var rueckblickPfad = NavigationPath()
+
+    /// Analyse im Rückblick öffnen (aus Habit-/Ziel-Seite, Rückblick oder Lotse)
+    func zeigeAnalyse(habit id: UUID) {
+        rueckblickPfad = NavigationPath([AnalyseAuswahl(art: .habit, id: id)])
+        bereich = .rueckblick
+    }
+
+    func zeigeAnalyse(ziel id: UUID) {
+        rueckblickPfad = NavigationPath([AnalyseAuswahl(art: .ziel, id: id)])
+        bereich = .rueckblick
+    }
+
     func zeige(_ teil: FortschrittTeil) {
         fortschrittTeil = teil
         bereich = .fortschritt

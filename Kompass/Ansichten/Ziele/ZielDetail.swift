@@ -65,7 +65,7 @@ private struct ZielStandKarte: View {
             } else if let n = naechster {
                 Text("Als Nächstes: \(n.aufgabe?.titel ?? n.schritt.titel)").font(.unterzeile.weight(.semibold)).lineLimit(1).padding(.top, 10)
             }
-            Button { nav.bereich = .rueckblick } label: {
+            Button { nav.zeigeAnalyse(ziel: ziel.id) } label: {
                 HStack(spacing: 6) {
                     Text("Analyse im Rückblick")
                     Image(systemName: "arrow.right")

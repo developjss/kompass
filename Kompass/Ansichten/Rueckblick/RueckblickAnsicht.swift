@@ -59,6 +59,29 @@ struct RueckblickAnsicht: View {
                     HStack { Text("vor 12 Wochen"); Spacer(); Text("jetzt") }.font(.caption2).foregroundStyle(Farbe.zweitrangig)
                 }
 
+                let aktiv = z.ziele.filter { $0.status == .aktiv }
+                if !aktiv.isEmpty {
+                    WeisseKarte(titel: "Ziele", wert: "\(aktiv.count)", unter: "Antippen für Verlauf, Prognose und Einsatz") {
+                        VStack(spacing: 8) {
+                            ForEach(aktiv) { g in
+                                let k = Kurs.aufKurs(g, in: z, heute: T)
+                                Button { nav.zeigeAnalyse(ziel: g.id) } label: {
+                                    HStack(spacing: 8) {
+                                        Text(g.titel).font(.klein).foregroundStyle(Farbe.text).lineLimit(1).frame(width: 120, alignment: .leading)
+                                        Balken(anteil: k.fortschritt, farbe: Color(hex: g.farbe), spur: Farbe.linie, hoehe: 6)
+                                        Text(k.lage.text).font(.klein).foregroundStyle(Farbe.zweitrangig).frame(width: 74, alignment: .trailing)
+                                        Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                                    }
+                                    .frame(minHeight: 32).contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(g.titel), \(Zahl.prozent(k.fortschritt)), \(k.lage.text)")
+                                .accessibilityHint("Analyse öffnen")
+                            }
+                        }
+                    }
+                }
+
                 WeisseKarte(titel: "Zeit je Ziel", wert: jeZiel.isEmpty ? "–" : Zahl.dauer(jeZiel.reduce(0) { $0 + $1.1 }),
                             unter: jeZiel.isEmpty ? "Noch keine Zeit für Ziele in dieser Woche." : "Fokus und zugeordnete Termine") {
                     if !jeZiel.isEmpty {
@@ -89,14 +112,18 @@ struct RueckblickAnsicht: View {
                 WeisseKarte(titel: "Habits", wert: Zahl.prozent(habitQuote),
                             unter: "\(Zahl.text(bilanz.habitsErledigt, stellen: 1)) von \(bilanz.habitsGeplant) geplanten Tagen", pfeil: { nav.zeige(.habits) }) {
                     VStack(spacing: 8) {
-                        ForEach(z.habits.prefix(4)) { h in
+                        ForEach(z.habits) { h in
                             let q = HabitRechnung.quote(alle: [h], von: von, bis: bis, heute: T)
-                            HStack(spacing: 8) {
+                            Button { nav.zeigeAnalyse(habit: h.id) } label: { HStack(spacing: 8) {
                                 Text(h.titel).font(.klein).foregroundStyle(Farbe.text).lineLimit(1).frame(width: 120, alignment: .leading)
                                 Balken(anteil: q.geplant > 0 ? q.erledigt / Double(q.geplant) : 0, farbe: Color(hex: h.farbe), spur: Farbe.linie, hoehe: 6)
                                 Text(q.geplant > 0 ? Zahl.prozent(q.erledigt / Double(q.geplant)) : "–").font(.klein).monospacedDigit()
-                                    .foregroundStyle(Farbe.zweitrangig).frame(width: 40, alignment: .trailing)
+                                    .lineLimit(1).minimumScaleFactor(0.8).foregroundStyle(Farbe.zweitrangig).frame(width: 50, alignment: .trailing)
+                                Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
                             }
+                            .frame(minHeight: 32).contentShape(Rectangle()) }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("Analyse öffnen")
                         }
                     }
                 }

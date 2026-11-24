@@ -107,13 +107,14 @@ private struct HabitStandKarte: View {
                     }
                     .buttonStyle(.plain)
                 }
-                Button { nav.bereich = .rueckblick } label: {
+                Button { nav.zeigeAnalyse(habit: habit.id) } label: {
                     HStack(spacing: 6) { Text("Analyse"); Image(systemName: "arrow.right") }
                         .font(.kompass(.subheadline, .bold)).foregroundStyle(.white)
                         .padding(.horizontal, 14).frame(minHeight: 40).background(.white.opacity(0.2), in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Analyse im Rückblick")
+                .accessibilityIdentifier("habit.analyse")
             }
             .padding(.top, 12)
         }
