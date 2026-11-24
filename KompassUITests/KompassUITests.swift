@@ -192,13 +192,13 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(sichtbar(app, "Meilensteine"), "Ziel-Seite öffnet nicht")
         XCTAssertTrue(sichtbar(app, "Einstellungen") && sichtbar(app, "Bis wann"), "Einstellungs-Kacheln fehlen")
         foto(app, "Ziel-Seite")
-        // Verfeinern-Kachel → Meilensteine mit Anteilen und „Mehr“ → Details
+        // Verfeinern-Kachel → Kacheln (Aufgaben … Details, Geschafft?) → Details
         app.buttons["ziel.verfeinern"].tap()
-        XCTAssertTrue(sichtbar(app, "Meilenstein hinzufügen"), "Verfeinern öffnet nicht")
+        XCTAssertTrue(sichtbar(app, "Geschafft?") || sichtbar(app, "Aufgaben"), "Verfeinern öffnet nicht")
         let details = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Details")).firstMatch
         for _ in 0..<6 where !details.isHittable { app.swipeUp() }
         details.tap()
-        XCTAssertTrue(sichtbar(app, "Fakten"), "Details-Seite öffnet nicht")
+        XCTAssertTrue(sichtbar(app, "Worum es geht"), "Details-Seite öffnet nicht")
         XCTAssertTrue(sichtbar(app, "Ziel löschen"), "Löschen fehlt in Details")
         foto(app, "Ziel Details")
     }
