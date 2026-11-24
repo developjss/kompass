@@ -17,8 +17,6 @@ struct ZieleAnsicht: View {
         let gruppen = ZielOrdnung.gruppen(z, filter: filter, sortierung: sortierung, heute: T)
 
         VStack(alignment: .leading, spacing: 0) {
-            ZieleKopf(ziele: z.ziele.filter { $0.status == .aktiv })
-
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(ZielOrdnung.Filter.allCases, id: \.self) { f in
                     FilterKachel(filter: f, anzahl: ZielOrdnung.anzahl(f, in: z, heute: T), an: f == filter) {
@@ -26,7 +24,6 @@ struct ZieleAnsicht: View {
                     }
                 }
             }
-            .padding(.top, 16)
 
             HStack(alignment: .firstTextBaseline) {
                 Text(filter == .alle ? "Deine Ziele" : filter.titel).font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
@@ -97,11 +94,17 @@ private struct FilterKachel: View {
             }
             .foregroundStyle(.white)
             .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .background(LinearGradient(colors: farben, startPoint: .topLeading, endPoint: .bottomTrailing),
-                        in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
+            .background {
+                ZStack {
+                    LinearGradient(colors: farben, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    // weicher Lichtschein oben links für mehr Tiefe
+                    RadialGradient(colors: [.white.opacity(0.18), .clear], center: .topLeading, startRadius: 0, endRadius: 160)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            }
             .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(.white, lineWidth: an ? 3 : 0))
-            .shadow(color: farben[0].opacity(an ? 0.35 : 0.15), radius: an ? 10 : 6, y: 4)
+            .shadow(color: farben[1].opacity(an ? 0.3 : 0.12), radius: an ? 10 : 6, y: 4)
             .scaleEffect(an ? 1 : 0.98)
         }
         .buttonStyle(.plain)
@@ -118,78 +121,31 @@ private struct FilterKachel: View {
         }
     }
 
+    /// Ruhige Verläufe mit drei Stufen und leichtem Farbwechsel (wie „Coming up“ in Gapless)
     private var farben: [Color] {
         switch filter {
-        case .alle: [Color(hex: "#2A36A0"), Color(hex: "#6A5BE0")]
-        case .aufKurs: [Color(hex: "#0F6E5C"), Color(hex: "#2FB36C")]
-        case .hinterher: [Color(hex: "#B4400A"), Color(hex: "#F0A030")]
-        case .erreicht: [Color(hex: "#5A33B0"), Color(hex: "#C060C8")]
+        case .alle: [Color(hex: "#3A3F9E"), Color(hex: "#5753C2"), Color(hex: "#7D6CCF")]
+        case .aufKurs: [Color(hex: "#2C6E6A"), Color(hex: "#3D8F86"), Color(hex: "#5C93B8")]
+        case .hinterher: [Color(hex: "#A65A3A"), Color(hex: "#C47A55"), Color(hex: "#C76A78")]
+        case .erreicht: [Color(hex: "#5A479E"), Color(hex: "#7E5AAF"), Color(hex: "#A76AA8")]
         }
     }
 }
 
-/// Eine Aussage über alle aktiven Ziele: „2 von 3 auf Kurs“, dazu, wo es hakt.
-private struct ZieleKopf: View {
-    var ziele: [Ziel]
-    @Environment(Speicher.self) private var speicher
-
-    var body: some View {
-        let z = speicher.zustand
-        let T = speicher.heute
-        let lagen = ziele.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
-        let gut = lagen.filter { $0.1.lage == .imPlan || $0.1.lage == .voraus }.count
-        let hinten = lagen.filter { $0.1.lage == .hinterher || $0.1.lage == .ueberfaellig }.map(\.0)
-        let mittel = lagen.isEmpty ? 0 : lagen.reduce(0) { $0 + $1.1.fortschritt } / Double(lagen.count)
-        Verlaufskarte(farben: Farbe.indigo) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    KartenLabel(text: "Ziele")
-                    Text(ziele.isEmpty ? "Noch kein Ziel" : "\(gut) von \(ziele.count) auf Kurs").font(.kompass(.title, .heavy)).contentTransition(.numericText())
-                    Text(unterzeile(hinten: hinten, T: T)).font(.unterzeile).opacity(0.9).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 12)
-                if !ziele.isEmpty {
-                    VStack(spacing: 2) {
-                        Text(Zahl.prozent(mittel)).font(.kompass(.title2, .heavy)).monospacedDigit()
-                        Text("im Schnitt").font(.klein).opacity(0.85)
-                    }
-                }
-            }
-            if !ziele.isEmpty {
-                // Geteilter Balken: auf Kurs (grün) · hinterher (orange) – je Ziel ein Stück
-                GeometryReader { geo in
-                    HStack(spacing: 3) {
-                        if gut > 0 { Capsule().fill(Color(hex: "#5EE0B5")).frame(width: max(8, (geo.size.width - 3) * CGFloat(gut) / CGFloat(ziele.count))) }
-                        if !hinten.isEmpty { Capsule().fill(Color(hex: "#FFC266")) }
-                    }
-                }
-                .frame(height: 8).padding(.top, 10)
-                .accessibilityHidden(true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private func unterzeile(hinten: [Ziel], T: Tag) -> String {
-        if ziele.isEmpty { return "Oben auf „+ Neu“ – zum Beispiel „Führerschein Klasse B“." }
-        if hinten.isEmpty {
-            if let n = ziele.min(by: { $0.faellig < $1.faellig }) { return "Nächste Frist: \(n.titel.prefix(24))\(n.titel.count > 24 ? "…" : "") · \(Kurs.bisText(n.faellig, heute: T))" }
-            return "Alles im Plan."
-        }
-        let namen = hinten.prefix(2).map { $0.titel.count > 22 ? String($0.titel.prefix(21)) + "…" : $0.titel }
-        return "Hinterher: " + namen.joined(separator: ", ") + (hinten.count > 2 ? " +\(hinten.count - 2)" : "")
-    }
-}
-
+/// Zielkarte: Ring mit Prozent, Titel, ein Lage-Chip – mehr nicht. Ein leuchtender Rand in der Zielfarbe läuft langsam
+/// um die Karte und lädt zum Antippen ein (bei „Bewegung reduzieren“ steht er still).
 struct ZielKarte: View {
     var ziel: Ziel
     @Environment(Speicher.self) private var speicher
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @State private var dreh = 0.0
 
     var body: some View {
         let z = speicher.zustand
         let T = speicher.heute
         let kurs = Kurs.aufKurs(ziel, in: z, heute: T)
         let c = Color(hex: ziel.farbe)
+        let form = RoundedRectangle(cornerRadius: Mass.karte, style: .continuous)
         NavigationLink(value: ZielAuswahl(id: ziel.id)) {
             HStack(spacing: 14) {
                 ZStack {
@@ -198,26 +154,34 @@ struct ZielKarte: View {
                     Text(Zahl.prozent(kurs.fortschritt)).font(.kompass(.caption, .heavy)).foregroundStyle(Farbe.text).monospacedDigit()
                         .minimumScaleFactor(0.7).lineLimit(1).padding(6)
                 }
-                .frame(width: 58, height: 58)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text).lineLimit(2)
-                    HStack(spacing: 6) {
-                        Text(kurs.lage.text).font(.klein).padding(.horizontal, 8).frame(minHeight: 22)
-                            .background(lageFarbe(kurs.lage).opacity(0.14), in: Capsule()).foregroundStyle(lageFarbe(kurs.lage))
-                        Text(Kurs.bisText(ziel.faellig, heute: T)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
-                    }
-                    if let n = Fortschritt.naechsterSchritt(ziel, in: z, heute: T) {
-                        Text("Als Nächstes: \(n.aufgabe?.titel ?? n.schritt.titel)").font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
-                    }
+                .frame(width: 54, height: 54)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text).lineLimit(1)
+                    Text(kurs.lage.text).font(.klein).padding(.horizontal, 8).frame(minHeight: 22)
+                        .background(lageFarbe(kurs.lage).opacity(0.14), in: Capsule()).foregroundStyle(lageFarbe(kurs.lage))
                 }
                 Spacer(minLength: 4)
-                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                Image(systemName: "arrow.right").font(.footnote.weight(.heavy)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30).background(c.gradient, in: Circle())
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+            .background(Farbe.karte, in: form)
+            .overlay {
+                // umlaufender Lichtrand: ein heller Bogen in der Zielfarbe wandert um die Karte
+                form.strokeBorder(AngularGradient(colors: [c.opacity(0.0), c.opacity(0.12), c.opacity(0.85), c.opacity(0.12), c.opacity(0.0)],
+                                                  center: .center, angle: .degrees(dreh)), lineWidth: 2)
+            }
+            .background {
+                form.stroke(AngularGradient(colors: [.clear, c.opacity(0.4), .clear], center: .center, angle: .degrees(dreh)), lineWidth: 6)
+                    .blur(radius: 8)
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ZielKartenDruck())
+        .onAppear {
+            guard !ruhig else { dreh = 45; return }
+            withAnimation(.linear(duration: 6).repeatForever(autoreverses: false)) { dreh = 360 }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ziel.titel), \(Zahl.prozent(kurs.fortschritt)), \(kurs.lage.text), \(Kurs.bisText(ziel.faellig, heute: T))")
         .accessibilityAddTraits(.isButton)
@@ -229,5 +193,14 @@ struct ZielKarte: View {
         case .imPlan: Farbe.akzent
         case .hinterher, .ueberfaellig: Farbe.warnung
         }
+    }
+}
+
+/// Beim Drücken leicht kleiner – fühlt sich antippbar an.
+private struct ZielKartenDruck: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
