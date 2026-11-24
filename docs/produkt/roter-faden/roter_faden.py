@@ -188,7 +188,7 @@ seite(K1, "Die 6 Prinzipien", "prinzipien", "Aus deiner Ideen-Word – und wo si
 
 # =============================================================== 2 Heute
 K2 = kapitel("Home", "kap2", ["Die Startseite: was jetzt dran ist, was ansteht und wo es eng wird."],
-             [("Home", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Erklärung (i)", "info")])
+             [("Home", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Assistent", "assistent"), ("Erklärung (i)", "info")])
 seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder kommt als Nächstes – Termin, Aufgabe oder Habit) mit Fokus, Erledigt oder Menge; dann „Dein Tag im Blick“ als Reel (Slides: Jetzt, Danach, wie voll der Tag ist, Heute offen, Ziele, Los); darunter Hinweise (enger Tag, Überschneidung, zu wenig Zeit), Heute offen, Liegen geblieben, Tagesabschluss. Konzept: " + doc("docs/produkt/konzepte/struktur-v3.md"),
       bilder=[("heute.jpg", "Home")],
       klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge eintragen direkt auf der Karte", "Hinweis antippen → der Tag im Kalender", "Kreis links → erledigt",
@@ -200,13 +200,15 @@ seite(K2, "Fokus-Modus", "fokus", "Vollbild mit Timer. Jede Minute zählt für d
       gespeichert="als Fokus-Sitzung je Tag; " + LOKAL)
 seite(K2, "Tagesabschluss", "reflexion", "Drei Fragen am Abend, drei am Wochenende (Prinzip 4).",
       bilder=[("reflexion.jpg", "Tagesabschluss")], klicks=["Täglich / Wöchentlich umschalten", "Speichern → erscheint unter „Frühere“"], gespeichert=LOKAL)
+seite(K2, "Assistent", "assistent", "Tab in der Mitte: Claude beantwortet jede Frage – zu deinem Tag, deinen Zielen, zur App oder ganz allgemein; Aktuelles (Wetter, Sport) über die Websuche mit Quellen. Für deine Daten fragt Claude die App, die rechnet. Antworten mit Absätzen, Überschriften und Listen. Beim Laden rückt die Frage nach oben, darunter das animierte Zeichen mit „Schaut in deinen Kalender …“. „Merk dir …“ speichert Vorlieben nur auf dem Gerät (Einstellungen › Assistent, löschbar). Ohne Netz antworten Regeln auf dem Gerät. Technik: " + doc("docs/technik/lotse-server.md")),
+
 seite(K2, "Erklärung (i)", "info", "Jede Seite hat oben ein (i). Erklärungen stehen dort statt auf der Seite (Textregel: ≤ ~35 Wörter je Bildschirm).",
       bilder=[("info.jpg", "Erklärung")])
 
 # =============================================================== 3 Kalender
 K3 = kapitel("Kalender", "kap3", ["Planen und Kalender in einem Bereich. Ergänzt Google und Apple."],
              [("Kalender", "kalender"), ("Termin zuordnen", "termin"), ("Einstellungen & Kalender verbinden", "einstellungen")])
-seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ (drei Karten), darunter Tag · Woche · Monat · Jahr. Tag: Zeitleiste mit Blöcken in Ziel- oder Kategoriefarbe. Darunter „Ohne Uhrzeit“ und Eingang – Aufgaben und Habits per Ziehen in den Tag legen.",
+seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ als Kartenstapel (hintere Karten lesbar versetzt, „Alle ansehen“ fächert auf), darunter Tag · Woche · Monat · Jahr. Tag: Zeitleiste mit Blöcken in Ziel- oder Kategoriefarbe. Darunter „Empfehlung“: Vorschläge passend zur Ansicht – Tag mit freier Uhrzeit, Woche/Monat mit dem freiesten Tag bis zur Frist –, je Karte ein Grund. Antippen zeigt, wie man zieht, und bietet „Um 14:00 einplanen“.",
       bilder=[("kalender.jpg", "Kalender (Tag)")],
       klicks=["Leere Stunde antippen → neuer Termin", "„+ Neu“ → Termin: Titel, Zeit, Kategorie, zählt für Ziel oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
               "Monat: Tag antippen, nochmal → Tagesansicht", "Jahr: Tage nach Auslastung eingefärbt"],
@@ -301,6 +303,7 @@ seite(K8, "Pflege und /roterfaden", "pflege", "Damit hier nie etwas fehlt oder v
 seite(K8, "Änderungsverlauf", "verlauf", "Neueste oben.",
       extra=lambda: d.table([
           ["Datum", "Fassung", "Was sich geändert hat"],
+          ["24.11.2026", "2", "Ziele minimal mit „Dein nächster Schritt“, Kalender-Empfehlungen als Kartenstapel, Assistent mit Claude (Websuche, Gedächtnis, Ladeanzeige)."],
           ["23.11.2026", "1", "Erste Fassung: Klick-Dummy Seite für Seite, Rechenregeln, Personen-Test, Fahrplan und Landkarte."],
       ], [1600, 1000, 7038]))
 
