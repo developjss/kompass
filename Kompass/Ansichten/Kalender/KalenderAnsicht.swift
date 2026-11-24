@@ -206,6 +206,7 @@ struct TagZeitleiste: View {
     @State private var zug: (id: String, dy: CGFloat)?
     @State private var gegriffen = 0
     @State private var abgelegt = 0
+    @State private var serie: SerienAuftrag?
 
     var body: some View {
         let z = speicher.zustand
@@ -293,6 +294,7 @@ struct TagZeitleiste: View {
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: gegriffen)
                 .sensoryFeedback(.success, trigger: abgelegt)
+                .serienFrage($serie)
                 .frame(height: min(CGFloat(bis - von) * hoehe + 20, hoehe * 10))
                 .scrollIndicators(.hidden)
                 .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
@@ -325,7 +327,10 @@ struct TagZeitleiste: View {
                 }
                 let neu = Zeitraster.verschoben(start: b.start, dauer: b.dauer, dy: d.translation.height, hoehe: hoehe, von: von, bis: bis)
                 guard neu != b.start else { return }
-                if KalenderAktion.verschieben(b, tag: tag, start: neu, speicher: speicher) { abgelegt += 1 }
+                if b.art == .termin && b.wiederkehrend {
+                    let t = tag
+                    serie = SerienAuftrag.fuer(b) { nur in if KalenderAktion.verschieben(b, tag: t, start: neu, nurDieser: nur, speicher: speicher) { abgelegt += 1 } }
+                } else if KalenderAktion.verschieben(b, tag: tag, start: neu, speicher: speicher) { abgelegt += 1 }
             }
     }
 
@@ -441,6 +446,7 @@ private struct WochenRaster: View {
     @State private var zug: (id: String, dx: CGFloat, dy: CGFloat)?
     @State private var gegriffen = 0
     @State private var abgelegt = 0
+    @State private var serie: SerienAuftrag?
 
     /// Lesbar wie in Kalender-Apps: breite Spalten (rund 3 Tage sichtbar), waagerecht wischen, Stunden links fest.
     var body: some View {
@@ -469,8 +475,10 @@ private struct WochenRaster: View {
                             .id(i)
                         }
                     }
+                    .scrollTargetLayout()
                     .padding(.leading, 6).padding(.trailing, 10)
                 }
+                .scrollTargetBehavior(.viewAligned)
                 .scrollIndicators(.hidden)
                 .onAppear { leser.scrollTo(startSpalte(T), anchor: .leading) }
                 .onChange(of: tag) { _, _ in leser.scrollTo(startSpalte(T), anchor: .leading) }
@@ -480,6 +488,7 @@ private struct WochenRaster: View {
         .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
         .sensoryFeedback(.impact(weight: .light), trigger: gegriffen)
         .sensoryFeedback(.success, trigger: abgelegt)
+        .serienFrage($serie)
     }
 
     /// Ziel einer Verschiebung: Tag (innerhalb der Woche) und gerasteter Start.
@@ -503,7 +512,9 @@ private struct WochenRaster: View {
                 let (neuTag, neu) = ziel(b, d: d, dx: g.translation.width, dy: g.translation.height, hoehe: hoehe, breite: breite)
                 guard neuTag != d || neu != b.start else { return }
                 if b.art == .termin, neuTag != d, speicher.zustand.eigenerTermin(b.eigenID ?? UUID())?.wiederholung != .nie { return }
-                if KalenderAktion.verschieben(b, tag: neuTag, start: neu, speicher: speicher) { abgelegt += 1 }
+                if b.art == .termin && b.wiederkehrend {
+                    serie = SerienAuftrag.fuer(b) { nur in if KalenderAktion.verschieben(b, tag: neuTag, start: neu, nurDieser: nur, speicher: speicher) { abgelegt += 1 } }
+                } else if KalenderAktion.verschieben(b, tag: neuTag, start: neu, speicher: speicher) { abgelegt += 1 }
             }
     }
 
@@ -815,14 +826,21 @@ enum KalenderAktion {
         switch b.art {
         case .aufgabe: b.aufgabeID != nil
         case .habit: b.habitID != nil
-        case .termin: b.eigenID != nil
+        case .termin: b.eigenID != nil || externeID(b.serie) != nil
         }
+    }
+
+    /// Kennung im Apple-/Google-Kalender aus „apple:…“ bzw. „google:…“ (sonst nil, z. B. Kompass oder Beispiel).
+    nonisolated static func externeID(_ serie: String?) -> String? {
+        guard let s = serie, s.hasPrefix("apple:") || s.hasPrefix("google:") else { return nil }
+        let id = String(s.drop(while: { $0 != ":" }).dropFirst())
+        return id.contains(":") ? id : nil   // EventKit-Kennungen haben die Form „…:…“; Beispieltermine nicht
     }
 
     /// Eintrag auf Tag und Uhrzeit legen (nil = ohne Uhrzeit, nur Aufgaben und Habits).
     @MainActor
     @discardableResult
-    static func verschieben(_ b: Tagesplan.Block, tag: Tag, start: Int?, speicher: Speicher) -> Bool {
+    static func verschieben(_ b: Tagesplan.Block, tag: Tag, start: Int?, nurDieser: Bool = true, speicher: Speicher) -> Bool {
         switch b.art {
         case .aufgabe:
             guard let a = b.aufgabeID else { return false }
@@ -832,8 +850,15 @@ enum KalenderAktion {
             if tag != b.tag { speicher.aendern { $0.habitEinplanen(h, tag: b.tag, uhrzeit: nil) } }
             speicher.aendern { $0.habitEinplanen(h, tag: tag, uhrzeit: start) }
         case .termin:
-            guard let e = b.eigenID, let s = start else { return false }
-            speicher.aendern { $0.terminVerschieben(e, tag: tag, start: s) }
+            guard let s = start else { return false }
+            if let e = b.eigenID {
+                let alt = b.tag
+                speicher.aendern { $0.terminVerschieben(e, von: alt, tag: tag, start: s, nurDieser: nurDieser) }
+            } else if let id = externeID(b.serie) {
+                // Apple/Google: direkt im Kalender des Geräts (nur dieses Vorkommen)
+                do { try AppleKalender.aktiv.verschieben(id, von: b.tag, nach: tag, start: s, alle: !nurDieser, kalender: speicher.kalender) } catch { return false }
+                speicher.appleKalenderLesen()
+            } else { return false }
         }
         return true
     }

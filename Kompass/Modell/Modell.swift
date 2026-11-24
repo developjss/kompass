@@ -373,10 +373,12 @@ struct EigenerTermin: Identifiable, Codable, Sendable, Hashable {
     var notiz: String?
     /// Bis zu diesem Tag sind Habit-Einträge übernommen
     var habitBis: Tag?
+    /// Serie: an diesen Tagen fällt der Termin aus („nur dieser Termin“ verschoben oder gelöscht)
+    var ausgelassen: [Tag]?
 
     /// Findet der Termin an diesem Tag statt?
     func findetStatt(am d: Tag) -> Bool {
-        guard d >= tag else { return false }
+        guard d >= tag, ausgelassen?.contains(d) != true else { return false }
         switch wiederholung {
         case .nie: return d == tag
         case .taeglich: return true

@@ -71,6 +71,8 @@ final class Speicher {
             zustand.verlaufFortschreiben(heute: heute)
             lage = .bereit
             appleKalenderLesen()
+            // Live: jede Änderung im Kalender (auch iCloud-/Google-Sync) sofort übernehmen
+            AppleKalender.aktiv.beobachten { [weak self] in self?.appleKalenderLesen() }
             erinnerungenPlanen()
         } catch {
             lage = .fehler("Deine Daten konnten nicht gelesen werden.")

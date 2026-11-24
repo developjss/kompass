@@ -7,7 +7,7 @@ enum Kalenderquelle {
         var t = Beispieltermine.termine(am: d, google: e.googleBeispiel, apple: e.appleBeispiel, heute: heute)
         t += z.eigeneTermine.filter { $0.findetStatt(am: d) }.map { x in
             Termin(quelle: .kompass, schluessel: x.id.uuidString, titel: x.titel, tag: d, start: x.start, ende: x.ende,
-                   eigenID: x.id, kategorie: x.kategorie, zielID: x.zielID, habitID: x.habitID)
+                   eigenID: x.id, kategorie: x.kategorie, zielID: x.zielID, habitID: x.habitID, wiederkehrend: x.wiederholung != .nie)
         }
         t += extern.filter { $0.tag == d }
         // Termine aus Apple/Google, die für ein Ziel zählen, tragen das Ziel (nur Anzeige: Farbe, Ziel-Zeichen)
@@ -49,6 +49,8 @@ enum Tagesplan {
         var erledigt = false
         /// Nur Termine: Serie „quelle:schlüssel“ (öffnet die Termin-Seite)
         var serie: String? = nil
+        /// Termin gehört zu einer Wiederholung → beim Ändern fragen: nur dieser oder alle
+        var wiederkehrend = false
         var dauer: Int { ende - start }
     }
 
@@ -73,7 +75,7 @@ enum Tagesplan {
             guard let s = t.start, let e = t.ende, e > s else { continue }
             out.append(Block(id: "t:\(t.id)", art: .termin, titel: t.titel, tag: d, start: s, ende: e,
                              farbe: farbe(ziel: t.zielID, kategorie: t.kategorie, sonst: t.kalenderFarbe ?? t.quelle.farbe, in: z),
-                             unter: "\(uhr(s))–\(uhr(e))", zielID: t.zielID, habitID: t.habitID, eigenID: t.eigenID, serie: Kalenderquelle.serie(t)))
+                             unter: "\(uhr(s))–\(uhr(e))", zielID: t.zielID, habitID: t.habitID, eigenID: t.eigenID, serie: Kalenderquelle.serie(t), wiederkehrend: t.wiederkehrend))
         }
         for a in z.aufgaben where a.datum == d {
             guard let u = a.uhrzeit else { continue }

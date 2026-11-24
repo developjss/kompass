@@ -293,14 +293,37 @@ extension Zustand {
         }
     }
 
-    /// Eigenen Termin verschieben (Dauer bleibt). Einmalig: Tag und Uhrzeit; Serie: nur die Uhrzeit (alle Termine der Serie).
-    mutating func terminVerschieben(_ id: UUID, tag: Tag, start: Int) {
+    /// Eigenen Termin verschieben (Dauer bleibt). Einmalig: Tag und Uhrzeit.
+    /// Serie: `nurDieser` = dieses Vorkommen (am Tag `von`) wird ein eigener Termin, die Serie lässt den Tag aus;
+    /// sonst wandert die ganze Serie mit (Uhrzeit und – bei Tageswechsel – derselbe Versatz in Tagen).
+    mutating func terminVerschieben(_ id: UUID, von alt: Tag? = nil, tag: Tag, start: Int, nurDieser: Bool = false) {
         guard var t = eigeneTermine.first(where: { $0.id == id }) else { return }
         let dauer = max(5, t.ende - t.start)
-        t.start = min(max(0, start), 24 * 60 - dauer)
-        t.ende = t.start + dauer
-        if t.wiederholung == .nie { t.tag = tag }
+        let s = min(max(0, start), 24 * 60 - dauer)
+        if t.wiederholung == .nie {
+            t.tag = tag; t.start = s; t.ende = s + dauer
+            terminSpeichern(t)
+            return
+        }
+        if nurDieser, let alt {
+            terminAuslassen(id, am: alt)
+            var kopie = t
+            kopie.id = UUID(); kopie.tag = tag; kopie.start = s; kopie.ende = s + dauer
+            kopie.wiederholung = .nie; kopie.ausgelassen = nil; kopie.habitBis = nil
+            terminSpeichern(kopie)
+            return
+        }
+        if let alt { t.tag = t.tag.plus(tage: alt.tage(bis: tag)) }
+        t.start = s; t.ende = s + dauer
         terminSpeichern(t)
+    }
+
+    /// Serie: an diesem Tag fällt der Termin aus.
+    mutating func terminAuslassen(_ id: UUID, am tag: Tag) {
+        guard let i = eigeneTermine.firstIndex(where: { $0.id == id }) else { return }
+        var l = eigeneTermine[i].ausgelassen ?? []
+        if !l.contains(tag) { l.append(tag) }
+        eigeneTermine[i].ausgelassen = l
     }
 
     mutating func terminLoeschen(_ id: UUID) {

@@ -74,9 +74,15 @@ struct TerminSeite: View {
                                         EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Zeit, Titel, Wiederholung", farbe: Color(hex: farbe), verlauf: true)
                                     }
                                     .buttonStyle(DruckStil())
+                                } else if let id = KalenderAktion.externeID(serie), AppleKalender.aktiv.bearbeitbar(id, am: tag, kalender: speicher.kalender) {
+                                    Button { nav.blatt = .externTermin(id: id, tag: tag.text) } label: {
+                                        EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Titel, Zeit, löschen",
+                                                             unter: "im \(t.quelle.name)-Kalender", farbe: Color(hex: farbe), verlauf: true)
+                                    }
+                                    .buttonStyle(DruckStil())
                                 } else {
-                                    EinstellKachelInhalt(symbol: "arrow.up.forward.app", titel: "Ändern", wert: "im \(t.quelle.name)-Kalender",
-                                                         unter: "Zeit und Titel kommen von dort", farbe: Color(hex: farbe), verlauf: true)
+                                    EinstellKachelInhalt(symbol: "lock", titel: "Nur lesen", wert: "im \(t.quelle.name)-Kalender",
+                                                         unter: "dieser Kalender erlaubt keine Änderungen", farbe: Color(hex: farbe), verlauf: true)
                                 }
                             }
                             .foregroundStyle(Farbe.text)
@@ -100,11 +106,22 @@ struct TerminSeite: View {
                         .padding(Mass.rand).padding(.bottom, 24)
                     }
                     .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                        Button("Löschen", role: .destructive) {
-                            if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
-                            dismiss()
+                        if eigener?.wiederholung ?? .nie != .nie {
+                            Button("Nur diesen Termin löschen", role: .destructive) {
+                                if let id = eigener?.id { let d = tag; speicher.aendern { $0.terminAuslassen(id, am: d) } }
+                                dismiss()
+                            }
+                            Button("Alle Termine der Serie löschen", role: .destructive) {
+                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                                dismiss()
+                            }
+                        } else {
+                            Button("Löschen", role: .destructive) {
+                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                                dismiss()
+                            }
                         }
-                    } message: { Text(eigener?.wiederholung == .nie ? "" : "Die ganze Serie wird gelöscht.") }
+                    } message: { Text(eigener?.wiederholung ?? .nie == .nie ? "" : "Der Termin wiederholt sich.") }
                 } else {
                     ContentUnavailableView("Termin nicht gefunden", systemImage: "calendar", description: Text("Er wurde vielleicht verschoben oder gelöscht."))
                 }
