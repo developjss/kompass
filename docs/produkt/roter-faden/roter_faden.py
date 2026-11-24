@@ -208,9 +208,9 @@ seite(K2, "Erklärung (i)", "info", "Jede Seite hat oben ein (i). Erklärungen s
 # =============================================================== 3 Kalender
 K3 = kapitel("Kalender", "kap3", ["Planen und Kalender in einem Bereich. Ergänzt Google und Apple."],
              [("Kalender", "kalender"), ("Termin zuordnen", "termin"), ("Einstellungen & Kalender verbinden", "einstellungen")])
-seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ als Kartenstapel (hintere Karten lesbar versetzt, „Alle ansehen“ fächert auf), darunter Tag · Woche · Monat · Jahr. Tag: Zeitleiste mit Blöcken in Ziel- oder Kategoriefarbe. Darunter „Empfehlung“: Vorschläge passend zur Ansicht – Tag mit freier Uhrzeit, Woche/Monat mit dem freiesten Tag bis zur Frist –, je Karte ein Grund. Antippen zeigt, wie man zieht, und bietet „Um 14:00 einplanen“.",
+seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ als Kartenstapel (Kopf „Nächstes in 57 Min“, Karten mit Tag und Ziel), darunter Tag · Woche · Monat · Jahr. Tag: direkt über der Zeitleiste eine Leiste mit Vorschlägen (ziehen oder antippen → „um 11:15 einplanen“); in der Zeitleiste tragen Einträge ein Ziel-Zeichen, wenn sie für ein Ziel zählen, Aufgaben und Habits lassen sich dort abhaken. Jeder Termin – auch aus Apple oder Google – öffnet die Termin-Seite: Zählt für (Ziel), Zählt in (Meilenstein oder nur Einsatz), Erfüllt Habit. Woche/Monat: darunter „Empfehlung“ mit dem freiesten Tag bis zur Frist.",
       bilder=[("kalender.jpg", "Kalender (Tag)")],
-      klicks=["Leere Stunde antippen → neuer Termin", "„+ Neu“ → Termin: Titel, Zeit, Kategorie, zählt für Ziel oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
+      klicks=["Freie Stunde antippen → „Was um 14:00?“: neuer Termin (geführt) oder Offenes hierhin legen", "Termin antippen → Termin-Seite", "„+ Neu“ → Termin: Titel, Zeit, zählt für Ziel (mit Meilenstein) oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
               "Monat: Tag antippen, nochmal → Tagesansicht", "Jahr: Tage nach Auslastung eingefärbt"],
       gespeichert=LOKAL + " Apple-Termine werden nur gelesen (EventKit, nach Zustimmung).",
       kommt=["Google-Anmeldung (OAuth) – " + doc("docs/produkt/konzepte/kalender-anbindung.md")])

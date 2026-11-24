@@ -140,6 +140,12 @@ final class Navigation {
         case chats
         /// Termin anlegen (id nil) oder bearbeiten; Tag als Text, Start in Minuten
         case termin(UUID?, tag: String, start: Int?)
+        /// Termin-Seite (jeder Termin, auch Apple/Google): Serie „quelle:schlüssel“ und Tag als Text
+        case terminSeite(serie: String, tag: String)
+        /// Freie Stunde im Kalender angetippt: Termin anlegen oder Offenes einplanen
+        case stunde(tag: String, start: Int)
+        /// „+ Neu“ Termin mit Tag und Uhrzeit vorbelegt
+        case neuTermin(tag: String, start: Int)
 
         var id: String {
             switch self {
@@ -160,6 +166,9 @@ final class Navigation {
             case .habitBearbeiten(let h, let f): "habitbearbeiten-\(h)-\(f.rawValue)"
             case .chats: "chats"
             case .termin(let i, let t, let s): "termin-\(i?.uuidString ?? "neu")-\(t)-\(s ?? -1)"
+            case .terminSeite(let s, let t): "terminseite-\(s)-\(t)"
+            case .stunde(let t, let s): "stunde-\(t)-\(s)"
+            case .neuTermin(let t, let s): "neutermin-\(t)-\(s)"
             }
         }
     }

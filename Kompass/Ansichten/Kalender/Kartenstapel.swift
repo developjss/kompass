@@ -132,14 +132,14 @@ struct NaechsteStapel: View {
         let T = speicher.heute
         let jetzt = speicher.jetztMinuten
         let n = Tagesplan.naechste(zustand: speicher.zustand, heute: T, jetzt: jetzt, termine: speicher.termine(am:), anzahl: 5)
-        let aussage = n.first.map { b -> String in let w = Tagesplan.wannText(b, heute: T, jetzt: jetzt); return w.prefix(1).uppercased() + w.dropFirst() } ?? "Nichts mit Uhrzeit"
+        let aussage = n.first.map { Self.aussage($0, heute: T, jetzt: jetzt) } ?? "Nichts mit Uhrzeit"
         StapelRahmen(label: "Als Nächstes", symbol: "clock", aussage: aussage, anzahl: n.count, offen: $offen) {
             if n.isEmpty {
                 Text("In den nächsten 7 Tagen ist nichts eingeplant. Zieh eine Empfehlung in den Kalender.")
                     .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).multilineTextAlignment(.center)
             } else {
                 KartenStapel(elemente: n, offen: offen || schrift.isAccessibilitySize) { b, _ in
-                    let wann = Tagesplan.wannText(b, heute: T, jetzt: jetzt)
+                    let wann = Self.unter(b, heute: T, zustand: speicher.zustand)
                     Button { KalenderAktion.oeffnen(b, nav: nav) } label: {
                         StapelKarte(titel: b.titel, unter: wann, farbe: b.farbe, symbol: symbol(b), rechts: Tagesplan.uhr(b.start), rechtsUnter: "bis \(Tagesplan.uhr(b.ende))") { EmptyView() }
                     }
@@ -150,6 +150,27 @@ struct NaechsteStapel: View {
                 }
             }
         }
+    }
+
+    /// Kopf: wie lange bis zum Nächsten („Nächstes in 57 Min“) – die Uhrzeit steht schon auf der Karte.
+    nonisolated static func aussage(_ b: Tagesplan.Block, heute T: Tag, jetzt: Int) -> String {
+        if b.tag == T {
+            let m = b.start - jetzt
+            if m <= 0 { return "Läuft gerade" }
+            if m < 60 { return "Nächstes in \(m) Min" }
+            let h = m / 60, r = m % 60
+            return r == 0 ? "Nächstes in \(h) h" : "Nächstes in \(h) h \(r) Min"
+        }
+        if b.tag == T.plus(tage: 1) { return "Nächstes morgen" }
+        return "Nächstes " + b.tag.datum().formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "de_DE")))
+    }
+
+    /// Unterzeile einer Karte: Tag und – falls vorhanden – das Ziel, für das es zählt (Uhrzeit steht rechts).
+    static func unter(_ b: Tagesplan.Block, heute T: Tag, zustand z: Zustand) -> String {
+        let tag = b.tag == T ? "heute" : b.tag == T.plus(tage: 1) ? "morgen"
+            : b.tag.datum().formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "de_DE")))
+        if let g = z.ziel(b.zielID) { return "\(tag) · \(g.titel)" }
+        return b.art == .habit ? "\(tag) · Habit" : tag
     }
 
     private func symbol(_ b: Tagesplan.Block) -> String {
@@ -278,5 +299,89 @@ struct EmpfehlungStapel: View {
         }
         if n == 0 { return "Nichts offen \(wofuer)" }
         return n == 1 ? "1 Vorschlag \(wofuer)" : "\(n) Vorschläge \(wofuer)"
+    }
+}
+
+// MARK: Empfehlung kompakt (Tagesansicht)
+
+/// Tagesansicht: Vorschläge als Leiste direkt über der Zeitleiste – kurzer Weg zum Ziehen.
+/// Antippen zeigt „Um 11:15 einplanen“; zurück auf die Leiste ziehen = an diesem Tag ohne Uhrzeit.
+struct EmpfehlungLeiste: View {
+    var tag: Tag
+    @Environment(Speicher.self) private var speicher
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @State private var gewaehlt: String?
+    @State private var eingeplant = 0
+
+    var body: some View {
+        let v = Empfehlung.fuer(.tag, tag: tag, zustand: speicher.zustand, heute: speicher.heute, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").foregroundStyle(Farbe.akzent)
+                Text(v.isEmpty ? "Alles eingeplant" : v.count == 1 ? "1 Vorschlag" : "\(v.count) Vorschläge")
+                    .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.text)
+                if !v.isEmpty { Text("· ziehen oder antippen").font(.klein).foregroundStyle(Farbe.zweitrangig) }
+                Spacer()
+            }
+            if !v.isEmpty {
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(v) { e in chip(e) }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .scrollIndicators(.hidden)
+                if let id = gewaehlt, let e = v.first(where: { $0.id == id }) {
+                    Button { einplanen(e) } label: {
+                        Label(e.uhrzeit.map { e.verschoben ? "Auf \(Empfehlung.platzText(e, bereich: .tag, heute: speicher.heute) ?? "") legen" : "„\(e.titel)“ um \(Tagesplan.uhr($0)) einplanen" } ?? "Auf diesen Tag legen",
+                              systemImage: "calendar.badge.plus")
+                            .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent).lineLimit(1)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(Farbe.akzentWeich, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                    .accessibilityIdentifier("empfehlung.einplanen")
+                }
+            }
+        }
+        .padding(12)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .ablagezone(ecken: 20) { items, _ in
+            KalenderAktion.ablegen(items, tag: tag, uhrzeit: nil, speicher: speicher)
+        }
+        .sensoryFeedback(.success, trigger: eingeplant)
+        .onChange(of: tag) { gewaehlt = nil }
+    }
+
+    private func chip(_ e: Empfehlung.Vorschlag) -> some View {
+        let an = gewaehlt == e.id
+        return HStack(spacing: 8) {
+            Image(systemName: e.symbol).font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                .frame(width: 26, height: 26).background(Color(hex: e.farbe).gradient, in: Circle())
+            VStack(alignment: .leading, spacing: 0) {
+                Text(e.titel).font(.kompass(.caption, .bold)).foregroundStyle(Farbe.text).lineLimit(1)
+                Text(e.uhrzeit.map { e.verschoben ? "morgen" : "frei \(Tagesplan.uhr($0))" } ?? e.grund).font(.caption2).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+            }
+            .frame(maxWidth: 140, alignment: .leading)
+        }
+        .padding(.leading, 6).padding(.trailing, 12).frame(minHeight: 44)
+        .background(Farbe.grund, in: Capsule())
+        .overlay(Capsule().strokeBorder(an ? Farbe.akzent : Farbe.linie, lineWidth: an ? 2 : 1))
+        .contentShape(Capsule())
+        .onTapGesture { withAnimation(ruhig ? nil : .snappy) { gewaehlt = an ? nil : e.id } }
+        .draggable(e.nutzlast) {
+            Label(e.titel, systemImage: e.symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 12).padding(.vertical, 8)
+                .background(Farbe.karte, in: Capsule()).overlay(Capsule().strokeBorder(Color(hex: e.farbe), lineWidth: 2))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(e.titel), \(e.grund)\(e.uhrzeit.map { ", frei um \(Tagesplan.uhr($0))" } ?? "")")
+        .accessibilityHint("Halten und in den Kalender ziehen")
+        .accessibilityAction(named: "Einplanen") { einplanen(e) }
+    }
+
+    private func einplanen(_ e: Empfehlung.Vorschlag) {
+        if KalenderAktion.ablegen([e.nutzlast], tag: e.tag, uhrzeit: e.uhrzeit, speicher: speicher) { eingeplant += 1 }
+        withAnimation(ruhig ? nil : .snappy) { gewaehlt = nil }
     }
 }

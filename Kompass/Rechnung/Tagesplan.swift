@@ -10,7 +10,19 @@ enum Kalenderquelle {
                    eigenID: x.id, kategorie: x.kategorie, zielID: x.zielID, habitID: x.habitID)
         }
         t += extern.filter { $0.tag == d }
+        // Termine aus Apple/Google, die für ein Ziel zählen, tragen das Ziel (nur Anzeige: Farbe, Ziel-Zeichen)
+        for i in t.indices where t[i].zielID == nil && t[i].quelle != .kompass {
+            t[i].zielID = verknuepfung(serie: serie(t[i]), in: z)?.zielID
+        }
         return t.sorted { ($0.start ?? -1, $0.titel) < ($1.start ?? -1, $1.titel) }
+    }
+
+    /// Serien-Schlüssel wie in `TerminVerknuepfung.serie`: „quelle:schlüssel“.
+    static func serie(_ t: Termin) -> String { "\(t.quelle.rawValue):\(t.schluessel)" }
+
+    /// Verknüpfung einer Serie mit einem Ziel (Kompass-Termine tragen sie selbst).
+    static func verknuepfung(serie: String, in z: Zustand) -> TerminVerknuepfung? {
+        z.termine.first { $0.serie == serie }
     }
 }
 
@@ -35,6 +47,8 @@ enum Tagesplan {
         var habitID: UUID?
         var eigenID: UUID?
         var erledigt = false
+        /// Nur Termine: Serie „quelle:schlüssel“ (öffnet die Termin-Seite)
+        var serie: String? = nil
         var dauer: Int { ende - start }
     }
 
@@ -59,7 +73,7 @@ enum Tagesplan {
             guard let s = t.start, let e = t.ende, e > s else { continue }
             out.append(Block(id: "t:\(t.id)", art: .termin, titel: t.titel, tag: d, start: s, ende: e,
                              farbe: farbe(ziel: t.zielID, kategorie: t.kategorie, sonst: t.kalenderFarbe ?? t.quelle.farbe, in: z),
-                             unter: "\(uhr(s))–\(uhr(e))", zielID: t.zielID, habitID: t.habitID, eigenID: t.eigenID))
+                             unter: "\(uhr(s))–\(uhr(e))", zielID: t.zielID, habitID: t.habitID, eigenID: t.eigenID, serie: Kalenderquelle.serie(t)))
         }
         for a in z.aufgaben where a.datum == d {
             guard let u = a.uhrzeit else { continue }
