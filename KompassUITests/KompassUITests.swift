@@ -190,10 +190,11 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(karte.waitForExistence(timeout: 5))
         karte.tap()
         XCTAssertTrue(sichtbar(app, "Meilensteine"), "Ziel-Seite öffnet nicht")
-        XCTAssertTrue(sichtbar(app, "Dein nächster Schritt"), "Nächster Schritt fehlt")
+        XCTAssertTrue(sichtbar(app, "Einstellungen") && sichtbar(app, "Bis wann"), "Einstellungs-Kacheln fehlen")
         foto(app, "Ziel-Seite")
-        // Minimal: Fakten stehen nicht auf der Seite, sondern unter Verfeinern › Details
-        XCTAssertFalse(app.staticTexts["Fakten"].exists, "Ziel-Seite zeigt zu viel")
+        // Verfeinern-Kachel → Meilensteine mit Anteilen und „Mehr“ → Details
+        app.buttons["ziel.verfeinern"].tap()
+        XCTAssertTrue(sichtbar(app, "Meilenstein hinzufügen – geführt"), "Verfeinern öffnet nicht")
         let details = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Details")).firstMatch
         for _ in 0..<6 where !details.isHittable { app.swipeUp() }
         details.tap()

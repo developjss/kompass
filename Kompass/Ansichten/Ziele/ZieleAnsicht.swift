@@ -1,30 +1,129 @@
 import SwiftUI
 
-/// Ziele (Inhalt im Tab Fortschritt): Aussage-Karte, dann Verlaufskarte je Ziel mit Prozent, Auf Kurs, Frist, Wochenzeit und Balken.
+/// Ziele (Inhalt im Tab Fortschritt): Aussage-Karte, Filter als Verlaufskacheln (Alle · Auf Kurs · Hinterher · Erreicht),
+/// Sortieren nach Frist, Jahr, Fortschritt, Hinterher zuerst, Bereich oder Name, dann die Zielkarten.
 struct ZieleAnsicht: View {
     @Environment(Speicher.self) private var speicher
-    @State private var erreichteZeigen = false
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @AppStorage("ziele.filter") private var filterRoh = ZielOrdnung.Filter.alle.rawValue
+    @AppStorage("ziele.sortierung") private var sortierungRoh = ZielOrdnung.Sortierung.frist.rawValue
+
+    private var filter: ZielOrdnung.Filter { .init(rawValue: filterRoh) ?? .alle }
+    private var sortierung: ZielOrdnung.Sortierung { .init(rawValue: sortierungRoh) ?? .frist }
 
     var body: some View {
         let z = speicher.zustand
-        let liste = z.ziele.filter { $0.status == (erreichteZeigen ? .erreicht : .aktiv) }.sorted { $0.faellig < $1.faellig }
-        let erreicht = z.ziele.filter { $0.status == .erreicht }.count
+        let T = speicher.heute
+        let gruppen = ZielOrdnung.gruppen(z, filter: filter, sortierung: sortierung, heute: T)
 
         VStack(alignment: .leading, spacing: 0) {
-            if !erreichteZeigen { ZieleKopf(ziele: liste) }
-            if liste.isEmpty {
-                GruppierteListe {
-                    LeerZeile(text: erreichteZeigen ? "Noch kein Ziel erreicht." : "Noch keine Ziele. Oben auf „+ Neu“.")
+            ZieleKopf(ziele: z.ziele.filter { $0.status == .aktiv })
+
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(ZielOrdnung.Filter.allCases, id: \.self) { f in
+                    FilterKachel(filter: f, anzahl: ZielOrdnung.anzahl(f, in: z, heute: T), an: f == filter) {
+                        withAnimation(ruhig ? nil : .snappy) { filterRoh = f.rawValue }
+                    }
                 }
             }
-            if !liste.isEmpty {
-                AbschnittKopf(titel: erreichteZeigen ? "Erreicht" : "Deine Ziele") { Text("nach Frist").foregroundStyle(Farbe.zweitrangig) }
-                VStack(spacing: 12) { ForEach(liste) { ZielKarte(ziel: $0) } }
+            .padding(.top, 16)
+
+            HStack(alignment: .firstTextBaseline) {
+                Text(filter == .alle ? "Deine Ziele" : filter.titel).font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
+                Spacer()
+                Menu {
+                    Picker("Sortieren", selection: $sortierungRoh) {
+                        ForEach(ZielOrdnung.Sortierung.allCases, id: \.self) { Label($0.titel, systemImage: $0.symbol).tag($0.rawValue) }
+                    }
+                } label: {
+                    Label(sortierung.titel, systemImage: "arrow.up.arrow.down")
+                        .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
+                        .padding(.horizontal, 12).frame(minHeight: 36)
+                        .background(Farbe.akzentWeich, in: Capsule())
+                }
+                .accessibilityLabel("Sortieren: \(sortierung.titel)")
             }
-            if erreicht > 0 || erreichteZeigen {
-                PfeilZeile(symbol: "checkmark", text: erreichteZeigen ? "Zurück zu aktiven Zielen" : "Erreicht · \(erreicht)") { erreichteZeigen.toggle() }
-                    .padding(.top, Mass.abschnitt)
+            .padding(.top, Mass.abschnitt).padding(.bottom, Mass.ueberschrift)
+
+            if gruppen.isEmpty {
+                GruppierteListe { LeerZeile(text: leerText) }
             }
+            ForEach(Array(gruppen.enumerated()), id: \.offset) { i, gr in
+                if let t = gr.titel {
+                    HStack {
+                        Text(t).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text)
+                        Spacer()
+                        Text("\(gr.ziele.count) Ziel\(gr.ziele.count == 1 ? "" : "e")").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                    }
+                    .padding(.top, i == 0 ? 0 : 20).padding(.bottom, 8)
+                    .accessibilityAddTraits(.isHeader)
+                }
+                VStack(spacing: 12) { ForEach(gr.ziele) { ZielKarte(ziel: $0) } }
+            }
+        }
+    }
+
+    private var leerText: String {
+        switch filter {
+        case .alle: "Noch keine Ziele. Oben auf „+ Neu“."
+        case .aufKurs: "Gerade ist kein Ziel auf Kurs."
+        case .hinterher: "Kein Ziel hinkt hinterher – stark."
+        case .erreicht: "Noch kein Ziel erreicht."
+        }
+    }
+}
+
+/// Filter-Kachel mit Farbverlauf (wie „Coming up“ in Gapless): Glas-Kreis mit Symbol, Titel, Anzahl; gewählt = weißer Rand + Haken.
+private struct FilterKachel: View {
+    var filter: ZielOrdnung.Filter
+    var anzahl: Int
+    var an: Bool
+    var aktion: () -> Void
+
+    var body: some View {
+        Button(action: aktion) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top) {
+                    Image(systemName: symbol).font(.system(size: 16, weight: .bold))
+                        .frame(width: 38, height: 38).background(.white.opacity(0.22), in: Circle())
+                    Spacer()
+                    if an {
+                        Image(systemName: "checkmark.circle.fill").font(.title3).symbolRenderingMode(.palette).foregroundStyle(farben[0], .white)
+                    }
+                }
+                Spacer(minLength: 10)
+                Text(filter.titel).font(.kompass(.headline, .heavy)).lineLimit(1).minimumScaleFactor(0.8)
+                Text("\(anzahl) Ziel\(anzahl == 1 ? "" : "e")").font(.klein).opacity(0.9)
+            }
+            .foregroundStyle(.white)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+            .background(LinearGradient(colors: farben, startPoint: .topLeading, endPoint: .bottomTrailing),
+                        in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(.white, lineWidth: an ? 3 : 0))
+            .shadow(color: farben[0].opacity(an ? 0.35 : 0.15), radius: an ? 10 : 6, y: 4)
+            .scaleEffect(an ? 1 : 0.98)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(filter.titel), \(anzahl) Ziele")
+        .accessibilityAddTraits(an ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var symbol: String {
+        switch filter {
+        case .alle: "square.grid.2x2.fill"
+        case .aufKurs: "arrow.up.right"
+        case .hinterher: "tortoise.fill"
+        case .erreicht: "flag.checkered"
+        }
+    }
+
+    private var farben: [Color] {
+        switch filter {
+        case .alle: [Color(hex: "#2A36A0"), Color(hex: "#6A5BE0")]
+        case .aufKurs: [Color(hex: "#0F6E5C"), Color(hex: "#2FB36C")]
+        case .hinterher: [Color(hex: "#B4400A"), Color(hex: "#F0A030")]
+        case .erreicht: [Color(hex: "#5A33B0"), Color(hex: "#C060C8")]
         }
     }
 }
@@ -55,6 +154,17 @@ private struct ZieleKopf: View {
                         Text("im Schnitt").font(.klein).opacity(0.85)
                     }
                 }
+            }
+            if !ziele.isEmpty {
+                // Geteilter Balken: auf Kurs (grün) · hinterher (orange) – je Ziel ein Stück
+                GeometryReader { geo in
+                    HStack(spacing: 3) {
+                        if gut > 0 { Capsule().fill(Color(hex: "#5EE0B5")).frame(width: max(8, (geo.size.width - 3) * CGFloat(gut) / CGFloat(ziele.count))) }
+                        if !hinten.isEmpty { Capsule().fill(Color(hex: "#FFC266")) }
+                    }
+                }
+                .frame(height: 8).padding(.top, 10)
+                .accessibilityHidden(true)
             }
         }
         .accessibilityElement(children: .combine)
