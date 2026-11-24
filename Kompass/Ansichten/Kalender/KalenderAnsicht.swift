@@ -20,9 +20,7 @@ struct KalenderAnsicht: View {
         let tag = nav.kalenderTag ?? T
 
         Seite(titel: "Kalender", info: .kalender, neu: .termin) {
-            NaechsteStapel()
-
-            ModusWahl(modus: $nav.kalenderModus).padding(.top, Mass.abschnitt - 8)
+            ModusWahl(modus: $nav.kalenderModus)
 
             KopfZeile(tag: tag, modus: nav.kalenderModus) { nav.kalenderTag = $0 }
                 .padding(.top, 12).padding(.bottom, 8)
@@ -210,7 +208,7 @@ struct TagZeitleiste: View {
         let termine = speicher.termine(am: tag)
         let ganztags = termine.filter { $0.start == nil }
         let bloecke = Tagesplan.bloecke(am: tag, zustand: z, termine: termine)
-        let hoehe: CGFloat = schrift >= .accessibility1 ? 72 : 54
+        let hoehe: CGFloat = schrift >= .accessibility1 ? 84 : 64
         let spalten = Self.spalten(bloecke)
 
         VStack(alignment: .leading, spacing: 8) {
@@ -248,7 +246,7 @@ struct TagZeitleiste: View {
                         ForEach(bloecke) { b in
                             let (spalte, anzahl) = spalten[b.id] ?? (0, 1)
                             let w = breite / CGFloat(anzahl)
-                            BlockKachel(block: b, kompakt: CGFloat(b.dauer) / 60 * hoehe < 40)
+                            BlockKachel(block: b, kompakt: CGFloat(b.dauer) / 60 * hoehe < 46, schmal: anzahl > 1)
                                 .frame(width: max(20, w - 3), height: max(22, CGFloat(b.dauer) / 60 * hoehe - 2))
                                 .offset(x: 34 + CGFloat(spalte) * w, y: CGFloat(b.start - von * 60) / 60 * hoehe + 1)
                         }
@@ -272,7 +270,7 @@ struct TagZeitleiste: View {
                     return KalenderAktion.ablegen(items, tag: tag, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
                 }
                 }
-                .frame(height: min(CGFloat(bis - von) * hoehe + 20, hoehe * 9))
+                .frame(height: min(CGFloat(bis - von) * hoehe + 20, hoehe * 10))
                 .scrollIndicators(.hidden)
                 .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
                 .clipShape(RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
@@ -320,6 +318,8 @@ struct BlockKachel: View {
     var block: Tagesplan.Block
     var kompakt = false
     var mini = false
+    /// Wochenansicht: schmale Spalte – Titel umbrechen statt kürzen, kein Haken
+    var schmal = false
     @Environment(Navigation.self) private var nav
     @Environment(Speicher.self) private var speicher
 
@@ -329,15 +329,22 @@ struct BlockKachel: View {
         let inhalt = HStack(alignment: .top, spacing: 5) {
             RoundedRectangle(cornerRadius: 2).fill(c).frame(width: 3)
             VStack(alignment: .leading, spacing: 1) {
-                Text(block.titel).font(mini ? .system(size: 10, weight: .semibold, design: .rounded) : .kompass(.caption, .bold))
-                    .foregroundStyle(Farbe.text).strikethrough(block.erledigt).lineLimit(mini ? 1 : (kompakt ? 1 : 2))
+                Text(block.titel)
+                    .font(mini ? .system(size: 10, weight: .semibold, design: .rounded)
+                          : schmal ? .system(size: 11, weight: .bold, design: .rounded) : .kompass(.subheadline, .bold))
+                    .foregroundStyle(Farbe.text).strikethrough(block.erledigt)
+                    .lineLimit(mini ? 1 : schmal ? (kompakt ? 2 : 4) : (kompakt ? 1 : 2))
                     .truncationMode(.tail)
-                if !kompakt && !mini {
-                    Text(ziel.map { "\(block.unter) · \($0.titel)" } ?? block.unter).font(.caption2).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: schmal)
+                    .minimumScaleFactor(schmal ? 0.8 : 1)
+                if schmal && !kompakt {
+                    Text("\(Tagesplan.uhr(block.start))–\(Tagesplan.uhr(block.ende))").font(.system(size: 9, weight: .medium)).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                } else if !kompakt && !mini {
+                    Text(ziel.map { "\(block.unter) · \($0.titel)" } ?? block.unter).font(.footnote).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
-            if !mini {
+            if !mini && !schmal {
                 if let ziel {
                     // Zählt für ein Ziel: kleines Ziel-Zeichen
                     Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
@@ -357,7 +364,7 @@ struct BlockKachel: View {
                 }
             }
         }
-        .padding(.vertical, mini ? 2 : 4).padding(.trailing, 4)
+        .padding(.vertical, mini ? 2 : (schmal ? 3 : 5)).padding(.trailing, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(c.opacity(block.erledigt ? 0.08 : 0.16), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
@@ -385,71 +392,101 @@ private struct WochenRaster: View {
     var tag: Tag
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
-    private let von = 7, bis = 23, hoehe: CGFloat = 30
+    @Environment(\.dynamicTypeSize) private var schrift
+    private let von = 6, bis = 24
     private let namen = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
+    /// Lesbar wie in Kalender-Apps: breite Spalten (rund 3 Tage sichtbar), waagerecht wischen, Stunden links fest.
     var body: some View {
         let T = speicher.heute
-        VStack(spacing: 6) {
-            HStack(spacing: 2) {
-                Color.clear.frame(width: 22)
-                ForEach(0..<7, id: \.self) { i in
-                    let d = tag.montag.plus(tage: i)
-                    Button { nav.kalenderTag = d; nav.kalenderModus = .tag } label: {
-                        VStack(spacing: 0) {
-                            Text(namen[i]).font(.caption2.weight(.semibold)).foregroundStyle(Farbe.zweitrangig)
-                            Text("\(d.tag)").font(.kompass(.subheadline, .bold))
-                                .foregroundStyle(d == T ? .white : Farbe.text)
-                                .frame(width: 28, height: 28)
-                                .background(d == T ? Farbe.akzent : .clear, in: Circle())
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(d.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
+        let hoehe: CGFloat = schrift >= .accessibility1 ? 60 : 44
+        let breite: CGFloat = schrift >= .accessibility1 ? 150 : 112
+        HStack(alignment: .top, spacing: 0) {
+            VStack(spacing: 0) {
+                Color.clear.frame(width: 24, height: 50)
+                ForEach(von..<bis, id: \.self) { h in
+                    Text(String(format: "%02d", h)).font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Farbe.pfeil).frame(width: 24, height: hoehe, alignment: .topTrailing).offset(y: -6)
                 }
             }
-            HStack(alignment: .top, spacing: 2) {
-                VStack(spacing: 0) {
-                    ForEach(von..<bis, id: \.self) { h in
-                        Text(h % 2 == 1 ? String(format: "%02d", h) : "").font(.system(size: 9, weight: .semibold).monospacedDigit())
-                            .foregroundStyle(Farbe.pfeil).frame(width: 22, height: hoehe, alignment: .topTrailing).offset(y: -5)
+            .frame(width: 24)
+            ScrollViewReader { leser in
+                ScrollView(.horizontal) {
+                    HStack(alignment: .top, spacing: 4) {
+                        ForEach(0..<7, id: \.self) { i in
+                            let d = tag.montag.plus(tage: i)
+                            VStack(spacing: 4) {
+                                kopf(d, i: i, T: T)
+                                spalte(d, T: T, hoehe: hoehe)
+                            }
+                            .frame(width: breite)
+                            .id(i)
+                        }
                     }
+                    .padding(.leading, 6).padding(.trailing, 10)
                 }
-                ForEach(0..<7, id: \.self) { i in
-                    let d = tag.montag.plus(tage: i)
-                    let b = Tagesplan.bloecke(am: d, zustand: speicher.zustand, termine: speicher.termine(am: d))
-                    ZStack(alignment: .topLeading) {
-                        VStack(spacing: 0) {
-                            ForEach(von..<bis, id: \.self) { _ in
-                                Rectangle().fill(Farbe.linie).frame(height: 0.5).frame(height: hoehe, alignment: .top)
-                            }
-                        }
-                        GeometryReader { g in
-                            let sp = TagZeitleiste.spalten(b)
-                            ForEach(b) { x in
-                                let (spalte, anzahl) = sp[x.id] ?? (0, 1)
-                                let w = g.size.width / CGFloat(anzahl)
-                                BlockKachel(block: x, kompakt: true, mini: true)
-                                    .frame(width: max(8, w - 1), height: max(16, CGFloat(min(x.ende, bis * 60) - max(x.start, von * 60)) / 60 * hoehe - 1))
-                                    .offset(x: CGFloat(spalte) * w, y: CGFloat(max(x.start, von * 60) - von * 60) / 60 * hoehe)
-                                    .opacity(x.ende <= von * 60 || x.start >= bis * 60 ? 0 : 1)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: CGFloat(bis - von) * hoehe)
-                    .background(d == T ? Farbe.akzentWeich.opacity(0.4) : .clear)
-                    .contentShape(Rectangle())
-                    .ablagezone(ecken: 6) { items, ort in
-                        let m = von * 60 + Int(ort.y / hoehe * 60)
-                        return KalenderAktion.ablegen(items, tag: d, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
-                    }
+                .scrollIndicators(.hidden)
+                .onAppear { leser.scrollTo(startSpalte(T), anchor: .leading) }
+                .onChange(of: tag) { _, _ in leser.scrollTo(startSpalte(T), anchor: .leading) }
+            }
+        }
+        .padding(.vertical, 8)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+    }
+
+    /// Erste sichtbare Spalte: heute (wenn in dieser Woche) bzw. der gewählte Tag, höchstens Freitag.
+    private func startSpalte(_ T: Tag) -> Int {
+        let d = tag.montag == T.montag ? T : tag
+        return min(max(0, d.wochentag - 1), 4)
+    }
+
+    private func kopf(_ d: Tag, i: Int, T: Tag) -> some View {
+        Button { nav.kalenderTag = d; nav.kalenderModus = .tag } label: {
+            HStack(spacing: 6) {
+                Text(namen[i]).font(.kompass(.subheadline, .semibold)).foregroundStyle(Farbe.zweitrangig)
+                Text("\(d.tag)").font(.kompass(.headline, .bold))
+                    .foregroundStyle(d == T ? Farbe.aufFarbe : Farbe.text)
+                    .frame(width: 32, height: 32)
+                    .background(d == T ? Farbe.akzent : .clear, in: Circle())
+            }
+            .frame(maxWidth: .infinity, minHeight: 46)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(d.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
+    }
+
+    private func spalte(_ d: Tag, T: Tag, hoehe: CGFloat) -> some View {
+        let b = Tagesplan.bloecke(am: d, zustand: speicher.zustand, termine: speicher.termine(am: d))
+        return ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                ForEach(von..<bis, id: \.self) { _ in
+                    Rectangle().fill(Farbe.linie).frame(height: 0.5).frame(height: hoehe, alignment: .top)
+                }
+            }
+            GeometryReader { g in
+                let sp = TagZeitleiste.spalten(b)
+                ForEach(b) { x in
+                    let (spalte, anzahl) = sp[x.id] ?? (0, 1)
+                    let w = g.size.width / CGFloat(anzahl)
+                    let h = max(20, CGFloat(min(x.ende, bis * 60) - max(x.start, von * 60)) / 60 * hoehe - 2)
+                    BlockKachel(block: x, kompakt: h < 36, schmal: true)
+                        .frame(width: max(10, w - 2), height: h)
+                        .offset(x: CGFloat(spalte) * w, y: CGFloat(max(x.start, von * 60) - von * 60) / 60 * hoehe + 1)
+                        .opacity(x.ende <= von * 60 || x.start >= bis * 60 ? 0 : 1)
+                }
+                if d == T {
+                    let y = CGFloat(speicher.jetztMinuten - von * 60) / 60 * hoehe
+                    if y >= 0 { Rectangle().fill(Farbe.kritisch).frame(height: 1.5).offset(y: y).accessibilityHidden(true) }
                 }
             }
         }
-        .padding(10)
-        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        .frame(height: CGFloat(bis - von) * hoehe)
+        .background(d == T ? Farbe.akzentWeich.opacity(0.35) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .contentShape(Rectangle())
+        .ablagezone(ecken: 6) { items, ort in
+            let m = von * 60 + Int(ort.y / hoehe * 60)
+            return KalenderAktion.ablegen(items, tag: d, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
+        }
     }
 }
 

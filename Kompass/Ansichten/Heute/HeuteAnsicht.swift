@@ -22,6 +22,9 @@ struct HeuteAnsicht: View {
         Seite(titel: "Home", info: .heute) {
             JetztKarte(fokus: fokus)
 
+            // Als Nächstes (vom Kalender hierher, 24.11.2026)
+            NaechsteStapel().padding(.top, 12)
+
             TagReelKarte(slides: slides, teaser: reelTeaser(naechste: naechste, hinweise: hinweise, offen: offenA.count + offenH.count)) { reel = true }
                 .padding(.top, 12)
 
