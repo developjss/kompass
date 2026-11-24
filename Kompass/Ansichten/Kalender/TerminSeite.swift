@@ -187,7 +187,7 @@ struct StundeBlatt: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Button { nav.blatt = .neuTermin(tag: tag.text, start: start) } label: {
                         HStack(spacing: 14) {
-                            Image(systemName: "calendar.badge.plus").font(.system(size: 20, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                            Image(systemName: "calendar.badge.plus").font(.system(size: 20, weight: .bold)).foregroundStyle(Farbe.aufTon)
                                 .frame(width: 48, height: 48).background(LinearGradient(colors: [Color(hex: "#0E5A8A"), Color(hex: "#2F8FD6")], startPoint: .bottomTrailing, endPoint: .topLeading), in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Neuer Termin um \(Tagesplan.uhr(start))").font(.zeile).foregroundStyle(Farbe.text)
@@ -209,7 +209,7 @@ struct StundeBlatt: View {
                             ForEach(v.prefix(8)) { e in
                                 Button { einplanen(e) } label: {
                                     HStack(spacing: 12) {
-                                        Image(systemName: e.symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                                        Image(systemName: e.symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(Farbe.aufTon)
                                             .frame(width: 34, height: 34).background(Color(hex: e.farbe).gradient, in: Circle())
                                         VStack(alignment: .leading, spacing: 1) {
                                             Text(e.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)

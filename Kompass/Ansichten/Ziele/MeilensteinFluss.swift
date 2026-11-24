@@ -206,7 +206,7 @@ private struct AnpassKachel: View {
     var body: some View {
         Button(action: aktion) {
             VStack(alignment: .leading, spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufTon)
                     .frame(width: 34, height: 34).background(farbe.gradient, in: Circle())
                 Spacer(minLength: 4)
                 Text(titel).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.text).lineLimit(2).fixedSize(horizontal: false, vertical: true)
@@ -316,7 +316,7 @@ struct MeilensteinAssistent: View {
         Button(action: weiter) {
             Text(knopfText).font(.kompass(.headline, .bold))
                 .frame(maxWidth: .infinity, minHeight: 54)
-                .background(gueltig ? Farbe.akzent : Farbe.akzent.opacity(0.35), in: Capsule())
+                .background(gueltig ? Farbe.handlung : Farbe.handlung.opacity(0.35), in: Capsule())
                 .foregroundStyle(Farbe.aufFarbe)
         }
         .disabled(!gueltig)
@@ -772,7 +772,7 @@ private struct WahlKachel: View {
     var body: some View {
         Button(action: aktion) {
             HStack(spacing: 14) {
-                Image(systemName: symbol).font(.system(size: 17, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                Image(systemName: symbol).font(.system(size: 17, weight: .bold)).foregroundStyle(Farbe.aufTon)
                     .frame(width: 42, height: 42).background(farbe.gradient, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(titel).font(.zeile).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)

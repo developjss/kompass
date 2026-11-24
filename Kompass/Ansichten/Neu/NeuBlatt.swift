@@ -156,7 +156,7 @@ struct NeuBlatt: View {
                 Button(action: weiter) {
                     Text(schritt == .fertig ? "Anlegen" : "Weiter").font(.kompass(.headline, .bold))
                         .frame(maxWidth: .infinity, minHeight: 54)
-                        .background(gueltig ? Farbe.akzent : Farbe.akzent.opacity(0.35), in: Capsule())
+                        .background(gueltig ? Farbe.handlung : Farbe.handlung.opacity(0.35), in: Capsule())
                         .foregroundStyle(Farbe.aufFarbe)
                 }
                 .disabled(!gueltig)

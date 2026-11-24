@@ -135,11 +135,11 @@ struct EinstellKachelInhalt: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top) {
-                Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufTon)
                     .frame(width: 36, height: 36).background(farbe.gradient, in: Circle())
                 Spacer()
                 if hinweis {
-                    Image(systemName: "exclamationmark").font(.caption.weight(.heavy)).foregroundStyle(Farbe.aufFarbe)
+                    Image(systemName: "exclamationmark").font(.caption.weight(.heavy)).foregroundStyle(Farbe.warnungGrund)
                         .frame(width: 22, height: 22).background(Farbe.warnung, in: Circle())
                 }
             }
@@ -279,7 +279,7 @@ struct ZielTeilSeite: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .center, spacing: 12) {
-                        Image(systemName: teil.symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                        Image(systemName: teil.symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufTon)
                             .frame(width: 40, height: 40).background(Color(hex: g.farbe).gradient, in: Circle())
                         Text(teil.erklaerung).font(.unterzeile).foregroundStyle(Farbe.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
                     }
@@ -320,7 +320,7 @@ struct ZielTeilSeite: View {
         // Aussehen als Vorschau – so sieht das Ziel überall aus
         Button { nav.blatt = .zielBearbeiten(g.id, .aussehen) } label: {
             HStack(spacing: 14) {
-                Image(systemName: g.symbol).font(.system(size: 22, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                Image(systemName: g.symbol).font(.system(size: 22, weight: .bold)).foregroundStyle(Farbe.aufTon)
                     .frame(width: 56, height: 56).background(LinearGradient(colors: Farbe.verlauf(g.farbe), startPoint: .bottomTrailing, endPoint: .topLeading), in: Circle())
                 VStack(alignment: .leading, spacing: 3) {
                     Text(g.titel).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text).lineLimit(2)
@@ -473,7 +473,7 @@ private struct NeuerMeilensteinKnopf: View {
         let c = Color(hex: ziel.farbe)
         Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) } label: {
             HStack(spacing: 10) {
-                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(Farbe.aufFarbe)
+                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(Farbe.aufTon)
                     .frame(width: 30, height: 30).background(c.gradient, in: Circle())
                 VStack(alignment: .leading, spacing: 1) {
                     Text(ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen").font(.zeile).foregroundStyle(c)

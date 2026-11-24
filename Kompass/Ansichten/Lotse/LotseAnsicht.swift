@@ -77,7 +77,7 @@ struct LotseAnsicht: View {
                 } else {
                     Button { senden(eingabe) } label: {
                         Image(systemName: "arrow.up").font(.body.weight(.bold))
-                            .frame(width: 34, height: 34).background(Farbe.akzent, in: Circle()).foregroundStyle(Farbe.aufFarbe)
+                            .frame(width: 34, height: 34).background(Farbe.handlung, in: Circle()).foregroundStyle(Farbe.aufFarbe)
                             .frame(width: 40, height: 40)
                     }
                     .disabled(denkt)
@@ -320,7 +320,7 @@ private struct Blase: View {
                 if nutzer {
                     Text(nachricht.text)
                         .font(.kompass(.body, .semibold))
-                        .foregroundStyle(Farbe.aufFarbe)
+                        .foregroundStyle(Farbe.grund)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
@@ -341,7 +341,7 @@ private struct Blase: View {
                 }
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(nutzer ? AnyShapeStyle(Farbe.akzent) : AnyShapeStyle(Farbe.karte), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(nutzer ? AnyShapeStyle(Farbe.text) : AnyShapeStyle(Farbe.karte), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
             if !nutzer { Spacer(minLength: 24) }
         }
         .accessibilityElement(children: .contain)

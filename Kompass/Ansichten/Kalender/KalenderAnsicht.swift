@@ -264,7 +264,7 @@ struct TagZeitleiste: View {
                             if Zeitraster.ueberRand(start: b.start, dy: zug.dy, hoehe: hoehe, von: von) && b.art != .termin {
                                 Label("Loslassen = ohne Uhrzeit", systemImage: "tray.and.arrow.up").font(.kompass(.subheadline, .bold))
                                     .foregroundStyle(Farbe.aufFarbe).padding(.horizontal, 14).frame(minHeight: 36)
-                                    .background(Farbe.akzent, in: Capsule())
+                                    .background(Farbe.handlung, in: Capsule())
                                     .offset(x: 34, y: max(0, CGFloat(b.start - von * 60) / 60 * hoehe + zug.dy))
                             } else {
                                 let neu = Zeitraster.verschoben(start: b.start, dauer: b.dauer, dy: zug.dy, hoehe: hoehe, von: von, bis: bis)
@@ -402,7 +402,7 @@ struct BlockKachel: View {
             if !mini && !schmal {
                 if let ziel {
                     // Zählt für ein Ziel: kleines Ziel-Zeichen
-                    Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                    Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(Farbe.aufTon)
                         .frame(width: 16, height: 16).background(Color(hex: ziel.farbe), in: Circle())
                         .padding(.top, 1)
                         .accessibilityHidden(true)
@@ -531,7 +531,7 @@ private struct WochenRaster: View {
                 Text("\(d.tag)").font(.kompass(.headline, .bold))
                     .foregroundStyle(d == T ? Farbe.aufFarbe : Farbe.text)
                     .frame(width: 32, height: 32)
-                    .background(d == T ? Farbe.akzent : .clear, in: Circle())
+                    .background(d == T ? Farbe.handlung : .clear, in: Circle())
             }
             .frame(maxWidth: .infinity, minHeight: 46)
         }

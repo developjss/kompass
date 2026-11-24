@@ -143,7 +143,7 @@ struct HabitTeilSeite: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 12) {
-                        Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                        Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufTon)
                             .frame(width: 40, height: 40).background(c.gradient, in: Circle())
                         Text(teil == .verfeinern ? "Alles Weitere zu deinem Habit – antippen zum Ändern." : "Vergessen abzuhaken? Tipp auf einen Tag, um ihn nachzutragen.")
                             .font(.unterzeile).foregroundStyle(Farbe.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
