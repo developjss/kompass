@@ -69,6 +69,8 @@ final class LotseStand {
     static let geteilt = LotseStand()
     var kontingent: Kontingent?
     var letzterFehler: String?
+    /// Was der Assistent gerade tut („Schaut in deinen Kalender …“) – für die Ladeanzeige
+    var status: String?
 }
 
 enum LotseFehler: Error, Equatable {

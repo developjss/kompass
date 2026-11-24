@@ -38,6 +38,14 @@ struct EinstellungenBlatt: View {
                 }
                 Section {
                     LabeledContent("Antwortet mit", value: Sprachmodelle.aktiv == nil ? "Regeln auf dem Gerät" : "Claude (offline: Regeln)")
+                    if !speicher.zustand.lernen.lotse.erinnerungen.isEmpty {
+                        DisclosureGroup("Das merkt sich der Assistent (\(speicher.zustand.lernen.lotse.erinnerungen.count))") {
+                            ForEach(speicher.zustand.lernen.lotse.erinnerungen, id: \.self) { e in
+                                Text(e).font(.footnote)
+                                    .swipeActions { Button("Löschen", role: .destructive) { speicher.aendern { $0.lernen.lotse.erinnerungen.removeAll { $0 == e } } } }
+                            }
+                        }
+                    }
                     if let k = LotseStand.geteilt.kontingent {
                         LabeledContent("Heute frei", value: k.pro ? "unbegrenzt (Pro)" : "\(k.frei) von \(k.limit)")
                     }

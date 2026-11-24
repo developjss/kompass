@@ -182,23 +182,65 @@ private struct Verlauf: View {
     @Environment(Speicher.self) private var speicher
 
     var body: some View {
-        ScrollViewReader { leser in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(speicher.zustand.chat) { n in Blase(nachricht: n) }
-                    if denkt {
-                        HStack(spacing: 8) { ProgressView(); Text("Denkt nach …").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
-                            .padding(.leading, 12)
+        GeometryReader { geo in
+            ScrollViewReader { leser in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(speicher.zustand.chat) { n in Blase(nachricht: n).id(n.id) }
+                        if denkt { DenktAnzeige().transition(.opacity) }
+                        // Platz unter der Frage, damit sie beim Laden ganz oben stehen kann (wie Gemini/ChatGPT)
+                        Color.clear.frame(height: denkt ? max(0, geo.size.height * 0.7) : 1).id("ende")
                     }
-                    Color.clear.frame(height: 1).id("ende")
+                    .padding(.horizontal, Mass.rand).padding(.vertical, 12)
                 }
-                .padding(.horizontal, Mass.rand).padding(.vertical, 12)
+                .onChange(of: denkt) { _, an in
+                    // Frage nach oben; danach liest man die Antwort von ihrem Anfang an
+                    withAnimation(.easeOut(duration: 0.35)) { frageNachOben(leser, sonst: !an) }
+                }
+                .onAppear { leser.scrollTo("ende", anchor: .bottom) }
+                .scrollDismissesKeyboard(.interactively)
             }
-            .onChange(of: speicher.zustand.chat.count) { _, _ in withAnimation { leser.scrollTo("ende", anchor: .bottom) } }
-            .onChange(of: denkt) { _, _ in withAnimation { leser.scrollTo("ende", anchor: .bottom) } }
-            .onAppear { leser.scrollTo("ende", anchor: .bottom) }
-            .scrollDismissesKeyboard(.interactively)
         }
+    }
+
+    private func frageNachOben(_ leser: ScrollViewProxy, sonst unten: Bool) {
+        if let f = speicher.zustand.chat.last(where: { $0.rolle == .nutzer }) { leser.scrollTo(f.id, anchor: .top) }
+        else if unten { leser.scrollTo("ende", anchor: .bottom) }
+    }
+}
+
+/// Ladeanzeige: das Assistent-Zeichen mit drehendem Farbring und pulsierendem Funken, darunter, was gerade passiert.
+private struct DenktAnzeige: View {
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @State private var dreh = false
+    @State private var puls = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .stroke(AngularGradient(colors: [Farbe.indigo[1], Farbe.violett[1], Farbe.violett[1].opacity(0), Farbe.indigo[1]], center: .center),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .frame(width: 40, height: 40)
+                    .rotationEffect(.degrees(dreh ? 360 : 0))
+                AssistentZeichen(groesse: 30, schein: true)
+                    .scaleEffect(puls ? 1.06 : 0.92)
+            }
+            .frame(width: 44, height: 44)
+            Text(LotseStand.geteilt.status ?? "Denkt nach …")
+                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.25), value: LotseStand.geteilt.status)
+                .opacity(puls ? 1 : 0.55)
+        }
+        .padding(.leading, 2).padding(.top, 4)
+        .onAppear {
+            guard !ruhig else { puls = true; return }
+            withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { dreh = true }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { puls = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(LotseStand.geteilt.status ?? "Assistent denkt nach")
     }
 }
 

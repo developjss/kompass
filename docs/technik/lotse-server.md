@@ -17,6 +17,7 @@ App ◀──(Werkzeugaufrufe + Inhalt  oder  Text) + Kontingent─────�
 4. **Regeln auf dem Gerät** (`Verstehen`) nur noch ohne Server oder bei Fehler. Wurde schon etwas angelegt, springen sie nicht ein (kein doppeltes Anlegen).
 5. **Mitwachsen:** Claude bekommt bei jeder Frage `AppWissen.text()` (Bereiche, Fenster, Rechenregeln – Tests erzwingen Vollständigkeit) und alle `Werkzeuge.alle`. Neues Werkzeug oder neuer Bereich ist damit sofort bekannt, ohne Server-Deploy.
 6. Eine Frage zählt einmal im Kontingent, egal wie viele Runden.
+7. **Fassung 3 (24.11.2026):** Websuche (`web_search`, höchstens 3 je Frage, Standort DE + Zeitzone) für Wetter, Sport, Nachrichten – Quellen als Links. „Erst die Antwort, nie zuerst ‚weiß ich nicht‘“. Gliederung mit Überschriften bei längeren Antworten. Werkzeug **merken**: Vorlieben nur auf dem Gerät (`lernen.lotse.erinnerungen`, höchstens 30), gehen im Stand mit, in den Einstellungen sicht- und löschbar. Werkzeuge sehen jetzt auch Apple-Kalender-Termine. [RISIKO] Websuche kostet extra (Anbieterpreis je Suche) und schickt Suchbegriffe an Anthropics Suche.
 
 Der Server speichert **keine Fragen**. Gespeichert wird nur der Zähler je Geräte-ID und Tag (`lotse_kontingent`). Das App-Wissen ist bei allen gleich und wird als Prompt-Cache markiert.
 

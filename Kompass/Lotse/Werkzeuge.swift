@@ -6,7 +6,7 @@ import Foundation
 
 struct Werkzeug: Sendable, Hashable {
     enum Name: String, CaseIterable, Sendable {
-        case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen
+        case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen, merken
     }
 
     let name: Name
@@ -65,6 +65,9 @@ enum Werkzeuge {
                  parameter: ["thema": "Begriff oder Frage"], beispiele: ["Wie fange ich an?", "Wie wird der Fortschritt gerechnet?", "Wo finde ich den Fokus-Timer?"]),
         Werkzeug(name: .empfehlen, beschreibung: "Empfiehlt, womit du anfangen solltest: Liegengebliebenes, Ziele hinterher, wichtige Aufgaben – mit Begründung.",
                  parameter: ["zeitraum": "heute | woche"], beispiele: ["Was soll ich diese Woche zuerst machen?", "Worauf soll ich mich konzentrieren?"]),
+        Werkzeug(name: .merken, beschreibung: "Merkt sich etwas Dauerhaftes über den Nutzer (Vorlieben, Gewohnheiten, Umstände, z. B. „trainiert lieber morgens“, „wohnt in Ulm“) – nur auf dem Gerät, der Nutzer kann es löschen. Nur nutzen, wenn der Nutzer es sagt oder es für künftige Antworten klar hilft; nichts Sensibles (Gesundheit, Geld, Dritte) ohne Bitte. „vergessen“ entfernt passende Einträge.",
+                 parameter: ["notiz": "kurzer Satz in der dritten Person", "vergessen": "Stichwort eines Eintrags, der weg soll (optional)"],
+                 beispiele: ["Merk dir: Ich trainiere lieber morgens.", "Vergiss, dass ich in Ulm wohne."]),
     ]
 
     static func werkzeug(_ n: Werkzeug.Name) -> Werkzeug { alle.first { $0.name == n }! }
@@ -91,11 +94,16 @@ enum Werkzeuge {
         case .analyse: return analyse(z, T, kalender, letzte: a.parameter["zeitraum"] == "letzte")
         case .hilfe: return hilfe(a.parameter["thema"] ?? "")
         case .empfehlen: return empfehlen(z, T, woche: a.parameter["zeitraum"] == "woche", jetzt: minuten(jetzt, kalender))
+        case .merken: return LotseAntwort(text: "Was soll ich mir merken?", werkzeug: .merken) // echtes Merken in Lotse
         }
     }
 
+    /// Terminquelle der App (mit Apple-Kalender); gesetzt von `Lotse`, sonst Kompass- und Beispieltermine.
+    /// Nur auf dem Haupt-Thread gesetzt und gelesen (Lotse läuft dort).
+    nonisolated(unsafe) static var quelle: ((Tag) -> [Termin])?
+
     private static func termine(_ z: Zustand, _ d: Tag, _ T: Tag) -> [Termin] {
-        Kalenderquelle.termine(am: d, zustand: z, heute: T)
+        quelle?(d) ?? Kalenderquelle.termine(am: d, zustand: z, heute: T)
     }
 
     private static func minuten(_ d: Date, _ k: Calendar) -> Int {
