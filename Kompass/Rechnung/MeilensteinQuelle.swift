@@ -8,12 +8,12 @@ enum MeilensteinQuelle {
         /// „quelle:schlüssel“ wie in `TerminVerknuepfung.serie`
         var id: String
         var titel: String
-        /// bis einschließlich heute im Suchzeitraum (wie der Abgleich zählt)
+        /// stattgefunden im Suchzeitraum (heute nur, was schon vorbei ist – wie der Abgleich)
         var bisher: Int
         var minutenBisher: Int
         /// erster stattgefundener Tag (Start fürs Mitzählen), nil = noch keiner
         var erster: Tag?
-        /// geplant ab morgen im Suchzeitraum
+        /// noch geplant im Suchzeitraum (heute Kommendes eingeschlossen)
         var kommend: Int
     }
 
@@ -30,8 +30,8 @@ enum MeilensteinQuelle {
                 let key = "\(t.quelle.rawValue):\(t.schluessel)"
                 guard !verknuepft.contains(key) else { continue }
                 var s = liste[key] ?? Serie(id: key, titel: t.titel, bisher: 0, minutenBisher: 0, erster: nil, kommend: 0)
-                // wie der Abgleich (`termineAbgleichen`): heutige Termine zählen schon mit
-                let vorbei = d <= heute
+                // wie der Abgleich (`termineAbgleichen`): heutige Termine zählen erst, wenn sie vorbei sind
+                let vorbei = d < heute || (d == heute && e <= jetzt)
                 if vorbei {
                     s.bisher += 1
                     s.minutenBisher += max(0, e - a)

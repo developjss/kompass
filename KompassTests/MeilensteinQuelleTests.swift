@@ -22,11 +22,14 @@ struct MeilensteinQuelleTests {
     @Test func serienZaehlenVergangeneUndKommende() {
         let z = zustand()
         let g = UUID()
-        // heute zählt schon mit – genau wie beim Abgleich der Termine
+        // 10:00 – der heutige Termin (17–18:30) ist noch nicht vorbei
         let s = MeilensteinQuelle.serien(zustand: z, ziel: g, heute: heute, jetzt: 10 * 60, termine: quelle(z), zurueck: 30, voraus: 14)
         #expect(s.count == 1 && s[0].titel == "Fahrstunde")
-        #expect(s[0].bisher == 4 && s[0].minutenBisher == 360 && s[0].erster == heute.plus(tage: -21))
-        #expect(s[0].kommend == 2) // +7, +14
+        #expect(s[0].bisher == 3 && s[0].minutenBisher == 270 && s[0].erster == heute.plus(tage: -21))
+        #expect(s[0].kommend == 3) // heute, +7, +14
+        // abends ist er vorbei und zählt
+        let abends = MeilensteinQuelle.serien(zustand: z, ziel: g, heute: heute, jetzt: 19 * 60, termine: quelle(z), zurueck: 30, voraus: 14)
+        #expect(abends[0].bisher == 4 && abends[0].kommend == 2)
     }
 
     @Test func schonVerknuepfteSerienFehlen() {
@@ -44,10 +47,14 @@ struct MeilensteinQuelleTests {
         let schritt = Schritt(titel: "Fahrstunden", art: .zahl, soll: 10, start: 0, einheit: "Termine")
         g.schritte = [schritt]
         z.ziele = [g]
-        // mitzählen ab dem ersten Termin → 4 von 10 = 40 % – Vorschau und Meilenstein zeigen dasselbe
+        // mitzählen ab dem ersten Termin → um 10 Uhr 3 von 10 = 30 % – Vorschau und Meilenstein zeigen dasselbe
         z.terminVerknuepfen(serie: sr.id, titel: sr.titel, ziel: g.id, schritt: schritt.id, seit: sr.erster!)
-        z.termineAbgleichen(heute: heute, quelle: quelle(z))
+        z.termineAbgleichen(heute: heute, jetzt: 600, quelle: quelle(z))
+        #expect(abs(Fortschritt.stand(schritt, in: z, heute: heute).anteil - 0.3) < 1e-9)
         #expect(abs(Fortschritt.stand(schritt, in: z, heute: heute).anteil - MeilensteinQuelle.vorschau(bisher: Double(sr.bisher), soll: 10)) < 1e-9)
+        // nach dem Termin (19 Uhr) zählt er beim nächsten Abgleich mit
+        z.termineAbgleichen(heute: heute, jetzt: 19 * 60, quelle: quelle(z))
+        #expect(abs(Fortschritt.stand(schritt, in: z, heute: heute).anteil - 0.4) < 1e-9)
         #expect(MeilensteinQuelle.vorschau(bisher: 3, soll: 10) == 0.3 && MeilensteinQuelle.vorschau(bisher: 12, soll: 10) == 1)
     }
 
