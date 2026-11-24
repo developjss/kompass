@@ -55,7 +55,7 @@ final class KompassUITests: XCTestCase {
 
         tab(app, "Fortschritt")
         XCTAssertTrue(app.buttons["Ziele"].waitForExistence(timeout: 5))
-        XCTAssertTrue(sichtbar(app, "auf Kurs"))
+        XCTAssertTrue(sichtbar(app, "Auf Kurs"))
         foto(app, "Fortschritt Ziele")
         app.buttons["Habits"].tap()
         XCTAssertTrue(sichtbar(app, "geschafft"))
