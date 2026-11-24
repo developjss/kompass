@@ -258,11 +258,7 @@ struct EmpfehlungStapel: View {
                 if vorne { hinweis = an ? nil : e.id } else { offen = true }
             }
         }
-        .draggable(e.nutzlast) {
-            Label(e.titel, systemImage: e.symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Farbe.karte, in: Capsule()).overlay(Capsule().strokeBorder(Color(hex: e.farbe), lineWidth: 2))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-        }
+        .vorschlagZiehen(e.nutzlast, titel: e.titel, dauer: e.dauer, farbe: e.farbe, symbol: e.symbol)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(e.titel), \(e.grund)\(platz.map { bereich == .tag ? ", frei um \($0)" : ", am freiesten \($0)" } ?? "")")
         .accessibilityHint("Halten und in den Kalender ziehen")
@@ -370,10 +366,7 @@ struct EmpfehlungLeiste: View {
         .overlay(Capsule().strokeBorder(an ? Farbe.akzent : Farbe.linie, lineWidth: an ? 2 : 1))
         .contentShape(Capsule())
         .onTapGesture { withAnimation(ruhig ? nil : .snappy) { gewaehlt = an ? nil : e.id } }
-        .draggable(e.nutzlast) {
-            Label(e.titel, systemImage: e.symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Farbe.karte, in: Capsule()).overlay(Capsule().strokeBorder(Color(hex: e.farbe), lineWidth: 2))
-        }
+        .vorschlagZiehen(e.nutzlast, titel: e.titel, dauer: e.dauer, farbe: e.farbe, symbol: e.symbol)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(e.titel), \(e.grund)\(e.uhrzeit.map { ", frei um \(Tagesplan.uhr($0))" } ?? "")")
         .accessibilityHint("Halten und in den Kalender ziehen")

@@ -202,6 +202,10 @@ struct TagZeitleiste: View {
     @Environment(Navigation.self) private var nav
     @Environment(\.dynamicTypeSize) private var schrift
     private let von = 6, bis = 24
+    /// Gerade gezogener Eintrag und Verschiebung (nach 0,3 s Halten)
+    @State private var zug: (id: String, dy: CGFloat)?
+    @State private var gegriffen = 0
+    @State private var abgelegt = 0
 
     var body: some View {
         let z = speicher.zustand
@@ -248,7 +252,25 @@ struct TagZeitleiste: View {
                             let w = breite / CGFloat(anzahl)
                             BlockKachel(block: b, kompakt: CGFloat(b.dauer) / 60 * hoehe < 46, schmal: anzahl > 1)
                                 .frame(width: max(20, w - 3), height: max(22, CGFloat(b.dauer) / 60 * hoehe - 2))
+                                .opacity(zug?.id == b.id ? 0.35 : 1)
+                                .gesture(KalenderAktion.verschiebbar(b) ? ziehGeste(b, hoehe: hoehe) : nil)
+                                .accessibilityAction(named: "15 Minuten später") { schieben(b, um: 15) }
+                                .accessibilityAction(named: "15 Minuten früher") { schieben(b, um: -15) }
                                 .offset(x: 34 + CGFloat(spalte) * w, y: CGFloat(b.start - von * 60) / 60 * hoehe + 1)
+                        }
+                        // Vorschau: genau dort, wo der gezogene Eintrag landet
+                        if let zug, let b = bloecke.first(where: { $0.id == zug.id }) {
+                            if Zeitraster.ueberRand(start: b.start, dy: zug.dy, hoehe: hoehe, von: von) && b.art != .termin {
+                                Label("Loslassen = ohne Uhrzeit", systemImage: "tray.and.arrow.up").font(.kompass(.subheadline, .bold))
+                                    .foregroundStyle(Farbe.aufFarbe).padding(.horizontal, 14).frame(minHeight: 36)
+                                    .background(Farbe.akzent, in: Capsule())
+                                    .offset(x: 34, y: max(0, CGFloat(b.start - von * 60) / 60 * hoehe + zug.dy))
+                            } else {
+                                let neu = Zeitraster.verschoben(start: b.start, dauer: b.dauer, dy: zug.dy, hoehe: hoehe, von: von, bis: bis)
+                                ZiehGeist(titel: b.titel, farbe: b.farbe, start: neu, dauer: b.dauer)
+                                    .frame(width: breite - 3, height: max(26, CGFloat(b.dauer) / 60 * hoehe - 2))
+                                    .offset(x: 34, y: CGFloat(neu - von * 60) / 60 * hoehe + 1)
+                            }
                         }
                         if tag == speicher.heute {
                             let y = CGFloat(speicher.jetztMinuten - von * 60) / 60 * hoehe
@@ -265,11 +287,12 @@ struct TagZeitleiste: View {
                 }
                 .frame(height: CGFloat(bis - von) * hoehe)
                 .padding(.vertical, 10).padding(.horizontal, 10)
-                .ablagezone(ecken: 0) { items, ort in
-                    let m = von * 60 + Int((ort.y - 10) / hoehe * 60)
-                    return KalenderAktion.ablegen(items, tag: tag, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
+                .zeitAblage(hoehe: hoehe, von: von, bis: bis, oben: 10, links: 44) { items, m in
+                    KalenderAktion.ablegen(items, tag: tag, uhrzeit: m, speicher: speicher)
                 }
                 }
+                .sensoryFeedback(.impact(weight: .light), trigger: gegriffen)
+                .sensoryFeedback(.success, trigger: abgelegt)
                 .frame(height: min(CGFloat(bis - von) * hoehe + 20, hoehe * 10))
                 .scrollIndicators(.hidden)
                 .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
@@ -282,6 +305,33 @@ struct TagZeitleiste: View {
                     .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
             }
         }
+    }
+
+    /// Halten (0,3 s), dann ziehen: der Eintrag bleibt groß, die Vorschau zeigt die neue Uhrzeit.
+    private func ziehGeste(_ b: Tagesplan.Block, hoehe: CGFloat) -> some Gesture {
+        LongPressGesture(minimumDuration: 0.3)
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onChanged { wert in
+                guard case .second(true, let d) = wert else { return }
+                if zug == nil { gegriffen += 1 }
+                zug = (b.id, d?.translation.height ?? 0)
+            }
+            .onEnded { wert in
+                defer { zug = nil }
+                guard case .second(true, let d?) = wert else { return }
+                if Zeitraster.ueberRand(start: b.start, dy: d.translation.height, hoehe: hoehe, von: von) {
+                    if b.art != .termin, KalenderAktion.verschieben(b, tag: tag, start: nil, speicher: speicher) { abgelegt += 1 }
+                    return
+                }
+                let neu = Zeitraster.verschoben(start: b.start, dauer: b.dauer, dy: d.translation.height, hoehe: hoehe, von: von, bis: bis)
+                guard neu != b.start else { return }
+                if KalenderAktion.verschieben(b, tag: tag, start: neu, speicher: speicher) { abgelegt += 1 }
+            }
+    }
+
+    private func schieben(_ b: Tagesplan.Block, um m: Int) {
+        guard KalenderAktion.verschiebbar(b) else { return }
+        KalenderAktion.verschieben(b, tag: tag, start: min(max(von * 60, b.start + m), bis * 60 - b.dauer), speicher: speicher)
     }
 
     /// Wo die Zeitleiste beginnt: heute eine Stunde vor jetzt, sonst beim ersten Block (frühestens 7 Uhr).
@@ -374,15 +424,8 @@ struct BlockKachel: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { KalenderAktion.oeffnen(block, nav: nav) }
 
-        if let p = KalenderAktion.nutzlast(block) {
-            inhalt.draggable(p) {
-                Label(block.titel, systemImage: block.art == .habit ? "repeat" : "checkmark.circle").font(.kompass(.subheadline, .bold))
-                    .padding(.horizontal, 12).padding(.vertical, 8).background(Farbe.karte, in: Capsule())
-                    .overlay(Capsule().strokeBorder(c, lineWidth: 2)).shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-            }
-        } else {
-            inhalt
-        }
+        // Verschieben: Halten und Ziehen in der Zeitleiste (Ziehen.swift) – kein Systemziehen, damit die Größe bleibt
+        inhalt
     }
 }
 
@@ -395,6 +438,9 @@ private struct WochenRaster: View {
     @Environment(\.dynamicTypeSize) private var schrift
     private let von = 6, bis = 24
     private let namen = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+    @State private var zug: (id: String, dx: CGFloat, dy: CGFloat)?
+    @State private var gegriffen = 0
+    @State private var abgelegt = 0
 
     /// Lesbar wie in Kalender-Apps: breite Spalten (rund 3 Tage sichtbar), waagerecht wischen, Stunden links fest.
     var body: some View {
@@ -417,7 +463,7 @@ private struct WochenRaster: View {
                             let d = tag.montag.plus(tage: i)
                             VStack(spacing: 4) {
                                 kopf(d, i: i, T: T)
-                                spalte(d, T: T, hoehe: hoehe)
+                                spalte(d, T: T, hoehe: hoehe, breite: breite)
                             }
                             .frame(width: breite)
                             .id(i)
@@ -432,6 +478,33 @@ private struct WochenRaster: View {
         }
         .padding(.vertical, 8)
         .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+        .sensoryFeedback(.impact(weight: .light), trigger: gegriffen)
+        .sensoryFeedback(.success, trigger: abgelegt)
+    }
+
+    /// Ziel einer Verschiebung: Tag (innerhalb der Woche) und gerasteter Start.
+    private func ziel(_ b: Tagesplan.Block, d: Tag, dx: CGFloat, dy: CGFloat, hoehe: CGFloat, breite: CGFloat) -> (Tag, Int) {
+        let k = Zeitraster.tage(dx: dx, spalte: breite + 4)
+        let i = min(max(0, d.wochentag - 1 + k), 6)
+        return (tag.montag.plus(tage: i), Zeitraster.verschoben(start: b.start, dauer: b.dauer, dy: dy, hoehe: hoehe, von: von, bis: bis))
+    }
+
+    private func ziehGeste(_ b: Tagesplan.Block, d: Tag, hoehe: CGFloat, breite: CGFloat) -> some Gesture {
+        LongPressGesture(minimumDuration: 0.3)
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onChanged { wert in
+                guard case .second(true, let g) = wert else { return }
+                if zug == nil { gegriffen += 1 }
+                zug = (b.id, g?.translation.width ?? 0, g?.translation.height ?? 0)
+            }
+            .onEnded { wert in
+                defer { zug = nil }
+                guard case .second(true, let g?) = wert else { return }
+                let (neuTag, neu) = ziel(b, d: d, dx: g.translation.width, dy: g.translation.height, hoehe: hoehe, breite: breite)
+                guard neuTag != d || neu != b.start else { return }
+                if b.art == .termin, neuTag != d, speicher.zustand.eigenerTermin(b.eigenID ?? UUID())?.wiederholung != .nie { return }
+                if KalenderAktion.verschieben(b, tag: neuTag, start: neu, speicher: speicher) { abgelegt += 1 }
+            }
     }
 
     /// Erste sichtbare Spalte: heute (wenn in dieser Woche) bzw. der gewählte Tag, höchstens Freitag.
@@ -455,7 +528,7 @@ private struct WochenRaster: View {
         .accessibilityLabel(d.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
     }
 
-    private func spalte(_ d: Tag, T: Tag, hoehe: CGFloat) -> some View {
+    private func spalte(_ d: Tag, T: Tag, hoehe: CGFloat, breite: CGFloat) -> some View {
         let b = Tagesplan.bloecke(am: d, zustand: speicher.zustand, termine: speicher.termine(am: d))
         return ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
@@ -471,8 +544,17 @@ private struct WochenRaster: View {
                     let h = max(20, CGFloat(min(x.ende, bis * 60) - max(x.start, von * 60)) / 60 * hoehe - 2)
                     BlockKachel(block: x, kompakt: h < 36, schmal: true)
                         .frame(width: max(10, w - 2), height: h)
+                        .opacity(zug?.id == x.id ? 0.35 : 1)
+                        .gesture(KalenderAktion.verschiebbar(x) ? ziehGeste(x, d: d, hoehe: hoehe, breite: breite) : nil)
                         .offset(x: CGFloat(spalte) * w, y: CGFloat(max(x.start, von * 60) - von * 60) / 60 * hoehe + 1)
                         .opacity(x.ende <= von * 60 || x.start >= bis * 60 ? 0 : 1)
+                }
+                if let zug, let x = b.first(where: { $0.id == zug.id }) {
+                    let (neuTag, neu) = ziel(x, d: d, dx: zug.dx, dy: zug.dy, hoehe: hoehe, breite: breite)
+                    ZiehGeist(titel: x.titel, farbe: x.farbe, start: neu, dauer: x.dauer)
+                        .frame(width: g.size.width - 2, height: max(26, CGFloat(x.dauer) / 60 * hoehe - 2))
+                        .offset(x: CGFloat(neuTag.wochentag - d.wochentag) * (breite + 4), y: CGFloat(neu - von * 60) / 60 * hoehe + 1)
+                        .zIndex(10)
                 }
                 if d == T {
                     let y = CGFloat(speicher.jetztMinuten - von * 60) / 60 * hoehe
@@ -483,9 +565,9 @@ private struct WochenRaster: View {
         .frame(height: CGFloat(bis - von) * hoehe)
         .background(d == T ? Farbe.akzentWeich.opacity(0.35) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
-        .ablagezone(ecken: 6) { items, ort in
-            let m = von * 60 + Int(ort.y / hoehe * 60)
-            return KalenderAktion.ablegen(items, tag: d, uhrzeit: max(von * 60, (m / 15) * 15), speicher: speicher)
+        .zIndex(zug.map { z in b.contains { $0.id == z.id } ? 1 : 0 } ?? 0)
+        .zeitAblage(hoehe: hoehe, von: von, bis: bis) { items, m in
+            KalenderAktion.ablegen(items, tag: d, uhrzeit: m, speicher: speicher)
         }
     }
 }
@@ -726,6 +808,34 @@ enum KalenderAktion {
             if let s = b.serie { nav.blatt = .terminSeite(serie: s, tag: b.tag.text) }
             else if let e = b.eigenID { nav.blatt = .termin(e, tag: b.tag.text, start: nil) }
         }
+    }
+
+    /// Lässt sich der Eintrag in der Zeitleiste verschieben? Aufgaben, Habits und eigene Termine.
+    static func verschiebbar(_ b: Tagesplan.Block) -> Bool {
+        switch b.art {
+        case .aufgabe: b.aufgabeID != nil
+        case .habit: b.habitID != nil
+        case .termin: b.eigenID != nil
+        }
+    }
+
+    /// Eintrag auf Tag und Uhrzeit legen (nil = ohne Uhrzeit, nur Aufgaben und Habits).
+    @MainActor
+    @discardableResult
+    static func verschieben(_ b: Tagesplan.Block, tag: Tag, start: Int?, speicher: Speicher) -> Bool {
+        switch b.art {
+        case .aufgabe:
+            guard let a = b.aufgabeID else { return false }
+            speicher.aendern { $0.aufgabeEinplanen(a, tag: tag, uhrzeit: start) }
+        case .habit:
+            guard let h = b.habitID else { return false }
+            if tag != b.tag { speicher.aendern { $0.habitEinplanen(h, tag: b.tag, uhrzeit: nil) } }
+            speicher.aendern { $0.habitEinplanen(h, tag: tag, uhrzeit: start) }
+        case .termin:
+            guard let e = b.eigenID, let s = start else { return false }
+            speicher.aendern { $0.terminVerschieben(e, tag: tag, start: s) }
+        }
+        return true
     }
 
     @MainActor
