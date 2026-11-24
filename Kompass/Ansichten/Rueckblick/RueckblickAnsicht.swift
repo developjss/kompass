@@ -35,7 +35,9 @@ struct RueckblickAnsicht: View {
             .foregroundStyle(Farbe.akzent)
             .padding(.bottom, 8)
 
-            // Aussage
+            // Aussage – hinter der Bordkarte der Woche (Gadget)
+            Bordkarte(woche: von.text, kw: von.kalenderwoche, von: von, bis: bis, fokus: gesamt,
+                      ziele: z.ziele.filter { $0.status == .aktiv }.count) {
             Verlaufskarte(farben: Farbe.indigo) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -51,6 +53,8 @@ struct RueckblickAnsicht: View {
                 Text("\(bilanz.aufgabenErledigt) von \(bilanz.aufgabenGeplant) Aufgaben · Habits \(Zahl.prozent(habitQuote)) · \(bilanz.termine) Termine")
                     .font(.klein).opacity(0.9).padding(.top, 6)
             }
+            }
+            .id(von.text)
 
             VStack(spacing: 12) {
                 WeisseKarte(titel: "Fokuszeit", wert: Zahl.dauer(gesamt),
