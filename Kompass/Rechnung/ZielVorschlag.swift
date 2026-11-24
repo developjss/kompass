@@ -94,4 +94,18 @@ enum ZielVorschlag {
         if (1990...2100).contains(z), roh.count == 4 { return nil }
         return z
     }
+
+    /// Ähnliche Meilenstein-Titel („Praxisprüfung bestanden“ ≈ „Praktische Prüfung“): gleicher Anfang (3 Buchstaben)
+    /// und ein gemeinsames Wortstück aus 5 Buchstaben. Damit schlägt Kompass nichts vor, was es schon gibt.
+    static func aehnlich(_ a: String, _ b: String) -> Bool {
+        func norm(_ t: String) -> String { t.lowercased().folding(options: .diacriticInsensitive, locale: Locale(identifier: "de_DE")).filter(\.isLetter) }
+        let x = norm(a), y = norm(b)
+        guard x.count >= 3, y.count >= 3 else { return x == y }
+        if x.hasPrefix(y) || y.hasPrefix(x) { return true }
+        guard x.prefix(3) == y.prefix(3) else { return false }
+        let xs = Array(x)
+        guard xs.count >= 5 else { return y.contains(x) }
+        for i in 0...(xs.count - 5) where y.contains(String(xs[i..<i + 5])) && i > 0 { return true }
+        return false
+    }
 }
