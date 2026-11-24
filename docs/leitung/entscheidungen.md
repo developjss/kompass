@@ -25,6 +25,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 23.11.2026 | [ENTSCHEIDUNG] Assistent: Claude beantwortet jede Frage mit Werkzeugschleife; Titel von Aufgaben/Terminen gehen im Stand an den Server; Kosten ≈ 1–2 Cent je Frage akzeptiert (PR #19, „Ja, mergen“) | `docs/technik/lotse-server.md` §1, §6 |
 | 24.11.2026 | [ENTSCHEIDUNG] Assistent: Websuche über Anthropic und Gedächtnis „merken“ (nur Gerät, löschbar) (PR #20, „Ja, mergen“) | `docs/technik/lotse-server.md` §1 |
 | 24.11.2026 | [ENTSCHEIDUNG] Arbeitsweise: Full-/UI-Tests auf Ansage oder nach Rückfrage etwa alle 10 Builds; Doku gebündelt alle 3–4 Blöcke; jedes Update sofort auf iPhone und Simulator | `docs/team/arbeitsweise.md` |
+| 24.11.2026 | [ENTSCHEIDUNG] Meilenstein aus Bestehendem (Aufgabe, Termine, Habit); Termine wahlweise alle bisherigen, Habit wahlweise seit Anlage des Habits (PR #27, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §3 |
 
 ## 2. Offen (Gründer entscheidet)
 
