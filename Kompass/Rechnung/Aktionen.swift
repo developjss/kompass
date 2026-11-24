@@ -293,6 +293,16 @@ extension Zustand {
         }
     }
 
+    /// Eigenen Termin verschieben (Dauer bleibt). Einmalig: Tag und Uhrzeit; Serie: nur die Uhrzeit (alle Termine der Serie).
+    mutating func terminVerschieben(_ id: UUID, tag: Tag, start: Int) {
+        guard var t = eigeneTermine.first(where: { $0.id == id }) else { return }
+        let dauer = max(5, t.ende - t.start)
+        t.start = min(max(0, start), 24 * 60 - dauer)
+        t.ende = t.start + dauer
+        if t.wiederholung == .nie { t.tag = tag }
+        terminSpeichern(t)
+    }
+
     mutating func terminLoeschen(_ id: UUID) {
         eigeneTermine.removeAll { $0.id == id }
         termine.removeAll { $0.serie == "kompass:\(id.uuidString)" }
