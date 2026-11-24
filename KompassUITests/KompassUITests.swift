@@ -41,8 +41,7 @@ final class KompassUITests: XCTestCase {
         let app = starten()
         XCTAssertTrue(sichtbar(app, "Home"))
         XCTAssertTrue(sichtbar(app, "Als Nächstes"))
-        XCTAssertTrue(sichtbar(app, "Dein Tag im Blick"))
-        XCTAssertTrue(sichtbar(app, "Heute offen"))
+        XCTAssertTrue(sichtbar(app, "Kompass"))
         foto(app, "Home")
 
         tab(app, "Kalender")
@@ -121,44 +120,23 @@ final class KompassUITests: XCTestCase {
         foto(app, "Neu Habit Vorschlag")
     }
 
-    /// Dein Tag als Reel: Start, Slides, Fertig
-    func testTagReel() {
-        let app = starten()
-        let karte = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Dein Tag im Blick")).firstMatch
-        XCTAssertTrue(karte.waitForExistence(timeout: 5))
-        karte.tap()
-        let weiter = app.buttons["reel.weiter"]
-        XCTAssertTrue(weiter.waitForExistence(timeout: 5), "Reel öffnet nicht")
-        foto(app, "Reel 1")
-        var n = 0
-        while weiter.exists && n < 8 { weiter.tap(); n += 1; usleep(300_000) }
-        XCTAssertTrue(sichtbar(app, "Dein Tag im Blick", timeout: 5), "Reel schließt nicht")
-    }
-
     // MARK: Home
 
-    func testAufgabeAnlegenUndAbhaken() {
+    /// „Als Nächstes“ auf Home: Aufgaben und Habits haben einen Haken (Titel als Beschriftung, „offen“/„erledigt“ als Wert)
+    func testAlsNaechstesAbhaken() {
         let app = starten()
-        let feld = app.textFields["Aufgabe für heute"]
-        var versuche = 0
-        while !feld.isHittable && versuche < 6 { app.swipeUp(); versuche += 1 }
-        XCTAssertTrue(feld.waitForExistence(timeout: 5))
-        feld.tap()
-        feld.typeText("UI Aufgabe\n")
-        // Der Haken trägt den Titel als Beschriftung und „offen“/„erledigt“ als Wert
-        let haken = app.buttons.matching(NSPredicate(format: "label == %@ AND value == %@", "UI Aufgabe", "offen")).firstMatch
-        XCTAssertTrue(haken.waitForExistence(timeout: 5), "Neue Aufgabe erscheint nicht")
+        let haken = app.buttons.matching(NSPredicate(format: "value == %@", "offen")).firstMatch
+        XCTAssertTrue(haken.waitForExistence(timeout: 5), "Kein offener Haken in „Als Nächstes“")
+        let titel = haken.label
         haken.tap()
-        // Erledigtes verschwindet aus „Heute offen“ und zählt oben in der Jetzt-Karte mit
-        let weg = NSPredicate(format: "exists == false")
-        expectation(for: weg, evaluatedWith: haken)
-        waitForExpectations(timeout: 5)
-        foto(app, "Aufgabe erledigt")
+        let erledigt = app.buttons.matching(NSPredicate(format: "label == %@ AND value == %@", titel, "erledigt")).firstMatch
+        XCTAssertTrue(erledigt.waitForExistence(timeout: 5) || !haken.exists, "Haken bleibt offen")
+        foto(app, "Als Nächstes abgehakt")
     }
 
     func testJetztKarteHatAktion() {
         let app = starten()
-        let knoepfe = ["Fokus starten", "Menge eintragen", "Abhaken", "Im Kalender", "Plan für morgen", "Fokus öffnen"]
+        let knoepfe = ["Fokus starten", "Menge eintragen", "Abhaken", "Im Kalender", "Morgen planen", "Fokus öffnen"]
         XCTAssertTrue(knoepfe.contains { app.buttons[$0].waitForExistence(timeout: 2) }, "Jetzt-Karte ohne Knopf")
     }
 
