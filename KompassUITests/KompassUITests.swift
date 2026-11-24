@@ -58,7 +58,7 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(sichtbar(app, "Auf Kurs"))
         foto(app, "Fortschritt Ziele")
         app.buttons["Habits"].tap()
-        XCTAssertTrue(sichtbar(app, "geschafft"))
+        XCTAssertTrue(sichtbar(app, "Alle Habits"))
         foto(app, "Fortschritt Habits")
 
         tab(app, "Rückblick")
