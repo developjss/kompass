@@ -146,6 +146,8 @@ final class Navigation {
         case stunde(tag: String, start: Int)
         /// „+ Neu“ Termin mit Tag und Uhrzeit vorbelegt
         case neuTermin(tag: String, start: Int)
+        /// Termin aus Apple/Google bearbeiten (Kennung, Tag als Text)
+        case externTermin(id: String, tag: String)
 
         var id: String {
             switch self {
@@ -169,6 +171,7 @@ final class Navigation {
             case .terminSeite(let s, let t): "terminseite-\(s)-\(t)"
             case .stunde(let t, let s): "stunde-\(t)-\(s)"
             case .neuTermin(let t, let s): "neutermin-\(t)-\(s)"
+            case .externTermin(let i, let t): "externtermin-\(i)-\(t)"
             }
         }
     }

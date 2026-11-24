@@ -815,8 +815,15 @@ enum KalenderAktion {
         switch b.art {
         case .aufgabe: b.aufgabeID != nil
         case .habit: b.habitID != nil
-        case .termin: b.eigenID != nil
+        case .termin: b.eigenID != nil || externeID(b.serie) != nil
         }
+    }
+
+    /// Kennung im Apple-/Google-Kalender aus „apple:…“ bzw. „google:…“ (sonst nil, z. B. Kompass oder Beispiel).
+    nonisolated static func externeID(_ serie: String?) -> String? {
+        guard let s = serie, s.hasPrefix("apple:") || s.hasPrefix("google:") else { return nil }
+        let id = String(s.drop(while: { $0 != ":" }).dropFirst())
+        return id.contains(":") ? id : nil   // EventKit-Kennungen haben die Form „…:…“; Beispieltermine nicht
     }
 
     /// Eintrag auf Tag und Uhrzeit legen (nil = ohne Uhrzeit, nur Aufgaben und Habits).
@@ -832,8 +839,14 @@ enum KalenderAktion {
             if tag != b.tag { speicher.aendern { $0.habitEinplanen(h, tag: b.tag, uhrzeit: nil) } }
             speicher.aendern { $0.habitEinplanen(h, tag: tag, uhrzeit: start) }
         case .termin:
-            guard let e = b.eigenID, let s = start else { return false }
-            speicher.aendern { $0.terminVerschieben(e, tag: tag, start: s) }
+            guard let s = start else { return false }
+            if let e = b.eigenID {
+                speicher.aendern { $0.terminVerschieben(e, tag: tag, start: s) }
+            } else if let id = externeID(b.serie) {
+                // Apple/Google: direkt im Kalender des Geräts (nur dieses Vorkommen)
+                do { try AppleKalender.aktiv.verschieben(id, von: b.tag, nach: tag, start: s, kalender: speicher.kalender) } catch { return false }
+                speicher.appleKalenderLesen()
+            } else { return false }
         }
         return true
     }

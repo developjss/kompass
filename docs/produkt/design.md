@@ -69,6 +69,13 @@ Seitentitel und große Zahlen in Serif (New York, Dynamic Type); sonst SF Pro Ro
 
 Kurven zeichnen sich in 1,25 s von links nach rechts mit leuchtender Spitze; Zahlen zählen hoch; Balken und Ringe wachsen beim Öffnen; Haken ploppen (Feder) mit kurzer Vibration; Fenster mit iOS-Federkurve. Nur beim ersten Öffnen einer Ansicht, nicht bei jeder Änderung.
 
+## 6a. Kalender (24.11.2026)
+
+- „Als Nächstes“ steht auf Home; der Kalender beginnt mit Tag · Woche · Monat · Jahr.
+- Tag: 64 pt je Stunde, überlappende Einträge brechen um. Woche: breite Spalten (~3 Tage sichtbar), waagerecht wischen.
+- Ziehen: halten 0,3 s, Eintrag bleibt groß, gestrichelte Vorschau mit Uhrzeit (15-Min-Raster), Woche auch über Tage, über den oberen Rand = ohne Uhrzeit.
+- Apple/Google (EventKit): live aktualisiert (`EKEventStoreChanged`), verschieben/bearbeiten/löschen/anlegen direkt im Kalender des Geräts; Google über das iOS-Konto (keine eigene Google-Anbindung).
+
 ## 7. Gadgets (Nachtflug)
 
 - **Fokus als Flug** (`FokusBlatt`, `FlugRechnung`): Nachthimmel, Route KMP → Kürzel des Ziels, Flugzeug an der Stelle Fokuszeit ÷ geplante Dauer der Aufgabe (mind. 5 Min). Phasen: Boarding, Steigflug (< 15 %), Reiseflughöhe, Landeanflug (≥ 80 %), Gelandet, Warteschleife (Pause). Instrumente Höhe (FL, Sinusbogen bis FL350), Strecke, Ankunft. Haptik beim Abheben und Landen. Reduce Motion: Wolken stehen, Flugzeug springt ohne Gleiten. Nur Anzeige – gebucht wird wie bisher (`FokusRechnung`).

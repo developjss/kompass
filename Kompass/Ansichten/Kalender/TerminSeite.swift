@@ -74,9 +74,15 @@ struct TerminSeite: View {
                                         EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Zeit, Titel, Wiederholung", farbe: Color(hex: farbe), verlauf: true)
                                     }
                                     .buttonStyle(DruckStil())
+                                } else if let id = KalenderAktion.externeID(serie), AppleKalender.aktiv.bearbeitbar(id, am: tag, kalender: speicher.kalender) {
+                                    Button { nav.blatt = .externTermin(id: id, tag: tag.text) } label: {
+                                        EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Titel, Zeit, löschen",
+                                                             unter: "im \(t.quelle.name)-Kalender", farbe: Color(hex: farbe), verlauf: true)
+                                    }
+                                    .buttonStyle(DruckStil())
                                 } else {
-                                    EinstellKachelInhalt(symbol: "arrow.up.forward.app", titel: "Ändern", wert: "im \(t.quelle.name)-Kalender",
-                                                         unter: "Zeit und Titel kommen von dort", farbe: Color(hex: farbe), verlauf: true)
+                                    EinstellKachelInhalt(symbol: "lock", titel: "Nur lesen", wert: "im \(t.quelle.name)-Kalender",
+                                                         unter: "dieser Kalender erlaubt keine Änderungen", farbe: Color(hex: farbe), verlauf: true)
                                 }
                             }
                             .foregroundStyle(Farbe.text)

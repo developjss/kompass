@@ -90,6 +90,7 @@ private struct BlattInhalt: View {
         case .terminSeite(let s, let t): TerminSeite(serie: s, tag: Tag(text: t) ?? Tag(Date()))
         case .stunde(let t, let s): StundeBlatt(tag: Tag(text: t) ?? Tag(Date()), start: s)
         case .neuTermin(let t, let s): NeuBlatt(art: .termin, tag: Tag(text: t), start: s)
+        case .externTermin(let i, let t): ExternTerminBlatt(id: i, tag: Tag(text: t) ?? Tag(Date()))
         case .chats: ChatVerlaufBlatt()
         }
     }

@@ -41,6 +41,8 @@ struct NeuBlatt: View {
     /// Meilenstein, in den der Termin zählt (nil + nurEinsatz = zählt nur als Einsatz; nil sonst = erster passender)
     @State private var terminSchrittID: UUID?
     @State private var terminNurEinsatz = false
+    /// Wohin der Termin gespeichert wird: nil = Kompass, sonst Kennung eines Apple-/Google-Kalenders
+    @State private var terminKalender: String?
     // Habit
     @State private var rhythmusArt: RhythmusArt = .taeglich
     @State private var tage: Set<Int> = [1, 2, 3, 4, 5]
@@ -388,6 +390,15 @@ struct NeuBlatt: View {
             zielKarte
             kategorieKarte
         case .termin:
+            let kalender = speicher.zustand.einstellungen.appleKalender ? AppleKalender.aktiv.beschreibbareKalender() : []
+            if !kalender.isEmpty {
+                Karte {
+                    ChipReihe(titel: "Speichern in", auswahl: [("Kompass", terminKalender == nil)] + kalender.map { ("\($0.google ? "Google · " : "")\($0.titel)", $0.id == terminKalender) }) { i in
+                        terminKalender = i == 0 ? nil : kalender[i - 1].id
+                        if terminKalender != nil { terminHabitID = nil }
+                    }
+                }
+            }
             zielKarte
             if let g = speicher.zustand.ziel(zielID) {
                 let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
@@ -406,7 +417,7 @@ struct NeuBlatt: View {
             }
             Karte {
                 let habits = speicher.zustand.habits
-                if !habits.isEmpty {
+                if !habits.isEmpty && terminKalender == nil {
                     ChipReihe(titel: "Erfüllt einen Habit", auswahl: [("Keinen", terminHabitID == nil)] + habits.map { ($0.titel, $0.id == terminHabitID) }) { i in
                         terminHabitID = i == 0 ? nil : habits[i - 1].id
                     }
@@ -592,6 +603,7 @@ struct NeuBlatt: View {
         case .termin:
             t.append("\(datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))) · \(Tagesplan.uhr(terminStart))–\(Tagesplan.uhr(terminEnde))")
             if wiederholung != .nie { t.append("Wiederholt sich \(wiederholung.name.lowercased())") }
+            if let id = terminKalender, let c = AppleKalender.aktiv.beschreibbareKalender().first(where: { $0.id == id }) { t.append("Im Kalender „\(c.titel)“") }
             if let g = z.ziel(zielID) { t.append(terminSchritt.map { "Zählt in „\($0.titel)“" } ?? "Einsatz für „\(g.titel)“") }
             if let h = z.habit(terminHabitID) { t.append("Erfüllt „\(h.titel)“") }
         case .habit:
@@ -736,6 +748,21 @@ struct NeuBlatt: View {
         case .termin:
             let g = speicher.zustand.ziel(zielID)
             let schritt = terminSchritt
+            if let kid = terminKalender {
+                // In den Apple-/Google-Kalender des Geräts; zählt über die Serien-Verknüpfung fürs Ziel
+                let tg = Tag(datum, kalender: k)
+                let beginn = k.date(byAdding: .minute, value: terminStart, to: tg.datum(kalender: k)) ?? datum
+                let schluss = k.date(byAdding: .minute, value: terminEnde, to: tg.datum(kalender: k)) ?? datum
+                if let eid = try? AppleKalender.aktiv.speichern(id: nil, am: tg, titel: t, start: beginn, ende: schluss, kalenderID: kid, kalender: k), !eid.isEmpty {
+                    let google = AppleKalender.aktiv.beschreibbareKalender().first { $0.id == kid }?.google ?? false
+                    if let g {
+                        let serie = "\(google ? "google" : "apple"):\(eid)", sid = schritt?.id, gid = g.id
+                        speicher.aendern { $0.terminSerieZaehlen(serie: serie, titel: t, ziel: gid, schritt: sid, seit: tg) }
+                    }
+                    speicher.appleKalenderLesen()
+                }
+                break
+            }
             let neu = EigenerTermin(titel: t, tag: Tag(datum, kalender: k), start: terminStart, ende: terminEnde, kategorie: kategorie,
                                     zielID: g?.id, schrittID: schritt?.id, habitID: terminHabitID, wiederholung: wiederholung)
             speicher.aendern { $0.terminSpeichern(neu) }
