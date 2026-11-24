@@ -20,7 +20,7 @@ struct TagReelKarte: View {
                         Text(teaser).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
                         Label("Start", systemImage: "play.fill").font(.kompass(.subheadline, .bold))
                             .padding(.horizontal, 16).frame(minHeight: 40)
-                            .background(Farbe.akzent, in: Capsule()).foregroundStyle(Farbe.aufFarbe)
+                            .background(Farbe.handlung, in: Capsule()).foregroundStyle(Farbe.aufFarbe)
                             .padding(.top, 4)
                     }
                     Spacer(minLength: 8)

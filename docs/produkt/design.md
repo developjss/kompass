@@ -17,29 +17,39 @@ Gemessen 23.11.2026 (iPhone, Wörter je Bildschirm): Gapless Insights 32, Net wo
 
 Höchstens 3–5 Wahlmöglichkeiten je Entscheidung, eine Hauptaktion je Bildschirm, Voreinstellung statt Frage, Stufen statt Listen („Mehr“, „Details“). Analyse je Bereich und Plan: `konzepte/hicks-law.md`.
 
-## 2. Farben „Nachtflug“ (hell / dunkel) [ENTSCHEIDUNG – 24.11.2026]
+## 2. Farben „Blattwerk“ (hell / dunkel) [ENTSCHEIDUNG – 24.11.2026, Gründer: „Ja, so bauen“]
 
-Indigo trägt, Seladon ist die Handlung, Gold zeigt, was zählt. Entwurf: https://claude.ai/artifact/DfYjA5AX77ed6CfnVLANHe (Code: `Kompass/Design/Farben.swift`).
+Rosé trägt, Weinrot spricht, Kellygrün ist die eine Handlung. Löst „Nachtflug“ (Indigo, Seladon, Gold; 24.11.2026 vormittags) ab. Prototyp mit allen Seiten, Bildern und Maßen: https://claude.ai/artifact/HzWoB8fnKe61TxXBUjEUrf (Code: `Kompass/Design/Farben.swift`, `Buehne.swift`; Tests `KompassTests/BlattwerkTests.swift`).
 
 | Token | Hell | Dunkel | Verwendung |
 |---|---|---|---|
-| grund | #F3F6F4 | #0B1325 | Grund |
-| grundOben | #E1ECE7 | #1A2950 | Verlauf oben |
-| karte | #FFFFFF | #121D38 | Karten, Listen |
-| text | #0B1325 | #EAF1EE | Text |
-| zweitrangig | #56657A | #93A3B8 | Unterzeilen |
-| akzent (Seladon) | #3A7262 | #A9CDBE | Handlung, Auswahl |
-| akzentWeich | #DCEBE4 | #22364A | „+ Neu“, Chips |
-| aufFarbe | #FFFFFF | #0B1325 | Schrift/Zeichen auf Akzent- und Palette-Flächen |
-| gold / goldText | #F2B53A / #855B00 | #F2B53A | Ring, Prozent, Erfolg (Text hell nur tief) |
-| warnung | #855B00 | #F2B53A | „hinterher“ |
-| kritisch | #BA3228 | #FF7A6E | „überfällig“ |
+| grund | #FBEDF1 | #2E0816 | Seitengrund |
+| buehne (= grundOben) | #F6CBD4 Rosé | #4A0F24 Weinrot | Ebene 1, Chips, Zeichen-Kreise |
+| karte | #FFFFFF | #5A1C33 | Karten, Listen, Tabbar |
+| text / wort | #4A0F24 | #F6CBD4 | Text, Bühnen-Wort, Marke |
+| zweitrangig | #85536A | #D4A3B4 | Unterzeilen, Etiketten |
+| akzent (Text) | #1B7A1A | #2DC92A | Handlung als Text und Zeichen |
+| handlung (Fläche) | #2DC92A | #2DC92A | Hauptknopf, Ring, Haken, heutiger Tag, letztes Wort |
+| aufFarbe | #2E0816 | #2E0816 | Schrift auf Grün |
+| akzentWeich | #DDF5DC | #3B4D30 | Tab-Pille, Vorschläge, Band „dein Normal“, Pille „im Plan“ |
+| linie | #E6D2D8 | #4E2734 | Trennlinien, Rahmen |
+| warnung / warnungGrund | Weinrot / Rosé | Rosé / Weinrot | „hinterher“ als Pille |
+| kritisch | #8E1B3C | #FF9FB8 | „überfällig“ |
 
-Stand-Karten (Home, Ziel, Habit, Rückblick): in beiden Modi nachtblau (#24396E → #0F1A35) mit Goldschein oben rechts und Goldrand; Ring und Prozent in Gold, Knöpfe Seladon mit Nacht-Schrift.
+Alte Namen `gold`, `goldText`, `seladon`, `nacht` zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind.
 
-Ziel-, Habit- und Kalenderfarben: nur Abstufungen der Palette – `Farbe.tonArt` legt jede bunte Hex-Farbe nach Farbton auf Seladon, Seladon tief, Indigo hell, Gold, Gold hell oder Gold tief (je hell/dunkel). Auswahl beim Anlegen: 6 Familien. Unterschieden wird vor allem am Symbol.
+Ziel-, Habit- und Kalenderfarben: `Farbe.tonArt` legt jede bunte Hex-Farbe nach Farbton auf weinrot, beere, rosa, wein, gruen oder gruenTief (je hell/dunkel).
 
-Kontraste (WCAG): dunkel Text 16:1, Seladon 10,7:1, Gold 10:1; hell Gold-Text #855B00 5,5:1, Seladon #3A7262 5,1:1.
+Kontraste (WCAG): Weinrot auf Grund 13 : 1, auf Rosé 10 : 1; Grün tief als Text 4,8 : 1; Schrift auf Grün 8,2 : 1. Grün ist nie Text auf Rosé (2,1 : 1) – das grüne Bühnen-Wort gilt als Dekoration ≥ 48 pt, die Zahl steht immer zusätzlich in der Karte.
+
+### 2a. Drei Ebenen: Bühne · Objekt · Karte
+
+Jede Hauptseite ist wie ein Produktbild aufgebaut (`Buehne.swift`):
+1. **Bühne** (Rosé): Marke bei y 62 (Name in Versalien, New York 17, Laufweite; rechts Datum oder Knöpfe 36 pt mit Rahmen), **Wort** bei y 118 / x 20 (New York, Großbuchstaben, 72 pt; klein 56, mittel 64, riesig 98; Zeilenabstand 0,86; das letzte Wort in Grün). Das Wort ist die Aussage der Seite, nie ein Etikett. Höhe 360, kurz 250, lang 430; Fokus: Foto Landebahn über die ganze Höhe.
+2. **Objekt**: ein echtes, freigestelltes Foto je Seite, nie mittig, nie antippbar; Platzierung je Seite in `Platz` (rechts/oben/Breite/Drehung aus dem Prototyp); Schatten 0 24 26 bei 28 %. Flugzeug = Tun (Home, Aufgabe, Fokus, Ziel), Bordkarte = Woche (Kalender, Habits, Rückblick), Kompass-Kugel = Kurs (Fortschritt, Neu), Tower = Assistent und Einstellungen.
+3. **Karte vorn** (`VornKarte`): Radius 24, Innen 16, Versatz −38 über die Bühne, Schatten 0 18 40; darin genau eine grüne Hauptaktion (`.buttonStyle(.haupt)`, 50 pt) und höchstens eine leise Zweitaktion (`.leise`); Löschen `.rot`. Karten-Titel New York 26, Etikett 12 heavy Versalien.
+
+Bilder: `Assets.xcassets/blattwerk-*` (A380, 747 im Anflug, 747 beim Abflug, zwei Tower, Kompass-Kugel, Messing-Kompass, Bordkarte, Landebahn, Landebahn bei Nacht; einzeln skaliert, 1024–2100 px). Entstanden aus Vorlagen des Gründers: freigestellt mit Vision, Schriftzüge entfernt, Leitwerke in Weinrot. [RISIKO] Rechte an den Foto-Vorlagen vor dem Store klären (Presse-/Stock-Fotos); Bordkarte und Messing-Kompass sind erzeugt.
 
 ## 3. Maße
 

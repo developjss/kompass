@@ -6,6 +6,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 24.11.2026 | [ENTSCHEIDUNG] Design „Blattwerk“ löst Nachtflug ab: Rosé, Weinrot, Kellygrün in hell und dunkel; jede Hauptseite in drei Ebenen (Bühne mit Wort, echtes Foto, Karte vorn mit genau einer Hauptaktion); Hick’s Law je Seite wie im Prototyp (Gründer: „Ja, so bauen“) | `docs/produkt/design.md` §2, Prototyp https://claude.ai/artifact/HzWoB8fnKe61TxXBUjEUrf |
 | 24.11.2026 | [ENTSCHEIDUNG] Design „Nachtflug“: Indigo, Seladon, Gold in hell und dunkel (folgt der iPhone-Einstellung); Ziel- und Habit-Farben nur als Palette-Abstufungen; Serif für Seitentitel und große Zahlen. Gadgets Fokus-Flug und Bordkarte folgen als eigene Blöcke („Ja, so einbauen“) | `docs/produkt/design.md` §2 |
 | 23.11.2026 | [ENTSCHEIDUNG] Der Chat-Assistent heißt in der App **„Assistent“** (statt „Lotse“; Code-Namen bleiben); jeder App-Start beginnt einen neuen Chat, frühere Chats bleiben erreichbar. Anlegen, Home und Kalender „geführt“ wie Gapless (Personal check, Reel) | `docs/produkt/konzepte/struktur-v3.md` §10 |
 | 23.11.2026 | [ENTSCHEIDUNG] Struktur v3: Home statt Heute, Kalender mit Tag/Woche/Monat/Jahr und Ziehen, eigene Termine (zählen für Ziel, erfüllen Habit), Rechenregel Tagesplan (enger Tag ≥ 75 % von 7–22 Uhr oder < 90 Min frei; Überschneidung ≥ 5 Min; kein Platz), Apple-Kalender nur lesen nach Zustimmung (Gründer: „allem selber zustimmen und fortfahren“) | `docs/produkt/konzepte/struktur-v3.md`, `rechenregeln.md` §9 |

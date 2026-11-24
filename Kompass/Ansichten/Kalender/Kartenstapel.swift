@@ -65,7 +65,7 @@ struct StapelRahmen<Inhalt: View>: View {
                     Text(offen ? "Weniger zeigen" : "Alle \(anzahl) ansehen")
                         .font(.kompass(.headline, .bold)).foregroundStyle(Farbe.aufFarbe)
                         .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(Farbe.akzent, in: Capsule())
+                        .background(Farbe.handlung, in: Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -92,7 +92,7 @@ struct StapelKarte<Unten: View>: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle().fill(LinearGradient(colors: Farbe.verlauf(farbe), startPoint: .bottomTrailing, endPoint: .topLeading))
-                    Image(systemName: symbol).font(.system(size: 17, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+                    Image(systemName: symbol).font(.system(size: 17, weight: .bold)).foregroundStyle(Farbe.aufTon)
                 }
                 .frame(width: 42, height: 42)
                 .accessibilityHidden(true)
@@ -353,7 +353,7 @@ struct EmpfehlungLeiste: View {
     private func chip(_ e: Empfehlung.Vorschlag) -> some View {
         let an = gewaehlt == e.id
         return HStack(spacing: 8) {
-            Image(systemName: e.symbol).font(.system(size: 11, weight: .bold)).foregroundStyle(Farbe.aufFarbe)
+            Image(systemName: e.symbol).font(.system(size: 11, weight: .bold)).foregroundStyle(Farbe.aufTon)
                 .frame(width: 26, height: 26).background(Color(hex: e.farbe).gradient, in: Circle())
             VStack(alignment: .leading, spacing: 0) {
                 Text(e.titel).font(.kompass(.caption, .bold)).foregroundStyle(Farbe.text).lineLimit(1)
