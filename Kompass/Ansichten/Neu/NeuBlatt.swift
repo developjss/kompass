@@ -34,6 +34,9 @@ struct NeuBlatt: View {
     @State private var mitUhrzeit = false
     @State private var uhrzeit = 9 * 60
     @State private var dauer = 60
+    /// Aufgabe: Meilenstein, in den sie zählt (nil = erster passender bzw. nur Einsatz)
+    @State private var aufgabeSchrittID: UUID?
+    @State private var aufgabeNurEinsatz = false
     // Termin
     @State private var terminStart = 15 * 60
     @State private var terminEnde = 16 * 60
@@ -105,6 +108,15 @@ struct NeuBlatt: View {
         let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
         if let id = terminSchrittID, let s = passend.first(where: { $0.id == id }) { return s }
         return terminNurEinsatz ? nil : passend.first
+    }
+
+    /// Meilenstein der neuen Aufgabe: gewählt, sonst der erste „Aufgaben“/„Zeit“-Meilenstein, außer „Nur Einsatz“.
+    private var aufgabeSchritt: UUID? {
+        guard let g = speicher.zustand.ziel(zielID) else { return nil }
+        let passend = g.schritte.filter { $0.art == .aufgaben || $0.art == .zeit }
+        if let id = aufgabeSchrittID, passend.contains(where: { $0.id == id }) { return id }
+        if aufgabeNurEinsatz { return nil }
+        return Fortschritt.naechsterOffenerSchritt(g, in: speicher.zustand, heute: speicher.heute)?.id ?? passend.first?.id
     }
 
     private var schritte: [Schritt] { art == .habit || art == .ziel ? Schritt.allCases : Schritt.allCases.filter { $0 != .verbinden } }
@@ -385,7 +397,9 @@ struct NeuBlatt: View {
                 ChipReihe(titel: "Wichtigkeit", auswahl: [("Wichtig", wichtig), ("Normal", !wichtig)]) { wichtig = $0 == 0 }
                 ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
             }
-            zielKarte
+            ZaehltKarte(zielID: zielID, schrittID: aufgabeSchritt, einmalig: wiederholung == .nie, aufgabeID: nil,
+                        zielWaehlen: { zielID = $0; aufgabeSchrittID = nil; aufgabeNurEinsatz = false },
+                        schrittWaehlen: { aufgabeSchrittID = $0; aufgabeNurEinsatz = $0 == nil })
             kategorieKarte
         case .termin:
             zielKarte
@@ -727,8 +741,10 @@ struct NeuBlatt: View {
             }
             let w = wiederholung, z = zielID, p: Prioritaet = wichtig ? .hoch : .normal
             let u = tag != nil && mitUhrzeit ? uhrzeit : nil, du = dauer, kat = kategorie
+            let sid = aufgabeSchritt
             speicher.aendern { s in
                 let a = s.aufgabeAnlegen(t, datum: tag, prio: p, zielID: z, heute: heute)
+                if z != nil { s.aufgabeZuordnen(a.id, ziel: z, schritt: sid, automatisch: false, heute: heute) }
                 if let i = s.aufgaben.firstIndex(where: { $0.id == a.id }) {
                     s.aufgaben[i].wiederholung = w; s.aufgaben[i].uhrzeit = u; s.aufgaben[i].dauer = du; s.aufgaben[i].kategorie = kat
                 }
@@ -854,133 +870,6 @@ extension NeuArt {
     }
 }
 
-/// Aufgabe bearbeiten: Titel, Datum, Wichtig, Wiederholung, Ziel, Notizen; Löschen (nur diese / Serie beenden).
-struct AufgabeBlatt: View {
-    var id: UUID
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-    @Environment(\.dismiss) private var dismiss
-
-    /// Welcher Meilenstein zählt die Aufgabe (§3): „Aufgaben“ zählt erledigte einmalige, „Zeit“ die Fokuszeit.
-    /// Ohne passenden Meilenstein zählt sie nur als Einsatz – das wird gesagt, nicht verschwiegen.
-    @ViewBuilder private func meilensteinWahl(_ a: Aufgabe, _ g: Ziel) -> some View {
-        let passend = g.schritte.filter { $0.art == .aufgaben || $0.art == .zeit }
-        if !passend.isEmpty {
-            Picker("Zählt in", selection: Binding(get: { a.schrittID }, set: { neu in
-                let h = speicher.heute
-                speicher.aendern { $0.aufgabeZuordnen(id, ziel: g.id, schritt: neu, automatisch: false, heute: h) }
-            })) {
-                Text("Nur Einsatz").tag(UUID?.none)
-                ForEach(passend) { s in Text("\(s.titel) · \(s.art == .zeit ? "Fokuszeit" : "erledigt")").tag(UUID?.some(s.id)) }
-            }
-            .accessibilityIdentifier("aufgabe.meilenstein")
-        }
-        let s = g.schritte.first { $0.id == a.schrittID }
-        if s == nil {
-            VStack(alignment: .leading, spacing: 6) {
-                Label("Zählt nicht in die Prozente, nur als Einsatz.", systemImage: "info.circle")
-                    .font(.footnote).foregroundStyle(Farbe.zweitrangig)
-                if passend.isEmpty {
-                    Button("Meilenstein „Aufgaben“ anlegen") { nav.blatt = .meilenstein(ziel: g.id, schritt: nil) }
-                        .font(.footnote.weight(.semibold))
-                }
-            }
-        } else if s?.art == .aufgaben && !a.einmalig {
-            Label("Wiederkehrende Aufgaben zählen hier nicht – nur einmalige.", systemImage: "info.circle")
-                .font(.footnote).foregroundStyle(Farbe.zweitrangig)
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            if let a = speicher.zustand.aufgabe(id) {
-                Form {
-                    Section {
-                        TextField("Titel", text: feld(\.titel))
-                        Toggle("Erledigt", isOn: Binding(get: { a.erledigt }, set: { _ in speicher.aendern { $0.umschalten(id, jetzt: speicher.jetzt()) } }))
-                        Toggle("Wichtig", isOn: Binding(get: { a.prio == .hoch }, set: { neu in speicher.aendern { s in setze(&s) { $0.prio = neu ? .hoch : .normal } } }))
-                    }
-                    Section {
-                        Toggle("Mit Datum", isOn: Binding(get: { a.datum != nil }, set: { neu in
-                            let h = speicher.heute
-                            speicher.aendern { s in setze(&s) { $0.datum = neu ? h : nil } }
-                        }))
-                        if let d = a.datum {
-                            DatePicker("Datum", selection: Binding(get: { d.datum() }, set: { neu in
-                                let t = Tag(neu, kalender: speicher.kalender)
-                                speicher.aendern { s in setze(&s) { $0.datum = t } }
-                            }), displayedComponents: .date)
-                            Toggle("Mit Uhrzeit", isOn: Binding(get: { a.uhrzeit != nil }, set: { neu in
-                                speicher.aendern { s in setze(&s) { $0.uhrzeit = neu ? 9 * 60 : nil } }
-                            }))
-                            if let u = a.uhrzeit {
-                                DatePicker("Uhrzeit", selection: Binding(get: { Calendar.kompass.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: u / 60, minute: u % 60)) ?? Date() }, set: { neu in
-                                    let k = Calendar.kompass.dateComponents([.hour, .minute], from: neu)
-                                    let m = (k.hour ?? 0) * 60 + (k.minute ?? 0)
-                                    speicher.aendern { s in setze(&s) { $0.uhrzeit = m } }
-                                }), displayedComponents: .hourAndMinute)
-                                ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { ($0 < 60 ? "\($0) Min" : $0 % 60 == 0 ? "\($0 / 60) h" : "1,5 h", $0 == a.dauer) }) { i in
-                                    let du = [15, 30, 60, 90, 120][i]
-                                    speicher.aendern { s in setze(&s) { $0.dauer = du } }
-                                }
-                            }
-                        }
-                        Picker("Wiederholen", selection: feld(\.wiederholung)) {
-                            ForEach(Wiederholung.allCases, id: \.self) { Text($0.name).tag($0) }
-                        }
-                        Picker("Ziel", selection: Binding(get: { a.zielID }, set: { neu in
-                            let h = speicher.heute
-                            speicher.aendern { s in
-                                let schritt = Fortschritt.naechsterOffenerSchritt(s.ziel(neu), in: s, heute: h)?.id
-                                setze(&s) { $0.zielID = neu; $0.schrittID = schritt }
-                            }
-                        })) {
-                            Text("Keins").tag(UUID?.none)
-                            ForEach(speicher.zustand.ziele) { Text($0.titel).tag(UUID?.some($0.id)) }
-                        }
-                        if let g = speicher.zustand.ziel(a.zielID) {
-                            meilensteinWahl(a, g)
-                        }
-                        ChipReihe(titel: "Kategorie", auswahl: Kategorie.allCases.map { ($0.name, $0 == a.kategorie) }) { i in
-                            let k = Kategorie.allCases[i]
-                            speicher.aendern { s in setze(&s) { $0.kategorie = $0.kategorie == k ? nil : k } }
-                        }
-                        if a.fokusSekunden > 0 { LabeledContent("Fokuszeit", value: Zahl.dauer(a.fokusSekunden)) }
-                    }
-                    Section("Notizen") { TextField("Notizen", text: feld(\.notizen), axis: .vertical) }
-                    Section {
-                        Button("Löschen", role: .destructive) {
-                            speicher.aendern { $0.loeschen(id, heute: speicher.heute) }
-                            dismiss()
-                        }
-                        if !a.einmalig {
-                            Button("Serie beenden", role: .destructive) {
-                                speicher.aendern { $0.loeschen(id, serieBeenden: true, heute: speicher.heute) }
-                                dismiss()
-                            }
-                        }
-                    }
-                }
-                .navigationTitle("Aufgabe")
-                .navigationBarTitleDisplayMode(.inline)
-                .schliessenKnopf()
-            } else {
-                ContentUnavailableView("Aufgabe nicht gefunden", systemImage: "checklist", description: Text("Sie wurde vielleicht gelöscht."))
-            }
-        }
-    }
-
-    private func setze(_ s: inout Zustand, _ f: (inout Aufgabe) -> Void) {
-        if let i = s.aufgaben.firstIndex(where: { $0.id == id }) { f(&s.aufgaben[i]) }
-    }
-
-    private func feld<W>(_ pfad: WritableKeyPath<Aufgabe, W>) -> Binding<W> {
-        Binding(
-            get: { speicher.zustand.aufgabe(id)![keyPath: pfad] },
-            set: { neu in speicher.aendern { s in if let i = s.aufgaben.firstIndex(where: { $0.id == id }) { s.aufgaben[i][keyPath: pfad] = neu } } }
-        )
-    }
-}
 
 
 /// Auswahl als Chips in einer Zeile (umbrechend) – wie „How often“ in Gapless statt Picker-Rad.
