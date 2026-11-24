@@ -18,58 +18,114 @@ struct KalenderAnsicht: View {
         @Bindable var nav = nav
         let T = speicher.heute
         let tag = nav.kalenderTag ?? T
+        let naechster = Tagesplan.naechste(zustand: speicher.zustand, heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:), anzahl: 1).first
 
-        Seite(titel: "Kalender", info: .kalender, neu: .termin) {
-            ModusWahl(modus: $nav.kalenderModus)
-
-            KopfZeile(tag: tag, modus: nav.kalenderModus) { nav.kalenderTag = $0 }
-                .padding(.top, 12).padding(.bottom, 8)
-
-            switch nav.kalenderModus {
-            case .tag:
-                Wochenleiste(gewaehlt: tag, heute: T) { nav.kalenderTag = $0 }.padding(.bottom, 10)
-                EmpfehlungLeiste(tag: tag).padding(.bottom, 10)
-                TagZeitleiste(tag: tag)
-            case .woche: WochenRaster(tag: tag)
-            case .monat:
-                MonatsRaster(tag: tag)
-                TagesListe(tag: tag)
-            case .jahr: JahresRaster(tag: tag)
+        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(tag: tag, heute: T, jetzt: speicher.jetztMinuten, naechster: naechster), objekt: .bordkarte, platz: .kalender, marke: {
+            MarkenTitel(text: "Kalender")
+            Spacer(minLength: 8)
+            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.kalender) }
+            RahmenKnopf(symbol: "plus", beschriftung: "Neuer Termin") { nav.blatt = .neu(.termin) }
+        }) {
+            VornKarte(abstand: 10) {
+                ModusWahl(modus: $nav.kalenderModus)
+                if nav.kalenderModus != .jahr {
+                    Wochenleiste(gewaehlt: tag, heute: T) { nav.kalenderTag = $0; if nav.kalenderModus == .monat { nav.kalenderModus = .tag } }
+                }
             }
 
-            if let b = empfehlungsBereich(nav.kalenderModus) { EmpfehlungStapel(bereich: b, tag: tag).padding(.top, Mass.abschnitt - 8) }
+            VStack(alignment: .leading, spacing: 10) {
+                if nav.kalenderModus != .tag {
+                    KopfZeile(tag: tag, modus: nav.kalenderModus) { nav.kalenderTag = $0 }
+                } else {
+                    TagKopf(tag: tag)
+                }
 
-            if !(speicher.zustand.einstellungen.googleBeispiel || speicher.zustand.einstellungen.appleBeispiel || speicher.zustand.einstellungen.appleKalender) {
-                PfeilZeile(symbol: "calendar.badge.plus", text: "Apple- oder Google-Kalender verbinden") { nav.blatt = .einstellungen }
-                    .padding(.top, Mass.abschnitt)
+                switch nav.kalenderModus {
+                case .tag:
+                    EmpfehlungLeiste(tag: tag)
+                    TagZeitleiste(tag: tag)
+                case .woche: WochenRaster(tag: tag)
+                case .monat:
+                    MonatsRaster(tag: tag)
+                    TagesListe(tag: tag)
+                    Button { withAnimation(.snappy(duration: 0.2)) { nav.kalenderModus = .jahr } } label: { Label("Jahr ansehen", systemImage: "calendar") }
+                        .buttonStyle(.leise)
+                case .jahr: JahresRaster(tag: tag)
+                }
+
+                if let b = empfehlungsBereich(nav.kalenderModus) { EmpfehlungStapel(bereich: b, tag: tag).padding(.top, Mass.abschnitt - 8) }
+
+                if !(speicher.zustand.einstellungen.googleBeispiel || speicher.zustand.einstellungen.appleBeispiel || speicher.zustand.einstellungen.appleKalender) {
+                    PfeilZeile(symbol: "calendar.badge.plus", text: "Apple- oder Google-Kalender verbinden") { nav.blatt = .einstellungen }
+                        .padding(.top, Mass.abschnitt)
+                }
+            }
+            .padding(.horizontal, Mass.rand)
+            .padding(.top, 12)
+        }
+    }
+
+    /// Das Wort: heute das Nächste („In 57 Min · Fahrstunde.“), sonst der gewählte Tag.
+    nonisolated static func wort(tag: Tag, heute T: Tag, jetzt: Int, naechster: Tagesplan.Block?) -> Wort {
+        if tag == T {
+            if let b = naechster, b.tag == T {
+                let m = b.start - jetzt
+                let titel = b.titel.count > 14 ? String(b.titel.prefix(13)).trimmingCharacters(in: .whitespaces) + "…" : b.titel
+                if m <= 0 { return Wort(zeilen: ["Jetzt"], akzent: "\(titel).", groesse: Wort.kleinGroesse) }
+                if m < 60 { return Wort(zeilen: ["In \(m) Min"], akzent: "\(titel).", groesse: Wort.kleinGroesse) }
+                return Wort(zeilen: ["Um \(Tagesplan.uhr(b.start))"], akzent: "\(titel).", groesse: Wort.kleinGroesse)
+            }
+            return Wort(zeilen: ["Heute"], akzent: "frei.", groesse: Wort.kleinGroesse)
+        }
+        let de = Locale(identifier: "de_DE")
+        return Wort(zeilen: [tag.datum().formatted(.dateTime.weekday(.wide).locale(de))], akzent: tag.datum().formatted(.dateTime.day().month(.abbreviated).locale(de)) + ".", groesse: Wort.kleinGroesse)
+    }
+}
+
+/// Tagesansicht: Überschrift des Tags (Serif) – „Heute“ oder der Wochentag.
+private struct TagKopf: View {
+    var tag: Tag
+    @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
+    var body: some View {
+        let T = speicher.heute
+        let de = Locale(identifier: "de_DE")
+        HStack(alignment: .firstTextBaseline) {
+            Text(tag == T ? "Heute" : tag == T.plus(tage: 1) ? "Morgen" : tag.datum().formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(de)))
+                .font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
+            Spacer()
+            if tag != T {
+                Button("Heute") { nav.kalenderTag = T }.font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
             }
         }
+        .padding(.top, 8)
     }
 }
 
 // MARK: Umschalter und Kopf
 
+/// Tag · Woche · Monat (Hick: drei; das Jahr liegt im Monat). Gewählt = Weinrot mit Rosé-Schrift.
 private struct ModusWahl: View {
     @Binding var modus: KalenderModus
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(KalenderModus.allCases, id: \.self) { m in
-                let an = modus == m
+            ForEach([KalenderModus.tag, .woche, .monat], id: \.self) { m in
+                let an = modus == m || (m == .monat && modus == .jahr)
                 Button { withAnimation(.snappy(duration: 0.2)) { modus = m } } label: {
                     Text(m.titel).font(.kompass(.subheadline, .bold)).lineLimit(1).minimumScaleFactor(0.6)
                         .padding(.horizontal, 4)
-                        .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(an ? Farbe.karte : Color.clear, in: Capsule())
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background(an ? Farbe.wort : Color.clear, in: Capsule())
                         .contentShape(Capsule())
-                        .foregroundStyle(an ? Farbe.text : Farbe.zweitrangig)
-                        .shadow(color: an ? .black.opacity(0.06) : .clear, radius: 4, y: 1)
+                        .foregroundStyle(an ? Farbe.buehne : Farbe.zweitrangig)
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(an ? [.isSelected] : [])
             }
         }
         .padding(4)
-        .background(Farbe.akzentWeich.opacity(0.7), in: Capsule())
+        .background(Farbe.grund, in: Capsule())
+        .overlay(Capsule().strokeBorder(Farbe.linie, lineWidth: 1))
     }
 }
 
@@ -169,20 +225,20 @@ struct Wochenleiste: View {
                 let an = d == gewaehlt
                 Button { waehlen(d) } label: {
                     VStack(spacing: 4) {
-                        Text(namen[i]).font(.klein).foregroundStyle(an ? .white.opacity(0.85) : Farbe.zweitrangig)
-                        Text("\(d.tag)").font(.kompass(.title3, .bold)).foregroundStyle(an ? .white : (d == heute ? Farbe.akzent : Farbe.text))
+                        Text(namen[i]).font(.klein).foregroundStyle(an ? Farbe.aufFarbe.opacity(0.8) : Farbe.zweitrangig)
+                        Text("\(d.tag)").font(.system(.title3, design: .serif, weight: .regular)).foregroundStyle(an ? Farbe.aufFarbe : (d == heute ? Farbe.akzent : Farbe.text))
                             .lineLimit(1).minimumScaleFactor(0.6)
                         HStack(spacing: 2) {
                             ForEach(Array(b.prefix(3).enumerated()), id: \.offset) { _, x in
-                                Circle().fill(an ? .white : Color(hex: x.farbe)).frame(width: 5, height: 5)
+                                Circle().fill(an ? Farbe.aufFarbe : Color(hex: x.farbe)).frame(width: 5, height: 5)
                             }
                         }
                         .frame(height: 6)
                     }
                     .frame(maxWidth: .infinity, minHeight: 66)
-                    .background(an ? Farbe.akzent : Farbe.karte, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(an ? Farbe.handlung : Farbe.grund, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay {
-                        if d == heute && !an { RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Farbe.akzent.opacity(0.5), lineWidth: 1.5) }
+                        RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(d == heute && !an ? Farbe.akzent.opacity(0.6) : (an ? .clear : Farbe.linie), lineWidth: d == heute && !an ? 1.5 : 1)
                     }
                 }
                 .buttonStyle(.plain)

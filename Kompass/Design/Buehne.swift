@@ -28,7 +28,7 @@ struct Platz: Sendable, Equatable {
     var links: CGFloat? = nil
 
     static let home = Platz(rechts: -90, oben: 166, breite: 360, drehung: -8)
-    static let kalender = Platz(rechts: -70, oben: 118, breite: 270, drehung: -14)
+    static let kalender = Platz(rechts: -60, oben: 140, breite: 270, drehung: -14)
     static let neu = Platz(rechts: -70, oben: 62, breite: 230, drehung: 10)
     static let assistent = Platz(rechts: 6, oben: 34, breite: 150)
     static let fortschritt = Platz(rechts: -96, oben: 118, breite: 300, drehung: -12)
@@ -73,7 +73,7 @@ struct Buehne<Marke: View, Extra: View>: View {
             Farbe.buehne
             WortText(wort: wort)
                 .padding(.leading, 20)
-                .padding(.top, sicherOben + 64)
+                .padding(.top, sicherOben + 60)
             if let objekt { ObjektBild(objekt: objekt, platz: platz) }
             extra
             HStack(spacing: 10) { marke }
@@ -97,14 +97,14 @@ extension Buehne where Extra == EmptyView {
 struct WortText: View {
     var wort: Wort
     var body: some View {
-        VStack(alignment: .leading, spacing: -wort.groesse * 0.12) {
+        VStack(alignment: .leading, spacing: -wort.groesse * 0.34) {
             ForEach(Array(wort.zeilen.enumerated()), id: \.offset) { _, z in
                 Text(z.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.wort)
             }
             Text(wort.akzent.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.handlung)
             if let k = wort.klein {
                 Text(k.uppercased()).font(.etikett).tracking(1).foregroundStyle(Farbe.wort.opacity(0.85))
-                    .padding(.top, 12 + wort.groesse * 0.12).frame(maxWidth: 250, alignment: .leading).lineLimit(2)
+                    .padding(.top, 12 + wort.groesse * 0.34).frame(maxWidth: 250, alignment: .leading).lineLimit(2)
             }
         }
         .lineLimit(1)
@@ -147,6 +147,46 @@ struct VornKarte<Inhalt: View>: View {
             .shadow(color: Farbe.schatten.opacity(0.28), radius: 20, y: 18)
             .padding(.horizontal, Mass.rand)
             .padding(.top, Mass.karteVornVersatz)
+    }
+}
+
+/// Seite mit Bühne oben (ragt unter die Statusleiste), Inhalt darunter, Fuß. Ersetzt `Seite` auf den Hauptseiten.
+/// Der Inhalt bringt seinen Seitenrand selbst mit (`VornKarte` hat ihn; Listen `.padding(.horizontal, Mass.rand)`).
+struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
+    var hoehe: CGFloat = Mass.buehne
+    var wort: Wort
+    var objekt: Objekt? = nil
+    var platz: Platz = .home
+    @ViewBuilder var marke: Marke
+    @ViewBuilder var extra: Extra
+    @ViewBuilder var inhalt: Inhalt
+
+    var body: some View {
+        GeometryReader { g in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Buehne(hoehe: hoehe, wort: wort, objekt: objekt, platz: platz, sicherOben: g.safeAreaInsets.top, marke: { marke }, extra: { extra })
+                    VStack(alignment: .leading, spacing: 0) { inhalt }
+                        .frame(maxWidth: 720)
+                        .frame(maxWidth: .infinity)
+                    SeitenFuss()
+                        .padding(.horizontal, Mass.rand)
+                        .padding(.top, Mass.abschnitt)
+                        .frame(maxWidth: 720)
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.bottom, 32)
+            }
+            .ignoresSafeArea(edges: .top)
+        }
+        .background(Farbe.grund.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+extension BuehnenSeite where Extra == EmptyView {
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, objekt: Objekt? = nil, platz: Platz = .home, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
+        self.init(hoehe: hoehe, wort: wort, objekt: objekt, platz: platz, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
     }
 }
 

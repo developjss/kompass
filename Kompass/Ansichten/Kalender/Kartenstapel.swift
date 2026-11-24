@@ -308,9 +308,12 @@ struct EmpfehlungLeiste: View {
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @State private var gewaehlt: String?
     @State private var eingeplant = 0
+    /// Hick: drei Vorschläge, der Rest hinter „alle“
+    @State private var alle = false
 
     var body: some View {
         let v = Empfehlung.fuer(.tag, tag: tag, zustand: speicher.zustand, heute: speicher.heute, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
+        let sichtbar = alle ? v : Array(v.prefix(3))
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "sparkles").foregroundStyle(Farbe.akzent)
@@ -318,11 +321,15 @@ struct EmpfehlungLeiste: View {
                     .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.text)
                 if !v.isEmpty { Text("· ziehen oder antippen").font(.klein).foregroundStyle(Farbe.zweitrangig) }
                 Spacer()
+                if v.count > 3 {
+                    Button(alle ? "weniger" : "alle \(v.count)") { withAnimation(ruhig ? nil : .snappy) { alle.toggle() } }
+                        .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
+                }
             }
             if !v.isEmpty {
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
-                        ForEach(v) { e in chip(e) }
+                        ForEach(sichtbar) { e in chip(e) }
                     }
                     .padding(.vertical, 2)
                 }
