@@ -233,13 +233,13 @@ seite(K4, "Ein Habit", "habit", "Eigene Seite wie eine Gapless-Transaktion: Kopf
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],
              [("Ziele", "ziele"), ("Ein Ziel", "ziel"), ("So wird gerechnet", "rechnung"), ("Ein Schritt", "schritt"), ("Vorschläge", "vorschlaege")])
-seite(K5, "Ziele", "ziele", "Oben eine Aussage-Karte („2 von 3 auf Kurs“, wo es hakt, Schnitt). Darunter die Ziele nach Frist als weiße Karten: Ring mit Prozent, „voraus / im Plan / hinterher“, restliche Zeit und „Als Nächstes: …“.",
+seite(K5, "Ziele", "ziele", "Oben vier Filter-Kacheln mit Verlauf von Weiß zu Farbe: Alle · Auf Kurs · Hinterher · Erreicht. Darunter „Deine Ziele“ mit „Sortieren“ (Frist, Jahr, Fortschritt, Hinterher zuerst, Bereich, Name; Jahr und Bereich als Gruppen). Jede Zielkarte: Ring mit Prozent, voller Titel, Pfeil – ein leuchtender Rand läuft langsam um die Karte.",
       bilder=[("ziele.jpg", "Ziele")], klicks=["Karte → [[Ein Ziel|ziel]]", "Erreicht › → erreichte Ziele", "+ Neu → Ziel: Meilenstein-Vorlagen aus dem Titel (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte)"], gespeichert=LOKAL)
-seite(K5, "Ein Ziel", "ziel", "Schlicht und geführt: Kopfkarte mit Prozent, Auf Kurs, Prognose (antippen = so wird gerechnet), das Warum, dann „Dein nächster Schritt“ – der Meilenstein, der am meisten bringt, mit einem passenden Knopf (Abhaken, Stand eintragen, Fokus starten …). Darunter die Meilensteine. Alles Weitere unter „Verfeinern“ (optional), je eine eigene Seite mit einem Erklärsatz: Aufgaben, Habits, Termine, Einsatz, Details (Fakten-Zeilen, erreicht, löschen).",
+seite(K5, "Ein Ziel", "ziel", "Oben minimal der Stand: Ring, Prozent, Lage und Restzeit, „Als Nächstes“, Knopf „Analyse im Rückblick“. Darunter vier Einstellungs-Kacheln: Bis wann · Warum · Name · Verfeinern. Darunter die Meilensteine als Karten (Ring mit Symbol, Stand, Prozent) und „Meilenstein hinzufügen – geführt“. Verfeinern: Meilensteine mit Anteil am Ziel, darunter Kacheln Aufgaben, Habits, Termine, Einsatz und Details.",
       bilder=[("ziel.jpg", "Ziel")], klicks=["Satz oder (i) → [[So wird gerechnet|rechnung]]", "Meilenstein → [[Ein Schritt|schritt]]", "Fakten-Zeile → Editor (Sichern)", "✓ Ziel erreicht"], gespeichert=LOKAL)
 seite(K5, "So wird gerechnet", "rechnung", "Die Rechnung mit echten Zahlen, für jedes Ziel aufklappbar: Tabelle der Schritte, Auf Kurs, Prognose, gelernter Zeitfaktor.",
       bilder=[("rechnung.jpg", "Rechnung")], gespeichert="Formeln: " + doc("docs/produkt/rechenregeln.md") + " (Kapitel [[Rechenregeln|kap7]])")
-seite(K5, "Ein Schritt", "schritt", "Wie der Schritt gemessen wird (Abhaken/Aufgaben, Zeit, Habit, Zahl), Zielwert, Gewicht (klein/mittel/groß), geschafft, Aufgaben im Schritt.",
+seite(K5, "Ein Schritt", "schritt", "Meilenstein antippen: Stand oben, Anteil am Ziel, genau eine Hauptaktion (Abhaken, Stand eintragen, Fokus, Habit öffnen), „Anpassen“-Kacheln (Name, Woran merkst du es, Ziel-Wert, Wie wichtig); Löschen zeigt die Neuverteilung. Neu anlegen geführt: Name mit Vorschlägen → Woran merkst du es → Wert → Wie wichtig (mit Live-Anteil) → „Passt das so?“ mit Aufteilung des Ziels.",
       bilder=[("schritt.jpg", "Schritt")], klicks=["Messart wechseln", "Gewicht wählen", "Geschafft → 100 %", "Aufgabe hinzufügen → gehört zu diesem Schritt"], gespeichert=LOKAL)
 seite(K5, "Vorschläge", "vorschlaege", "Passende Schritte aus Vorlagen – oder von der KI. Alles übernehmen oder vorher ändern. Gerechnet wird danach immer gleich.",
       bilder=[("vorschlaege.jpg", "Vorschläge")], klicks=["Haken → übernehmen ja/nein", "Name, Art, Zielwert, Gewicht ändern", "✨ Mehr Vorschläge von der KI", "x übernehmen"],
@@ -303,6 +303,7 @@ seite(K8, "Pflege und /roterfaden", "pflege", "Damit hier nie etwas fehlt oder v
 seite(K8, "Änderungsverlauf", "verlauf", "Neueste oben.",
       extra=lambda: d.table([
           ["Datum", "Fassung", "Was sich geändert hat"],
+          ["24.11.2026", "3", "Ziele neu: Filter-Kacheln, Sortieren nach Jahr u. a., Zielkarten mit Lichtrand, Ziel-Seite mit Einstellungs-Kacheln, Meilensteine geführt und als Karten."],
           ["24.11.2026", "2", "Ziele minimal mit „Dein nächster Schritt“, Kalender-Empfehlungen als Kartenstapel, Assistent mit Claude (Websuche, Gedächtnis, Ladeanzeige)."],
           ["23.11.2026", "1", "Erste Fassung: Klick-Dummy Seite für Seite, Rechenregeln, Personen-Test, Fahrplan und Landkarte."],
       ], [1600, 1000, 7038]))

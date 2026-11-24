@@ -148,11 +148,8 @@ struct ZielKarte: View {
                         .minimumScaleFactor(0.7).lineLimit(1).padding(6)
                 }
                 .frame(width: 54, height: 54)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text).lineLimit(1)
-                    Text(kurs.lage.text).font(.klein).padding(.horizontal, 8).frame(minHeight: 22)
-                        .background(lageFarbe(kurs.lage).opacity(0.14), in: Capsule()).foregroundStyle(lageFarbe(kurs.lage))
-                }
+                Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text)
+                    .lineLimit(3).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
                 Image(systemName: "arrow.right").font(.footnote.weight(.heavy)).foregroundStyle(.white)
                     .frame(width: 30, height: 30).background(c.gradient, in: Circle())
@@ -167,14 +164,6 @@ struct ZielKarte: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ziel.titel), \(Zahl.prozent(kurs.fortschritt)), \(kurs.lage.text), \(Kurs.bisText(ziel.faellig, heute: T))")
         .accessibilityAddTraits(.isButton)
-    }
-
-    private func lageFarbe(_ l: Kurs.Lage) -> Color {
-        switch l {
-        case .voraus, .erreicht: Farbe.freude
-        case .imPlan: Farbe.akzent
-        case .hinterher, .ueberfaellig: Farbe.warnung
-        }
     }
 }
 

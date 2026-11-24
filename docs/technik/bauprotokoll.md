@@ -4,6 +4,7 @@ Neueste oben. Je gemergtem Block eine Zeile: Datum · Kürzel · was · Tests.
 
 | Datum | Kürzel | Was | Tests |
 |---|---|---|---|
+| 24.11.2026 | P2-Z4 | Ziele neu: `ZielOrdnung` (Filter/Sortierung) + Tests, `Fortschritt.anteile`/`anteilVorschau`/`anteileOhne` + Tests, `ZielVorschlag.aehnlich`; Übersicht mit `FilterKachel`, `ZielKarte` + `Lichtrand` (TimelineView, maskiert), `DruckStil`; `ZielDetail` mit `ZielStandKarte`, `WichtigsteEinstellungen`, `MeilensteinKarte`, Verfeinern-Kacheln; `MeilensteinFluss` (Übersicht + geführter Assistent) ersetzt das Formular; PR #22–#25 | Swift-Tests 105/105, Simulator |
 | 24.11.2026 | P2-A3 | Assistent Fassung 3: Websuche (`web_search`, Quellen, `pause_turn`), Rolle „erst antworten“, Werkzeug `merken` (`lernen.lotse.erinnerungen`), `Werkzeuge.quelle` (Apple-Kalender), `DenktAnzeige` + Status, `AntwortText` mit Überschriften/Unterpunkten; Server v9; PR #20 | Swift-Tests 101/101, live Wetter/CL, Simulator |
 | 23.11.2026 | P2-A2 | Assistent Fassung 2: Werkzeugschleife (`schritte`, `JSONWert`, `ModellAufruf`), Claude zuerst, Regeln offline, `kurzstand` reicher, `AntwortText`; Server v8 (Sonnet, neue Rolle); PR #19 | Swift-Tests 99/99, live geprüft |
 | 23.11.2026 | P2-K5 | Kalender: `Empfehlung` (Rechnung, §9.1) + `EmpfehlungTests`, `KartenStapel`/`StapelRahmen`/`EmpfehlungStapel`/`NaechsteStapel`, Umschalter `contentShape`; PR #18 | Swift-Tests 98/98, Simulator |
