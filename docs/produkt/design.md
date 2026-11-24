@@ -13,6 +13,10 @@ Stand: 23. November 2026. Vorbild ist das Designsystem von Gapless (`Tokens.swif
 
 Gemessen 23.11.2026 (iPhone, Wörter je Bildschirm): Gapless Insights 32, Net worth 35, Bills 37, Overview 56 · Kompass nach Umbau: Heute ~44, Kalender 40, Habits 40, Ziele 33, Rückblick 29.
 
+## 1a. Hick’s Law [VORSCHLAG – 24.11.2026]
+
+Höchstens 3–5 Wahlmöglichkeiten je Entscheidung, eine Hauptaktion je Bildschirm, Voreinstellung statt Frage, Stufen statt Listen („Mehr“, „Details“). Analyse je Bereich und Plan: `konzepte/hicks-law.md`.
+
 ## 2. Farben „Nachtflug“ (hell / dunkel) [ENTSCHEIDUNG – 24.11.2026]
 
 Indigo trägt, Seladon ist die Handlung, Gold zeigt, was zählt. Entwurf: https://claude.ai/artifact/DfYjA5AX77ed6CfnVLANHe (Code: `Kompass/Design/Farben.swift`).
