@@ -225,10 +225,10 @@ seite(K3, "Einstellungen & Kalender verbinden", "einstellungen", "Kalender verbi
 
 # =============================================================== 4 Habits
 K4 = kapitel("Habits", "kap4", ["Das Tägliche: kein Enddatum, sondern eine Serie."], [("Habits", "habits"), ("Ein Habit", "habit")])
-seite(K4, "Habits", "habits", "Oben „x von y geschafft“ mit den letzten 7 Tagen; dann Heute (je Habit „12 von 20 min“), Diese Woche (Tage als Punkte, n-mal pro Woche als Balken) und Alle Habits (Soll, Quote, Serie). In der App hat ein Habit eine Menge mit Einheit (Minuten, Seiten, Gramm, km …) oder wird nur abgehakt; halb geschafft zählt halb.",
+seite(K4, "Habits", "habits", "Oben zwei Kacheln mit senkrechtem Verlauf (bewusst anders als bei Zielen): Heute (x von y, Ring) und Alle Habits (Wochenpunkte); darunter die Liste zur gewählten Kachel. In der App hat ein Habit eine Menge mit Einheit (Minuten, Seiten, Gramm, km …) oder wird nur abgehakt; halb geschafft zählt halb.",
       bilder=[("habits.jpg", "Habits")], klicks=["Zeile mit Menge → Menge eintragen (Schnellwahl ½, ganz …)", "Haken → ganz erledigt / zurücknehmen", "Name → [[Ein Habit|habit]]"], gespeichert=LOKAL)
-seite(K4, "Ein Habit", "habit", "Eigene Seite wie eine Gapless-Transaktion: Kopfkarte (Stand heute, Serie), Heute abhaken oder Menge eintragen, Stand (Serie · beste · Quote), Fakten-Zeilen mit Pfeil (Titel, Menge, Rhythmus, Erinnerung, Ziel, Aussehen – jede öffnet ihren Editor), letzte 14 Tage, „Zählt in“ (Meilensteine), Löschen. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit an dem Tag offen ist.",
-      bilder=[("habit.jpg", "Habit")], klicks=["Fakten-Zeile → Editor (Sichern)", "Tag im Verlauf → Menge nachtragen", "Erinnerung einschalten → einmal Erlaubnis für Mitteilungen", "Habit löschen"], gespeichert=LOKAL)
+seite(K4, "Ein Habit", "habit", "Geführt wie ein Ziel: oben Stand heute mit genau einer Handlung (Abhaken oder Menge) und „Analyse“; darunter Kacheln Wann · Wie viel · Erinnerung · Verfeinern (Name, Aussehen, Im Kalender, Ziel, Tage nachtragen, Löschen); darunter „Zählt für“. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit an dem Tag offen ist.",
+      bilder=[("habit.jpg", "Habit")], klicks=["Kachel → Editor (Sichern)", "Analyse → [[Rückblick|rueckblick]] (Habit-Analyse)", "Verfeinern › Tage nachtragen → Tag antippen", "Erinnerung einschalten → einmal Erlaubnis für Mitteilungen", "Habit löschen"], gespeichert=LOKAL)
 
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],
@@ -249,12 +249,12 @@ seite(K5, "Vorschläge", "vorschlaege", "Passende Schritte aus Vorlagen – oder
 # =============================================================== 6 Rückblick & Hinzufügen
 K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und wie Neues in die App kommt."],
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
-seite(K6, "Rückblick", "rueckblick", "Oben eine Aussage („62 % deiner Pläne geschafft“), darunter weiße Karten: Fokuszeit (12 Wochen), Zeit je Ziel, Habits je Habit, Auslastung je Tag (Linie = enger Tag), Wochenreflexion.",
-      bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
-seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite, geführt in Schritten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Vorschlag) → Wann → Details → „Passt das so?“ → Anlegen.",
+seite(K6, "Rückblick", "rueckblick", "Oben eine Aussage („62 % deiner Pläne geschafft“), darunter weiße Karten: Fokuszeit (12 Wochen), Ziele (Balken, Lage), Zeit je Ziel, Habits je Habit, Auslastung je Tag, Wochenreflexion. Ziel oder Habit antippen öffnet die Analyse: beim Ziel Verlauf mit gestricheltem Plan, Prognose, Meilensteine, Einsatz; beim Habit Quote, Serie, 12-Wochen-Raster, Anteil je Woche.",
+      bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Ziel oder Habit → Analyse", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
+seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite, geführt in Schritten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Beispielen) → Wann → Details → bei Ziel „Was zählt schon dafür?“ (Habits, Termine, Aufgaben; Bisheriges zählt mit), bei Habit „Gehört er zu etwas?“ → „Passt das so?“ → Anlegen.",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])
-seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Titel, wann (Heute, Morgen, Eingang, Datum, Uhrzeit), wichtig oder weitere, Ziel.",
-      bilder=[("neu-aufgabe.jpg", "Aufgabe")], gespeichert="Aufgabe fällt automatisch in den nächsten offenen Schritt ihres Ziels; " + LOKAL)
+seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Titel, wann (Heute, Morgen, Eingang, Datum, Uhrzeit), wichtig oder weitere, Ziel und „Zählt in“ (welcher Meilenstein; ohne passenden sagt die App, dass sie nur als Einsatz zählt).",
+      bilder=[("neu-aufgabe.jpg", "Aufgabe")], gespeichert="Aufgabe fällt zuerst in den nächsten offenen Aufgaben- oder Zeit-Meilenstein, „Zählt in“ ändert das; " + LOKAL)
 seite(K6, "Erster Start", "willkommen", "Neue Nutzer wählen: Beispieldaten ansehen oder leer starten.",
       bilder=[("willkommen.jpg", "Willkommen")])
 

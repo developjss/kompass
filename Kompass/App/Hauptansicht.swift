@@ -49,7 +49,7 @@ private struct Bereiche: View {
             Tab(Bereich.kalender.titel, systemImage: Bereich.kalender.symbol, value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
             Tab(Bereich.lotse.titel, systemImage: Bereich.lotse.symbol, value: Bereich.lotse) { NavigationStack { LotseAnsicht().zielZiel() } }
             Tab(Bereich.fortschritt.titel, systemImage: Bereich.fortschritt.symbol, value: Bereich.fortschritt) { NavigationStack(path: $nav.fortschrittPfad) { FortschrittAnsicht().zielZiel() } }
-            Tab(Bereich.rueckblick.titel, systemImage: Bereich.rueckblick.symbol, value: Bereich.rueckblick) { NavigationStack { RueckblickAnsicht() } }
+            Tab(Bereich.rueckblick.titel, systemImage: Bereich.rueckblick.symbol, value: Bereich.rueckblick) { NavigationStack(path: $nav.rueckblickPfad) { RueckblickAnsicht().navigationDestination(for: AnalyseAuswahl.self) { AnalyseSeite(auswahl: $0) } } }
         }
         .tint(Farbe.akzent)
         .sheet(item: $nav.blatt) { blatt in

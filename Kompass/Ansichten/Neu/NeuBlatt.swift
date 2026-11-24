@@ -826,7 +826,38 @@ extension NeuArt {
 struct AufgabeBlatt: View {
     var id: UUID
     @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
     @Environment(\.dismiss) private var dismiss
+
+    /// Welcher Meilenstein zählt die Aufgabe (§3): „Aufgaben“ zählt erledigte einmalige, „Zeit“ die Fokuszeit.
+    /// Ohne passenden Meilenstein zählt sie nur als Einsatz – das wird gesagt, nicht verschwiegen.
+    @ViewBuilder private func meilensteinWahl(_ a: Aufgabe, _ g: Ziel) -> some View {
+        let passend = g.schritte.filter { $0.art == .aufgaben || $0.art == .zeit }
+        if !passend.isEmpty {
+            Picker("Zählt in", selection: Binding(get: { a.schrittID }, set: { neu in
+                let h = speicher.heute
+                speicher.aendern { $0.aufgabeZuordnen(id, ziel: g.id, schritt: neu, automatisch: false, heute: h) }
+            })) {
+                Text("Nur Einsatz").tag(UUID?.none)
+                ForEach(passend) { s in Text("\(s.titel) · \(s.art == .zeit ? "Fokuszeit" : "erledigt")").tag(UUID?.some(s.id)) }
+            }
+            .accessibilityIdentifier("aufgabe.meilenstein")
+        }
+        let s = g.schritte.first { $0.id == a.schrittID }
+        if s == nil {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Zählt nicht in die Prozente, nur als Einsatz.", systemImage: "info.circle")
+                    .font(.footnote).foregroundStyle(Farbe.zweitrangig)
+                if passend.isEmpty {
+                    Button("Meilenstein „Aufgaben“ anlegen") { nav.blatt = .meilenstein(ziel: g.id, schritt: nil) }
+                        .font(.footnote.weight(.semibold))
+                }
+            }
+        } else if s?.art == .aufgaben && !a.einmalig {
+            Label("Wiederkehrende Aufgaben zählen hier nicht – nur einmalige.", systemImage: "info.circle")
+                .font(.footnote).foregroundStyle(Farbe.zweitrangig)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -874,6 +905,9 @@ struct AufgabeBlatt: View {
                         })) {
                             Text("Keins").tag(UUID?.none)
                             ForEach(speicher.zustand.ziele) { Text($0.titel).tag(UUID?.some($0.id)) }
+                        }
+                        if let g = speicher.zustand.ziel(a.zielID) {
+                            meilensteinWahl(a, g)
                         }
                         ChipReihe(titel: "Kategorie", auswahl: Kategorie.allCases.map { ($0.name, $0 == a.kategorie) }) { i in
                             let k = Kategorie.allCases[i]
