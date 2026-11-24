@@ -40,13 +40,14 @@ final class KompassUITests: XCTestCase {
     func testRundgangAlleTabs() {
         let app = starten()
         XCTAssertTrue(sichtbar(app, "Home"))
+        XCTAssertTrue(sichtbar(app, "Als Nächstes"))
         XCTAssertTrue(sichtbar(app, "Dein Tag im Blick"))
         XCTAssertTrue(sichtbar(app, "Heute offen"))
         foto(app, "Home")
 
         tab(app, "Kalender")
         XCTAssertTrue(app.buttons["Tag"].waitForExistence(timeout: 5))
-        XCTAssertTrue(sichtbar(app, "Als Nächstes"))
+        XCTAssertTrue(sichtbar(app, "Vorschläge") || sichtbar(app, "Alles eingeplant", timeout: 2))
         foto(app, "Kalender Tag")
 
         tab(app, "Assistent")
