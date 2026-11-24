@@ -63,8 +63,8 @@ final class KompassUITests: XCTestCase {
         foto(app, "Fortschritt Habits")
 
         tab(app, "Rückblick")
-        XCTAssertTrue(sichtbar(app, "deiner Pläne geschafft"))
-        XCTAssertTrue(sichtbar(app, "Fokuszeit"))
+        XCTAssertTrue(sichtbar(app, "Flugbericht"))
+        XCTAssertTrue(sichtbar(app, "Flugplan"))
         foto(app, "Rückblick")
     }
 

@@ -45,6 +45,10 @@ Stand: 24. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Nachtflug (24.11.2026):** neues Aussehen in Indigo, Seladon und Gold, hell und dunkel; Kalender mit Termin-Seite und Vorschlags-Leiste (PR #31). Gadgets Fokus als Flug (PR #33) und Rückblick als Bordkarte (PR #34) eingebaut.
 
+**Kalender live (24.11.2026, PR #35–#38):** „Läuft gerade“ auf Home, Kalender oben. Apple- und Google-Termine werden gelesen **und geschrieben** (Verschieben, Bearbeiten, Löschen, live bei jeder Änderung); Serien-Frage „nur dieser / alle“ für fremde und eigene Serien. Tag und Woche lesbar, Ziehen mit Vorschau am Zielort. Aufgabe anlegen/bearbeiten erklärt „Zählt für“ (Ziel, Meilenstein, Punkte).
+
+**Rückblick neu, Schritt 1 (24.11.2026, PR offen – Freigabe nötig):** Konzept in zwei Fassungen (`docs/produkt/konzepte/rueckblick-analysen.md`: dein Normal, Reife, Muster-Bibliothek, Lernen je Nutzer, immer mit „Warum“) und Hick’s-Law-Analyse der ganzen App (`hicks-law.md`). Gebaut: Zeitraum Woche · Monat · Jahr oben, fünf Karten (Flugbericht, Tower, Flugplan, Logbuch, Debriefing), Rest hinter „Details“; vier erste Tower-Muster, Warum-Blatt mit Hilfreich/Passt nicht. **Neue Rechenregel §11** wartet auf „Ja, mergen“. Nächste Schritte: weitere Muster, Crew-Profil, Testflug, KI-Formulierung; danach Hick’s Law für Aufgabe/+ Neu, Kalender, Habit-Einheiten.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte

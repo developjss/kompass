@@ -437,6 +437,8 @@ struct Lernen: Codable, Sendable, Hashable {
     var vorschlaege: [String: VorschlagZaehler] = [:]
     /// Was der Lotse aus Rückmeldungen lernt
     var lotse = LotseLernen()
+    /// Rückblick: welche Tower-Hinweise helfen (nur auf dem Gerät)
+    var rueckblick = RueckblickLernen()
 
     struct VorschlagZaehler: Codable, Sendable, Hashable {
         var gezeigt = 0
@@ -450,7 +452,18 @@ struct Lernen: Codable, Sendable, Hashable {
         zeitVerhaeltnisse = try c.decodeIfPresent([Double].self, forKey: .zeitVerhaeltnisse) ?? []
         vorschlaege = try c.decodeIfPresent([String: VorschlagZaehler].self, forKey: .vorschlaege) ?? [:]
         lotse = try c.decodeIfPresent(LotseLernen.self, forKey: .lotse) ?? LotseLernen()
+        rueckblick = try c.decodeIfPresent(RueckblickLernen.self, forKey: .rueckblick) ?? RueckblickLernen()
     }
+}
+
+/// Rückblick-Lernen (rechenregeln.md §11): je Muster gezeigt/hilfreich; „Passt nicht“ blendet 8 Wochen aus.
+struct RueckblickLernen: Codable, Sendable, Hashable {
+    var gezeigt: [String: Int] = [:]
+    var hilfreich: [String: Int] = [:]
+    /// Muster-Kennung → Tag, bis zu dem es ausgeblendet bleibt (als Text)
+    var ausgeblendet: [String: String] = [:]
+    /// Je Woche (Montag als Text): ob die Bordkarte abgerissen ist, bleibt in AppStorage
+    init() {}
 }
 
 /// Lernen des Lotsen: nur Zähler und Fragen, nie Antworten verändern. Später anonym über alle Nutzer zusammengeführt.

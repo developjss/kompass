@@ -34,6 +34,8 @@ struct Termin: Identifiable, Hashable, Sendable {
     var zielID: UUID? = nil
     var habitID: UUID? = nil
     var kalenderFarbe: String? = nil
+    /// Name des Kalenders (Apple/Google), für „Zeit ohne Ziel“ im Rückblick
+    var kalenderName: String? = nil
     /// Teil einer Serie (Apple/Google: Wiederholungsregel; Kompass: Wiederholung)
     var wiederkehrend = false
 }

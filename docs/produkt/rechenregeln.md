@@ -104,3 +104,17 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).
+
+## 11. Rückblick (Flugbericht, Normal, Tower) [VORSCHLAG – 24.11.2026, Gründer-Freigabe nötig]
+
+Konzept: `docs/produkt/konzepte/rueckblick-analysen.md`. Swift: `Kompass/Rechnung/Rueckblick.swift`, Tests `KompassTests/RueckblickTests.swift`.
+
+- **Zeitraum:** Woche (Mo–So), Monat, Jahr; Versatz ‹ › verschiebt um einen Zeitraum. Die laufende Woche wird mit der **gleichen Stufe** der Vorwoche verglichen (heute Mittwoch → Vorwoche bis Mittwoch), nicht mit der vollen Vorwoche.
+- **Plan geschafft** = erledigte einmalige Aufgaben (fällig im Zeitraum) + Σ Habit-Tagesanteile ÷ (geplante Aufgaben + geplante Habit-Tage). Quote = geschafft ÷ geplant.
+- **Zeit für Ziele:** je Tag die Zeitspannen aus Terminen (mit Ziel) und Habit-Blöcken **vereinigt** (`Tagesplan.vereinigt`, Überlappungen zählen einmal), Fokuszeit zusätzlich; Anteil = Zeit mit Ziel ÷ erfasste Zeit. Je Ziel: Fokus + Termine + Habits dieses Ziels.
+- **Dein Normal** je Kennzahl: Median der letzten 8 vollen Wochen ± 1,5 × MAD (Median der absoluten Abweichungen), Band mindestens ± 10 % des Medians; braucht ≥ 4 Wochen. Lage: unter · im · über dem Normal.
+- **Reife** = volle Wochen seit der ersten Erledigung (höchstens 12). Tower ab 4 Wochen, Radar/ETA ab 8 („lernt noch“ mit Resttagen).
+- **Muster (Tower), Fassung 1:** `zielRuht` (aktives Ziel, Frist offen, ≥ 14 Tage ohne Einsatz) · `besterFokus` (eine Woche ≥ 1,5 × Normal) · `habitWackelt` (Habit ≥ 3 Wochen unter seinem Normal) · `zuVielGeplant` (3 Wochen in Folge Plan-Quote < 60 % bei ≥ 10 geplanten). Je Muster ein Satz, **eine** Handlung, Zahlen, Rechnung, Sicherheit 1–3.
+- **Rang** = Stärke × Familiengewicht (Ziele 1,5 · Planen 1,2 · Habits/Zeit 1,0) × Nutzen; **Nutzen** `(hilfreich + 1) ÷ (gezeigt + 2)` je Muster. Tower zeigt die 2 besten.
+- **Lernen:** „Hilfreich“ zählt hilfreich +1; „Passt nicht“ blendet das Muster 56 Tage aus (`Lernen.rueckblick.ausgeblendet`). Gezeigt wird je Anzeige gezählt. Ändert nie Prozente (§7).
+- Alles deterministisch; KI formuliert höchstens Sätze (noch nicht angebunden).
