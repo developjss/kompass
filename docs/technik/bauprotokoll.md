@@ -4,6 +4,10 @@ Neueste oben. Je gemergtem Block eine Zeile: Datum · Kürzel · was · Tests.
 
 | Datum | Kürzel | Was | Tests |
 |---|---|---|---|
+| 24.11.2026 | P2-RB | Rückblick als Bordkarte: `Bordkarte` (Abschnitt ziehen/antippen reißt ab, je Woche gemerkt), `BordkarteTests`; PR #34 | Swift-Tests grün, Simulator |
+| 24.11.2026 | P2-FF | Fokus als Flug: `FlugRechnung` (Strecke, Phasen, FL, Rest, Kürzel) + `FlugTests`, `FokusBlatt` mit `FlugHimmel`, Instrumenten, Haptik; Buchung unverändert; PR #33 | Swift-Tests grün, Simulator |
+| 24.11.2026 | P2-NF | Design Nachtflug: Tokens Indigo/Seladon/Gold hell+dunkel, `Farbe.tonArt` (bunte Farben → Palette) + `NachtflugTests`, Stand-Karten mit Goldschein, Serif-Titel; PR #32 | Swift-Tests grün, Simulator hell/dunkel |
+| 24.11.2026 | P2-K6 | Kalender: `TerminSeite` (auch Apple/Google, `terminSerieZaehlen`), `StundeBlatt`, Ziel-Zeichen und Haken in der Zeitleiste, `EmpfehlungLeiste`, „Zählt in“ beim Termin, Kopf „Nächstes in x Min“ + `KalenderTests`; PR #31 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-AN | Analyse im Rückblick: `AnalyseSeite` (`HabitAnalyse`: Quote 30/90/84 Tage, Serie, beste Serie, 12-Wochen-Raster, Anteil je voller Woche; `ZielAnalyse`: Lage, Plan heute, Prognose §5, Verlauf mit Plan-Linie, Meilensteine, Einsatz 8 Wochen), `Navigation.rueckblickPfad`/`zeigeAnalyse`, Rückblick-Karte „Ziele“, Habit-Zeilen antippbar; Aufgabe „Zählt in“ (Meilenstein wählbar, Hinweis „nur Einsatz“); `AnalyseTests`; PR #30 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-HB3 | Habits geführt wie Ziele: Kacheln Heute/Alle Habits, Habit-Seite mit `HabitStandKarte` + Kacheln, `HabitTeilSeite` (Verfeinern, Nachtragen); „+ Neu“ mit Schritt Verbinden (Ziel: Habits/Serien/Aufgaben → Meilensteine; Habit: Ziel, letzte 7 Tage, Termin erfüllt Habit), `MeilensteinQuelle.habitSollBisFrist`; PR #29 | Swift-Tests 110/110, Simulator |
 | 24.11.2026 | P2-MQ | Meilenstein aus Bestehendem (`MeilensteinQuelle.serien`/`habitBisher`/`vorschau`, „Bisherige mitzählen“), Termin-Abgleich zählt heutige Termine erst nach dem Ende; PR #27, #28 | Swift-Tests grün |

@@ -72,4 +72,4 @@ Kurven zeichnen sich in 1,25 s von links nach rechts mit leuchtender Spitze; Zah
 ## 7. Gadgets (Nachtflug)
 
 - **Fokus als Flug** (`FokusBlatt`, `FlugRechnung`): Nachthimmel, Route KMP → Kürzel des Ziels, Flugzeug an der Stelle Fokuszeit ÷ geplante Dauer der Aufgabe (mind. 5 Min). Phasen: Boarding, Steigflug (< 15 %), Reiseflughöhe, Landeanflug (≥ 80 %), Gelandet, Warteschleife (Pause). Instrumente Höhe (FL, Sinusbogen bis FL350), Strecke, Ankunft. Haptik beim Abheben und Landen. Reduce Motion: Wolken stehen, Flugzeug springt ohne Gleiten. Nur Anzeige – gebucht wird wie bisher (`FokusRechnung`).
-- **Rückblick als Bordkarte**: folgt.
+- **Rückblick als Bordkarte** (`Bordkarte`): oben im Rückblick die Bordkarte der Woche (Woche, KMP + KW, MO → SO, Von/Nach, Gate = aktive Ziele, Fokuszeit). Goldenen Abschnitt nach rechts ziehen (> 60 pt) oder antippen: er reißt ab und fällt, dahinter erscheint die Aussage-Karte. Je Woche gemerkt (höchstens 26 Wochen). Haptik beim Abreißen; Reduce Motion: ohne Fallen.

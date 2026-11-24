@@ -194,7 +194,7 @@ seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder
       klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge eintragen direkt auf der Karte", "Hinweis antippen → der Tag im Kalender", "Kreis links → erledigt",
               "„Liegen geblieben“ → „Alle auf heute“", "+ Neu → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
       gespeichert=LOKAL)
-seite(K2, "Fokus-Modus", "fokus", "Vollbild mit Timer. Jede Minute zählt für das Ziel und den Schritt der Aufgabe.",
+seite(K2, "Fokus-Modus", "fokus", "Fokus als Flug: Nachthimmel, ein Flugzeug fliegt von KMP zum Kürzel des Ziels – die Strecke ist die geplante Dauer der Aufgabe. Darunter Fokuszeit, Phase (Steigflug, Reiseflughöhe, Landeanflug, Gelandet) und Höhe, Strecke, Ankunft. Jede Minute zählt für das Ziel und den Schritt der Aufgabe.",
       bilder=[("fokus.jpg", "Fokus")],
       klicks=["Pause / Weiter", "Erledigt → nächste Aufgabe startet automatisch", "Stoppen → Zeit wird gebucht (an Mitternacht geteilt, höchstens 4 Stunden am Stück)"],
       gespeichert="als Fokus-Sitzung je Tag; " + LOKAL)
@@ -249,7 +249,7 @@ seite(K5, "Vorschläge", "vorschlaege", "Passende Schritte aus Vorlagen – oder
 # =============================================================== 6 Rückblick & Hinzufügen
 K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und wie Neues in die App kommt."],
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
-seite(K6, "Rückblick", "rueckblick", "Oben eine Aussage („62 % deiner Pläne geschafft“), darunter weiße Karten: Fokuszeit (12 Wochen), Ziele (Balken, Lage), Zeit je Ziel, Habits je Habit, Auslastung je Tag, Wochenreflexion. Ziel oder Habit antippen öffnet die Analyse: beim Ziel Verlauf mit gestricheltem Plan, Prognose, Meilensteine, Einsatz; beim Habit Quote, Serie, 12-Wochen-Raster, Anteil je Woche.",
+seite(K6, "Rückblick", "rueckblick", "Oben die Bordkarte der Woche (MO → SO, Gate = Ziele, Fokuszeit): den goldenen Abschnitt abreißen, dahinter liegt die Aussage („62 % deiner Pläne geschafft“). Darunter Karten: Fokuszeit (12 Wochen), Ziele (Balken, Lage), Zeit je Ziel, Habits je Habit, Auslastung je Tag, Wochenreflexion. Ziel oder Habit antippen öffnet die Analyse: beim Ziel Verlauf mit gestricheltem Plan, Prognose, Meilensteine, Einsatz; beim Habit Quote, Serie, 12-Wochen-Raster, Anteil je Woche.",
       bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Ziel oder Habit → Analyse", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
 seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite, geführt in Schritten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Beispielen) → Wann → Details → bei Ziel „Was zählt schon dafür?“ (Habits, Termine, Aufgaben; Bisheriges zählt mit), bei Habit „Gehört er zu etwas?“ → „Passt das so?“ → Anlegen.",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])
