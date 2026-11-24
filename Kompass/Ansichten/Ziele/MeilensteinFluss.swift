@@ -225,7 +225,9 @@ private struct AnpassKachel: View {
 // MARK: Geführter Ablauf (neu oder eine einzelne Frage)
 
 struct MeilensteinAssistent: View {
-    enum Frage: String, Identifiable, CaseIterable { case titel, art, wert, wichtig, fertig; var id: String { rawValue } }
+    enum Frage: String, Identifiable, CaseIterable { case quelle, auswahl, titel, art, wert, wichtig, fertig; var id: String { rawValue } }
+    /// Woraus der Meilenstein entsteht: etwas Neues oder etwas, das es schon gibt
+    enum Quelle: String, CaseIterable { case neu, aufgabe, termin, habit }
 
     var zielID: UUID
     /// gesetzt = bestehender Meilenstein wird geändert
@@ -241,11 +243,22 @@ struct MeilensteinAssistent: View {
     @State private var neuerHabit = false
     @State private var habitTitel = ""
     @State private var schwellenText = ""
+    @State private var quelle: Quelle = .neu
+    @State private var aufgabeID: UUID?
+    @State private var serie: MeilensteinQuelle.Serie?
+    @State private var mitBisherigen = true
     @FocusState private var fokus: Bool
 
     static func wichtigName(_ g: Int) -> String { g == 3 ? "Groß" : g == 2 ? "Mittel" : "Klein" }
 
-    private var ablauf: [Frage] { e.art == .aufgaben ? [.titel, .art, .wichtig, .fertig] : Frage.allCases }
+    private var ablauf: [Frage] {
+        if vorhanden != nil { return e.art == .aufgaben ? [.titel, .art, .wichtig, .fertig] : [.titel, .art, .wert, .wichtig, .fertig] }
+        switch quelle {
+        case .neu: return e.art == .aufgaben ? [.quelle, .titel, .art, .wichtig, .fertig] : [.quelle, .titel, .art, .wert, .wichtig, .fertig]
+        case .aufgabe: return [.quelle, .auswahl, .wichtig, .fertig]
+        case .termin, .habit: return [.quelle, .auswahl, .wert, .wichtig, .fertig]
+        }
+    }
     private var position: Int { ablauf.firstIndex(of: frage) ?? 0 }
 
     var body: some View {
@@ -320,8 +333,18 @@ struct MeilensteinAssistent: View {
 
     private var ueberschrift: String {
         switch frage {
+        case .quelle: "Was soll zählen?"
+        case .auswahl:
+            switch quelle {
+            case .aufgabe: "Welche Aufgabe?"
+            case .termin: "Welche Termine?"
+            case .habit: "Welcher Habit?"
+            case .neu: ""
+            }
         case .titel: "Wie heißt der Meilenstein?"
         case .art: "Woran merkst du, dass er geschafft ist?"
+        case .wert where quelle == .termin: "Was zählt – und wie viel brauchst du?"
+        case .wert where quelle == .habit: "Wie oft brauchst du es?"
         case .wert:
             switch e.art {
             case .zahl: "Von wo nach wo?"
@@ -336,6 +359,15 @@ struct MeilensteinAssistent: View {
 
     private var unterzeile: String? {
         switch frage {
+        case .quelle: "Etwas Neues – oder etwas, das du schon machst oder gemacht hast. Auch Vergangenes kann zählen."
+        case .auswahl:
+            switch quelle {
+            case .aufgabe: "Auch erledigte zählen: Ist sie schon geschafft, ist es der Meilenstein auch."
+            case .termin: "Wiederkehrende Termine, z. B. Fahrstunden oder Training – mit allem, was schon stattgefunden hat."
+            case .habit: "Jedes Abhaken zählt – auch rückwirkend, wenn du möchtest."
+            case .neu: nil
+            }
+        case .wert where quelle == .termin, .wert where quelle == .habit: "Kompass zählt mit und rechnet die Prozente – du trägst nichts ein."
         case .titel: "Ein Zwischenziel auf dem Weg, z. B. „Theorieprüfung“."
         case .art: "Danach rechnet Kompass den Fortschritt – du musst nichts ausrechnen."
         case .wert:
@@ -355,6 +387,14 @@ struct MeilensteinAssistent: View {
     @ViewBuilder
     private func inhalt(_ g: Ziel) -> some View {
         switch frage {
+        case .quelle:
+            VStack(spacing: 10) {
+                WahlKachel(symbol: "sparkles", titel: "Etwas Neues", beispiel: "Kompass fragt dich Schritt für Schritt", an: quelle == .neu, farbe: Color(hex: g.farbe)) { quelle = .neu }
+                WahlKachel(symbol: "checkmark.circle", titel: "Eine Aufgabe", beispiel: "auch eine schon erledigte", an: quelle == .aufgabe, farbe: Color(hex: g.farbe)) { quelle = .aufgabe }
+                WahlKachel(symbol: "calendar", titel: "Termine aus dem Kalender", beispiel: "jeder Termin zählt – auch vergangene", an: quelle == .termin, farbe: Color(hex: g.farbe)) { quelle = .termin }
+                WahlKachel(symbol: "repeat", titel: "Ein Habit", beispiel: "jedes Abhaken zählt – auch bisherige", an: quelle == .habit, farbe: Color(hex: g.farbe)) { quelle = .habit }
+            }
+        case .auswahl: auswahl(g)
         case .titel:
             TextField("Name", text: $e.titel)
                 .font(.kompass(.title2, .bold)).focused($fokus).submitLabel(.next).onSubmit(weiter)
@@ -402,8 +442,95 @@ struct MeilensteinAssistent: View {
         }
     }
 
+    // MARK: Bestehendes wählen
+
+    @ViewBuilder
+    private func auswahl(_ g: Ziel) -> some View {
+        let T = speicher.heute
+        switch quelle {
+        case .aufgabe:
+            let liste = speicher.zustand.aufgaben.filter { $0.schrittID == nil || $0.zielID != g.id }
+                .sorted { ($0.erledigt ? 1 : 0, $1.datum ?? T, $0.titel) < ($1.erledigt ? 1 : 0, $0.datum ?? T, $1.titel) }
+            if liste.isEmpty { Text("Noch keine Aufgaben. Wähl „Etwas Neues“.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+            VStack(spacing: 8) {
+                ForEach(liste.prefix(40)) { a in
+                    WahlKachel(symbol: a.erledigt ? "checkmark.circle.fill" : "circle", titel: a.titel,
+                               beispiel: a.erledigt ? "erledigt" : (a.datum.map { Empfehlung.kurz($0, heute: T) } ?? "ohne Tag"),
+                               an: aufgabeID == a.id, farbe: Color(hex: g.farbe)) { aufgabeID = a.id }
+                }
+            }
+        case .termin:
+            let serien = MeilensteinQuelle.serien(zustand: speicher.zustand, ziel: g.id, heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
+            if serien.isEmpty { Text("Keine Termine mit Uhrzeit gefunden. Verbinde deinen Kalender oder leg Termine an.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+            VStack(spacing: 8) {
+                ForEach(serien) { sr in
+                    WahlKachel(symbol: "calendar", titel: sr.titel,
+                               beispiel: "\(sr.bisher) stattgefunden · \(sr.kommend) geplant",
+                               an: serie?.id == sr.id, farbe: Color(hex: g.farbe)) { serie = sr }
+                }
+            }
+        case .habit:
+            VStack(spacing: 8) {
+                ForEach(speicher.zustand.habits) { h in
+                    WahlKachel(symbol: h.symbol, titel: h.titel, beispiel: "\(Zahl.text(MeilensteinQuelle.habitBisher(h, modus: .anzahl, heute: T), stellen: 1))-mal geschafft",
+                               an: e.habitID == h.id, farbe: Color(hex: h.farbe)) { e.habitID = h.id }
+                }
+            }
+        case .neu: EmptyView()
+        }
+    }
+
+    /// Mitzählen-Schalter mit Vorschau: „Damit bist du schon bei 40 %“.
+    private func mitzaehlen(bisher: Double, einheit: String) -> some View {
+        let soll = e.soll ?? 0
+        let p = MeilensteinQuelle.vorschau(bisher: mitBisherigen ? bisher : 0, soll: soll)
+        return VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: $mitBisherigen) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Bisherige mitzählen").font(.zeile).foregroundStyle(Farbe.text)
+                    Text("\(Zahl.text(bisher, stellen: 1)) \(einheit) schon geschafft").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                }
+            }
+            .tint(Farbe.akzent)
+            if soll > 0 {
+                HStack {
+                    Text(p >= 1 ? "Damit ist er schon geschafft" : "Damit bist du schon bei").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                    Spacer()
+                    Text(Zahl.prozent(p)).font(.kompass(.title3, .heavy)).monospacedDigit().foregroundStyle(Farbe.akzent)
+                }
+                Balken(anteil: p, farbe: Farbe.akzent, spur: Farbe.linie)
+            }
+        }
+        .padding(16).background(Farbe.karte, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
     @ViewBuilder
     private func wertFrage(_ g: Ziel) -> some View {
+        if quelle == .termin, let sr = serie {
+            VStack(spacing: 10) {
+                WahlKachel(symbol: "number", titel: "Jeder Termin zählt einmal", beispiel: "z. B. 30 Fahrstunden", an: e.art == .zahl, farbe: Color(hex: g.farbe)) {
+                    e.art = .zahl; e.start = 0; e.einheit = "Termine"; e.soll = Double(max(sr.bisher + sr.kommend, 1))
+                }
+                WahlKachel(symbol: "clock", titel: "Die Zeit zählt", beispiel: "z. B. 20 Stunden Training", an: e.art == .zeit, farbe: Color(hex: g.farbe)) {
+                    e.art = .zeit; e.einheit = nil; e.soll = max(1, (Double(sr.minutenBisher) / 60).rounded(.up) * 2)
+                }
+            }
+            zahlBox(e.art == .zeit ? "Stunden" : "Termine", wert: Binding(get: { e.soll ?? 0 }, set: { e.soll = $0 }))
+            mitzaehlen(bisher: e.art == .zeit ? Double(sr.minutenBisher) / 60 : Double(sr.bisher), einheit: e.art == .zeit ? "Stunden" : "Termine")
+        } else if quelle == .habit, let h = speicher.zustand.habit(e.habitID) {
+            ChipReihe(titel: "Zählen", auswahl: [("Wie oft insgesamt", e.modus == .anzahl), ("Wochen am Stück", e.modus == .wochen)]) { i in
+                e.habitModus = i == 0 ? .anzahl : .wochen
+                e.soll = vorschlag(h, g) + (mitBisherigen ? MeilensteinQuelle.habitBisher(h, modus: e.modus, heute: speicher.heute) : 0)
+            }
+            zahlBox(e.modus == .wochen ? "Wochen" : "Mal", wert: Binding(get: { e.soll ?? 0 }, set: { e.soll = $0 }))
+            mitzaehlen(bisher: MeilensteinQuelle.habitBisher(h, modus: e.modus, heute: speicher.heute), einheit: e.modus == .wochen ? "Wochen" : "Mal")
+        } else {
+            wertNeu(g)
+        }
+    }
+
+    @ViewBuilder
+    private func wertNeu(_ g: Ziel) -> some View {
         switch e.art {
         case .aufgaben: EmptyView()
         case .zahl:
@@ -490,13 +617,22 @@ struct MeilensteinAssistent: View {
         let wie: String
         switch e.art {
         case .aufgaben: wie = "Du hakst ihn ab, wenn er geschafft ist. Teilaufgaben füllen ihn bis 90 %."
+        case .zahl where quelle == .termin: wie = "Jeder Termin zählt einmal – \(Zahl.text(e.soll ?? 0)) Termine sind das Ziel."
+        case .zeit where quelle == .termin: wie = "Die Zeit der Termine zählt – \(Zahl.text(e.soll ?? 0)) Stunden sind das Ziel."
         case .zahl: wie = "Von \(Zahl.text(e.start ?? 0)) bis \(Zahl.text(e.soll ?? 0)) \(e.einheit ?? "") – du trägst ab und zu den Stand ein."
         case .zeit: wie = "\(Zahl.text(e.soll ?? 0)) Stunden – Fokus-Minuten und Termine zählen automatisch."
         case .habit:
             let name = neuerHabit ? habitTitel : (speicher.zustand.habit(e.habitID)?.titel ?? "")
             wie = "Über „\(name)“: \(Zahl.text(e.soll ?? 0)) \(e.modus == .wochen ? "Wochen am Stück" : "Mal") – Abhaken zählt automatisch."
         }
-        return wie + " Wichtigkeit: \(Self.wichtigName(e.gewicht))."
+        let woher: String
+        switch quelle {
+        case .termin: woher = " Aus deinen Terminen „\(serie?.titel ?? "")“" + (mitBisherigen ? ", bisherige zählen mit." : ", ab heute.")
+        case .habit: woher = mitBisherigen ? " Bisheriges Abhaken zählt mit." : " Zählt ab heute."
+        case .aufgabe: woher = e.geschafft ? " Die Aufgabe ist erledigt – der Meilenstein ist geschafft." : " Ist die Aufgabe erledigt, fehlt nur noch das Abhaken."
+        case .neu: woher = ""
+        }
+        return wie + woher + " Wichtigkeit: \(Self.wichtigName(e.gewicht))."
     }
 
     private func zahlBox(_ titel: String, wert: Binding<Double>) -> some View {
@@ -531,6 +667,14 @@ struct MeilensteinAssistent: View {
 
     private var gueltig: Bool {
         switch frage {
+        case .quelle: return true
+        case .auswahl:
+            switch quelle {
+            case .aufgabe: return aufgabeID != nil
+            case .termin: return serie != nil
+            case .habit: return e.habitID != nil
+            case .neu: return true
+            }
         case .titel: return !e.titel.trimmingCharacters(in: .whitespaces).isEmpty
         case .art, .wichtig: return true
         case .wert, .fertig:
@@ -548,7 +692,7 @@ struct MeilensteinAssistent: View {
         geladen = true
         if let v = vorhanden { e = v } else { e = Schritt(titel: "", seit: speicher.heute) }
         schwellenText = (e.schwellen ?? []).map { Zahl.text($0) }.joined(separator: "; ")
-        if let n = nur { frage = n }
+        if let n = nur { frage = n } else if vorhanden == nil { frage = .quelle }
     }
 
     private func zurueck() {
@@ -559,11 +703,29 @@ struct MeilensteinAssistent: View {
     private func weiter() {
         guard gueltig else { return }
         if nur != nil || frage == .fertig { sichern(); return }
+        if frage == .auswahl { vorbelegen() }
         // Art gewechselt → der Wert passt evtl. nicht mehr: Vorschlag aus dem Titel
         if frage == .art, e.art == .zahl, e.soll == nil, let g = speicher.zustand.ziel(zielID) {
             e.soll = ZielVorschlag.zahlImTitel(e.titel) ?? ZielVorschlag.zahlImTitel(g.titel)
         }
         if let i = ablauf.firstIndex(of: frage), i + 1 < ablauf.count { frage = ablauf[i + 1] }
+    }
+
+    /// Nach der Auswahl: Name, Messart und ein sinnvolles Soll aus dem Bestehenden übernehmen.
+    private func vorbelegen() {
+        guard let g = speicher.zustand.ziel(zielID) else { return }
+        switch quelle {
+        case .aufgabe:
+            if let a = speicher.zustand.aufgaben.first(where: { $0.id == aufgabeID }) { e.titel = a.titel; e.art = .aufgaben; e.geschafft = a.erledigt }
+        case .termin:
+            if let sr = serie { e.titel = sr.titel; e.art = .zahl; e.start = 0; e.einheit = "Termine"; e.soll = Double(max(sr.bisher + sr.kommend, 1)) }
+        case .habit:
+            if let h = speicher.zustand.habit(e.habitID) {
+                e.titel = h.titel; e.art = .habit; e.habitModus = .anzahl
+                e.soll = vorschlag(h, g) + MeilensteinQuelle.habitBisher(h, modus: .anzahl, heute: speicher.heute)
+            }
+        case .neu: break
+        }
     }
 
     private func sichern() {
@@ -572,7 +734,10 @@ struct MeilensteinAssistent: View {
         let T = speicher.heute
         let titelHabit = habitTitel.trimmingCharacters(in: .whitespaces)
         let neu = neuerHabit && x.art == .habit
-        if x.art == .habit { x.seit = x.seit ?? T }
+        if x.art == .habit { x.seit = quelle == .habit && mitBisherigen ? speicher.zustand.habit(x.habitID)?.angelegt ?? T : (x.seit ?? T) }
+        let aufgabe = quelle == .aufgabe && vorhanden == nil ? aufgabeID : nil
+        let verknuepfung = quelle == .termin && vorhanden == nil ? serie : nil
+        let terminSeit = mitBisherigen ? (serie?.erster ?? T) : T
         if x.art == .zahl {
             if x.aktuell == nil { x.aktuell = x.start ?? 0 }
             let w = schwellenText.split(whereSeparator: { ";/ \n".contains($0) })
@@ -588,6 +753,8 @@ struct MeilensteinAssistent: View {
                 x.habitID = h.id
             }
             s.schrittSpeichern(x, ziel: zid)
+            if let a = aufgabe { s.aufgabeZuordnen(a, ziel: zid, schritt: x.id, automatisch: false, heute: T) }
+            if let sr = verknuepfung { s.terminVerknuepfen(serie: sr.id, titel: sr.titel, ziel: zid, schritt: x.id, seit: terminSeit) }
         }
         dismiss()
     }

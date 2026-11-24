@@ -398,12 +398,12 @@ private struct MeilensteinListe: View {
                 .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true).padding(.bottom, 10)
         }
         VStack(spacing: 10) {
+            NeuerMeilensteinKnopf(ziel: ziel)
             if ziel.schritte.isEmpty {
-                Text("Woran misst du das Ziel? Leg den ersten Meilenstein an – Kompass fragt dich durch.")
+                Text("Woran misst du das Ziel? Etwas Neues oder etwas, das du schon machst – Kompass fragt dich durch.")
                     .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).frame(maxWidth: .infinity, alignment: .leading)
             }
             ForEach(ziel.schritte) { s in MeilensteinKarte(ziel: ziel, schritt: s) }
-            NeuerMeilensteinKnopf(ziel: ziel)
         }
     }
 }
@@ -475,9 +475,11 @@ private struct NeuerMeilensteinKnopf: View {
             HStack(spacing: 10) {
                 Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
                     .frame(width: 30, height: 30).background(c.gradient, in: Circle())
-                Text(ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen").font(.zeile).foregroundStyle(c)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen").font(.zeile).foregroundStyle(c)
+                    Text("neu oder aus Aufgaben, Terminen, Habits").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                }
                 Spacer()
-                Text("geführt").font(.klein).foregroundStyle(Farbe.zweitrangig)
             }
             .padding(14)
             .background(c.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
