@@ -57,4 +57,18 @@ enum MeilensteinQuelle {
     static func vorschau(bisher: Double, soll: Double) -> Double {
         soll > 0 ? min(1, max(0, bisher / soll)) : 0
     }
+
+    /// Vorschlag fürs Soll eines neuen Habits bis zur Frist: geplante Tage von `ab` bis `bis` (einschließlich);
+    /// bei „n-mal pro Woche“ angefangene Wochen × n. Mindestens 1. Nur ein Vorschlag – der Nutzer kann ihn ändern.
+    static func habitSollBisFrist(_ h: Habit, ab: Tag, bis: Tag) -> Double {
+        guard bis >= ab else { return 1 }
+        if case .proWoche(let n) = h.rhythmus {
+            let wochen = (ab.tage(bis: bis) + 7) / 7
+            return Double(max(1, wochen * n))
+        }
+        var n = 0
+        var d = ab
+        while d <= bis { if HabitRechnung.geplant(h, am: d) { n += 1 }; d = d.plus(tage: 1) }
+        return Double(max(1, n))
+    }
 }

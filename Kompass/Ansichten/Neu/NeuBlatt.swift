@@ -10,7 +10,7 @@ struct NeuBlatt: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var titelFokus: Bool
 
-    enum Schritt: Int, CaseIterable { case was, titel, wann, details, fertig }
+    enum Schritt: Int, CaseIterable { case was, titel, wann, details, verbinden, fertig }
 
     init(art: NeuArt?) {
         _art = State(initialValue: art)
@@ -52,6 +52,15 @@ struct NeuBlatt: View {
     @State private var zielwert = 100.0
     @State private var einheit = ""
     @State private var zahlAngefasst = false
+    @State private var warum = ""
+    // Verbinden: was schon dafür zählt (Ziel) bzw. wozu der Habit gehört
+    @State private var zaehlenHabits: Set<UUID> = []
+    @State private var zaehlenSerien: Set<String> = []
+    @State private var zaehlenAufgaben: Set<UUID> = []
+    @State private var mitBisherigen = true
+    @State private var alsMeilenstein = true
+    @State private var nachgetragen: Set<Int> = []
+    @State private var erfuelltDurch: UUID?
 
     enum WannWahl: String, CaseIterable { case heute = "Heute", morgen = "Morgen", datum = "Datum", eingang = "Ohne Datum" }
     enum RhythmusArt: String, CaseIterable { case taeglich = "Täglich", werktags = "Werktags", tage = "Wochentage", proWoche = "n-mal pro Woche" }
@@ -82,7 +91,7 @@ struct NeuBlatt: View {
 
     // MARK: Kopf und Fuß
 
-    private var schritte: [Schritt] { Schritt.allCases }
+    private var schritte: [Schritt] { art == .habit || art == .ziel ? Schritt.allCases : Schritt.allCases.filter { $0 != .verbinden } }
     private var position: Int { schritte.firstIndex(of: schritt) ?? 0 }
 
     private var kopf: some View {
@@ -139,21 +148,14 @@ struct NeuBlatt: View {
         switch schritt {
         case .was: dismiss()
         case .titel: if kamVonWas { schritt = .was } else { dismiss() }
-        case .wann: schritt = .titel
-        case .details: schritt = .wann
-        case .fertig: schritt = .details
+        default: if position > 0 { schritt = schritte[position - 1] }
         }
     }
 
     private func weiter() {
         guard gueltig else { return }
-        switch schritt {
-        case .was: schritt = .titel
-        case .titel: schritt = .wann
-        case .wann: schritt = .details
-        case .details: schritt = .fertig
-        case .fertig: anlegen()
-        }
+        if schritt == .fertig { anlegen(); return }
+        if position + 1 < schritte.count { schritt = schritte[position + 1] }
     }
 
     private var gueltig: Bool {
@@ -165,7 +167,7 @@ struct NeuBlatt: View {
             if art == .termin { return terminEnde > terminStart }
             return true
         case .details: return art != .habit || !mitMenge || menge > 0
-        case .fertig: return true
+        case .verbinden, .fertig: return true
         }
     }
 
@@ -174,6 +176,7 @@ struct NeuBlatt: View {
         case .titel: return art == .habit ? "Aus dem Titel schlägt Kompass Menge und Einheit vor." : art == .ziel ? "Aus dem Titel kommen Meilenstein-Vorlagen." : "Kurz und klar – du kannst alles später ändern."
         case .wann: return art == .aufgabe ? "Ohne Uhrzeit schlägt der Kalender sie unter „Empfehlung“ vor – ziehbar in den Tag." : art == .habit ? "Mit fester Uhrzeit steht der Habit als Block im Kalender." : ""
         case .details: return "Alles hier ist optional."
+        case .verbinden: return art == .ziel ? "Jedes Ausgewählte wird ein Meilenstein – Kompass zählt automatisch." : "Optional – du kannst es später unter Verfeinern ändern."
         default: return ""
         }
     }
@@ -204,9 +207,10 @@ struct NeuBlatt: View {
             case .aufgabe: return "Noch Details?"
             case .termin: return "Zählt er für etwas?"
             case .habit: return "Mit Menge?"
-            case .ziel: return "Meilensteine"
+            case .ziel: return "Meilensteine und Warum"
             case nil: return ""
             }
+        case .verbinden: return art == .ziel ? "Was zählt schon dafür?" : "Gehört er zu etwas?"
         case .fertig: return "Passt das so?"
         }
     }
@@ -217,6 +221,8 @@ struct NeuBlatt: View {
         case (.details, .habit): return "Halb geschafft zählt halb – zum Beispiel 10 von 20 Minuten."
         case (.details, .ziel): return gewaehlteVorlage.map { "Vorlage: \($0.kurz)" }
         case (.wann, .ziel): return "„Auf Kurs“ vergleicht den Fortschritt mit der Zeit bis dahin."
+        case (.verbinden, .ziel): return "Habits, Termine und Aufgaben, die du schon hast – auch Vergangenes kann mitzählen."
+        case (.verbinden, .habit): return "Ein Ziel, für das er zählt, Tage, an denen du es schon gemacht hast, oder ein Termin, der ihn erfüllt."
         default: return nil
         }
     }
@@ -229,6 +235,7 @@ struct NeuBlatt: View {
         case .titel: titelTeil
         case .wann: wannTeil
         case .details: detailsTeil
+        case .verbinden: verbindenTeil
         case .fertig: fertigTeil
         }
     }
@@ -287,8 +294,14 @@ struct NeuBlatt: View {
             }
             if let g = gewaehlteVorlage { Text(g.kurz).font(.klein).foregroundStyle(Farbe.zweitrangig) }
         }
-        if art == .aufgabe || art == .termin {
-            let beispiele = art == .aufgabe ? ["Flugschule anrufen", "Paket zur Post", "Kapitel 4 lesen"] : ["Fahrstunde", "Zahnarzt", "Training"]
+        if titel.trimmingCharacters(in: .whitespaces).isEmpty || art == .aufgabe || art == .termin {
+            let beispiele: [String] = switch art {
+            case .aufgabe: ["Flugschule anrufen", "Paket zur Post", "Kapitel 4 lesen"]
+            case .termin: ["Fahrstunde", "Zahnarzt", "Training"]
+            case .habit: ["20 Minuten lesen", "10.000 Schritte", "Sport 3× pro Woche"]
+            case .ziel: ["Halbmarathon laufen", "Führerschein Klasse B", "10.000 € sparen"]
+            case nil: []
+            }
             ChipReihe(titel: "Zum Beispiel", auswahl: beispiele.map { ($0, titel == $0) }) { titel = beispiele[$0] }
         }
     }
@@ -391,7 +404,6 @@ struct NeuBlatt: View {
                     DatePicker("Genau", selection: Binding(get: { uhr(erinnerung ?? 0) }, set: { erinnerung = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
                 }
             }
-            zielKarte
         case .ziel:
             if let zs = zahlSchritt {
                 Karte {
@@ -413,10 +425,90 @@ struct NeuBlatt: View {
                 let bereiche = ["Lernen", "Gesundheit", "Finanzen", "Arbeit", "Familie", "Allgemein"]
                 ChipReihe(titel: "Bereich", auswahl: bereiche.map { ($0, $0 == (zielBereich ?? gewaehlteVorlage?.bereich ?? "Allgemein")) }) { zielBereich = bereiche[$0] }
             }
+            Karte {
+                Text("Warum ist es dir wichtig?").font(.zeile)
+                TextField("z. B. unabhängig unterwegs sein", text: $warum, axis: .vertical).font(.unterzeile).lineLimit(1...3)
+                Text("Hilft beim Dranbleiben – steht später auf der Ziel-Seite.").font(.klein).foregroundStyle(Farbe.zweitrangig)
+            }
         case nil: EmptyView()
         }
     }
     @State private var zielBereich: String?
+
+    @ViewBuilder private var verbindenTeil: some View {
+        let z = speicher.zustand
+        let T = speicher.heute
+        if art == .ziel {
+            if !z.habits.isEmpty {
+                Karte {
+                    ChipReihe(titel: "Habits", auswahl: z.habits.map { ($0.titel, zaehlenHabits.contains($0.id)) }) { i in
+                        let id = z.habits[i].id; if zaehlenHabits.contains(id) { zaehlenHabits.remove(id) } else { zaehlenHabits.insert(id) }
+                    }
+                }
+            }
+            let serien = Array(MeilensteinQuelle.serien(zustand: z, ziel: UUID(), heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:)).prefix(8))
+            if !serien.isEmpty {
+                Karte {
+                    let doppelt = Dictionary(grouping: serien, by: \.titel).filter { $0.value.count > 1 }.keys
+                    ChipReihe(titel: "Termine (jeder zählt einmal)", auswahl: serien.map { sr in
+                        let quelle = sr.id.split(separator: ":").first.map { String($0).capitalized } ?? ""
+                        return ("\(sr.titel)\(doppelt.contains(sr.titel) ? " (\(quelle))" : "") · \(sr.bisher)", zaehlenSerien.contains(sr.id))
+                    }) { i in
+                        let id = serien[i].id; if zaehlenSerien.contains(id) { zaehlenSerien.remove(id) } else { zaehlenSerien.insert(id) }
+                    }
+                }
+            }
+            let aufgaben = Array(z.aufgaben.filter { $0.zielID == nil }.sorted { ($0.erledigt ? 1 : 0, $0.reihenfolge) < ($1.erledigt ? 1 : 0, $1.reihenfolge) }.prefix(10))
+            if !aufgaben.isEmpty {
+                Karte {
+                    ChipReihe(titel: "Aufgaben (auch erledigte)", auswahl: aufgaben.map { (($0.erledigt ? "✓ " : "") + $0.titel, zaehlenAufgaben.contains($0.id)) }) { i in
+                        let id = aufgaben[i].id; if zaehlenAufgaben.contains(id) { zaehlenAufgaben.remove(id) } else { zaehlenAufgaben.insert(id) }
+                    }
+                }
+            }
+            if !(zaehlenHabits.isEmpty && zaehlenSerien.isEmpty) {
+                Karte {
+                    Toggle(isOn: $mitBisherigen) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Bisheriges mitzählen").font(.zeile)
+                            Text("Was du schon gemacht hast, zählt ab Start mit.").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                        }
+                    }
+                    .tint(Farbe.akzent)
+                }
+            }
+            if z.habits.isEmpty && serien.isEmpty && aufgaben.isEmpty {
+                Karte { Text("Noch nichts da – Meilensteine legst du später direkt im Ziel an.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
+            }
+        } else {
+            zielKarte
+            if zielID != nil {
+                Karte {
+                    Toggle(isOn: $alsMeilenstein) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Zählt in die Prozente").font(.zeile)
+                            Text(alsMeilenstein ? "Wird ein Meilenstein im Ziel – jedes Abhaken zählt." : "Nur Einsatz – ändert die Prozente nicht.").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                        }
+                    }
+                    .tint(Farbe.akzent)
+                }
+            }
+            Karte {
+                let tage = (1...7).map { T.plus(tage: -$0) }
+                ChipReihe(titel: "Schon gemacht? (letzte 7 Tage)", auswahl: tage.enumerated().map { i, d in
+                    (i == 0 ? "Gestern" : namen[d.wochentag - 1], nachgetragen.contains(i + 1))
+                }) { i in let k = i + 1; if nachgetragen.contains(k) { nachgetragen.remove(k) } else { nachgetragen.insert(k) } }
+            }
+            let serienTermine = Dictionary(grouping: z.eigeneTermine.filter { $0.wiederholung != .nie }, by: \.titel).compactMap { $0.value.first }
+            if !serienTermine.isEmpty {
+                Karte {
+                    ChipReihe(titel: "Wird durch einen Termin erfüllt", auswahl: [("Keinen", erfuelltDurch == nil)] + serienTermine.map { ($0.titel, erfuelltDurch == $0.id) }) { i in
+                        erfuelltDurch = i == 0 ? nil : serienTermine[i - 1].id
+                    }
+                }
+            }
+        }
+    }
 
     private var zielKarte: some View {
         Karte {
@@ -474,9 +566,15 @@ struct NeuBlatt: View {
             t.append(mitMenge ? "\(Zahl.text(menge, stellen: 1)) \(habitEinheit.name) · \(rhythmusText)" : rhythmusText)
             if let u = habitUhrzeit { t.append("Im Kalender um \(Tagesplan.uhr(u))") }
             if let e = erinnerung { t.append("Erinnerung \(Tagesplan.uhr(e))") }
+            if zielID != nil { t.append(alsMeilenstein ? "Zählt als Meilenstein" : "Nur Einsatz fürs Ziel") }
+            if !nachgetragen.isEmpty { t.append("\(nachgetragen.count) Tag\(nachgetragen.count == 1 ? "" : "e") nachgetragen") }
+            if let id = erfuelltDurch, let et = z.eigeneTermine.first(where: { $0.id == id }) { t.append("Erfüllt durch „\(et.titel)“") }
         case .ziel:
             t.append("Bis \(faellig.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de_DE"))))")
             if let g = gewaehlteVorlage { t.append(g.kurz) }
+            let extra = zaehlenHabits.count + zaehlenSerien.count + (zaehlenAufgaben.isEmpty ? 0 : 1)
+            if extra > 0 { t.append("+ \(extra) Meilenstein\(extra == 1 ? "" : "e") aus Bestehendem" + (mitBisherigen ? ", Bisheriges zählt mit" : "")) }
+            if !warum.trimmingCharacters(in: .whitespaces).isEmpty { t.append("Warum: \(warum.trimmingCharacters(in: .whitespaces))") }
         case nil: break
         }
         if let g = z.ziel(zielID), art != .ziel { t.append("Ziel: \(g.titel)") }
@@ -616,10 +714,24 @@ struct NeuBlatt: View {
                           rhythmus: habitRhythmus, menge: mitMenge ? menge : nil, einheit: mitMenge ? habitEinheit : nil,
                           erinnerung: erinnerung, zielID: zielID, angelegt: heute)
             h.uhrzeit = habitUhrzeit
+            let tageZurueck = nachgetragen.sorted()
+            if let weitest = tageZurueck.last { h.angelegt = heute.plus(tage: -weitest) }
+            let ziel = speicher.zustand.ziel(zielID)
+            let meilenstein: Kompass.Schritt? = (ziel != nil && alsMeilenstein) ? {
+                let soll = MeilensteinQuelle.habitSollBisFrist(h, ab: heute, bis: ziel!.faellig) + Double(tageZurueck.count)
+                return Kompass.Schritt(titel: t, art: .habit, seit: h.angelegt, soll: soll, habitID: h.id)
+            }() : nil
+            let termin = erfuelltDurch
+            let speichern: (inout Zustand) -> Void = { s in
+                s.habits.append(h)
+                for k in tageZurueck { s.habitUmschalten(h.id, am: heute.plus(tage: -k)) }
+                if let m = meilenstein, let zid = ziel?.id { s.schrittSpeichern(m, ziel: zid) }
+                if let tid = termin, let i = s.eigeneTermine.firstIndex(where: { $0.id == tid }) { s.eigeneTermine[i].habitID = h.id }
+            }
             if h.erinnerung != nil {
-                Task { await Erinnerungen.aktiv.erlaubnis(); speicher.aendern { $0.habits.append(h) } }
+                Task { await Erinnerungen.aktiv.erlaubnis(); speicher.aendern(speichern) }
             } else {
-                speicher.aendern { $0.habits.append(h) }
+                speicher.aendern(speichern)
             }
         case .ziel:
             let farbe = Farbe.ziele[speicher.zustand.ziele.count % Farbe.ziele.count]
@@ -635,7 +747,40 @@ struct NeuBlatt: View {
                 if s.art == .habit { s.seit = heute }
                 return s
             }
-            speicher.aendern { $0.ziele.append(g) }
+            g.warum = warum.trimmingCharacters(in: .whitespaces)
+            // Was schon dafür zählt (rechenregeln.md §3 „Meilenstein aus Bestehendem“)
+            let z = speicher.zustand
+            let mit = mitBisherigen
+            let fristTag = Tag(faellig, kalender: k)
+            for hid in zaehlenHabits {
+                guard let h = z.habit(hid) else { continue }
+                let bisher = mit ? MeilensteinQuelle.habitBisher(h, modus: .anzahl, heute: heute) : 0
+                g.schritte.append(Kompass.Schritt(titel: h.titel, art: .habit, seit: mit ? h.angelegt : heute,
+                                                  soll: MeilensteinQuelle.habitSollBisFrist(h, ab: heute, bis: fristTag) + bisher, habitID: h.id))
+            }
+            let serien = MeilensteinQuelle.serien(zustand: z, ziel: UUID(), heute: heute, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
+                .filter { zaehlenSerien.contains($0.id) }
+            var verknuepfungen: [(MeilensteinQuelle.Serie, UUID, Tag)] = []
+            for sr in serien {
+                let sch = Kompass.Schritt(titel: sr.titel, art: .zahl, soll: Double(max(1, (mit ? sr.bisher : 0) + sr.kommend)), start: 0, aktuell: 0, einheit: "Termine")
+                g.schritte.append(sch)
+                verknuepfungen.append((sr, sch.id, mit ? (sr.erster ?? heute) : heute))
+            }
+            let aufgabenIDs = zaehlenAufgaben
+            var aufgabenSchritt: Kompass.Schritt?
+            if !aufgabenIDs.isEmpty {
+                let erledigt = aufgabenIDs.allSatisfy { id in z.aufgaben.first { $0.id == id }?.erledigt == true }
+                aufgabenSchritt = Kompass.Schritt(titel: aufgabenIDs.count == 1 ? (z.aufgaben.first { $0.id == aufgabenIDs.first! }?.titel ?? "Aufgabe") : "Aufgaben erledigen",
+                                                  art: .aufgaben, geschafft: erledigt)
+                g.schritte.append(aufgabenSchritt!)
+            }
+            let gid = g.id
+            speicher.aendern { s in
+                s.ziele.append(g)
+                for hid in zaehlenHabits { if let i = s.habits.firstIndex(where: { $0.id == hid }), s.habits[i].zielID == nil { s.habits[i].zielID = gid } }
+                for (sr, sid, seit) in verknuepfungen { s.terminVerknuepfen(serie: sr.id, titel: sr.titel, ziel: gid, schritt: sid, seit: seit) }
+                if let a = aufgabenSchritt { for id in aufgabenIDs { s.aufgabeZuordnen(id, ziel: gid, schritt: a.id, automatisch: false, heute: heute) } }
+            }
         case nil: break
         }
         dismiss()

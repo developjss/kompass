@@ -121,7 +121,7 @@ private struct EinstellKachel: View {
     }
 }
 
-private struct EinstellKachelInhalt: View {
+struct EinstellKachelInhalt: View {
     var symbol: String
     var titel: String
     var wert: String

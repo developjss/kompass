@@ -68,4 +68,15 @@ struct MeilensteinQuelleTests {
         z.habits = [h]
         #expect(abs(Fortschritt.stand(s, in: z, heute: heute).anteil - 0.5) < 1e-9)
     }
+
+    @Test func sollVorschlagBisZurFrist() {
+        // täglich: Mi 5.5. bis Di 11.5. = 7 Tage
+        let taeglich = Habit(titel: "Lesen", farbe: "#000000", symbol: "x", angelegt: heute)
+        #expect(MeilensteinQuelle.habitSollBisFrist(taeglich, ab: heute, bis: heute.plus(tage: 6)) == 7)
+        // 3× pro Woche über 14 Tage (3 angefangene Wochen) = 9
+        let dreimal = Habit(titel: "Laufen", farbe: "#000000", symbol: "x", rhythmus: .proWoche(3), angelegt: heute)
+        #expect(MeilensteinQuelle.habitSollBisFrist(dreimal, ab: heute, bis: heute.plus(tage: 14)) == 9)
+        // Frist vorbei → mindestens 1
+        #expect(MeilensteinQuelle.habitSollBisFrist(taeglich, ab: heute, bis: heute.plus(tage: -3)) == 1)
+    }
 }

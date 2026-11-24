@@ -1,11 +1,16 @@
 import SwiftUI
 
-/// Habits (Tab Fortschritt): Kopfkarte mit einer Aussage, dann Heute (abhaken/eintragen), Diese Woche, Alle Habits.
-/// Aufbau nach habits-v2.md §3 – Zeilen wie in Gapless: Kachel · Titel + eine Unterzeile · Wert rechts.
+/// Habits (Tab Fortschritt): zwei Kacheln „Heute“ und „Alle Habits“ (senkrechter Verlauf, große Zahl – bewusst anders
+/// als die diagonalen Ziel-Kacheln), darunter die gewählte Liste. Analyse steht im Rückblick.
 struct HabitsAnsicht: View {
+    enum Ansicht: String { case heute, alle }
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @AppStorage("habits.ansicht") private var ansichtRoh = Ansicht.heute.rawValue
     @State private var erledigteZeigen = false
+
+    private var ansicht: Ansicht { .init(rawValue: ansichtRoh) ?? .heute }
 
     var body: some View {
         let z = speicher.zustand
@@ -13,6 +18,12 @@ struct HabitsAnsicht: View {
         let heute = z.habits.filter { HabitRechnung.geplant($0, am: T) }
         let offen = heute.filter { !$0.voll(am: T) }
         let geschafft = heute.filter { $0.voll(am: T) }
+        let woche = (0..<7).map { i -> Double in
+            let d = T.montag.plus(tage: i)
+            guard d <= T else { return -1 }
+            let q = HabitRechnung.quote(alle: z.habits, von: d, bis: d, heute: T)
+            return q.geplant > 0 ? q.erledigt / Double(q.geplant) : 0
+        }
 
         VStack(alignment: .leading, spacing: 0) {
             if z.habits.isEmpty {
@@ -21,34 +32,47 @@ struct HabitsAnsicht: View {
                     PlusZeile(text: "Habit") { nav.blatt = .neu(.habit) }
                 }
             } else {
-                HabitsKopf(heute: heute, offen: offen)
-
-                AbschnittKopf(titel: "Heute") {
-                    Text(offen.isEmpty ? (heute.isEmpty ? "frei" : "alles geschafft") : "\(offen.count) offen").foregroundStyle(Farbe.zweitrangig)
-                }
-                GruppierteListe {
-                    if heute.isEmpty { LeerZeile(text: "Heute ist kein Habit geplant.") }
-                    if offen.isEmpty && !heute.isEmpty { LeerZeile(text: "Alles abgehakt – gut gemacht.") }
-                    ForEach(offen) { HeuteZeile(habit: $0) }
-                    if !geschafft.isEmpty {
-                        Button { withAnimation(.snappy(duration: 0.2)) { erledigteZeigen.toggle() } } label: {
-                            HStack {
-                                Text("\(geschafft.count) erledigt").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                                Spacer()
-                                Image(systemName: erledigteZeigen ? "chevron.up" : "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                            }
-                            .padding(.horizontal, 16).frame(minHeight: 44).contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(erledigteZeigen ? "Erledigte ausblenden" : "\(geschafft.count) erledigte zeigen")
-                        if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0) } }
+                HStack(spacing: 12) {
+                    HabitKachel(titel: "Heute", farbe: Color(hex: "#14A38B"), an: ansicht == .heute,
+                                zahl: heute.isEmpty ? "frei" : "\(geschafft.count)/\(heute.count)",
+                                unter: heute.isEmpty ? "nichts geplant" : (offen.isEmpty ? "alles geschafft" : "\(offen.count) offen"),
+                                anteil: heute.isEmpty ? nil : Double(geschafft.count) / Double(heute.count), woche: nil) {
+                        withAnimation(ruhig ? nil : .snappy) { ansichtRoh = Ansicht.heute.rawValue }
+                    }
+                    HabitKachel(titel: "Alle Habits", farbe: Color(hex: "#4A6FE0"), an: ansicht == .alle,
+                                zahl: "\(z.habits.count)", unter: "diese Woche", anteil: nil, woche: woche) {
+                        withAnimation(ruhig ? nil : .snappy) { ansichtRoh = Ansicht.alle.rawValue }
                     }
                 }
 
-                AbschnittKopf(titel: "Alle Habits") { Text("diese Woche").foregroundStyle(Farbe.zweitrangig) }
-                GruppierteListe {
-                    ForEach(z.habits.sorted { wochenReihenfolge($0) < wochenReihenfolge($1) }) { WochenZeile(habit: $0) }
-                    PlusZeile(text: "Habit") { nav.blatt = .neu(.habit) }
+                if ansicht == .heute {
+                    AbschnittKopf(titel: "Heute") {
+                        Text(offen.isEmpty ? (heute.isEmpty ? "frei" : "alles geschafft") : "\(offen.count) offen").foregroundStyle(Farbe.zweitrangig)
+                    }
+                    GruppierteListe {
+                        if heute.isEmpty { LeerZeile(text: "Heute ist kein Habit geplant.") }
+                        if offen.isEmpty && !heute.isEmpty { LeerZeile(text: "Alles abgehakt – gut gemacht.") }
+                        ForEach(offen) { HeuteZeile(habit: $0) }
+                        if !geschafft.isEmpty {
+                            Button { withAnimation(.snappy(duration: 0.2)) { erledigteZeigen.toggle() } } label: {
+                                HStack {
+                                    Text("\(geschafft.count) erledigt").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                                    Spacer()
+                                    Image(systemName: erledigteZeigen ? "chevron.up" : "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                                }
+                                .padding(.horizontal, 16).frame(minHeight: 44).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(erledigteZeigen ? "Erledigte ausblenden" : "\(geschafft.count) erledigte zeigen")
+                            if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0) } }
+                        }
+                    }
+                } else {
+                    AbschnittKopf(titel: "Alle Habits") { Text("diese Woche").foregroundStyle(Farbe.zweitrangig) }
+                    GruppierteListe {
+                        ForEach(z.habits.sorted { wochenReihenfolge($0) < wochenReihenfolge($1) }) { WochenZeile(habit: $0) }
+                        PlusZeile(text: "Habit") { nav.blatt = .neu(.habit) }
+                    }
                 }
             }
         }
@@ -57,45 +81,61 @@ struct HabitsAnsicht: View {
     private func wochenReihenfolge(_ h: Habit) -> Int { if case .proWoche = h.rhythmus { return 0 } else { return 1 } }
 }
 
-// MARK: Kopfkarte
-
-private struct HabitsKopf: View {
-    var heute: [Habit]
-    var offen: [Habit]
-    @Environment(Speicher.self) private var speicher
+/// Habit-Kachel: senkrechter Verlauf Weiß → Farbe, große Zahl, darunter Ring (heute) oder Wochenpunkte (alle).
+private struct HabitKachel: View {
+    var titel: String
+    var farbe: Color
+    var an: Bool
+    var zahl: String
+    var unter: String
+    /// Anteil für den Ring (heute), nil = kein Ring
+    var anteil: Double?
+    /// Mo–So: Anteil je Tag (−1 = Zukunft), nil = keine Punkte
+    var woche: [Double]?
+    var aktion: () -> Void
 
     var body: some View {
-        let z = speicher.zustand
-        let T = speicher.heute
-        let tage = (0..<7).map { i -> Double in
-            let d = T.plus(tage: -(6 - i))
-            let q = HabitRechnung.quote(alle: z.habits, von: d, bis: d, heute: T)
-            return q.geplant > 0 ? q.erledigt / Double(q.geplant) : 0
-        }
-        let beste = z.habits.map { HabitRechnung.serie($0, heute: T) }.max() ?? 0
-        let geschafft = heute.count - offen.count
-        Verlaufskarte(farben: Farbe.gruen) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    KartenLabel(text: "Heute")
-                    Text(heute.isEmpty ? "Nichts geplant" : "\(geschafft) von \(heute.count) geschafft")
-                        .font(.kompass(.title, .heavy)).contentTransition(.numericText())
-                    Text(unterzeile(beste: beste)).font(.unterzeile).opacity(0.9).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+        Button(action: aktion) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(titel).font(.kompass(.subheadline, .heavy)).foregroundStyle(Farbe.text)
+                    Spacer()
+                    if an { Image(systemName: "checkmark.circle.fill").font(.title3).symbolRenderingMode(.palette).foregroundStyle(.white, farbe) }
                 }
-                Spacer(minLength: 12)
-                MiniSaeulen(werte: tage, hoehe: 52, hervor: 6).padding(.top, 8)
+                HStack(alignment: .center, spacing: 10) {
+                    Text(zahl).font(.kompass(.largeTitle, .heavy)).foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                    Spacer(minLength: 0)
+                    if let anteil {
+                        ZStack {
+                            Circle().stroke(farbe.opacity(0.2), lineWidth: 5)
+                            if anteil > 0 { Circle().trim(from: 0, to: anteil).stroke(farbe, style: StrokeStyle(lineWidth: 5, lineCap: .round)).rotationEffect(.degrees(-90)) }
+                        }
+                        .frame(width: 34, height: 34)
+                    }
+                }
+                if let woche {
+                    HStack(spacing: 5) {
+                        ForEach(Array(woche.enumerated()), id: \.offset) { _, w in
+                            Circle().fill(w < 0 ? farbe.opacity(0.12) : (w >= 1 ? farbe : farbe.opacity(0.25 + 0.5 * w)))
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+                } else {
+                    Text(unter).font(.klein).foregroundStyle(Farbe.text.opacity(0.7))
+                }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+            .background {
+                LinearGradient(stops: [.init(color: Farbe.karte, location: 0.2), .init(color: farbe.opacity(0.32), location: 1)], startPoint: .top, endPoint: .bottom)
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+            }
+            .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(an ? farbe : farbe.opacity(0.2), lineWidth: an ? 2.5 : 1))
+            .shadow(color: farbe.opacity(an ? 0.25 : 0.1), radius: an ? 10 : 6, y: 4)
         }
-        .accessibilityElement(children: .combine)
-    }
-
-    /// Eine Zeile, ein Fakt: was noch offen ist (höchstens zwei Namen), sonst die längste Serie.
-    private func unterzeile(beste: Int) -> String {
-        if offen.isEmpty { return heute.isEmpty ? "Heute ist frei." : (beste > 0 ? "Alles abgehakt · längste Serie \(beste)" : "Alles abgehakt") }
-        let namen = offen.prefix(2).map { $0.titel.count > 22 ? String($0.titel.prefix(21)) + "…" : $0.titel }
-        var t = "Noch offen: " + namen.joined(separator: ", ")
-        if offen.count > 2 { t += " +\(offen.count - 2)" }
-        return t
+        .buttonStyle(DruckStil())
+        .accessibilityLabel("\(titel), \(zahl), \(unter)")
+        .accessibilityAddTraits(an ? [.isButton, .isSelected] : .isButton)
     }
 }
 
