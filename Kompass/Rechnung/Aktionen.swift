@@ -165,7 +165,8 @@ extension Zustand {
     mutating func terminLoesen(_ id: UUID) { termine.removeAll { $0.id == id } }
 
     /// Stattgefundene Termine der verknüpften Serien übernehmen (nur Tag und Dauer). `quelle` liefert die Termine eines Tages.
-    mutating func termineAbgleichen(heute: Tag, quelle: (Tag) -> [Termin]) {
+    /// `jetzt` (Minuten seit Mitternacht): heutige Termine zählen erst, wenn sie vorbei sind. nil = der ganze Tag zählt (Tagesende).
+    mutating func termineAbgleichen(heute: Tag, jetzt: Int? = nil, quelle: (Tag) -> [Termin]) {
         for i in termine.indices {
             let l = termine[i]
             // Heute wird jedes Mal neu geprüft (Termin kann noch dazukommen), frühere Tage nur einmal.
@@ -174,7 +175,9 @@ extension Zustand {
             if d > heute { d = heute }
             while d <= heute {
                 for t in quelle(d) where "\(t.quelle.rawValue):\(t.schluessel)" == l.serie {
-                    if let a = t.start, let e = t.ende { neu.append(TerminVorkommen(tag: d, minuten: max(0, e - a))) }
+                    guard let a = t.start, let e = t.ende else { continue }
+                    if d == heute, let j = jetzt, e > j { continue } // heute noch nicht vorbei → zählt noch nicht
+                    neu.append(TerminVorkommen(tag: d, minuten: max(0, e - a)))
                 }
                 d = d.plus(tage: 1)
             }

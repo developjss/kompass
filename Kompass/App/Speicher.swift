@@ -121,9 +121,10 @@ final class Speicher {
         let T = heute
         let z = zustand
         let extern = externeTermine
-        zustand.termineAbgleichen(heute: T) { d in Kalenderquelle.termine(am: d, zustand: z, heute: T, extern: extern[d] ?? []) }
         let k = kalender.dateComponents([.hour, .minute], from: jetzt())
-        zustand.habitsAusTerminen(heute: T, jetzt: (k.hour ?? 0) * 60 + (k.minute ?? 0))
+        let minuten = (k.hour ?? 0) * 60 + (k.minute ?? 0)
+        zustand.termineAbgleichen(heute: T, jetzt: minuten) { d in Kalenderquelle.termine(am: d, zustand: z, heute: T, extern: extern[d] ?? []) }
+        zustand.habitsAusTerminen(heute: T, jetzt: minuten)
     }
 
     /// Termine aus dem Apple-Kalender (EventKit), je Tag – nur gelesen, nicht gespeichert.
