@@ -29,7 +29,7 @@ struct ProBlatt: View {
                             speicher.aendern { $0.einstellungen.pro.toggle() }
                         }
                         .font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
-                        .background(Farbe.akzent, in: Capsule()).foregroundStyle(.white)
+                        .background(Farbe.akzent, in: Capsule()).foregroundStyle(Farbe.aufFarbe)
                         Text("Testversion: In Debug-, Beta- und TestFlight-Builds gilt Pro ohne Kauf.").font(.klein).foregroundStyle(Farbe.zweitrangig)
                     }
                 }

@@ -20,7 +20,7 @@ struct TagReelKarte: View {
                         Text(teaser).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
                         Label("Start", systemImage: "play.fill").font(.kompass(.subheadline, .bold))
                             .padding(.horizontal, 16).frame(minHeight: 40)
-                            .background(Farbe.akzent, in: Capsule()).foregroundStyle(.white)
+                            .background(Farbe.akzent, in: Capsule()).foregroundStyle(Farbe.aufFarbe)
                             .padding(.top, 4)
                     }
                     Spacer(minLength: 8)
@@ -222,7 +222,7 @@ private struct SlideAnsicht: View {
                 }
                 Button(action: weiter) {
                     Text(letzte ? "Fertig" : "Weiter").font(.kompass(.headline, .bold)).frame(maxWidth: .infinity, minHeight: 54)
-                        .background(.white, in: Capsule()).foregroundStyle(slide.farben[0])
+                        .background(Farbe.seladon, in: Capsule()).foregroundStyle(Farbe.nacht)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("reel.weiter")

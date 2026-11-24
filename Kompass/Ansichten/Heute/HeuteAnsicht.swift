@@ -193,7 +193,7 @@ struct HauptKnopf: View {
     var body: some View {
         Button(action: aktion) {
             Label(text, systemImage: symbol).font(.kompass(.subheadline, .bold)).padding(.horizontal, 16).frame(minHeight: 44)
-                .background(.white, in: Capsule()).foregroundStyle(Farbe.indigo[0])
+                .background(Farbe.seladon, in: Capsule()).foregroundStyle(Farbe.nacht)
         }
         .buttonStyle(.plain)
     }

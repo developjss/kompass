@@ -141,13 +141,18 @@ struct Verlaufskarte<Inhalt: View>: View {
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
+                // Nachtflug: nachtblau, goldener Schein oben rechts, ein Hauch der eigenen Farbe unten links, Goldrand
                 RoundedRectangle(cornerRadius: Mass.verlaufskarte, style: .continuous)
-                    .fill(LinearGradient(colors: farben, startPoint: .bottomTrailing, endPoint: .topLeading))
-                    .overlay(alignment: .topLeading) {
-                        Circle().fill(.white.opacity(0.18)).frame(width: 180).blur(radius: 50).offset(x: -40, y: -60)
+                    .fill(LinearGradient(colors: [Color(roh: "#24396E"), Color(roh: "#0F1A35")], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .overlay(alignment: .topTrailing) {
+                        Circle().fill(Farbe.gold.opacity(0.34)).frame(width: 220).blur(radius: 60).offset(x: 60, y: -90)
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        Circle().fill((farben.last ?? .clear).opacity(0.22)).frame(width: 180).blur(radius: 60).offset(x: -50, y: 70)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: Mass.verlaufskarte, style: .continuous))
-                    .shadow(color: (farben.first ?? .black).opacity(0.35), radius: 16, y: 8)
+                    .overlay(RoundedRectangle(cornerRadius: Mass.verlaufskarte, style: .continuous).strokeBorder(Farbe.gold.opacity(0.32), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.28), radius: 16, y: 8)
             }
     }
 }
@@ -193,7 +198,7 @@ struct Haken: View {
                 Circle().strokeBorder(an ? farbe : Farbe.pfeil.opacity(0.6), lineWidth: 2)
                     .background(Circle().fill(an ? farbe : .clear))
                 if an {
-                    Image(systemName: "checkmark").font(.system(size: groesse * 0.45, weight: .heavy)).foregroundStyle(.white)
+                    Image(systemName: "checkmark").font(.system(size: groesse * 0.45, weight: .heavy)).foregroundStyle(Farbe.aufFarbe)
                         .transition(ruhig ? .opacity : .scale.combined(with: .opacity))
                 }
             }

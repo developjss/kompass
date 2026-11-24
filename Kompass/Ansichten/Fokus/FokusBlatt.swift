@@ -43,7 +43,7 @@ struct FokusBlatt: View {
                     }
                 } label: {
                     Label("Fertig", systemImage: "stop.fill")
-                        .frame(minWidth: 120, minHeight: 50).background(.white, in: Capsule()).foregroundStyle(Farbe.indigo[0])
+                        .frame(minWidth: 120, minHeight: 50).background(Farbe.seladon, in: Capsule()).foregroundStyle(Farbe.nacht)
                 }
             }
             .font(.kompass(.headline, .bold))
