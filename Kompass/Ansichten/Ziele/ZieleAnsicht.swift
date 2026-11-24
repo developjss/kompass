@@ -78,36 +78,34 @@ private struct FilterKachel: View {
     var aktion: () -> Void
 
     var body: some View {
+        let c = farbe
         Button(action: aktion) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top) {
-                    Image(systemName: symbol).font(.system(size: 16, weight: .bold))
-                        .frame(width: 38, height: 38).background(.white.opacity(0.22), in: Circle())
+                    Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                        .frame(width: 38, height: 38).background(c.gradient, in: Circle())
+                        .shadow(color: c.opacity(0.35), radius: 6, y: 3)
                     Spacer()
                     if an {
-                        Image(systemName: "checkmark.circle.fill").font(.title3).symbolRenderingMode(.palette).foregroundStyle(farben[0], .white)
+                        Image(systemName: "checkmark.circle.fill").font(.title3).symbolRenderingMode(.palette).foregroundStyle(.white, c)
                     }
                 }
                 Spacer(minLength: 10)
-                Text(filter.titel).font(.kompass(.headline, .heavy)).lineLimit(1).minimumScaleFactor(0.8)
-                Text("\(anzahl) Ziel\(anzahl == 1 ? "" : "e")").font(.klein).opacity(0.9)
+                Text(filter.titel).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text).lineLimit(1).minimumScaleFactor(0.8)
+                Text("\(anzahl) Ziel\(anzahl == 1 ? "" : "e")").font(.klein).foregroundStyle(Farbe.text.opacity(0.7))
             }
-            .foregroundStyle(.white)
             .padding(14)
             .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
             .background {
-                ZStack {
-                    LinearGradient(colors: farben, startPoint: .topLeading, endPoint: .bottomTrailing)
-                    // weicher Lichtschein oben links für mehr Tiefe
-                    RadialGradient(colors: [.white.opacity(0.18), .clear], center: .topLeading, startRadius: 0, endRadius: 160)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                // Weiß oben links → kräftige Farbe unten rechts
+                LinearGradient(stops: [.init(color: Farbe.karte, location: 0), .init(color: c.opacity(0.28), location: 0.45), .init(color: c.opacity(0.75), location: 1)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             }
-            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(.white, lineWidth: an ? 3 : 0))
-            .shadow(color: farben[1].opacity(an ? 0.3 : 0.12), radius: an ? 10 : 6, y: 4)
-            .scaleEffect(an ? 1 : 0.98)
+            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(an ? c : c.opacity(0.2), lineWidth: an ? 2.5 : 1))
+            .shadow(color: c.opacity(an ? 0.3 : 0.12), radius: an ? 10 : 6, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DruckStil())
         .accessibilityLabel("\(filter.titel), \(anzahl) Ziele")
         .accessibilityAddTraits(an ? [.isButton, .isSelected] : .isButton)
     }
@@ -121,24 +119,19 @@ private struct FilterKachel: View {
         }
     }
 
-    /// Ruhige Verläufe mit drei Stufen und leichtem Farbwechsel (wie „Coming up“ in Gapless)
-    private var farben: [Color] {
+    private var farbe: Color {
         switch filter {
-        case .alle: [Color(hex: "#3A3F9E"), Color(hex: "#5753C2"), Color(hex: "#7D6CCF")]
-        case .aufKurs: [Color(hex: "#2C6E6A"), Color(hex: "#3D8F86"), Color(hex: "#5C93B8")]
-        case .hinterher: [Color(hex: "#A65A3A"), Color(hex: "#C47A55"), Color(hex: "#C76A78")]
-        case .erreicht: [Color(hex: "#5A479E"), Color(hex: "#7E5AAF"), Color(hex: "#A76AA8")]
+        case .alle: Color(hex: "#5B5BE6")
+        case .aufKurs: Color(hex: "#1FA67A")
+        case .hinterher: Color(hex: "#F08A3C")
+        case .erreicht: Color(hex: "#B05CD6")
         }
     }
 }
 
-/// Zielkarte: Ring mit Prozent, Titel, ein Lage-Chip – mehr nicht. Ein leuchtender Rand in der Zielfarbe läuft langsam
-/// um die Karte und lädt zum Antippen ein (bei „Bewegung reduzieren“ steht er still).
 struct ZielKarte: View {
     var ziel: Ziel
     @Environment(Speicher.self) private var speicher
-    @Environment(\.accessibilityReduceMotion) private var ruhig
-    @State private var dreh = 0.0
 
     var body: some View {
         let z = speicher.zustand
@@ -167,21 +160,10 @@ struct ZielKarte: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Farbe.karte, in: form)
-            .overlay {
-                // umlaufender Lichtrand: ein heller Bogen in der Zielfarbe wandert um die Karte
-                form.strokeBorder(AngularGradient(colors: [c.opacity(0.0), c.opacity(0.12), c.opacity(0.85), c.opacity(0.12), c.opacity(0.0)],
-                                                  center: .center, angle: .degrees(dreh)), lineWidth: 2)
-            }
-            .background {
-                form.stroke(AngularGradient(colors: [.clear, c.opacity(0.4), .clear], center: .center, angle: .degrees(dreh)), lineWidth: 6)
-                    .blur(radius: 8)
-            }
+            .overlay { Lichtrand(farbe: c, ecken: Mass.karte) }
+            .shadow(color: c.opacity(0.10), radius: 10, y: 4)
         }
-        .buttonStyle(ZielKartenDruck())
-        .onAppear {
-            guard !ruhig else { dreh = 45; return }
-            withAnimation(.linear(duration: 6).repeatForever(autoreverses: false)) { dreh = 360 }
-        }
+        .buttonStyle(DruckStil())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ziel.titel), \(Zahl.prozent(kurs.fortschritt)), \(kurs.lage.text), \(Kurs.bisText(ziel.faellig, heute: T))")
         .accessibilityAddTraits(.isButton)
@@ -197,10 +179,37 @@ struct ZielKarte: View {
 }
 
 /// Beim Drücken leicht kleiner – fühlt sich antippbar an.
-private struct ZielKartenDruck: ButtonStyle {
+struct DruckStil: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
+/// Umlaufender Lichtrand: eine fertige Verlaufs-Ebene dreht sich gleichmäßig (Zeitleiste statt Neu-Berechnung je Bild)
+/// und wird auf den Rand der Karte zugeschnitten – dadurch flackert nichts. Bei „Bewegung reduzieren“ steht er still.
+struct Lichtrand: View {
+    var farbe: Color
+    var ecken: CGFloat
+    var dauer: Double = 7
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+
+    var body: some View {
+        let form = RoundedRectangle(cornerRadius: ecken, style: .continuous)
+        GeometryReader { geo in
+            let seite = max(geo.size.width, geo.size.height) * 1.5
+            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: ruhig)) { zeit in
+                let winkel = ruhig ? 45 : (zeit.date.timeIntervalSinceReferenceDate / dauer).truncatingRemainder(dividingBy: 1) * 360
+                AngularGradient(colors: [farbe.opacity(0), farbe.opacity(0.1), farbe.opacity(0.9), farbe.opacity(0.1), farbe.opacity(0)], center: .center)
+                    .frame(width: seite, height: seite)
+                    .rotationEffect(.degrees(winkel))
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            }
+        }
+        .mask(form.strokeBorder(lineWidth: 2.5))
+        .overlay(form.strokeBorder(farbe.opacity(0.14), lineWidth: 1))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
