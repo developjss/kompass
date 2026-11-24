@@ -21,6 +21,10 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 23.11.2026 | [ENTSCHEIDUNG] So einfach wie möglich, so intelligent wie möglich, fein anpassbar; Vorschläge direkt übernehmen oder erweitern; **gerechnet wird immer gleich und richtig** | `docs/produkt/rechenregeln.md` |
 | 23.11.2026 | [ENTSCHEIDUNG] App soll durch Nutzer dazulernen | `docs/produkt/rechenregeln.md` §7 |
 | 23.11.2026 | [ENTSCHEIDUNG] Ziele minimal: Ziel-Seite zeigt nur Kopfkarte, Warum, „Dein nächster Schritt“ und Meilensteine, Rest unter „Verfeinern“; Regel „nächster Schritt“ = offener Meilenstein mit größtem fehlendem Beitrag (PR #17, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §1, `konzepte/struktur-v3.md` §11 |
+| 23.11.2026 | [ENTSCHEIDUNG] Rechenregel „Empfehlung im Kalender“ (Punkte, Platz nach freier Zeit, nie nach der Frist) (PR #18, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §9.1 |
+| 23.11.2026 | [ENTSCHEIDUNG] Assistent: Claude beantwortet jede Frage mit Werkzeugschleife; Titel von Aufgaben/Terminen gehen im Stand an den Server; Kosten ≈ 1–2 Cent je Frage akzeptiert (PR #19, „Ja, mergen“) | `docs/technik/lotse-server.md` §1, §6 |
+| 24.11.2026 | [ENTSCHEIDUNG] Assistent: Websuche über Anthropic und Gedächtnis „merken“ (nur Gerät, löschbar) (PR #20, „Ja, mergen“) | `docs/technik/lotse-server.md` §1 |
+| 24.11.2026 | [ENTSCHEIDUNG] Arbeitsweise: Full-/UI-Tests auf Ansage oder nach Rückfrage etwa alle 10 Builds; Doku gebündelt alle 3–4 Blöcke; jedes Update sofort auf iPhone und Simulator | `docs/team/arbeitsweise.md` |
 
 ## 2. Offen (Gründer entscheidet)
 

@@ -49,8 +49,8 @@ python3 scripts/bilder.py                                 # Bildschirmfotos für
 
 ## 4. Test-Rhythmus
 
-- **Jeder Block:** bauen + Unit-Tests. Im Bericht sagen, was lief und was nicht.
-- **Partieller UI-Lauf** nach 5–7 Änderungen; **voller UI-Lauf** vor jedem Phasen-Abschluss.
+- **Jeder Block:** bauen + Unit-Tests + Prüfen per Simulator-Screenshot; dann sofort auf das iPhone des Gründers (wenn erreichbar) und den Simulator installieren. Im Bericht sagen, was lief und was nicht. [ENTSCHEIDUNG – 24.11.2026]
+- **Voller UI-Lauf (Full)** nur auf Ansage des Gründers oder nach Rückfrage etwa alle 9–10 Builds und vor jedem Phasen-Abschluss (dauert ~5 Min).
 - **Personen-Test** (4 Personen × 2 Jahre mit zufälligen Eingriffen) vor jedem größeren Schritt und nach jeder Änderung an `rechenregeln.md`; Bericht in `docs/technik/berichte/`.
 - **Textmenge** prüfen (≤ ~35 Wörter je Bildschirmhöhe, Messung per Texterkennung wie im Design-Abgleich vom 23.11.2026).
 
@@ -66,6 +66,7 @@ python3 scripts/bilder.py                                 # Bildschirmfotos für
 
 ## 6. Dokumente pflegen
 
+- **Gebündelt** [ENTSCHEIDUNG – 24.11.2026]: Stand, Bauprotokoll, Entscheidungen und Roter Faden alle 3–4 gemergten Blöcke gemeinsam nachziehen. Rechenregeln und Fachdokumente weiter mit der Änderung selbst.
 - Übersicht und Ablage-Regeln: `docs/README.md`. Stand → `docs/stand.md`, Entscheidung → `docs/leitung/entscheidungen.md` + Fachdokument, gebauter Block → `docs/technik/bauprotokoll.md`, Erledigtes → `docs/archiv/` (nie löschen).
 - **Aufräumen:** monatlich (Aufgabe `r-aufraeumen`) und vor jedem PR mit Doku-Änderungen `python3 scripts/ordnung.py`.
 - Neue Aufgaben, Pflichten und Stichtage → `docs/leitung/aufgaben/aufgaben.json` (`/fahrplan`).

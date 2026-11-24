@@ -35,6 +35,10 @@ Stand: 23. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Ziele minimal (23.11.2026, PR #17):** Zielliste als weiße Karten mit Ring und „Als Nächstes“; Ziel-Seite nur Kopfkarte, Warum, „Dein nächster Schritt“ (ein Knopf) und Meilensteine; alles Weitere unter „Verfeinern“ auf eigenen Seiten mit Erklärsatz. Neue Rechenregel „nächster Schritt“ (rechenregeln.md §1), vom Gründer freigegeben. Konzept: `struktur-v3.md` §11.
 
+**Kalender-Empfehlungen (23.11.2026, PR #18):** „Empfehlung“ ersetzt „Ohne Uhrzeit“ und „Eingang“: Kartenstapel mit Vorschlägen je Ansicht (Tag: freie Uhrzeit; Woche/Monat: freiester Tag bis zur Frist), Grund je Karte, Tippen erklärt das Ziehen, „Um 14:00 einplanen“. „Als Nächstes“ im selben Stapel-Stil. Umschalter Ziele/Habits und Tag/Woche/Monat/Jahr reagieren auf der ganzen Fläche. Rechenregel §9.1, freigegeben.
+
+**Assistent mit Claude (23./24.11.2026, PR #19, #20):** Mit Server beantwortet Claude jede Frage – auch allgemeine und aktuelle (Websuche mit Quellen). Werkzeugschleife: Claude holt Daten über die Werkzeuge der App (die App rechnet) und formuliert selbst; Antworten mit Absätzen, Überschriften, Listen. Werkzeuge sehen den Apple-Kalender. „merken“: Vorlieben nur auf dem Gerät, in den Einstellungen löschbar. Ladeanzeige wie Gemini (Frage oben, animiertes Zeichen, Status). Regeln auf dem Gerät nur noch offline. [RISIKO] Kosten ≈ 1–2 Cent je Frage plus Websuche (`docs/technik/lotse-server.md` §6). [OFFEN] Lernen über alle Nutzer (anonyme Rückmeldungen mit Einwilligung) – Datenschutz-Entscheidung des Gründers.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte
