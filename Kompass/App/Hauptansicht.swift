@@ -87,6 +87,9 @@ private struct BlattInhalt: View {
         case .habitMenge(let h, let t): HabitMengeBlatt(habitID: h, tag: Tag(text: t) ?? Tag(Date()))
         case .habitBearbeiten(let h, let f): HabitFeldBlatt(habitID: h, feld: f)
         case .termin(let i, let t, let s): TerminBlatt(terminID: i, tag: Tag(text: t), start: s)
+        case .terminSeite(let s, let t): TerminSeite(serie: s, tag: Tag(text: t) ?? Tag(Date()))
+        case .stunde(let t, let s): StundeBlatt(tag: Tag(text: t) ?? Tag(Date()), start: s)
+        case .neuTermin(let t, let s): NeuBlatt(art: .termin, tag: Tag(text: t), start: s)
         case .chats: ChatVerlaufBlatt()
         }
     }

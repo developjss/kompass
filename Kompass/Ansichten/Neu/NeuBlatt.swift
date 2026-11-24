@@ -12,9 +12,14 @@ struct NeuBlatt: View {
 
     enum Schritt: Int, CaseIterable { case was, titel, wann, details, verbinden, fertig }
 
-    init(art: NeuArt?) {
+    init(art: NeuArt?, tag: Tag? = nil, start: Int? = nil) {
         _art = State(initialValue: art)
         _schritt = State(initialValue: art == nil ? .was : .titel)
+        if let tag { _datum = State(initialValue: tag.datum()) }
+        if let start {
+            _terminStart = State(initialValue: start)
+            _terminEnde = State(initialValue: min(24 * 60 - 1, start + 60))
+        }
     }
 
     // Gemeinsam
@@ -33,6 +38,9 @@ struct NeuBlatt: View {
     @State private var terminStart = 15 * 60
     @State private var terminEnde = 16 * 60
     @State private var terminHabitID: UUID?
+    /// Meilenstein, in den der Termin zählt (nil + nurEinsatz = zählt nur als Einsatz; nil sonst = erster passender)
+    @State private var terminSchrittID: UUID?
+    @State private var terminNurEinsatz = false
     // Habit
     @State private var rhythmusArt: RhythmusArt = .taeglich
     @State private var tage: Set<Int> = [1, 2, 3, 4, 5]
@@ -90,6 +98,14 @@ struct NeuBlatt: View {
     }
 
     // MARK: Kopf und Fuß
+
+    /// Gewählter Meilenstein des Termins: ausdrücklich gewählt, sonst der erste passende (Zeit/Zahl), außer „Nur Einsatz“.
+    private var terminSchritt: Kompass.Schritt? {
+        guard let g = speicher.zustand.ziel(zielID) else { return nil }
+        let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
+        if let id = terminSchrittID, let s = passend.first(where: { $0.id == id }) { return s }
+        return terminNurEinsatz ? nil : passend.first
+    }
 
     private var schritte: [Schritt] { art == .habit || art == .ziel ? Schritt.allCases : Schritt.allCases.filter { $0 != .verbinden } }
     private var position: Int { schritte.firstIndex(of: schritt) ?? 0 }
@@ -373,6 +389,21 @@ struct NeuBlatt: View {
             kategorieKarte
         case .termin:
             zielKarte
+            if let g = speicher.zustand.ziel(zielID) {
+                let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
+                let gewaehlt = terminSchritt
+                Karte {
+                    if passend.isEmpty {
+                        Label("Zählt als Einsatz – ändert die Prozente nicht. Für Prozente braucht das Ziel einen Meilenstein „Zeit“ oder „Zahl“.", systemImage: "info.circle")
+                            .font(.klein).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        ChipReihe(titel: "Zählt in", auswahl: [("Nur Einsatz", gewaehlt == nil)] + passend.map { ("\($0.titel) · \($0.art == .zeit ? "Dauer" : "je 1")", $0.id == gewaehlt?.id) }) { i in
+                            terminNurEinsatz = i == 0
+                            terminSchrittID = i == 0 ? nil : passend[i - 1].id
+                        }
+                    }
+                }
+            }
             Karte {
                 let habits = speicher.zustand.habits
                 if !habits.isEmpty {
@@ -561,6 +592,7 @@ struct NeuBlatt: View {
         case .termin:
             t.append("\(datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))) · \(Tagesplan.uhr(terminStart))–\(Tagesplan.uhr(terminEnde))")
             if wiederholung != .nie { t.append("Wiederholt sich \(wiederholung.name.lowercased())") }
+            if let g = z.ziel(zielID) { t.append(terminSchritt.map { "Zählt in „\($0.titel)“" } ?? "Einsatz für „\(g.titel)“") }
             if let h = z.habit(terminHabitID) { t.append("Erfüllt „\(h.titel)“") }
         case .habit:
             t.append(mitMenge ? "\(Zahl.text(menge, stellen: 1)) \(habitEinheit.name) · \(rhythmusText)" : rhythmusText)
@@ -703,7 +735,7 @@ struct NeuBlatt: View {
             }
         case .termin:
             let g = speicher.zustand.ziel(zielID)
-            let schritt = g?.schritte.first { $0.art == .zeit || $0.art == .zahl }
+            let schritt = terminSchritt
             let neu = EigenerTermin(titel: t, tag: Tag(datum, kalender: k), start: terminStart, ende: terminEnde, kategorie: kategorie,
                                     zielID: g?.id, schrittID: schritt?.id, habitID: terminHabitID, wiederholung: wiederholung)
             speicher.aendern { $0.terminSpeichern(neu) }

@@ -4,7 +4,7 @@ import SwiftUI
 struct KalenderAnsicht: View {
     private func empfehlungsBereich(_ m: KalenderModus) -> Empfehlung.Bereich? {
         switch m {
-        case .tag: .tag
+        case .tag: nil   // Tagesansicht: kompakte Leiste direkt über der Zeitleiste
         case .woche: .woche
         case .monat: .monat
         case .jahr: nil
@@ -30,6 +30,7 @@ struct KalenderAnsicht: View {
             switch nav.kalenderModus {
             case .tag:
                 Wochenleiste(gewaehlt: tag, heute: T) { nav.kalenderTag = $0 }.padding(.bottom, 10)
+                EmpfehlungLeiste(tag: tag).padding(.bottom, 10)
                 TagZeitleiste(tag: tag)
             case .woche: WochenRaster(tag: tag)
             case .monat:
@@ -238,7 +239,7 @@ struct TagZeitleiste: View {
                             .frame(height: hoehe, alignment: .top)
                             .contentShape(Rectangle())
                             .id(h)
-                            .onTapGesture { nav.blatt = .termin(nil, tag: tag.text, start: h * 60) }
+                            .onTapGesture { nav.blatt = .stunde(tag: tag.text, start: h * 60) }
                         }
                     }
                     // Blöcke
@@ -279,7 +280,7 @@ struct TagZeitleiste: View {
                 .onChange(of: tag) { _, _ in leser.scrollTo(startStunde(bloecke), anchor: .top) }
             }
             if bloecke.isEmpty && ganztags.isEmpty {
-                Text("Frei. Tipp auf eine Stunde für einen Termin – oder zieh unten eine Aufgabe hinein.")
+                Text("Frei. Tipp auf eine Stunde – oder zieh einen Vorschlag hinein.")
                     .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
             }
         }
@@ -320,9 +321,11 @@ struct BlockKachel: View {
     var kompakt = false
     var mini = false
     @Environment(Navigation.self) private var nav
+    @Environment(Speicher.self) private var speicher
 
     var body: some View {
         let c = Color(hex: block.farbe)
+        let ziel = speicher.zustand.ziel(block.zielID)
         let inhalt = HStack(alignment: .top, spacing: 5) {
             RoundedRectangle(cornerRadius: 2).fill(c).frame(width: 3)
             VStack(alignment: .leading, spacing: 1) {
@@ -330,19 +333,39 @@ struct BlockKachel: View {
                     .foregroundStyle(Farbe.text).strikethrough(block.erledigt).lineLimit(mini ? 1 : (kompakt ? 1 : 2))
                     .truncationMode(.tail)
                 if !kompakt && !mini {
-                    Text(block.unter).font(.caption2).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                    Text(ziel.map { "\(block.unter) · \($0.titel)" } ?? block.unter).font(.caption2).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
+            if !mini {
+                if let ziel {
+                    // Zählt für ein Ziel: kleines Ziel-Zeichen
+                    Image(systemName: ziel.symbol).font(.system(size: 8, weight: .bold)).foregroundStyle(.white)
+                        .frame(width: 16, height: 16).background(Color(hex: ziel.farbe), in: Circle())
+                        .padding(.top, 1)
+                        .accessibilityHidden(true)
+                }
+                if block.art != .termin {
+                    // Abhaken direkt in der Zeitleiste
+                    Button { KalenderAktion.abhaken(block, speicher: speicher) } label: {
+                        Image(systemName: block.erledigt ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 17, weight: .semibold)).foregroundStyle(block.erledigt ? c : Farbe.pfeil)
+                            .frame(width: 28, height: 24)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(block.erledigt ? "\(block.titel) zurücknehmen" : "\(block.titel) abhaken")
+                }
+            }
         }
         .padding(.vertical, mini ? 2 : 4).padding(.trailing, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(c.opacity(block.erledigt ? 0.08 : 0.16), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { KalenderAktion.oeffnen(block, nav: nav) }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(block.titel), \(block.unter)")
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(block.titel), \(block.unter)\(ziel.map { ", zählt für \($0.titel)" } ?? "")")
         .accessibilityAddTraits(.isButton)
+        .accessibilityAction { KalenderAktion.oeffnen(block, nav: nav) }
 
         if let p = KalenderAktion.nutzlast(block) {
             inhalt.draggable(p) {
@@ -662,7 +685,9 @@ enum KalenderAktion {
         switch b.art {
         case .aufgabe: if let a = b.aufgabeID { nav.blatt = .aufgabe(a) }
         case .habit: if let h = b.habitID { nav.oeffneHabit(h) }
-        case .termin: if let e = b.eigenID { nav.blatt = .termin(e, tag: b.tag.text, start: nil) }
+        case .termin:
+            if let s = b.serie { nav.blatt = .terminSeite(serie: s, tag: b.tag.text) }
+            else if let e = b.eigenID { nav.blatt = .termin(e, tag: b.tag.text, start: nil) }
         }
     }
 

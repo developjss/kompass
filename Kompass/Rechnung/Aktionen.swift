@@ -164,6 +164,19 @@ extension Zustand {
 
     mutating func terminLoesen(_ id: UUID) { termine.removeAll { $0.id == id } }
 
+    /// Termin-Serie (Apple/Google) für ein Ziel zählen lassen oder lösen (Termin-Seite im Kalender).
+    /// Wechselt das Ziel, wird die alte Verknüpfung ersetzt; bleibt es gleich, bleibt `seit` erhalten.
+    mutating func terminSerieZaehlen(serie: String, titel: String, ziel zid: UUID?, schritt sid: UUID?, seit: Tag) {
+        if let zid, let i = termine.firstIndex(where: { $0.serie == serie && $0.zielID == zid }) {
+            termine[i].schrittID = sid
+            termine.removeAll { $0.serie == serie && $0.zielID != zid }
+            return
+        }
+        termine.removeAll { $0.serie == serie }
+        guard let zid else { return }
+        termine.append(TerminVerknuepfung(serie: serie, titel: titel, zielID: zid, schrittID: sid, seit: seit))
+    }
+
     /// Stattgefundene Termine der verknüpften Serien übernehmen (nur Tag und Dauer). `quelle` liefert die Termine eines Tages.
     /// `jetzt` (Minuten seit Mitternacht): heutige Termine zählen erst, wenn sie vorbei sind. nil = der ganze Tag zählt (Tagesende).
     mutating func termineAbgleichen(heute: Tag, jetzt: Int? = nil, quelle: (Tag) -> [Termin]) {
