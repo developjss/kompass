@@ -129,6 +129,8 @@ private struct EinstellKachelInhalt: View {
     var farbe: Color
     var hinweis = false
     var hervor = false
+    /// Verlauf von Weiß zur Farbe (Kacheln unter „Verfeinern › Mehr“)
+    var verlauf = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -147,9 +149,16 @@ private struct EinstellKachelInhalt: View {
             if let unter { Text(unter).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1) }
         }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 128, alignment: .topLeading)
-        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(hervor ? farbe : .clear, lineWidth: 2))
+        .frame(maxWidth: .infinity, minHeight: verlauf ? 108 : 128, alignment: .topLeading)
+        .background {
+            if verlauf {
+                LinearGradient(stops: [.init(color: Farbe.karte, location: 0.35), .init(color: farbe.opacity(0.22), location: 1)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Farbe.karte)
+            }
+        }
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(hervor ? farbe : farbe.opacity(verlauf ? 0.15 : 0), lineWidth: hervor ? 2 : 1))
         .accessibilityElement(children: .combine)
     }
 }
@@ -208,57 +217,42 @@ private struct VerfeinernInhalt: View {
     var body: some View {
         let c = Color(hex: ziel.farbe)
         let anteile = Fortschritt.anteile(ziel.schritte.map(Fortschritt.gewicht))
-        AbschnittKopf(titel: "Meilensteine") { Text("\(ziel.schritte.count)").foregroundStyle(Farbe.zweitrangig) }
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "wand.and.stars").foregroundStyle(c).frame(width: 24)
-                Text("Jeder Meilenstein macht einen Teil deines Ziels aus – je wichtiger, desto mehr. Kommt einer dazu oder fällt einer weg, rechnet Kompass neu.")
-                    .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
-            }
-            ForEach(Array(zip(ziel.schritte, anteile)), id: \.0.id) { s, a in
-                Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: s.id) } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Image(systemName: s.art.symbol).foregroundStyle(c).frame(width: 22)
-                            Text(s.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
-                            Spacer()
-                            Text(Zahl.prozent(a)).font(.kompass(.subheadline, .heavy)).monospacedDigit().foregroundStyle(c)
-                            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                        }
-                        Balken(anteil: a, farbe: c, spur: Farbe.linie)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(s.titel), macht \(Zahl.prozent(a)) des Ziels aus")
-            }
-            Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) } label: {
-                Label("Meilenstein hinzufügen – geführt", systemImage: "plus").font(.kompass(.headline, .bold))
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Farbe.akzent, in: Capsule()).foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
+        AbschnittKopf(titel: "Meilensteine") { Text("antippen zum Ändern").foregroundStyle(Farbe.zweitrangig) }
+        Text("Je wichtiger ein Meilenstein, desto mehr zählt er. Kommt einer dazu oder fällt einer weg, rechnet Kompass neu.")
+            .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true).padding(.bottom, 10)
+        VStack(spacing: 10) {
+            ForEach(ziel.schritte) { s in MeilensteinKarte(ziel: ziel, schritt: s, anteilBetont: true) }
+            NeuerMeilensteinKnopf(ziel: ziel)
         }
-        .padding(16)
-        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
 
         AbschnittKopf(titel: "Mehr")
-        GruppierteListe {
-            ForEach(ZielTeil.mehr, id: \.self) { t in
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach([ZielTeil.aufgaben, .habits, .termine, .einsatz], id: \.self) { t in
                 NavigationLink(value: ZielTeilAuswahl(id: ziel.id, teil: t)) {
-                    HStack(spacing: 12) {
-                        Image(systemName: t.symbol).font(.body.weight(.semibold)).foregroundStyle(c).frame(width: 32)
-                        Text(t.titel).font(.zeile).foregroundStyle(Farbe.text)
-                        Spacer(minLength: 8)
-                        Text(wert(t)).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
-                        Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                    }
-                    .padding(.horizontal, 14).frame(minHeight: Mass.zeileKompakt).contentShape(Rectangle())
+                    EinstellKachelInhalt(symbol: t.symbol, titel: t.titel, wert: t == .einsatz ? Zahl.dauer(Fortschritt.zeit(ziel: ziel.id, in: speicher.zustand, von: speicher.heute.montag, bis: speicher.heute)) : wert(t),
+                                         unter: t == .einsatz ? "diese Woche" : nil, farbe: c, verlauf: true)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(t.titel), \(wert(t))")
+                .buttonStyle(DruckStil())
             }
         }
+        NavigationLink(value: ZielTeilAuswahl(id: ziel.id, teil: .details)) {
+            HStack(spacing: 12) {
+                Image(systemName: ZielTeil.details.symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 36, height: 36).background(c.gradient, in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Details").font(.kompass(.subheadline, .heavy)).foregroundStyle(Farbe.text)
+                    Text(wert(.details)).font(.klein).foregroundStyle(Farbe.zweitrangig)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(c)
+                    .frame(width: 30, height: 30).background(c.opacity(0.12), in: Circle())
+            }
+            .padding(14)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(c.opacity(0.15), lineWidth: 1))
+        }
+        .buttonStyle(DruckStil())
+        .padding(.top, 12)
     }
 
     private func wert(_ t: ZielTeil) -> String {
@@ -275,7 +269,7 @@ private struct VerfeinernInhalt: View {
             let n = z.termine.filter { $0.zielID == ziel.id }.count
             return n == 0 ? "keine" : "\(n) Serie\(n == 1 ? "" : "n")"
         case .einsatz: return "\(Zahl.dauer(Fortschritt.zeit(ziel: ziel.id, in: z, von: T.montag, bis: T))) diese Woche"
-        case .details: return "Aussehen, erreicht, löschen"
+        case .details: return "Titel, Aussehen, erreicht, löschen"
         }
     }
 }
@@ -293,11 +287,15 @@ struct ZielTeilSeite: View {
         if let g = speicher.zustand.ziel(id) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: teil.symbol).font(.body.weight(.semibold)).foregroundStyle(Color(hex: g.farbe))
-                            .frame(width: 36, height: 36).background(Color(hex: g.farbe).opacity(0.14), in: Circle())
-                        Text(teil.erklaerung).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .center, spacing: 12) {
+                        Image(systemName: teil.symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                            .frame(width: 40, height: 40).background(Color(hex: g.farbe).gradient, in: Circle())
+                        Text(teil.erklaerung).font(.unterzeile).foregroundStyle(Farbe.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
                     }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(LinearGradient(colors: [Farbe.karte, Color(hex: g.farbe).opacity(0.14)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                     switch teil {
                     case .verfeinern: VerfeinernInhalt(ziel: g)
                     case .aufgaben: ZielAufgaben(ziel: g)
@@ -376,7 +374,6 @@ struct PlusZeile: View {
 
 private struct MeilensteinListe: View {
     var ziel: Ziel
-    @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
     var body: some View {
@@ -384,17 +381,23 @@ private struct MeilensteinListe: View {
             Button { nav.blatt = .rechnung(ziel.id) } label: { Image(systemName: "info.circle") }
                 .accessibilityLabel("So wird gerechnet")
         }
-        GruppierteListe {
-            if ziel.schritte.isEmpty { LeerZeile(text: "Woran misst du das Ziel? Leg den ersten Meilenstein an – Kompass fragt dich durch.") }
-            ForEach(ziel.schritte) { s in MeilensteinZeile(ziel: ziel, schritt: s) }
-            PlusZeile(text: ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) }
+        VStack(spacing: 10) {
+            if ziel.schritte.isEmpty {
+                Text("Woran misst du das Ziel? Leg den ersten Meilenstein an – Kompass fragt dich durch.")
+                    .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            ForEach(ziel.schritte) { s in MeilensteinKarte(ziel: ziel, schritt: s, anteilBetont: false) }
+            NeuerMeilensteinKnopf(ziel: ziel)
         }
     }
 }
 
-private struct MeilensteinZeile: View {
+/// Ein Meilenstein als Karte: Ring mit Messart-Symbol, Titel, Stand, Anteil am Ziel, Pfeil – lädt zum Antippen ein.
+/// `anteilBetont` (Verfeinern): statt des Stands steht groß, wie viel er vom Ziel ausmacht, mit Balken.
+private struct MeilensteinKarte: View {
     var ziel: Ziel
     var schritt: Schritt
+    var anteilBetont: Bool
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
@@ -403,30 +406,46 @@ private struct MeilensteinZeile: View {
         let T = speicher.heute
         let st = Fortschritt.stand(schritt, in: z, heute: T)
         let c = Color(hex: ziel.farbe)
-        HStack(spacing: 10) {
-            Haken(an: schritt.geschafft, farbe: c, beschriftung: schritt.titel) {
-                speicher.aendern { $0.schrittUmschalten(ziel: ziel.id, schritt: schritt.id, heute: T) }
-            }
-            .padding(.leading, 4)
-            Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: schritt.id) } label: {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(schritt.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(2)
-                        Text(unterzeile(st)).font(.unterzeile).foregroundStyle(st.hinweis == nil ? Farbe.zweitrangig : Farbe.warnung).lineLimit(1)
+        let anteil = Fortschritt.anteilVorschau(ziel, gewicht: st.gewicht, ersetzt: schritt.id)
+        let fertig = st.anteil >= 1
+        Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: schritt.id) } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle().fill(c.opacity(0.10))
+                    if st.anteil > 0 {
+                        Circle().trim(from: 0, to: st.anteil).stroke(fertig ? Farbe.freude : c, style: StrokeStyle(lineWidth: 4, lineCap: .round)).rotationEffect(.degrees(-90))
                     }
-                    Spacer(minLength: 8)
-                    Text(Zahl.prozent(st.anteil)).font(.kompass(.subheadline, .bold)).foregroundStyle(st.anteil >= 1 ? Farbe.freude : Farbe.zweitrangig).monospacedDigit()
-                    Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                    Image(systemName: fertig ? "checkmark" : schritt.art.symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(fertig ? Farbe.freude : c)
                 }
-                .contentShape(Rectangle())
+                .frame(width: 48, height: 48)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(schritt.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading)
+                    if anteilBetont {
+                        Balken(anteil: anteil, farbe: c, spur: Farbe.linie).frame(maxWidth: 160)
+                    } else {
+                        Text(st.hinweis ?? st.text).font(.unterzeile).foregroundStyle(st.hinweis == nil ? Farbe.zweitrangig : Farbe.warnung).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 6)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(anteilBetont ? Zahl.prozent(anteil) : Zahl.prozent(st.anteil))
+                        .font(.kompass(.headline, .heavy)).monospacedDigit().foregroundStyle(anteilBetont ? c : (fertig ? Farbe.freude : Farbe.text))
+                    if anteilBetont { Text("vom Ziel").font(.klein).foregroundStyle(Farbe.zweitrangig) }
+                }
+                Image(systemName: "chevron.right").font(.footnote.weight(.heavy)).foregroundStyle(c)
+                    .frame(width: 30, height: 30).background(c.opacity(0.12), in: Circle())
             }
-            .buttonStyle(.plain)
-            .accessibilityHint("Bearbeiten")
-            .padding(.trailing, 16)
+            .padding(14)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(c.opacity(0.16), lineWidth: 1))
+            .shadow(color: c.opacity(0.08), radius: 8, y: 3)
         }
-        .frame(minHeight: Mass.zeile)
+        .buttonStyle(DruckStil())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(schritt.titel), \(st.text), macht \(Zahl.prozent(anteil)) des Ziels aus")
+        .accessibilityHint("Öffnet den Meilenstein")
+        .accessibilityAddTraits(.isButton)
         .contextMenu {
-            Button("Bearbeiten", systemImage: "pencil") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: schritt.id) }
             Button(schritt.geschafft ? "Wieder öffnen" : "Abhaken", systemImage: "checkmark") {
                 speicher.aendern { $0.schrittUmschalten(ziel: ziel.id, schritt: schritt.id, heute: T) }
             }
@@ -435,14 +454,29 @@ private struct MeilensteinZeile: View {
             }
         }
     }
+}
 
-    private func unterzeile(_ st: Fortschritt.SchrittStand) -> String {
-        if let h = st.hinweis { return h }
-        var teile = [st.text]
-        let erreicht = Fortschritt.erreichteSchwellen(schritt, in: speicher.zustand, heute: speicher.heute).count
-        if let n = schritt.schwellen?.count, n > 0 { teile.append("\(erreicht) von \(n) Zwischenständen") }
-        teile.append("\(Zahl.prozent(Fortschritt.anteilVorschau(ziel, gewicht: st.gewicht, ersetzt: schritt.id))) vom Ziel")
-        return teile.joined(separator: " · ")
+/// „+ Meilenstein“ als gestrichelte Karte – geführt anlegen.
+private struct NeuerMeilensteinKnopf: View {
+    var ziel: Ziel
+    @Environment(Navigation.self) private var nav
+
+    var body: some View {
+        let c = Color(hex: ziel.farbe)
+        Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30).background(c.gradient, in: Circle())
+                Text(ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen").font(.zeile).foregroundStyle(c)
+                Spacer()
+                Text("geführt").font(.klein).foregroundStyle(Farbe.zweitrangig)
+            }
+            .padding(14)
+            .background(c.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(c.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+        }
+        .buttonStyle(DruckStil())
+        .accessibilityIdentifier("meilenstein.neu")
     }
 }
 

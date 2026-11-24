@@ -194,7 +194,7 @@ final class KompassUITests: XCTestCase {
         foto(app, "Ziel-Seite")
         // Verfeinern-Kachel → Meilensteine mit Anteilen und „Mehr“ → Details
         app.buttons["ziel.verfeinern"].tap()
-        XCTAssertTrue(sichtbar(app, "Meilenstein hinzufügen – geführt"), "Verfeinern öffnet nicht")
+        XCTAssertTrue(sichtbar(app, "Meilenstein hinzufügen"), "Verfeinern öffnet nicht")
         let details = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Details")).firstMatch
         for _ in 0..<6 where !details.isHittable { app.swipeUp() }
         details.tap()
