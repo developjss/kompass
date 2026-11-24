@@ -86,7 +86,7 @@ export function schrittePruefen(roh: unknown): Schritt[] {
   for (const s of roh.slice(0, MAX_SCHRITTE)) {
     if (!s || typeof s !== "object") return [];
     const { inhalt, ergebnisse } = s as Record<string, unknown>;
-    if (!Array.isArray(inhalt) || !Array.isArray(ergebnisse) || JSON.stringify(inhalt).length > 20_000) return [];
+    if (!Array.isArray(inhalt) || !Array.isArray(ergebnisse) || JSON.stringify(inhalt).length > 300_000) return [];
     const e = (ergebnisse as { id?: unknown; text?: unknown }[])
       .filter((x) => typeof x?.id === "string" && typeof x?.text === "string")
       .map((x) => ({ id: x.id as string, text: (x.text as string).slice(0, 8_000) }));
@@ -110,23 +110,26 @@ export function alsTools(werkzeuge: WerkzeugBeschreibung[]): Anthropic.Tool[] {
 }
 
 // Wie der Assistent denkt und schreibt. Wissen über die App kommt aus der App (AppWissen) – hier nur Haltung und Stil.
-export const ROLLE = `Du bist „Assistent“, die KI in der iPhone-App Kompass (Aufgaben, Termine, Habits, Ziele, Kalender, Rückblick). Du bist ein kluger, warmherziger Assistent – mit Zugriff auf die Daten des Nutzers über Werkzeuge.
+export const ROLLE = `Du bist „Assistent“, die KI in der iPhone-App Kompass (Aufgaben, Termine, Habits, Ziele, Kalender, Rückblick). Du bist ein kluger, warmherziger Assistent – mit Zugriff auf die Daten des Nutzers über Werkzeuge und auf das Web über die Websuche.
 
 So arbeitest du:
-- Fragen zu den eigenen Daten (Tag, Termine, freie Zeit, Aufgaben, Habits, Ziele, Fortschritt, Rückblick): rufe die passenden Werkzeuge auf – gern mehrere, auch nacheinander – und antworte dann mit den Ergebnissen. Zahlen, Prozente, Uhrzeiten und Stände übernimmst du aus Werkzeug-Ergebnissen oder dem Stand; du rechnest sie nie selbst nach oder um.
-- Fragen zur App (wo finde ich, wie geht, warum zählt): antworte aus dem App-Wissen unten. Erfinde keine Funktionen; gibt es etwas nicht, sag es ehrlich und nenne den nächsten passenden Weg.
-- Allgemeine Fragen (Wissen, Reisen, Rechnen, Schreiben, Ideen, Rat): beantworte sie hilfsbereit und sachlich richtig aus deinem Wissen. Wenn es passt, schlag eine Brücke zur App (z. B. Fahrzeit → „Soll ich die Fahrt als Termin eintragen?“). Für Live-Daten (Verkehr, Fahrpläne, Wetter, Preise, Nachrichten) hast du keinen Zugriff: sag das in einem Halbsatz und gib eine gute Schätzung.
-- Ändern (Aufgabe oder Termin anlegen) nur, wenn der Nutzer es möchte – dann das Werkzeug aufrufen und kurz bestätigen. Fehlt etwas Wesentliches (z. B. die Uhrzeit), frag nach.
+- Eigene Daten (Tag, Termine, freie Zeit, Aufgaben, Habits, Ziele, Fortschritt, Rückblick): rufe die passenden Werkzeuge auf – gern mehrere, auch nacheinander – und antworte mit den Ergebnissen. Zahlen, Prozente, Uhrzeiten und Stände übernimmst du aus Werkzeug-Ergebnissen oder dem Stand; du rechnest sie nie selbst nach oder um. Widersprechen sich Stand und Werkzeug, gilt das Werkzeug – erwähne Widersprüche nicht.
+- Fragen zur App (wo finde ich, wie geht, warum zählt): antworte aus dem App-Wissen unten. Erfinde keine Funktionen.
+- Aktuelles (Wetter, Sport, Spielpläne, Nachrichten, Öffnungszeiten, Preise, Fahrpläne, Ereignisse): nutze die Websuche und antworte mit dem Ergebnis. Den Ort des Nutzers kennst du aus „Das weißt du über den Nutzer“ oder du nimmst die Zeitzone; fehlt er für eine gute Antwort, frag kurz nach.
+- Allgemeines Wissen, Rechnen, Schreiben, Ideen, Rat: beantworte es hilfsbereit und sachlich richtig, wie ein sehr guter Assistent.
+- Antworte immer zuerst mit dem Nützlichen. Beginne nie mit dem, was du nicht kannst oder nicht weißt. Gibt es eine echte Grenze (z. B. Websuche ohne Treffer), nenne sie höchstens in einem kurzen Nebensatz am Ende.
+- Ändern (Aufgabe, Termin) nur, wenn der Nutzer es möchte – dann das Werkzeug aufrufen und kurz bestätigen. Fehlt Wesentliches (z. B. die Uhrzeit), frag nach.
+- Merken: Sagt der Nutzer etwas Dauerhaftes über sich (Wohnort, Vorlieben, Arbeitszeiten, wie er Antworten mag) oder bittet er darum, rufe „merken“ auf. Nutze das Gemerkte, um Antworten persönlich zuzuschneiden. Gesundheit, Geld und andere Personen nur auf ausdrücklichen Wunsch.
 - Mehrdeutig: beantworte die wahrscheinlichste Deutung und frag dann kurz nach.
-- Gesundheit, Recht, Geld: allgemein helfen, bei Ernstem auf Fachleute verweisen.
+- Gesundheit, Recht, Geld: hilfreich und konkret antworten, bei Ernstem auf Fachleute verweisen.
 
-Stil:
+Stil (wie gute KI-Assistenten):
 - Deutsch, per du, natürlich und freundlich – wie ein kluger Freund, nicht wie ein Protokoll.
-- Beginne direkt mit der Antwort; das Wichtigste **fett**. Danach, wenn es hilft, kurze Absätze oder eine Liste mit „- “. Leerzeile zwischen Absätzen.
-- Markdown sparsam: **fett**, Listen mit „- “ oder „1. “. Keine Überschriften mit #, keine Tabellen, keine Emojis.
-- Länge passend zur Frage: einfache Fragen 1–3 Sätze, Pläne und Erklärungen gern länger, aber selten über 150 Wörter.
-- Uhrzeiten als „14:30“, Daten als „Mi, 25. Nov.“. Wiederhole keine Werkzeug-Rohtexte, sondern formuliere sie lesbar.
-- Wenn sinnvoll, zum Schluss ein konkretes Angebot als kurze Frage.`;
+- Erster Satz = die direkte Antwort, das Wichtigste **fett**.
+- Kurze Fragen: 1–3 Sätze, ohne Überschriften.
+- Längere Antworten (Pläne, Vergleiche, Erklärungen): gliedere mit kurzen Überschriften („### Heute“), Listen mit „- “ (Unterpunkte mit zwei Leerzeichen eingerückt) oder „1. “, **fetten** Schlüsselbegriffen und Leerzeilen zwischen Abschnitten. Keine Tabellen, keine Emojis.
+- Uhrzeiten als „14:30“, Daten als „Mi, 25. Nov.“. Formuliere Werkzeug-Ergebnisse lesbar um, statt sie zu wiederholen.
+- Schließe, wenn sinnvoll, mit einem konkreten Angebot als kurze Frage („Soll ich … eintragen?“).`;
 
 function verlaufAlsNachrichten(verlauf: Anfrage["verlauf"]): Anthropic.MessageParam[] {
   // Die API verlangt wechselnde Rollen; gleiche Rollen hintereinander werden zusammengelegt.
@@ -159,15 +162,32 @@ export async function beantworten(a: Anfrage, d: Abhaengigkeiten): Promise<Antwo
   // Letzter Schritt erreicht: keine Werkzeuge mehr, Claude muss antworten
   const mitWerkzeugen = a.schritte.length < MAX_SCHRITTE;
 
-  const r = await mitRueckfall(d, "gespraech", (model) =>
-    d.client.messages.create({
-      model,
-      max_tokens: 2000,
-      output_config: { effort: "medium" },
-      system,
-      ...(mitWerkzeugen ? { tools: alsTools(a.werkzeuge) } : {}),
-      messages: nachrichten,
-    }));
+  const websuche = {
+    type: "web_search_20260209",
+    name: "web_search",
+    max_uses: 3,
+    user_location: { type: "approximate", country: "DE", ...(a.zeitzone ? { timezone: a.zeitzone } : {}) },
+  };
+  // deno-lint-ignore no-explicit-any
+  const tools = (mitWerkzeugen ? [...alsTools(a.werkzeuge), websuche] : []) as any[];
+
+  // Serverseitige Werkzeuge (Websuche) können eine Runde pausieren („pause_turn“) – dann hier weiterlaufen lassen.
+  let r: Anthropic.Message | undefined;
+  for (let runde = 0; runde < 3; runde++) {
+    r = await mitRueckfall(d, "gespraech", (model) =>
+      d.client.messages.create({
+        model,
+        max_tokens: 2500,
+        output_config: { effort: "medium" },
+        system,
+        ...(tools.length ? { tools } : {}),
+        messages: nachrichten,
+      // deno-lint-ignore no-explicit-any
+      } as any)) as Anthropic.Message;
+    if (r.stop_reason !== "pause_turn") break;
+    nachrichten.push({ role: "assistant", content: r.content as Anthropic.ContentBlockParam[] });
+  }
+  if (!r) throw new ModellFehler("keine Antwort");
 
   const aufrufe = r.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   if (aufrufe.length && r.stop_reason === "tool_use") {
@@ -181,9 +201,23 @@ export async function beantworten(a: Anfrage, d: Abhaengigkeiten): Promise<Antwo
       inhalt: r.content,
     };
   }
-  const text = r.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+  const text = antwortText(r.content);
   if (r.stop_reason === "refusal" || !text) return { art: "text", text: "Dazu kann ich leider nichts sagen. Frag mich gern etwas anderes – zu deinem Tag, deinen Zielen oder ganz allgemein." };
   return { art: "text", text };
+}
+
+/** Text der Antwort: nur der Teil nach der letzten Websuche (davor steht oft „Ich schaue nach“), Blöcke ohne Trenner
+ *  verbunden (Zitate teilen Sätze in Blöcke), dazu bis zu drei Quellen als Links. */
+export function antwortText(inhalt: unknown[]): string {
+  const bloecke = inhalt as { type: string; text?: string; citations?: { url?: string; title?: string }[] }[];
+  let start = 0;
+  bloecke.forEach((b, i) => { if (b.type !== "text") start = i + 1; });
+  const teile = bloecke.slice(start).filter((b) => b.type === "text");
+  const text = (teile.length ? teile : bloecke.filter((b) => b.type === "text")).map((b) => b.text ?? "").join("").trim();
+  const quellen = new Map<string, string>();
+  for (const b of bloecke) for (const c of b.citations ?? []) if (c.url && !quellen.has(c.url) && quellen.size < 3) quellen.set(c.url, (c.title || new URL(c.url).hostname).replace(/[\[\]]/g, "").slice(0, 60));
+  if (!text || quellen.size === 0) return text;
+  return `${text}\n\nQuellen: ${[...quellen].map(([url, titel]) => `[${titel}](${url})`).join(" · ")}`;
 }
 
 /** Ruft das erste verfügbare Modell der Rolle; ist es inzwischen weg (404), das nächste. */

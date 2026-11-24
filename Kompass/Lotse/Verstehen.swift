@@ -30,6 +30,15 @@ enum Verstehen {
         if hat(t, "termin:", "neuer termin", "trag ", "trage ", "eintragen", "termin anlegen", "termin erstellen") || (hat(t, "termin") && uhrzeit(aus: t) != nil && hat(t, "leg", "erstell", "mach", "plane", "neu")) {
             if uhrzeit(aus: t) != nil || hat(t, "termin") { return termin(aus: frage, t: t, z: z, T: T) }
         }
+        // 0b. Merken / vergessen
+        if t.hasPrefix("merk") || hat(t, "merk dir", "merke dir") {
+            let notiz = frage.replacingOccurrences(of: #"^\s*(bitte\s+)?merke?\s+dir\s*:?\s*"#, with: "", options: [.regularExpression, .caseInsensitive])
+            return WerkzeugAufruf(name: .merken, parameter: ["notiz": notiz.trimmingCharacters(in: .whitespacesAndNewlines)])
+        }
+        if t.hasPrefix("vergiss") {
+            let was = frage.replacingOccurrences(of: #"^\s*vergiss\s*,?\s*(dass\s+)?(ich\s+)?"#, with: "", options: [.regularExpression, .caseInsensitive])
+            return WerkzeugAufruf(name: .merken, parameter: ["vergessen": was.trimmingCharacters(in: CharacterSet(charactersIn: " .!"))])
+        }
         // 1. Aufgabe anlegen (vor allem anderen, sonst fängt „heute“ die Frage)
         if hat(t, "erstell", "leg ", "lege ", "anleg", "neue aufgabe", "aufgabe:", "erinnere mich", "notier", "fuege", "fueg ", "hinzu", "todo:", "to do:"),
            hat(t, "aufgabe", "erinnere", "notier", "todo", "to do") || t.hasPrefix("erstelle") || t.hasPrefix("lege") {

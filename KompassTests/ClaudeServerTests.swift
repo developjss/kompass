@@ -29,9 +29,9 @@ struct ClaudeServerTests {
     }
 
     @Test func antwortTextZerlegen() {
-        let b = AntwortText.bloecke("**Etwa 1 Stunde.**\n\n- **Auto:** 95 km\n- Zug: 1 h\n\n1. Erst\n2) Dann\n## Tipp\nZeile eins\nZeile zwei")
-        #expect(b == [.absatz("**Etwa 1 Stunde.**"), .punkt("•", "**Auto:** 95 km"), .punkt("•", "Zug: 1 h"),
-                      .punkt("1.", "Erst"), .punkt("2.", "Dann"), .absatz("**Tipp**"), .absatz("Zeile eins\nZeile zwei")])
+        let b = AntwortText.bloecke("**Etwa 1 Stunde.**\n\n- **Auto:** 95 km\n  - über die A8\n- Zug: 1 h\n\n1. Erst\n2) Dann\n---\n## Tipp\nZeile eins\nZeile zwei")
+        #expect(b == [.absatz("**Etwa 1 Stunde.**"), .punkt("•", "**Auto:** 95 km", 0), .punkt("•", "über die A8", 1), .punkt("•", "Zug: 1 h", 0),
+                      .punkt("1.", "Erst", 0), .punkt("2.", "Dann", 0), .trenner, .ueberschrift("Tipp"), .absatz("Zeile eins\nZeile zwei")])
         #expect(AntwortText.ohneZeichen("**fett** und normal") == "fett und normal")
     }
 
@@ -112,5 +112,38 @@ struct LotseStufenTests {
         let m = ZaehlModell(fehler: LotseFehler.server(503))
         let a = await Lotse.fragen("Was steht heute an?", speicher: speicher(), modell: m)
         #expect(a.werkzeug == .heute && LotseStand.geteilt.letzterFehler != nil)
+    }
+}
+
+@Suite("Assistent · Gedächtnis und Kalender")
+@MainActor
+struct AssistentGedaechtnisTests {
+    func speicher() -> Speicher {
+        let s = Speicher(datei: nil)
+        s.jetzt = { Date(timeIntervalSince1970: 1_795_000_000) }
+        s.zustand = DemoDaten.zustand(heute: s.heute, jetzt: s.jetzt())
+        return s
+    }
+
+    @Test func merkenVergessenUndImStand() {
+        let s = speicher()
+        _ = Lotse.ausfuehren(WerkzeugAufruf(name: .merken, parameter: ["notiz": "Wohnt in Ulm"]), speicher: s)
+        _ = Lotse.ausfuehren(WerkzeugAufruf(name: .merken, parameter: ["notiz": "wohnt in ulm"]), speicher: s) // kein Doppel
+        _ = Lotse.ausfuehren(WerkzeugAufruf(name: .merken, parameter: ["notiz": "Trainiert lieber morgens"]), speicher: s)
+        #expect(s.zustand.lernen.lotse.erinnerungen == ["wohnt in ulm", "Trainiert lieber morgens"])
+        #expect(Lotse.kurzstand(s).contains("Trainiert lieber morgens"))
+        let a = Lotse.ausfuehren(WerkzeugAufruf(name: .merken, parameter: ["vergessen": "Ulm"]), speicher: s)
+        #expect(a.text.hasPrefix("Vergessen") && s.zustand.lernen.lotse.erinnerungen == ["Trainiert lieber morgens"])
+        // offline: „Merk dir …“ trifft das Werkzeug
+        #expect(Verstehen.erkennen("Merk dir: Ich esse vegetarisch.", zustand: s.zustand, heute: s.heute)?.parameter["notiz"] == "Ich esse vegetarisch.")
+        #expect(Verstehen.erkennen("Vergiss, dass ich in Ulm wohne", zustand: s.zustand, heute: s.heute)?.parameter["vergessen"] == "in Ulm wohne")
+    }
+
+    @Test func werkzeugeSehenDieselbenTermineWieDieApp() {
+        let s = speicher()
+        s.externeTermine = [s.heute: [Termin(quelle: .apple, schluessel: "x", titel: "Aus Apple", tag: s.heute, start: 23 * 60, ende: 23 * 60 + 30)]]
+        let a = Lotse.ausfuehren(WerkzeugAufruf(name: .woche), speicher: s)
+        #expect(a.text.contains("Aus Apple"))
+        #expect(Werkzeuge.quelle == nil) // danach zurückgesetzt
     }
 }

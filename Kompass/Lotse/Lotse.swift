@@ -24,12 +24,15 @@ enum Lotse {
             var aktion: ChatNachricht.Aktion?
             var genutzt: Werkzeug.Name?
             var geaendert = false
+            LotseStand.geteilt.status = "Denkt nach …"
+            defer { LotseStand.geteilt.status = nil }
             do {
                 for _ in 0...maxSchritte {
                     switch try await modell.antworte(auf: anfrage) {
                     case .text(let t):
                         return abschliessen(LotseAntwort(text: t, werkzeug: genutzt, aktion: aktion), frage: text, speicher: speicher)
                     case .werkzeuge(let aufrufe, let inhalt):
+                        if let n = aufrufe.first.flatMap({ Werkzeug.Name(rawValue: $0.name) }) { LotseStand.geteilt.status = statusText(n) }
                         var ergebnisse: [(id: String, text: String)] = []
                         for a in aufrufe {
                             guard let name = Werkzeug.Name(rawValue: a.name) else { ergebnisse.append((a.id, "Dieses Werkzeug gibt es nicht: \(a.name).")); continue }
@@ -37,9 +40,10 @@ enum Lotse {
                             ergebnisse.append((a.id, r.text))
                             genutzt = name
                             if let ak = r.aktion { aktion = ak }
-                            if name == .aufgabeAnlegen || name == .terminAnlegen { geaendert = true }
+                            if name == .aufgabeAnlegen || name == .terminAnlegen || name == .merken { geaendert = true }
                         }
                         anfrage.schritte.append(ModellSchritt(inhalt: inhalt, ergebnisse: ergebnisse))
+                        LotseStand.geteilt.status = "Schreibt die Antwort …"
                     }
                 }
                 throw LotseFehler.antwort
@@ -70,7 +74,25 @@ enum Lotse {
     /// Führt ein Werkzeug aus – lesend über `Werkzeuge`, schreibend hier (Aufgabe anlegen).
     static func ausfuehren(_ a: WerkzeugAufruf, speicher: Speicher) -> LotseAntwort {
         let T = speicher.heute
+        // Werkzeuge sehen dieselben Termine wie die App (inkl. Apple-Kalender)
+        Werkzeuge.quelle = { speicher.termine(am: $0) }
+        defer { Werkzeuge.quelle = nil }
         switch a.name {
+        case .merken:
+            if let weg = a.parameter["vergessen"]?.trimmingCharacters(in: .whitespaces), !weg.isEmpty {
+                let vorher = speicher.zustand.lernen.lotse.erinnerungen.count
+                speicher.aendern { $0.lernen.lotse.erinnerungen.removeAll { $0.localizedCaseInsensitiveContains(weg) } }
+                let n = vorher - speicher.zustand.lernen.lotse.erinnerungen.count
+                return LotseAntwort(text: n == 0 ? "Dazu hatte ich mir nichts gemerkt." : "Vergessen (\(n) Eintrag\(n == 1 ? "" : "e")).", werkzeug: .merken)
+            }
+            let notiz = (a.parameter["notiz"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !notiz.isEmpty else { return LotseAntwort(text: "Was soll ich mir merken?", werkzeug: .merken) }
+            speicher.aendern { z in
+                var e = z.lernen.lotse.erinnerungen.filter { $0.caseInsensitiveCompare(notiz) != .orderedSame }
+                e.append(String(notiz.prefix(200)))
+                z.lernen.lotse.erinnerungen = Array(e.suffix(30))
+            }
+            return LotseAntwort(text: "Gemerkt: \(notiz) – du findest es unter Einstellungen › Assistent.", werkzeug: .merken)
         case .aufgabeAnlegen:
             let titel = a.parameter["titel"]?.trimmingCharacters(in: .whitespaces) ?? ""
             guard !titel.isEmpty else { return LotseAntwort(text: "Wie soll die Aufgabe heißen? Zum Beispiel: „Erstelle Aufgabe: Flugschule anrufen morgen“.", werkzeug: .aufgabeAnlegen) }
@@ -104,6 +126,20 @@ enum Lotse {
             return LotseAntwort(text: t + ".", werkzeug: .terminAnlegen, aktion: .bereich(Bereich.kalender.rawValue))
         default:
             return Werkzeuge.ausfuehren(a, z: speicher.zustand, heute: T, jetzt: speicher.jetzt(), kalender: speicher.kalender)
+        }
+    }
+
+    /// Ladeanzeige: was der Assistent mit einem Werkzeug gerade tut.
+    static func statusText(_ n: Werkzeug.Name) -> String {
+        switch n {
+        case .heute, .naechstes, .tagesplan, .woche, .freieZeit: "Schaut in deinen Kalender …"
+        case .empfehlen: "Wägt ab, was zuerst kommt …"
+        case .ziele, .ziel, .fortschrittErklaeren: "Prüft deine Ziele …"
+        case .habits: "Schaut auf deine Habits …"
+        case .analyse: "Wertet deine Woche aus …"
+        case .aufgabeAnlegen, .terminAnlegen: "Trägt es ein …"
+        case .hilfe: "Liest in der Anleitung …"
+        case .merken: "Merkt es sich …"
         }
     }
 
@@ -184,6 +220,7 @@ enum Lotse {
             return "\(h.titel) (" + (geplant ? (h.voll(am: T) ? "heute erledigt" : "heute offen") : "heute nicht geplant") + ")"
         }
         if !habits.isEmpty { zeilen.append("Habits: " + habits.joined(separator: "; ") + ".") }
+        if !z.lernen.lotse.erinnerungen.isEmpty { zeilen.append("Das weißt du über den Nutzer (mit „merken“ gespeichert): " + z.lernen.lotse.erinnerungen.joined(separator: " · ")) }
         return String(zeilen.joined(separator: "\n").prefix(3800))
     }
 }

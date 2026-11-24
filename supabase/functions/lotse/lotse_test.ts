@@ -1,7 +1,7 @@
 // Tests der reinen Teile: Anfrageprüfung, Tool-Umwandlung, Kontingent-Regeln, Datum.
 //   deno test supabase/functions/lotse/
 import { assertEquals } from "jsr:@std/assert";
-import { alsTools, anfragePruefen, MAX_SCHRITTE, schrittePruefen } from "./lotse.ts";
+import { alsTools, anfragePruefen, antwortText, MAX_SCHRITTE, schrittePruefen } from "./lotse.ts";
 import { heute, istPro, limitFuer, regelnAusUmgebung, SpeicherZaehler } from "./kontingent.ts";
 import { modelleAusUmgebung, STANDARD_MODELLE } from "./modelle.ts";
 
@@ -71,4 +71,16 @@ Deno.test("Modelle aus Umgebung, sonst Standard", () => {
   assertEquals(modelleAusUmgebung("kaputt"), STANDARD_MODELLE);
   assertEquals(modelleAusUmgebung('{"gespraech":["claude-opus-5-5"]}').gespraech, ["claude-opus-5-5"]);
   assertEquals(modelleAusUmgebung('{"gespraech":["claude-opus-5-5"]}').werkzeugwahl, STANDARD_MODELLE.werkzeugwahl);
+});
+
+Deno.test("Antworttext: nach der Websuche, Zitatblöcke verbunden, Quellen", () => {
+  const t = antwortText([
+    { type: "text", text: "Ich schaue nach." },
+    { type: "server_tool_use", id: "s1", name: "web_search", input: {} },
+    { type: "web_search_tool_result", tool_use_id: "s1", content: [] },
+    { type: "text", text: "Morgen wird es " },
+    { type: "text", text: "**8 °C** und bewölkt.", citations: [{ url: "https://wetter.example/ulm", title: "Wetter Ulm" }] },
+  ]);
+  assertEquals(t, "Morgen wird es **8 °C** und bewölkt.\n\nQuellen: [Wetter Ulm](https://wetter.example/ulm)");
+  assertEquals(antwortText([{ type: "text", text: "Hallo" }]), "Hallo");
 });

@@ -460,6 +460,19 @@ struct LotseLernen: Codable, Sendable, Hashable {
     var gut = 0
     /// je Werkzeug: wie oft genutzt
     var genutzt: [String: Int] = [:]
+    /// Was der Assistent sich über den Nutzer merkt (nur auf dem Gerät; Nutzer sieht und löscht es in den Einstellungen) – höchstens 30
+    var erinnerungen: [String] = []
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        unbeantwortet = try c.decodeIfPresent([String].self, forKey: .unbeantwortet) ?? []
+        schlecht = try c.decodeIfPresent([String].self, forKey: .schlecht) ?? []
+        gut = try c.decodeIfPresent(Int.self, forKey: .gut) ?? 0
+        genutzt = try c.decodeIfPresent([String: Int].self, forKey: .genutzt) ?? [:]
+        erinnerungen = try c.decodeIfPresent([String].self, forKey: .erinnerungen) ?? []
+    }
 }
 
 /// Ein früherer Chat mit dem Assistenten (Verlauf oben links).
