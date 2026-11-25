@@ -1,12 +1,20 @@
 import SwiftUI
 
-/// Ziele (Inhalt im Tab Fortschritt): Aussage-Karte, Filter als Verlaufskacheln (Alle · Auf Kurs · Hinterher · Erreicht),
-/// Sortieren nach Frist, Jahr, Fortschritt, Hinterher zuerst, Bereich oder Name, dann die Zielkarten.
+/// Ziele (Tab Fortschritt, Blattwerk): Bühne mit dem Wort „x von y auf Kurs“ und dem Kompass, Karte vorn mit
+/// Filter (Alle · Hinterher · Erreicht) und dem Ziel mit dem größten Hebel, darunter alle Ziele mit Ring und Lage.
+/// Hick: drei Filter, Sortieren (drei) unter „Mehr“.
 struct ZieleAnsicht: View {
     @Environment(Speicher.self) private var speicher
+    @Environment(Navigation.self) private var nav
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @AppStorage("ziele.filter") private var filterRoh = ZielOrdnung.Filter.alle.rawValue
     @AppStorage("ziele.sortierung") private var sortierungRoh = ZielOrdnung.Sortierung.frist.rawValue
+    @State private var mehr = false
+
+    /// Hick: drei Filter (Auf Kurs steckt in „Alle“ und im Wort auf der Bühne)
+    private let filterWahl: [ZielOrdnung.Filter] = [.alle, .hinterher, .erreicht]
+    /// Hick: drei Sortierungen statt sechs
+    private let sortierWahl: [ZielOrdnung.Sortierung] = [.frist, .fortschritt, .hinterherZuerst]
 
     private var filter: ZielOrdnung.Filter { .init(rawValue: filterRoh) ?? .alle }
     private var sortierung: ZielOrdnung.Sortierung { .init(rawValue: sortierungRoh) ?? .frist }
@@ -15,54 +23,86 @@ struct ZieleAnsicht: View {
         let z = speicher.zustand
         let T = speicher.heute
         let gruppen = ZielOrdnung.gruppen(z, filter: filter, sortierung: sortierung, heute: T)
+        let alle = gruppen.flatMap(\.ziele)
+        let aktiv = z.ziele.filter { $0.status == .aktiv }
+        let aufKurs = aktiv.filter { !Kurs.aufKurs($0, in: z, heute: T).lage.hinten }
+        let hebel = Self.hebel(z, heute: T)
 
-        VStack(alignment: .leading, spacing: 0) {
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                ForEach(ZielOrdnung.Filter.allCases, id: \.self) { f in
-                    FilterKachel(filter: f, anzahl: ZielOrdnung.anzahl(f, in: z, heute: T), an: f == filter) {
-                        withAnimation(ruhig ? nil : .snappy) { filterRoh = f.rawValue }
+        BuehnenSeite(wort: Self.wort(aufKurs: aufKurs.count, gesamt: aktiv.count), objekt: .kompass, platz: .fortschritt, marke: {
+            MarkenTitel(text: "Ziele")
+            Spacer(minLength: 8)
+            FortschrittWahl()
+            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.ziele) }
+            RahmenKnopf(symbol: "plus", beschriftung: "Neues Ziel") { nav.blatt = .neu(.ziel) }
+        }) {
+            VornKarte(abstand: 12) {
+                ChipReihe(titel: "", auswahl: filterWahl.map { ($0.titel, $0 == filter) }) { i in
+                    withAnimation(ruhig ? nil : .snappy) { filterRoh = filterWahl[i].rawValue }
+                }
+                if let g = hebel {
+                    let kurs = Kurs.aufKurs(g, in: z, heute: T)
+                    let naechster = Fortschritt.naechsterSchritt(g, in: z, heute: T)
+                    Rectangle().fill(Farbe.linie).frame(height: 1)
+                    NavigationLink(value: ZielAuswahl(id: g.id)) {
+                        HStack(spacing: 12) {
+                            FortschrittRing(anteil: kurs.fortschritt)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Etikett(text: kurs.lage.hinten ? "Größter Hebel" : "Dein nächster Schritt")
+                                Text(g.titel).font(.kompass(.body, .heavy)).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading)
+                                Text(naechster.map { $0.aufgabe?.titel ?? $0.schritt.titel } ?? "Meilenstein wählen")
+                                    .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                            }
+                            Spacer(minLength: 4)
+                            LagePille(kurs.lage)
+                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
             }
 
-            HStack(alignment: .firstTextBaseline) {
-                Text(filter == .alle ? "Deine Ziele" : filter.titel).font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
-                Spacer()
-                Menu {
-                    Picker("Sortieren", selection: $sortierungRoh) {
-                        ForEach(ZielOrdnung.Sortierung.allCases, id: \.self) { Label($0.titel, systemImage: $0.symbol).tag($0.rawValue) }
-                    }
-                } label: {
-                    Label(sortierung.titel, systemImage: "arrow.up.arrow.down")
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(filter == .alle ? "Alle Ziele" : filter.titel).font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    Button(mehr ? "weniger" : "Mehr") { withAnimation(ruhig ? nil : .snappy) { mehr.toggle() } }
                         .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
-                        .padding(.horizontal, 12).frame(minHeight: 36)
-                        .background(Farbe.akzentWeich, in: Capsule())
                 }
-                .accessibilityLabel("Sortieren: \(sortierung.titel)")
-            }
-            .padding(.top, Mass.abschnitt).padding(.bottom, Mass.ueberschrift)
-
-            if gruppen.isEmpty {
-                GruppierteListe { LeerZeile(text: leerText) }
-            }
-            ForEach(Array(gruppen.enumerated()), id: \.offset) { i, gr in
-                if let t = gr.titel {
-                    HStack {
-                        Text(t).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text)
-                        Spacer()
-                        Text("\(gr.ziele.count) Ziel\(gr.ziele.count == 1 ? "" : "e")").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                .padding(.top, 8)
+                if mehr {
+                    ChipReihe(titel: "Sortieren", auswahl: sortierWahl.map { ($0.titel, $0 == sortierung) }) { i in
+                        withAnimation(ruhig ? nil : .snappy) { sortierungRoh = sortierWahl[i].rawValue }
                     }
-                    .padding(.top, i == 0 ? 0 : 20).padding(.bottom, 8)
-                    .accessibilityAddTraits(.isHeader)
                 }
-                VStack(spacing: 12) { ForEach(gr.ziele) { ZielKarte(ziel: $0) } }
+                GruppierteListe {
+                    if alle.isEmpty { LeerZeile(text: leerText) }
+                    ForEach(alle) { ZielListenZeile(ziel: $0) }
+                }
             }
+            .padding(.horizontal, Mass.rand).padding(.top, 12)
         }
+    }
+
+    /// Das Wort: die Aussage über alle aktiven Ziele (§4 Auf Kurs).
+    nonisolated static func wort(aufKurs: Int, gesamt: Int) -> Wort {
+        if gesamt == 0 { return Wort(zeilen: ["Noch kein"], akzent: "Ziel.", groesse: Wort.mittel) }
+        if aufKurs == gesamt { return Wort(zeilen: ["Alle \(gesamt)"], akzent: "auf Kurs.", groesse: Wort.mittel) }
+        return Wort(zeilen: ["\(aufKurs) von \(gesamt)"], akzent: "auf Kurs.", groesse: Wort.mittel)
+    }
+
+    /// Größter Hebel: das Ziel, das am weitesten hinter dem Plan liegt; sonst das mit der nächsten Frist.
+    static func hebel(_ z: Zustand, heute T: Tag) -> Ziel? {
+        let aktiv = z.ziele.filter { $0.status == .aktiv }
+        let mitKurs = aktiv.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
+        if let hinten = mitKurs.filter({ $0.1.lage.hinten }).min(by: { $0.1.fortschritt - $0.1.erwartet < $1.1.fortschritt - $1.1.erwartet }) {
+            return hinten.0
+        }
+        return aktiv.min { $0.faellig < $1.faellig }
     }
 
     private var leerText: String {
         switch filter {
-        case .alle: "Noch keine Ziele. Oben auf „+ Neu“."
+        case .alle: "Noch keine Ziele. Oben auf „+“."
         case .aufKurs: "Gerade ist kein Ziel auf Kurs."
         case .hinterher: "Kein Ziel hinkt hinterher – stark."
         case .erreicht: "Noch kein Ziel erreicht."
@@ -70,66 +110,13 @@ struct ZieleAnsicht: View {
     }
 }
 
-/// Filter-Kachel mit Farbverlauf (wie „Coming up“ in Gapless): Glas-Kreis mit Symbol, Titel, Anzahl; gewählt = weißer Rand + Haken.
-private struct FilterKachel: View {
-    var filter: ZielOrdnung.Filter
-    var anzahl: Int
-    var an: Bool
-    var aktion: () -> Void
-
-    var body: some View {
-        let c = farbe
-        Button(action: aktion) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .top) {
-                    Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufTon)
-                        .frame(width: 38, height: 38).background(c.gradient, in: Circle())
-                        .shadow(color: c.opacity(0.35), radius: 6, y: 3)
-                    Spacer()
-                    if an {
-                        Image(systemName: "checkmark.circle.fill").font(.title3).symbolRenderingMode(.palette).foregroundStyle(.white, c)
-                    }
-                }
-                Spacer(minLength: 10)
-                Text(filter.titel).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text).lineLimit(1).minimumScaleFactor(0.8)
-                Text("\(anzahl) Ziel\(anzahl == 1 ? "" : "e")").font(.klein).foregroundStyle(Farbe.text.opacity(0.7))
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
-            .background {
-                // Weiß oben links → kräftige Farbe unten rechts
-                LinearGradient(stops: [.init(color: Farbe.karte, location: 0), .init(color: c.opacity(0.28), location: 0.45), .init(color: c.opacity(0.75), location: 1)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            }
-            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(an ? c : c.opacity(0.2), lineWidth: an ? 2.5 : 1))
-            .shadow(color: c.opacity(an ? 0.3 : 0.12), radius: an ? 10 : 6, y: 4)
-        }
-        .buttonStyle(DruckStil())
-        .accessibilityLabel("\(filter.titel), \(anzahl) Ziele")
-        .accessibilityAddTraits(an ? [.isButton, .isSelected] : .isButton)
-    }
-
-    private var symbol: String {
-        switch filter {
-        case .alle: "square.grid.2x2.fill"
-        case .aufKurs: "arrow.up.right"
-        case .hinterher: "tortoise.fill"
-        case .erreicht: "flag.checkered"
-        }
-    }
-
-    private var farbe: Color {
-        switch filter {
-        case .alle: Color(hex: "#5B5BE6")
-        case .aufKurs: Color(hex: "#1FA67A")
-        case .hinterher: Color(hex: "#F08A3C")
-        case .erreicht: Color(hex: "#B05CD6")
-        }
-    }
+extension Kurs.Lage {
+    /// „hinterher“ oder „überfällig“
+    var hinten: Bool { self == .hinterher || self == .ueberfaellig }
 }
 
-struct ZielKarte: View {
+/// Eine Ziel-Zeile: Ring, Titel, Frist, Lage.
+struct ZielListenZeile: View {
     var ziel: Ziel
     @Environment(Speicher.self) private var speicher
 
@@ -137,30 +124,21 @@ struct ZielKarte: View {
         let z = speicher.zustand
         let T = speicher.heute
         let kurs = Kurs.aufKurs(ziel, in: z, heute: T)
-        let c = Color(hex: ziel.farbe)
-        let form = RoundedRectangle(cornerRadius: Mass.karte, style: .continuous)
         NavigationLink(value: ZielAuswahl(id: ziel.id)) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle().stroke(c.opacity(0.15), lineWidth: 6)
-                    Circle().trim(from: 0, to: max(0.001, kurs.fortschritt)).stroke(c, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
-                    Text(Zahl.prozent(kurs.fortschritt)).font(.kompass(.caption, .heavy)).foregroundStyle(Farbe.text).monospacedDigit()
-                        .minimumScaleFactor(0.7).lineLimit(1).padding(6)
+            HStack(spacing: 12) {
+                FortschrittRing(anteil: kurs.fortschritt).padding(.leading, 8)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(ziel.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading)
+                    Text("bis \(ziel.faellig.datum().formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "de_DE"))))")
+                        .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
                 }
-                .frame(width: 54, height: 54)
-                Text(ziel.titel).font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text)
-                    .lineLimit(3).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
-                Image(systemName: "arrow.right").font(.footnote.weight(.heavy)).foregroundStyle(Farbe.aufTon)
-                    .frame(width: 30, height: 30).background(c.gradient, in: Circle())
+                LagePille(kurs.lage).padding(.trailing, 12)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Farbe.karte, in: form)
-            .overlay { Lichtrand(farbe: c, ecken: Mass.karte) }
-            .shadow(color: c.opacity(0.10), radius: 10, y: 4)
+            .frame(minHeight: 72)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(DruckStil())
+        .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ziel.titel), \(Zahl.prozent(kurs.fortschritt)), \(kurs.lage.text), \(Kurs.bisText(ziel.faellig, heute: T))")
         .accessibilityAddTraits(.isButton)

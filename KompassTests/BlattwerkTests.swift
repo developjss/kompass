@@ -66,7 +66,7 @@ struct BuehneTests {
             #expect(p.breite >= 120 && p.breite <= 460)
             #expect(p.oben >= 0 && p.oben < Mass.buehne)
             #expect(abs(p.drehung) <= 20)
-            #expect(p.rechts > -p.breite / 2, "Objekt ragt zu weit hinaus")
+            #expect(p.rechts >= -p.breite / 2, "Objekt ragt mehr als zur Hälfte hinaus")
         }
     }
 

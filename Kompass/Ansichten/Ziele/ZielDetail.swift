@@ -10,156 +10,65 @@ struct ZielDetail: View {
     var body: some View {
         let z = speicher.zustand
         if let g = z.ziel(id) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ZielStandKarte(ziel: g)
-                    WichtigsteEinstellungen(ziel: g)
+            let T = speicher.heute
+            let kurs = Kurs.aufKurs(g, in: z, heute: T)
+            let naechster = Fortschritt.naechsterSchritt(g, in: z, heute: T)
+            BuehnenSeite(wort: Self.wort(g, kurs: kurs), objekt: .a380, platz: .ziel, marke: {
+                MarkenTitel(text: "Ziel")
+                Spacer(minLength: 8)
+                MarkenHinweis(text: "bis " + g.faellig.datum().formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "de_DE"))))
+                RahmenKnopf(symbol: "info", beschriftung: "So wird gerechnet") { nav.blatt = .rechnung(g.id) }
+            }) {
+                VornKarte {
+                    Etikett(text: g.status == .erreicht ? "Geschafft" : "Dein nächster Schritt")
+                    Text(g.status == .erreicht ? "Dieses Ziel ist erreicht." : (naechster.map { $0.aufgabe?.titel ?? $0.schritt.titel } ?? "Meilenstein wählen"))
+                        .font(.karteTitel).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 8) {
+                        if let a = naechster?.aufgabe {
+                            Button { nav.blatt = .fokus(a.id) } label: { Label("Fokus starten", systemImage: "play.fill") }.buttonStyle(.haupt)
+                        } else if let s = naechster?.schritt {
+                            Button { nav.blatt = .meilenstein(ziel: g.id, schritt: s.id) } label: { Label("Meilenstein öffnen", systemImage: "flag.fill") }.buttonStyle(.haupt)
+                        } else if g.status != .erreicht {
+                            Button { nav.blatt = .meilenstein(ziel: g.id, schritt: nil) } label: { Label("Meilenstein anlegen", systemImage: "plus") }.buttonStyle(.haupt)
+                        }
+                        Button { nav.zeigeAnalyse(ziel: g.id) } label: { Label("Analyse", systemImage: "chart.line.uptrend.xyaxis") }.buttonStyle(.leise)
+                    }
+                    .padding(.top, 4)
+                    Text(Kurs.bisText(g.faellig, heute: T) + (g.warum.isEmpty ? "" : " · \(g.warum)"))
+                        .font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        AuswahlKachel(symbol: "flag.fill", titel: "Meilensteine", unter: meilensteinText(g)) {
+                            nav.blatt = .meilenstein(ziel: g.id, schritt: g.schritte.first?.id)
+                        }
+                        NavigationLink(value: ZielTeilAuswahl(id: g.id, teil: .verfeinern)) {
+                            AuswahlKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", unter: "Bis wann · Warum · Name · mehr")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("ziel.verfeinern")
+                    }
                     MeilensteinListe(ziel: g)
                 }
-                .padding(Mass.rand)
-                .padding(.bottom, 24)
-                .frame(maxWidth: 720)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Mass.rand).padding(.top, 12)
             }
-            .background(Farbe.grund.ignoresSafeArea())
-            .navigationTitle(g.titel)
-            .navigationBarTitleDisplayMode(.inline)
         } else {
             ContentUnavailableView("Ziel nicht gefunden", systemImage: "target", description: Text("Es wurde vielleicht gelöscht."))
+                .background(Farbe.grund.ignoresSafeArea())
         }
     }
-}
 
-// MARK: Stand – minimal
-
-/// Wie weit du bist, in einem Blick: Ring, Prozent, Lage, Restzeit, was als Nächstes zählt. Die Analyse steht im Rückblick.
-private struct ZielStandKarte: View {
-    var ziel: Ziel
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let z = speicher.zustand
-        let T = speicher.heute
-        let kurs = Kurs.aufKurs(ziel, in: z, heute: T)
-        let naechster = Fortschritt.naechsterSchritt(ziel, in: z, heute: T)
-        Verlaufskarte(farben: Farbe.verlauf(ziel.farbe)) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle().stroke(.white.opacity(0.25), lineWidth: 8)
-                    Circle().trim(from: 0, to: max(0.001, kurs.fortschritt)).stroke(Farbe.gold, style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90))
-                    Image(systemName: ziel.symbol).font(.system(size: 22, weight: .bold))
-                }
-                .frame(width: 78, height: 78)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Zahl.prozent(kurs.fortschritt)).font(.grosseZahl).foregroundStyle(Farbe.gold).contentTransition(.numericText())
-                    Text("\(kurs.lage.text.prefix(1).uppercased() + kurs.lage.text.dropFirst()) · \(Kurs.bisText(ziel.faellig, heute: T))")
-                        .font(.unterzeile).opacity(0.92).lineLimit(2)
-                }
-                Spacer(minLength: 0)
-                Button { nav.blatt = .rechnung(ziel.id) } label: { Image(systemName: "info.circle").font(.title3).opacity(0.85) }
-                    .accessibilityLabel("So wird gerechnet")
-            }
-            if ziel.status == .erreicht {
-                Text("Geschafft – dieses Ziel ist erreicht.").font(.unterzeile.weight(.semibold)).padding(.top, 10)
-            } else if let n = naechster {
-                Text("Als Nächstes: \(n.aufgabe?.titel ?? n.schritt.titel)").font(.unterzeile.weight(.semibold)).lineLimit(1).padding(.top, 10)
-            }
-            Button { nav.zeigeAnalyse(ziel: ziel.id) } label: {
-                HStack(spacing: 6) {
-                    Text("Analyse im Rückblick")
-                    Image(systemName: "arrow.right")
-                }
-                .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.nacht)
-                .padding(.horizontal, 14).frame(minHeight: 40)
-                .background(Farbe.seladon, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 12)
-        }
+    /// Das Wort: Prozent und Lage (§4), darunter der Zieltitel.
+    nonisolated static func wort(_ g: Ziel, kurs: Kurs.Ergebnis) -> Wort {
+        Wort(zeilen: [Zahl.prozent(kurs.fortschritt)], akzent: kurs.lage.text + ".", klein: g.titel, groesse: Wort.riesig)
     }
-}
 
-// MARK: Die wichtigsten Einstellungen
-
-/// Vier Kacheln wie Konten-Kacheln in Gapless: Bis wann · Warum · Name · Verfeinern (hervorgehoben).
-private struct WichtigsteEinstellungen: View {
-    var ziel: Ziel
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let T = speicher.heute
-        let c = Color(hex: ziel.farbe)
-        AbschnittKopf(titel: "Einstellungen")
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            EinstellKachel(symbol: "calendar", titel: "Bis wann", wert: ziel.faellig.datum().formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "de_DE"))),
-                           unter: Kurs.bisText(ziel.faellig, heute: T), farbe: c) { nav.blatt = .zielBearbeiten(ziel.id, .faellig) }
-            EinstellKachel(symbol: "heart.fill", titel: "Warum", wert: ziel.warum.isEmpty ? "Noch offen" : ziel.warum,
-                           unter: ziel.warum.isEmpty ? "Hilft beim Dranbleiben" : nil, farbe: c, hinweis: ziel.warum.isEmpty) { nav.blatt = .zielBearbeiten(ziel.id, .warum) }
-            EinstellKachel(symbol: "textformat", titel: "Name", wert: ziel.titel, unter: ziel.bereich, farbe: c) { nav.blatt = .zielBearbeiten(ziel.id, .titel) }
-            NavigationLink(value: ZielTeilAuswahl(id: ziel.id, teil: .verfeinern)) {
-                EinstellKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", wert: "Aufgaben, Habits …", unter: "Termine, Details", farbe: c, hervor: true)
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("ziel.verfeinern")
-        }
-    }
-}
-
-private struct EinstellKachel: View {
-    var symbol: String
-    var titel: String
-    var wert: String
-    var unter: String?
-    var farbe: Color
-    var hinweis = false
-    var aktion: () -> Void
-    var body: some View {
-        Button(action: aktion) { EinstellKachelInhalt(symbol: symbol, titel: titel, wert: wert, unter: unter, farbe: farbe, hinweis: hinweis) }
-            .buttonStyle(.plain)
-    }
-}
-
-struct EinstellKachelInhalt: View {
-    var symbol: String
-    var titel: String
-    var wert: String
-    var unter: String?
-    var farbe: Color
-    var hinweis = false
-    var hervor = false
-    /// Verlauf von Weiß zur Farbe (Kacheln unter „Verfeinern › Mehr“)
-    var verlauf = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top) {
-                Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufTon)
-                    .frame(width: 36, height: 36).background(farbe.gradient, in: Circle())
-                Spacer()
-                if hinweis {
-                    Image(systemName: "exclamationmark").font(.caption.weight(.heavy)).foregroundStyle(Farbe.warnungGrund)
-                        .frame(width: 22, height: 22).background(Farbe.warnung, in: Circle())
-                }
-            }
-            Spacer(minLength: 6)
-            Text(titel).font(.kompass(.subheadline, .heavy)).foregroundStyle(Farbe.text)
-            Text(wert).font(.unterzeile).foregroundStyle(Farbe.text).lineLimit(1)
-            if let unter { Text(unter).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1) }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: verlauf ? 108 : 128, alignment: .topLeading)
-        .background {
-            if verlauf {
-                LinearGradient(stops: [.init(color: Farbe.karte, location: 0.35), .init(color: farbe.opacity(0.22), location: 1)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            } else {
-                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Farbe.karte)
-            }
-        }
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(hervor ? farbe : farbe.opacity(verlauf ? 0.15 : 0), lineWidth: hervor ? 2 : 1))
-        .accessibilityElement(children: .combine)
+    private func meilensteinText(_ g: Ziel) -> String {
+        guard !g.schritte.isEmpty else { return "noch keiner – anlegen" }
+        let z = speicher.zustand, T = speicher.heute
+        let fertig = g.schritte.filter { Fortschritt.stand($0, in: z, heute: T).anteil >= 0.999 }.count
+        return "\(fertig) von \(g.schritte.count) · \(g.schritte[0].titel)"
     }
 }
 
