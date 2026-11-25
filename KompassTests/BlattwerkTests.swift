@@ -77,9 +77,9 @@ struct BuehneTests {
     @Test func masseDerEbenen() {
         #expect(Mass.buehne == 360 && Mass.buehneKurz == 270 && Mass.buehneLang == 430)
         #expect(Mass.karteVorn == 28 && Mass.karteVornVersatz == -44)
-        #expect(Mass.saum(fuer: Mass.buehneKurz) == 112)
-        #expect(Mass.saum(fuer: Mass.buehne) == 160)
-        #expect(Mass.saum(fuer: Mass.buehneLang) == 190)
+        #expect(Mass.saum(fuer: Mass.buehneKurz) == 150)
+        #expect(Mass.saum(fuer: Mass.buehne) == 210)
+        #expect(Mass.saum(fuer: Mass.buehneLang) == 240)
     }
 
     @Test func wortGroessen() {

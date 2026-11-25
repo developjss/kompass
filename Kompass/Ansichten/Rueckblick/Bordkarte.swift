@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Statistik als Bordkarte (Easter Egg 3, design.md §7): die Zahlen stecken in einem Schlitz unter der Bühne, nur der
-/// Abriss schaut heraus („Bericht · Herausziehen“). Antippen oder nach unten ziehen holt die Karte heraus – dann liegen
-/// oben die Zahlen, unten der Abriss mit Perforation. Herausgezogen bleibt herausgezogen (je Schlüssel gemerkt, höchstens 26).
-/// Keine Flugwörter: die Karte ist Papier (`Farbe.papier`), die Form ist die Erinnerung.
+/// Statistik als Bordkarte (design.md §7): Papierkarte (`Farbe.papier`) – oben die Zahlen, unten der Abriss mit Perforation.
+/// Nichts zum Ziehen (Entscheidung 25.11.2026): die Form ist die Erinnerung, die Karte liegt immer offen.
 struct Bordkarte<Inhalt: View>: View {
     /// Schlüssel fürs Merken („2026-11-23“, „ziel:…“, „habit:…“)
     var schluessel: String
@@ -20,7 +18,7 @@ struct Bordkarte<Inhalt: View>: View {
     /// Höhe des sichtbaren Abrisses, solange die Karte steckt
     static var abriss: CGFloat { 58 }
 
-    private var draussen: Bool { Self.istAbgerissen(gezogen, woche: schluessel) }
+    private var draussen: Bool { true }
 
     var body: some View {
         ZStack(alignment: .bottom) {

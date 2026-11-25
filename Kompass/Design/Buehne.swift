@@ -91,13 +91,13 @@ struct Schein: View {
     }
 }
 
-/// Ebene 1b: Saum – die untersten Punkte der Bühne laufen in den Grund aus, erst spät (58 % = 5 %, 80 % = 38 %), damit das Wort nicht ausbleicht.
+/// Ebene 1b: Saum – die untersten Punkte der Bühne laufen weich in den Grund aus (40 % = 4 %, 68 % = 22 %, 88 % = 70 %); das Wort steht darüber.
 struct Saum: View {
     var hoehe: CGFloat
     var body: some View {
         VStack { Spacer(minLength: 0)
-            LinearGradient(stops: [.init(color: Farbe.grund.opacity(0), location: 0), .init(color: Farbe.grund.opacity(0.05), location: 0.58),
-                                   .init(color: Farbe.grund.opacity(0.38), location: 0.80), .init(color: Farbe.grund, location: 1)],
+            LinearGradient(stops: [.init(color: Farbe.grund.opacity(0), location: 0), .init(color: Farbe.grund.opacity(0.04), location: 0.40),
+                                   .init(color: Farbe.grund.opacity(0.22), location: 0.68), .init(color: Farbe.grund.opacity(0.70), location: 0.88), .init(color: Farbe.grund, location: 1)],
                            startPoint: .top, endPoint: .bottom)
                 .frame(height: hoehe)
         }
