@@ -13,7 +13,7 @@ struct ZielDetail: View {
             let T = speicher.heute
             let kurs = Kurs.aufKurs(g, in: z, heute: T)
             let naechster = Fortschritt.naechsterSchritt(g, in: z, heute: T)
-            BuehnenSeite(wort: Self.wort(g, kurs: kurs), objekt: .a380, platz: .ziel, marke: {
+            BuehnenSeite(wort: Self.wort(g, kurs: kurs), marke: {
                 MarkenTitel(text: "Ziel")
                 Spacer(minLength: 8)
                 MarkenHinweis(text: "bis " + g.faellig.datum().formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "de_DE"))))

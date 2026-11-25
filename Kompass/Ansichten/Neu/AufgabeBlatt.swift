@@ -18,7 +18,7 @@ struct AufgabeBlatt: View {
     var body: some View {
         Group {
             if let a = speicher.zustand.aufgabe(id) {
-                BuehnenSeite(hoehe: Mass.buehneKurz, wort: wort(a), objekt: .b747Abflug, platz: .aufgabe, marke: {
+                BuehnenSeite(hoehe: Mass.buehneKurz, wort: wort(a), marke: {
                     RahmenKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }
                     MarkenTitel(text: "Aufgabe")
                     Spacer(minLength: 8)

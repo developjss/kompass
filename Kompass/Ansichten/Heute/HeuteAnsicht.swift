@@ -19,7 +19,7 @@ struct HeuteAnsicht: View {
         let zeilen = HomeRechnung.alsNaechstes(bloecke: naechste, habits: offenH, fokus: fokus, anzahl: 3)
         let gesamt = naechste.count + offenH.count
 
-        BuehnenSeite(wort: HomeRechnung.wort(fokus, heute: T, jetzt: jetzt), objekt: .b747, platz: .home, marke: {
+        BuehnenSeite(wort: HomeRechnung.wort(fokus, heute: T, jetzt: jetzt), marke: {
             MarkenTitel(text: "Kompass")
             Spacer(minLength: 8)
             MarkenHinweis(text: HomeRechnung.datumText(T))

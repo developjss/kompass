@@ -20,7 +20,7 @@ struct KalenderAnsicht: View {
         let tag = nav.kalenderTag ?? T
         let naechster = Tagesplan.naechste(zustand: speicher.zustand, heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:), anzahl: 1).first
 
-        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(tag: tag, heute: T, jetzt: speicher.jetztMinuten, naechster: naechster), objekt: .bordkarte, platz: .kalender, marke: {
+        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(tag: tag, heute: T, jetzt: speicher.jetztMinuten, naechster: naechster), marke: {
             MarkenTitel(text: "Kalender")
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.kalender) }
