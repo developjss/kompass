@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Ein Termin als Seite – geführt wie Habit- und Ziel-Seite: oben Zeit und Herkunft, darunter Kacheln
-/// „Zählt für“ · „Zählt in“ · „Erfüllt Habit“ · Bearbeiten. Gilt für jeden Termin, auch aus Apple oder Google
-/// (dort zählt die ganze Serie über `TerminVerknuepfung`, §3). Gerechnet wird wie bisher in `Fortschritt`.
+/// Ein Termin als Seite (Blattwerk): kurze Bühne mit Uhrzeit und Titel als Wort, Karte vorn mit Tag · Zeit · Herkunft
+/// und Bearbeiten, darunter Kacheln „Zählt für“ · „Zählt in“ · „Erfüllt Habit“ · Bearbeiten. Gilt für jeden Termin, auch
+/// aus Apple oder Google (dort zählt die ganze Serie über `TerminVerknuepfung`, §3). Gerechnet wird wie bisher in `Fortschritt`.
 struct TerminSeite: View {
     var serie: String
     var tag: Tag
@@ -13,136 +13,130 @@ struct TerminSeite: View {
 
     var body: some View {
         let z = speicher.zustand
-        NavigationStack {
-            Group {
-                if let t = speicher.termine(am: tag).first(where: { Kalenderquelle.serie($0) == serie }) {
-                    let eigener = t.eigenID.flatMap { z.eigenerTermin($0) }
-                    let link = Kalenderquelle.verknuepfung(serie: serie, in: z)
-                    let zid = eigener?.zielID ?? link?.zielID
-                    let sid = eigener?.schrittID ?? link?.schrittID
-                    let g = z.ziel(zid)
-                    let s = g.flatMap { gg in gg.schritte.first { $0.id == sid } }
-                    let farbe = g?.farbe ?? t.kalenderFarbe ?? t.quelle.farbe
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
-                            Verlaufskarte(farben: Farbe.verlauf(farbe)) {
-                                HStack(spacing: 14) {
-                                    Image(systemName: eigener == nil ? "calendar" : "calendar.badge.clock").font(.system(size: 22, weight: .bold))
-                                        .frame(width: 52, height: 52).background(.white.opacity(0.2), in: Circle())
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(t.titel).font(.kompass(.title3, .heavy)).lineLimit(2)
-                                        Text(wann(t)).font(.unterzeile).opacity(0.92)
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                                Text(herkunft(t, eigener)).font(.klein).opacity(0.85).padding(.top, 10)
+        Group {
+            if let t = speicher.termine(am: tag).first(where: { Kalenderquelle.serie($0) == serie }) {
+                let eigener = t.eigenID.flatMap { z.eigenerTermin($0) }
+                let link = Kalenderquelle.verknuepfung(serie: serie, in: z)
+                let zid = eigener?.zielID ?? link?.zielID
+                let sid = eigener?.schrittID ?? link?.schrittID
+                let g = z.ziel(zid)
+                let s = g.flatMap { gg in gg.schritte.first { $0.id == sid } }
+                let farbe = g?.farbe ?? t.kalenderFarbe ?? t.quelle.farbe
+                let externID = KalenderAktion.externeID(serie)
+                let bearbeitbar = eigener != nil || (externID.map { AppleKalender.aktiv.bearbeitbar($0, am: tag, kalender: speicher.kalender) } ?? false)
+
+                BuehnenSeite(hoehe: Mass.buehneKurz, wort: wort(t), marke: {
+                    RahmenKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }
+                    MarkenTitel(text: "Termin")
+                    Spacer(minLength: 8)
+                    MarkenHinweis(text: eigener == nil ? t.quelle.name : "Kompass")
+                }) {
+                    VornKarte {
+                        Etikett(text: wann(t) + (eigener.map { $0.wiederholung == .nie ? "" : " · \($0.wiederholung.name)" } ?? ""))
+                        Text(t.titel).font(.karteTitel).foregroundStyle(Farbe.text).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 8) {
+                            if let e = eigener {
+                                Button { nav.blatt = .termin(e.id, tag: tag.text, start: nil) } label: { Label("Bearbeiten", systemImage: "pencil") }.buttonStyle(.haupt)
+                            } else if let id = externID, bearbeitbar {
+                                Button { nav.blatt = .externTermin(id: id, tag: tag.text) } label: { Label("Bearbeiten", systemImage: "pencil") }.buttonStyle(.haupt)
+                            } else {
+                                Label("Nur lesen", systemImage: "lock").font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig)
                             }
-
-                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                                Menu {
-                                    Button("Kein Ziel") { setze(t, eigener, ziel: nil, schritt: nil) }
-                                    ForEach(z.ziele.filter { $0.status == .aktiv }) { ziel in
-                                        Button(ziel.titel) {
-                                            setze(t, eigener, ziel: ziel.id, schritt: ziel.schritte.first { $0.art == .zeit || $0.art == .zahl }?.id)
-                                        }
-                                    }
-                                } label: {
-                                    EinstellKachelInhalt(symbol: g?.symbol ?? "target", titel: "Zählt für", wert: g?.titel ?? "kein Ziel",
-                                                         unter: g == nil ? "antippen zum Wählen" : nil, farbe: Color(hex: farbe), verlauf: true)
-                                }
-                                .accessibilityIdentifier("termin.ziel")
-                                if let g {
-                                    let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
-                                    Menu {
-                                        Button("Nur Einsatz") { setze(t, eigener, ziel: g.id, schritt: nil) }
-                                        ForEach(passend) { p in Button("\(p.titel) · \(p.art == .zeit ? "Dauer" : "je 1")") { setze(t, eigener, ziel: g.id, schritt: p.id) } }
-                                    } label: {
-                                        EinstellKachelInhalt(symbol: "flag.fill", titel: "Zählt in", wert: s?.titel ?? "Nur Einsatz",
-                                                             unter: s == nil ? "ändert die Prozente nicht" : (s?.art == .zeit ? "die Dauer zählt" : "jeder Termin zählt 1"),
-                                                             farbe: Color(hex: farbe), hinweis: passend.isEmpty, verlauf: true)
-                                    }
-                                }
-                                if let e = eigener {
-                                    Menu {
-                                        Button("Keinen") { var x = e; x.habitID = nil; speicher.aendern { $0.terminSpeichern(x) } }
-                                        ForEach(z.habits) { h in Button(h.titel) { var x = e; x.habitID = h.id; speicher.aendern { $0.terminSpeichern(x) } } }
-                                    } label: {
-                                        EinstellKachelInhalt(symbol: "repeat", titel: "Erfüllt Habit", wert: z.habit(e.habitID)?.titel ?? "keinen",
-                                                             unter: e.habitID == nil ? nil : "abgehakt, wenn vorbei", farbe: Color(hex: farbe), verlauf: true)
-                                    }
-                                    Button { nav.blatt = .termin(e.id, tag: tag.text, start: nil) } label: {
-                                        EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Zeit, Titel, Wiederholung", farbe: Color(hex: farbe), verlauf: true)
-                                    }
-                                    .buttonStyle(DruckStil())
-                                } else if let id = KalenderAktion.externeID(serie), AppleKalender.aktiv.bearbeitbar(id, am: tag, kalender: speicher.kalender) {
-                                    Button { nav.blatt = .externTermin(id: id, tag: tag.text) } label: {
-                                        EinstellKachelInhalt(symbol: "pencil", titel: "Bearbeiten", wert: "Titel, Zeit, löschen",
-                                                             unter: "im \(t.quelle.name)-Kalender", farbe: Color(hex: farbe), verlauf: true)
-                                    }
-                                    .buttonStyle(DruckStil())
-                                } else {
-                                    EinstellKachelInhalt(symbol: "lock", titel: "Nur lesen", wert: "im \(t.quelle.name)-Kalender",
-                                                         unter: "dieser Kalender erlaubt keine Änderungen", farbe: Color(hex: farbe), verlauf: true)
-                                }
-                            }
-                            .foregroundStyle(Farbe.text)
-
-                            Text(erklaerung(g, s, eigener == nil, habit: z.habit(eigener?.habitID)?.titel))
-                                .font(.klein).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
-
                             if let g, link != nil || eigener?.zielID != nil {
-                                Button { dismiss(); nav.zeigeAnalyse(ziel: g.id) } label: {
-                                    Label("Ziel-Analyse", systemImage: "chart.line.uptrend.xyaxis").font(.kompass(.subheadline, .bold))
-                                        .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(Color(hex: farbe))
-                                        .background(Color(hex: farbe).opacity(0.12), in: Capsule())
-                                }
-                                .buttonStyle(DruckStil())
-                            }
-                            if eigener != nil {
-                                Button("Termin löschen", role: .destructive) { loeschenFragen = true }
-                                    .font(.kompass(.subheadline, .bold)).frame(maxWidth: .infinity, minHeight: 44)
+                                Button { dismiss(); nav.zeigeAnalyse(ziel: g.id) } label: { Label("Analyse", systemImage: "chart.line.uptrend.xyaxis") }.buttonStyle(.leise)
                             }
                         }
-                        .padding(Mass.rand).padding(.bottom, 24)
+                        .padding(.top, 4)
+                        Text(herkunft(t, eigener)).font(.klein).foregroundStyle(Farbe.zweitrangig)
                     }
-                    .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
-                        if eigener?.wiederholung ?? .nie != .nie {
-                            Button("Nur diesen Termin löschen", role: .destructive) {
-                                if let id = eigener?.id { let d = tag; speicher.aendern { $0.terminAuslassen(id, am: d) } }
-                                dismiss()
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                            Menu {
+                                Button("Kein Ziel") { setze(t, eigener, ziel: nil, schritt: nil) }
+                                ForEach(z.ziele.filter { $0.status == .aktiv }) { ziel in
+                                    Button(ziel.titel) {
+                                        setze(t, eigener, ziel: ziel.id, schritt: ziel.schritte.first { $0.art == .zeit || $0.art == .zahl }?.id)
+                                    }
+                                }
+                            } label: {
+                                EinstellKachelInhalt(symbol: g?.symbol ?? "target", titel: "Zählt für", wert: g?.titel ?? "kein Ziel",
+                                                     unter: g == nil ? "antippen zum Wählen" : nil, farbe: Color(hex: farbe), verlauf: true)
                             }
-                            Button("Alle Termine der Serie löschen", role: .destructive) {
-                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
-                                dismiss()
+                            .accessibilityIdentifier("termin.ziel")
+                            if let g {
+                                let passend = g.schritte.filter { $0.art == .zeit || $0.art == .zahl }
+                                Menu {
+                                    Button("Nur Einsatz") { setze(t, eigener, ziel: g.id, schritt: nil) }
+                                    ForEach(passend) { p in Button("\(p.titel) · \(p.art == .zeit ? "Dauer" : "je 1")") { setze(t, eigener, ziel: g.id, schritt: p.id) } }
+                                } label: {
+                                    EinstellKachelInhalt(symbol: "flag.fill", titel: "Zählt in", wert: s?.titel ?? "Nur Einsatz",
+                                                         unter: s == nil ? "ändert die Prozente nicht" : (s?.art == .zeit ? "die Dauer zählt" : "jeder Termin zählt 1"),
+                                                         farbe: Color(hex: farbe), hinweis: passend.isEmpty, verlauf: true)
+                                }
                             }
-                        } else {
-                            Button("Löschen", role: .destructive) {
-                                if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
-                                dismiss()
+                            if let e = eigener {
+                                Menu {
+                                    Button("Keinen") { var x = e; x.habitID = nil; speicher.aendern { $0.terminSpeichern(x) } }
+                                    ForEach(z.habits) { h in Button(h.titel) { var x = e; x.habitID = h.id; speicher.aendern { $0.terminSpeichern(x) } } }
+                                } label: {
+                                    EinstellKachelInhalt(symbol: "repeat", titel: "Erfüllt Habit", wert: z.habit(e.habitID)?.titel ?? "keinen",
+                                                         unter: e.habitID == nil ? nil : "abgehakt, wenn vorbei", farbe: Color(hex: farbe), verlauf: true)
+                                }
                             }
                         }
-                    } message: { Text(eigener?.wiederholung ?? .nie == .nie ? "" : "Der Termin wiederholt sich.") }
-                } else {
-                    ContentUnavailableView("Termin nicht gefunden", systemImage: "calendar", description: Text("Er wurde vielleicht verschoben oder gelöscht."))
+                        .foregroundStyle(Farbe.text)
+
+                        Text(erklaerung(g, s, eigener == nil, habit: z.habit(eigener?.habitID)?.titel))
+                            .font(.klein).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+
+                        if eigener != nil {
+                            Button("Termin löschen") { loeschenFragen = true }.buttonStyle(.rotBreit).padding(.top, 8)
+                        }
+                    }
+                    .padding(.horizontal, Mass.rand).padding(.top, 12)
                 }
+                .confirmationDialog("Termin löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
+                    if eigener?.wiederholung ?? .nie != .nie {
+                        Button("Nur diesen Termin löschen", role: .destructive) {
+                            if let id = eigener?.id { let d = tag; speicher.aendern { $0.terminAuslassen(id, am: d) } }
+                            dismiss()
+                        }
+                        Button("Alle Termine der Serie löschen", role: .destructive) {
+                            if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                            dismiss()
+                        }
+                    } else {
+                        Button("Löschen", role: .destructive) {
+                            if let id = eigener?.id { speicher.aendern { $0.terminLoeschen(id) } }
+                            dismiss()
+                        }
+                    }
+                } message: { Text(eigener?.wiederholung ?? .nie == .nie ? "" : "Der Termin wiederholt sich.") }
+            } else {
+                ContentUnavailableView("Termin nicht gefunden", systemImage: "calendar", description: Text("Er wurde vielleicht verschoben oder gelöscht."))
+                    .background(Farbe.grund.ignoresSafeArea())
             }
-            .background(Farbe.grund.ignoresSafeArea())
-            .navigationTitle("Termin")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
         }
         .presentationDetents([.large])
     }
 
+    private func wort(_ t: Termin) -> Wort {
+        let titel = t.titel.count > 14 ? String(t.titel.prefix(13)).trimmingCharacters(in: .whitespaces) + "…" : t.titel + "."
+        guard let s = t.start else { return Wort(zeilen: ["Ganztags"], akzent: titel, groesse: Wort.kleinGroesse) }
+        return Wort(zeilen: [Tagesplan.uhr(s)], akzent: titel, groesse: Wort.kleinGroesse)
+    }
+
     private func wann(_ t: Termin) -> String {
-        let d = tag.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))
+        let T = speicher.heute
+        let d = tag == T ? "Heute" : tag == T.plus(tage: 1) ? "Morgen" : tag.datum().formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))
         guard let s = t.start, let e = t.ende else { return "\(d) · ganztägig" }
-        return "\(d) · \(Tagesplan.uhr(s))–\(Tagesplan.uhr(e))"
+        return "\(d) · \(Tagesplan.uhr(s))–\(Tagesplan.uhr(e)) · \(e - s) Min"
     }
 
     private func herkunft(_ t: Termin, _ e: EigenerTermin?) -> String {
-        if let e { return e.wiederholung == .nie ? "Kompass-Termin" : "Kompass-Termin · wiederholt sich \(e.wiederholung.name.lowercased())" }
-        return "Aus deinem \(t.quelle.name)-Kalender"
+        if e != nil { return "Kompass-Termin – Änderungen gelten sofort." }
+        return "Aus deinem \(t.quelle.name)-Kalender – Änderungen landen direkt dort."
     }
 
     /// Ein Satz, was die Auswahl bewirkt (Regel §3: jeder stattgefundene Termin der Serie zählt).
@@ -171,7 +165,7 @@ struct TerminSeite: View {
     }
 }
 
-/// Freie Stunde angetippt: neuer Termin (geführt, Zeit vorbelegt) – oder etwas Offenes genau hierhin legen.
+/// Freie Stunde angetippt: „Was um 14:00?“ – drei Wege (Hick): neuer Termin, Offenes genau hierhin legen, Fokus starten.
 struct StundeBlatt: View {
     var tag: Tag
     var start: Int
@@ -182,13 +176,23 @@ struct StundeBlatt: View {
 
     var body: some View {
         let v = Empfehlung.fuer(.tag, tag: tag, zustand: speicher.zustand, heute: speicher.heute, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
+        let jetztDran = speicher.zustand.aufgaben.filter { $0.datum == speicher.heute && !$0.erledigt }
+            .sorted { ($0.prio == .hoch ? 0 : 1, $0.reihenfolge) < ($1.prio == .hoch ? 0 : 1, $1.reihenfolge) }.first
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top) {
+                    (Text("Was um ") + Text("\(Tagesplan.uhr(start))?").foregroundStyle(Farbe.handlung))
+                        .font(.system(size: 40, weight: .regular, design: .serif)).foregroundStyle(Farbe.text)
+                        .accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    RahmenKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }.foregroundStyle(Farbe.text)
+                }
+                .padding(.top, 8)
+
+                GruppierteListe {
                     Button { nav.blatt = .neuTermin(tag: tag.text, start: start) } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "calendar.badge.plus").font(.system(size: 20, weight: .bold)).foregroundStyle(Farbe.aufTon)
-                                .frame(width: 48, height: 48).background(LinearGradient(colors: [Color(hex: "#0E5A8A"), Color(hex: "#2F8FD6")], startPoint: .bottomTrailing, endPoint: .topLeading), in: Circle())
+                        HStack(spacing: 12) {
+                            ZeichenKreis(symbol: "calendar.badge.plus")
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Neuer Termin um \(Tagesplan.uhr(start))").font(.zeile).foregroundStyle(Farbe.text)
                                 Text("Geführt – mit Ziel und Habit").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
@@ -196,44 +200,49 @@ struct StundeBlatt: View {
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Farbe.pfeil)
                         }
-                        .padding(14).background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .padding(.horizontal, 14).frame(minHeight: Mass.zeile).contentShape(Rectangle())
                     }
-                    .buttonStyle(DruckStil())
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("stunde.termin")
-
-                    Text("Oder Offenes hierhin legen").font(.kompass(.headline, .bold)).foregroundStyle(Farbe.text).padding(.top, 6)
-                    if v.isEmpty {
-                        Text("Nichts Offenes für diesen Tag.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                    } else {
-                        VStack(spacing: 0) {
-                            ForEach(v.prefix(8)) { e in
-                                Button { einplanen(e) } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: e.symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(Farbe.aufTon)
-                                            .frame(width: 34, height: 34).background(Color(hex: e.farbe).gradient, in: Circle())
-                                        VStack(alignment: .leading, spacing: 1) {
-                                            Text(e.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
-                                            Text(e.art == .habit ? e.grund : "Aufgabe · \(e.grund)").font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
-                                        }
-                                        Spacer()
-                                        Text(Tagesplan.uhr(start)).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent)
-                                    }
-                                    .padding(.horizontal, 14).frame(minHeight: 56).contentShape(Rectangle())
+                    ForEach(v.prefix(3)) { e in
+                        Button { einplanen(e) } label: {
+                            HStack(spacing: 12) {
+                                ZeichenKreis(symbol: e.symbol, gruen: true)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(e.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                                    Text(e.art == .habit ? "Habit hierhin legen" : "Aufgabe hierhin legen · \(e.dauer) Min").font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityHint("Um \(Tagesplan.uhr(start)) einplanen")
+                                Spacer()
+                                Text(Tagesplan.uhr(start)).font(.zahlKlein).foregroundStyle(Farbe.text)
                             }
+                            .padding(.horizontal, 14).frame(minHeight: Mass.zeile).contentShape(Rectangle())
                         }
-                        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Um \(Tagesplan.uhr(start)) einplanen")
+                    }
+                    if let a = jetztDran, tag == speicher.heute {
+                        Button { dismiss(); nav.blatt = .fokus(a.id) } label: {
+                            HStack(spacing: 12) {
+                                ZeichenKreis(symbol: "airplane.departure")
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Fokus starten").font(.zeile).foregroundStyle(Farbe.text)
+                                    Text("Jetzt dran: \(a.titel)").font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Farbe.pfeil)
+                            }
+                            .padding(.horizontal, 14).frame(minHeight: Mass.zeile).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .padding(Mass.rand)
+                if v.count > 3 {
+                    Text("\(v.count - 3) weitere Vorschläge stehen im Kalender unter „alle“.").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                }
             }
-            .background(Farbe.grund.ignoresSafeArea())
-            .navigationTitle("Was um \(Tagesplan.uhr(start))?")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } } }
+            .padding(Mass.rand)
         }
+        .background(Farbe.grund.ignoresSafeArea())
         .presentationDetents([.medium, .large])
         .sensoryFeedback(.success, trigger: eingeplant)
     }

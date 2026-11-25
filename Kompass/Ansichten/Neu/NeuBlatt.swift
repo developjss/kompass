@@ -32,6 +32,8 @@ struct NeuBlatt: View {
     @State private var wichtig = false
     @State private var wiederholung: Wiederholung = .nie
     @State private var mitUhrzeit = false
+    @State private var genau = false
+    @State private var mehr = false
     @State private var uhrzeit = 9 * 60
     @State private var dauer = 60
     /// Aufgabe: Meilenstein, in den sie zählt (nil = erster passender bzw. nur Einsatz)
@@ -84,8 +86,7 @@ struct NeuBlatt: View {
             kopf
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text(frage).font(.kompass(.title, .heavy)).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
+                    FrageWort(text: frage)
                     if let u = unterfrage { Text(u).font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
                     inhalt
                 }
@@ -134,18 +135,12 @@ struct NeuBlatt: View {
                 }
                 .accessibilityLabel(schritt == .was || (schritt == .titel && artVorgegeben) ? "Abbrechen" : "Zurück")
                 Spacer()
-                Text(art.map { "Neu: \($0.name)" } ?? "Neu").font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig)
+                Etikett(text: art.map { "Neu · \($0.name)" } ?? "Neu")
                 Spacer()
                 Button("Abbrechen") { dismiss() }.font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent).frame(minHeight: 44)
                     .opacity(schritt == .was ? 0 : 1)
             }
-            HStack(spacing: 6) {
-                ForEach(Array(schritte.enumerated()), id: \.offset) { i, _ in
-                    Capsule().fill(i <= position ? Farbe.akzent : Farbe.akzentWeich).frame(height: 5)
-                }
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Schritt \(position + 1) von \(schritte.count)")
+            SchrittPunkte(anzahl: schritte.count, aktiv: position)
         }
         .padding(.horizontal, Mass.rand).padding(.top, 12).padding(.bottom, 6)
     }
@@ -153,15 +148,16 @@ struct NeuBlatt: View {
     @ViewBuilder private var fuss: some View {
         if schritt != .was {
             VStack(spacing: 8) {
-                Button(action: weiter) {
-                    Text(schritt == .fertig ? "Anlegen" : "Weiter").font(.kompass(.headline, .bold))
-                        .frame(maxWidth: .infinity, minHeight: 54)
-                        .background(gueltig ? Farbe.handlung : Farbe.handlung.opacity(0.35), in: Capsule())
-                        .foregroundStyle(Farbe.aufFarbe)
+                HStack(spacing: 8) {
+                    Button(schritt == .fertig ? "Anlegen" : "Weiter", action: weiter)
+                        .buttonStyle(.haupt)
+                        .disabled(!gueltig)
+                        .accessibilityIdentifier("neu.weiter")
+                    if schritt == .details || schritt == .verbinden {
+                        Button("Überspringen") { if position + 1 < schritte.count { schritt = schritte[position + 1] } }
+                            .buttonStyle(.leise)
+                    }
                 }
-                .disabled(!gueltig)
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("neu.weiter")
                 if schritt != .fertig {
                     Text(hinweisUnten).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(2).multilineTextAlignment(.center)
                 }
@@ -271,30 +267,9 @@ struct NeuBlatt: View {
     }
 
     private var wasTeil: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
             ForEach([NeuArt.aufgabe, .termin, .habit, .ziel], id: \.self) { a in
-                Button { art = a; kamVonWas = true; schritt = .titel } label: {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Image(systemName: a.symbol).font(.system(size: 18, weight: .bold))
-                            .frame(width: 40, height: 40).background(.white.opacity(0.22), in: Circle())
-                            .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                        Spacer(minLength: 4)
-                        Text(a.name).font(.kompass(.headline, .bold))
-                        Text(a.erklaerung).font(.klein).opacity(0.9).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(14)
-                    .frame(maxWidth: .infinity, minHeight: 136, alignment: .topLeading)
-                    .background {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(LinearGradient(colors: a.verlauf, startPoint: .bottomTrailing, endPoint: .topLeading))
-                            .overlay(alignment: .topLeading) { Circle().fill(.white.opacity(0.18)).frame(width: 120).blur(radius: 30).offset(x: -30, y: -40) }
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                            .shadow(color: a.verlauf[0].opacity(0.3), radius: 10, y: 5)
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(a.name): \(a.erklaerung)")
+                AuswahlKachel(symbol: a.symbol, titel: a.name, unter: a.erklaerung, an: art == a) { art = a; kamVonWas = true; schritt = .titel }
             }
         }
     }
@@ -345,12 +320,18 @@ struct NeuBlatt: View {
             }
             if wannWahl != .eingang {
                 Karte {
-                    ChipReihe(titel: "Uhrzeit", auswahl: [("keine", !mitUhrzeit)] + [9, 12, 15, 18].map { ("\($0):00", mitUhrzeit && uhrzeit == $0 * 60) }) { i in
-                        mitUhrzeit = i > 0; if i > 0 { uhrzeit = [9, 12, 15, 18][i - 1] * 60 }
+                    let tageszeiten = [("Vormittag", 9 * 60), ("Nachmittag", 14 * 60), ("Abend", 18 * 60)]
+                    ChipReihe(titel: "Uhrzeit (optional)", auswahl: tageszeiten.map { ($0.0, mitUhrzeit && !genau && uhrzeit == $0.1) } + [("genau", mitUhrzeit && genau)]) { i in
+                        if i < tageszeiten.count {
+                            let neu = tageszeiten[i].1
+                            if mitUhrzeit && !genau && uhrzeit == neu { mitUhrzeit = false } else { mitUhrzeit = true; genau = false; uhrzeit = neu }
+                        } else if mitUhrzeit && genau { mitUhrzeit = false; genau = false } else { mitUhrzeit = true; genau = true }
+                    }
+                    if mitUhrzeit && genau {
+                        DatePicker("Genau", selection: Binding(get: { uhr(uhrzeit) }, set: { uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
                     }
                     if mitUhrzeit {
-                        DatePicker("Genau", selection: Binding(get: { uhr(uhrzeit) }, set: { uhrzeit = minuten($0) }), displayedComponents: .hourAndMinute).font(.zeile)
-                        ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90, 120].map { (dauerText($0), $0 == dauer) }) { dauer = [15, 30, 60, 90, 120][$0] }
+                        ChipReihe(titel: "Dauer", auswahl: [15, 30, 60, 90].map { (dauerText($0), $0 == dauer) }) { dauer = [15, 30, 60, 90][$0] }
                     }
                 }
             }
@@ -395,14 +376,23 @@ struct NeuBlatt: View {
     @ViewBuilder private var detailsTeil: some View {
         switch art {
         case .aufgabe:
-            Karte {
-                ChipReihe(titel: "Wichtigkeit", auswahl: [("Wichtig", wichtig), ("Normal", !wichtig)]) { wichtig = $0 == 0 }
-                ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
-            }
             ZaehltKarte(zielID: zielID, schrittID: aufgabeSchritt, einmalig: wiederholung == .nie, aufgabeID: nil,
                         zielWaehlen: { zielID = $0; aufgabeSchrittID = nil; aufgabeNurEinsatz = false },
                         schrittWaehlen: { aufgabeSchrittID = $0; aufgabeNurEinsatz = $0 == nil })
-            kategorieKarte
+            Karte {
+                Toggle(isOn: $wichtig) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Wichtig").font(.zeile)
+                        Text("kommt in „Jetzt dran“ nach vorn").font(.klein).foregroundStyle(Farbe.zweitrangig)
+                    }
+                }
+                .tint(Farbe.handlung)
+            }
+            MehrKnopf(offen: $mehr, zu: "Mehr: Wiederholen, Kategorie")
+            if mehr {
+                Karte { ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] } }
+                kategorieKarte
+            }
         case .termin:
             let kalender = speicher.zustand.einstellungen.appleKalender ? AppleKalender.aktiv.beschreibbareKalender() : []
             if !kalender.isEmpty {
@@ -429,16 +419,19 @@ struct NeuBlatt: View {
                     }
                 }
             }
-            Karte {
-                let habits = speicher.zustand.habits
-                if !habits.isEmpty && terminKalender == nil {
-                    ChipReihe(titel: "Erfüllt einen Habit", auswahl: [("Keinen", terminHabitID == nil)] + habits.map { ($0.titel, $0.id == terminHabitID) }) { i in
-                        terminHabitID = i == 0 ? nil : habits[i - 1].id
+            MehrKnopf(offen: $mehr, zu: "Mehr: Habit, Wiederholen, Kategorie")
+            if mehr {
+                Karte {
+                    let habits = speicher.zustand.habits
+                    if !habits.isEmpty && terminKalender == nil {
+                        ChipReihe(titel: "Erfüllt einen Habit", auswahl: [("Keinen", terminHabitID == nil)] + habits.map { ($0.titel, $0.id == terminHabitID) }, grenze: 4) { i in
+                            terminHabitID = i == 0 ? nil : habits[i - 1].id
+                        }
                     }
+                    ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
                 }
-                ChipReihe(titel: "Wiederholen", auswahl: Wiederholung.allCases.map { ($0.name, $0 == wiederholung) }) { wiederholung = Wiederholung.allCases[$0] }
+                kategorieKarte
             }
-            kategorieKarte
         case .habit:
             Karte {
                 ChipReihe(titel: "Menge", auswahl: [("Nur abhaken", !mitMenge), ("Mit Menge", mitMenge)]) { mitMenge = $0 == 1 }
@@ -449,7 +442,7 @@ struct NeuBlatt: View {
                         TextField("20", value: $menge, format: .number.locale(Locale(identifier: "de_DE"))).multilineTextAlignment(.trailing).keyboardType(.decimalPad)
                             .font(.kompass(.title3, .bold)).frame(width: 90).padding(8).background(Farbe.grund, in: RoundedRectangle(cornerRadius: 10))
                     }
-                    ChipReihe(titel: "Einheit", auswahl: Einheit.allCases.map { ($0.name, $0 == habitEinheit) }) { habitEinheit = Einheit.allCases[$0] }
+                    ChipReihe(titel: "Einheit", auswahl: Einheit.allCases.map { ($0.name, $0 == habitEinheit) }, grenze: 3) { habitEinheit = Einheit.allCases[$0] }
                 }
             }
             Karte {
@@ -497,7 +490,7 @@ struct NeuBlatt: View {
         if art == .ziel {
             if !z.habits.isEmpty {
                 Karte {
-                    ChipReihe(titel: "Habits", auswahl: z.habits.map { ($0.titel, zaehlenHabits.contains($0.id)) }) { i in
+                    ChipReihe(titel: "Habits", auswahl: z.habits.map { ($0.titel, zaehlenHabits.contains($0.id)) }, grenze: 3) { i in
                         let id = z.habits[i].id; if zaehlenHabits.contains(id) { zaehlenHabits.remove(id) } else { zaehlenHabits.insert(id) }
                     }
                 }
@@ -509,7 +502,7 @@ struct NeuBlatt: View {
                     ChipReihe(titel: "Termine (jeder zählt einmal)", auswahl: serien.map { sr in
                         let quelle = sr.id.split(separator: ":").first.map { String($0).capitalized } ?? ""
                         return ("\(sr.titel)\(doppelt.contains(sr.titel) ? " (\(quelle))" : "") · \(sr.bisher)", zaehlenSerien.contains(sr.id))
-                    }) { i in
+                    }, grenze: 3) { i in
                         let id = serien[i].id; if zaehlenSerien.contains(id) { zaehlenSerien.remove(id) } else { zaehlenSerien.insert(id) }
                     }
                 }
@@ -517,7 +510,7 @@ struct NeuBlatt: View {
             let aufgaben = Array(z.aufgaben.filter { $0.zielID == nil }.sorted { ($0.erledigt ? 1 : 0, $0.reihenfolge) < ($1.erledigt ? 1 : 0, $1.reihenfolge) }.prefix(10))
             if !aufgaben.isEmpty {
                 Karte {
-                    ChipReihe(titel: "Aufgaben (auch erledigte)", auswahl: aufgaben.map { (($0.erledigt ? "✓ " : "") + $0.titel, zaehlenAufgaben.contains($0.id)) }) { i in
+                    ChipReihe(titel: "Aufgaben (auch erledigte)", auswahl: aufgaben.map { (($0.erledigt ? "✓ " : "") + $0.titel, zaehlenAufgaben.contains($0.id)) }, grenze: 3) { i in
                         let id = aufgaben[i].id; if zaehlenAufgaben.contains(id) { zaehlenAufgaben.remove(id) } else { zaehlenAufgaben.insert(id) }
                     }
                 }
@@ -572,7 +565,7 @@ struct NeuBlatt: View {
             if ziele.isEmpty {
                 Text("Noch kein Ziel – später zuordnen.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
             } else {
-                ChipReihe(titel: art == .termin ? "Zählt für ein Ziel" : "Gehört zu einem Ziel", auswahl: [("Keins", zielID == nil)] + ziele.map { ($0.titel, $0.id == zielID) }) { i in
+                ChipReihe(titel: art == .termin ? "Zählt für ein Ziel" : "Gehört zu einem Ziel", auswahl: [("Keins", zielID == nil)] + ziele.map { ($0.titel, $0.id == zielID) }, grenze: 4) { i in
                     zielID = i == 0 ? nil : ziele[i - 1].id
                 }
             }
@@ -588,20 +581,19 @@ struct NeuBlatt: View {
     }
 
     private var fertigTeil: some View {
-        let farben = art?.verlauf ?? Farbe.indigo
         return VStack(alignment: .leading, spacing: 12) {
-            Verlaufskarte(farben: farben) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        KartenLabel(text: art?.name ?? "Neu")
-                        Text(titel.trimmingCharacters(in: .whitespaces)).font(.kompass(.title2, .heavy)).fixedSize(horizontal: false, vertical: true)
-                        ForEach(zusammenfassung, id: \.self) { Text($0).font(.unterzeile).opacity(0.92) }
-                    }
-                    Spacer()
-                    Image(systemName: art?.symbol ?? "plus").font(.system(size: 20, weight: .semibold))
-                        .frame(width: 44, height: 44).background(.white.opacity(0.2), in: Circle())
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Etikett(text: art?.name ?? "Neu")
+                    Text(titel.trimmingCharacters(in: .whitespaces)).font(.karteTitel).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
+                    ForEach(zusammenfassung, id: \.self) { Text($0).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true) }
                 }
+                Spacer(minLength: 0)
+                ZeichenKreis(symbol: art?.symbol ?? "plus")
             }
+            .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karteVorn, style: .continuous))
+            .shadow(color: Farbe.schatten.opacity(0.18), radius: 16, y: 10)
             Text("Alles lässt sich später auf der Seite ändern.").font(.klein).foregroundStyle(Farbe.zweitrangig)
         }
     }
@@ -904,25 +896,40 @@ struct ChipReihe: View {
     var titel: String
     /// (Text, gewählt)
     var auswahl: [(String, Bool)]
+    /// Hick: höchstens so viele Chips auf einmal, der Rest hinter „weitere“ (gewählte bleiben sichtbar)
+    var grenze: Int? = nil
     var waehlen: (Int) -> Void
+    @State private var alle = false
 
     var body: some View {
+        let sichtbar: [Int] = {
+            guard let g = grenze, !alle, auswahl.count > g + 1 else { return Array(auswahl.indices) }
+            return auswahl.indices.filter { $0 < g || auswahl[$0].1 }
+        }()
         VStack(alignment: .leading, spacing: 8) {
-            Text(titel).font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+            if !titel.isEmpty { Text(titel).font(.unterzeile).foregroundStyle(Farbe.zweitrangig) }
             FliessLayout(abstand: 8) {
-                ForEach(Array(auswahl.enumerated()), id: \.offset) { i, a in
-                    Button { waehlen(i) } label: {
-                        Text(a.0).font(.kompass(.subheadline, .semibold))
-                            .padding(.horizontal, 12).frame(minHeight: 36)
-                            .background(a.1 ? Farbe.akzent : Farbe.akzentWeich, in: Capsule())
-                            .foregroundStyle(a.1 ? .white : Farbe.akzent)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(a.1 ? .isSelected : [])
+                ForEach(sichtbar, id: \.self) { i in
+                    let a = auswahl[i]
+                    Button { waehlen(i) } label: { chip(a.0, an: a.1) }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(a.1 ? .isSelected : [])
+                }
+                if sichtbar.count < auswahl.count {
+                    Button { withAnimation(.snappy(duration: 0.2)) { alle = true } } label: { chip("weitere \(auswahl.count - sichtbar.count)", an: false, leise: true) }
+                        .buttonStyle(.plain)
                 }
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func chip(_ t: String, an: Bool, leise: Bool = false) -> some View {
+        Text(t).font(.kompass(.subheadline, .bold)).lineLimit(1)
+            .padding(.horizontal, 14).frame(minHeight: 36)
+            .background(an ? Farbe.wort : Farbe.karte, in: Capsule())
+            .overlay(Capsule().strokeBorder(an ? .clear : Farbe.linie, lineWidth: 1.5))
+            .foregroundStyle(an ? Farbe.buehne : (leise ? Farbe.zweitrangig : Farbe.text))
     }
 }
 

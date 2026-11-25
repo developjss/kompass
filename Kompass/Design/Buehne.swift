@@ -34,7 +34,7 @@ struct Platz: Sendable, Equatable {
     static let fortschritt = Platz(rechts: -96, oben: 118, breite: 300, drehung: -12)
     static let ziel = Platz(rechts: -150, oben: 136, breite: 450, drehung: -6)
     static let habits = Platz(rechts: -130, oben: 44, breite: 300, drehung: -10)
-    static let aufgabe = Platz(rechts: -130, oben: 30, breite: 380, drehung: -4)
+    static let aufgabe = Platz(rechts: -150, oben: 96, breite: 380, drehung: -4)
     static let analyseZiel = Platz(rechts: -170, oben: 92, breite: 430, drehung: -6)
     static let analyseHabit = Platz(rechts: -80, oben: 70, breite: 220, drehung: 14)
     static let einstellungen = Platz(rechts: 10, oben: 40, breite: 130)
@@ -241,17 +241,19 @@ enum KnopfArt: Sendable { case haupt, leise, rot }
 struct KnopfStil: ButtonStyle {
     var art: KnopfArt
     var klein = false
+    var breit = false
+    @Environment(\.isEnabled) private var aktiv
     func makeBody(configuration c: Configuration) -> some View {
         c.label
             .font(.kompass(klein ? .subheadline : .body, .heavy))
             .lineLimit(1)
             .padding(.horizontal, klein ? 16 : 20)
             .frame(minHeight: klein ? Mass.knopfKlein : Mass.knopf)
-            .frame(maxWidth: art == .haupt ? .infinity : nil)
+            .frame(maxWidth: art == .haupt || breit ? .infinity : nil)
             .background(hintergrund, in: Capsule())
             .overlay(Capsule().strokeBorder(Farbe.linie, lineWidth: art == .leise ? 1.5 : 0))
             .foregroundStyle(vordergrund)
-            .opacity(c.isPressed ? 0.8 : 1)
+            .opacity(!aktiv ? 0.4 : c.isPressed ? 0.8 : 1)
             .scaleEffect(c.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: c.isPressed)
     }
@@ -269,6 +271,82 @@ extension ButtonStyle where Self == KnopfStil {
     static var rot: KnopfStil { KnopfStil(art: .rot) }
     static var hauptKlein: KnopfStil { KnopfStil(art: .haupt, klein: true) }
     static var leiseKlein: KnopfStil { KnopfStil(art: .leise, klein: true) }
+    static var leiseBreit: KnopfStil { KnopfStil(art: .leise, breit: true) }
+    static var rotBreit: KnopfStil { KnopfStil(art: .rot, breit: true) }
+}
+
+/// Auswahl-Kachel (Was anlegen, Einstellungen): Zeichen im Rosé-Kreis, Titel, Unterzeile; gewählt = grüner Rand.
+struct AuswahlKachel: View {
+    var symbol: String
+    var titel: String
+    var unter: String? = nil
+    var an = false
+    var aktion: () -> Void
+    var body: some View {
+        Button(action: aktion) {
+            VStack(alignment: .leading, spacing: 6) {
+                ZeichenKreis(symbol: symbol)
+                Spacer(minLength: 2)
+                Text(titel).font(.kompass(.body, .heavy)).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                if let unter {
+                    Text(unter).font(.kompass(.footnote, .semibold)).foregroundStyle(Farbe.zweitrangig).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(an ? Farbe.handlung : Farbe.linie, lineWidth: an ? 2.5 : 1.5))
+            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(unter.map { "\(titel): \($0)" } ?? titel)
+        .accessibilityAddTraits(an ? .isSelected : [])
+    }
+}
+
+/// Die Frage eines Schritts: Serif 40, das Fragezeichen in Grün („Wann?“)
+struct FrageWort: View {
+    var text: String
+    var body: some View {
+        let frage = text.hasSuffix("?")
+        (Text(frage ? String(text.dropLast()) : text) + Text(frage ? "?" : "").foregroundStyle(Farbe.handlung))
+            .font(.system(size: 40, weight: .regular, design: .serif))
+            .foregroundStyle(Farbe.text)
+            .lineLimit(2)
+            .minimumScaleFactor(0.7)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Schritt-Punkte statt Fortschrittsbalken (Hick: der Weg ist sichtbar, lenkt aber nicht ab)
+struct SchrittPunkte: View {
+    var anzahl: Int
+    var aktiv: Int
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<max(1, anzahl), id: \.self) { i in
+                Circle().fill(i <= aktiv ? Farbe.handlung : Farbe.linie).frame(width: 8, height: 8)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Schritt \(aktiv + 1) von \(anzahl)")
+    }
+}
+
+/// „Mehr“-Taste (Stufen statt Listen): zugeklappt sagt sie, was dahinter liegt.
+struct MehrKnopf: View {
+    @Binding var offen: Bool
+    var zu: String
+    var auf = "Weniger"
+    var body: some View {
+        Button { withAnimation(.snappy(duration: 0.25)) { offen.toggle() } } label: {
+            Label(offen ? auf : zu, systemImage: offen ? "chevron.up" : "chevron.down")
+        }
+        .buttonStyle(.leiseBreit)
+        .accessibilityHint(offen ? "Klappt ein" : "Klappt aus")
+    }
 }
 
 /// Lage als Pille: im Plan / voraus (grün weich), hinterher (Rosé mit Weinrot), überfällig (Weinrot mit Rosé)

@@ -65,7 +65,7 @@ struct PersonenTests {
 
         // Start: Ziele mit Meilensteinen, Habits
         for g in 0..<p.ziele {
-            var ziel = Ziel(titel: "Ziel \(g)", farbe: Farbe.ziele[g % 10], symbol: "target", bereich: "x", faellig: Self.start.plus(tage: 120 + 200 * g), angelegt: Self.start)
+            var ziel = Ziel(titel: "Ziel \(g)", farbe: Farbe.ziele[g % Farbe.ziele.count], symbol: "target", bereich: "x", faellig: Self.start.plus(tage: 120 + 200 * g), angelegt: Self.start)
             ziel.schritte = [
                 Schritt(titel: "Abhaken", art: .aufgaben, gewicht: 1 + g % 3),
                 Schritt(titel: "Zeit", art: .zeit, gewicht: 2, soll: Double(10 + 5 * g)),
@@ -75,7 +75,7 @@ struct PersonenTests {
         }
         let rhythmen: [Rhythmus] = [.taeglich, .wochentage([1, 3, 5]), .proWoche(3), .taeglich, .wochentage([6, 7]), .proWoche(2)]
         for i in 0..<p.habits {
-            var h = Habit(titel: "Habit \(i)", farbe: Farbe.ziele[(i + 3) % 10], symbol: "star", rhythmus: rhythmen[i % 6],
+            var h = Habit(titel: "Habit \(i)", farbe: Farbe.ziele[(i + 3) % Farbe.ziele.count], symbol: "star", rhythmus: rhythmen[i % 6],
                           menge: i % 2 == 0 ? Double(10 + 10 * i) : nil, einheit: i % 2 == 0 ? .minuten : nil, zielID: z.ziele.first?.id, angelegt: Self.start)
             if w.ja(p.geschick) { h.uhrzeit = [7, 12, 18, 21][i % 4] * 60 }
             if i == 0, let g = z.ziele.first { z.habits.append(h); z.habitVerknuepfen(h.id, ziel: g.id, alsMeilenstein: .anzahl, soll: 60, heute: Self.start); continue }

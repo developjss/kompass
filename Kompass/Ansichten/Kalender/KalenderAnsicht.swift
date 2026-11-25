@@ -70,10 +70,10 @@ struct KalenderAnsicht: View {
         if tag == T {
             if let b = naechster, b.tag == T {
                 let m = b.start - jetzt
-                let titel = b.titel.count > 14 ? String(b.titel.prefix(13)).trimmingCharacters(in: .whitespaces) + "…" : b.titel
-                if m <= 0 { return Wort(zeilen: ["Jetzt"], akzent: "\(titel).", groesse: Wort.kleinGroesse) }
-                if m < 60 { return Wort(zeilen: ["In \(m) Min"], akzent: "\(titel).", groesse: Wort.kleinGroesse) }
-                return Wort(zeilen: ["Um \(Tagesplan.uhr(b.start))"], akzent: "\(titel).", groesse: Wort.kleinGroesse)
+                let titel = b.titel.count > 14 ? String(b.titel.prefix(13)).trimmingCharacters(in: .whitespaces) + "…" : b.titel + "."
+                if m <= 0 { return Wort(zeilen: ["Jetzt"], akzent: titel, groesse: Wort.kleinGroesse) }
+                if m < 60 { return Wort(zeilen: ["In \(m) Min"], akzent: titel, groesse: Wort.kleinGroesse) }
+                return Wort(zeilen: ["Um \(Tagesplan.uhr(b.start))"], akzent: titel, groesse: Wort.kleinGroesse)
             }
             return Wort(zeilen: ["Heute"], akzent: "frei.", groesse: Wort.kleinGroesse)
         }

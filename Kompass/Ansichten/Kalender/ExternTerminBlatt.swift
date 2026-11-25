@@ -14,7 +14,8 @@ struct ExternTerminBlatt: View {
     @State private var loeschenFragen = false
     @State private var serie: SerienAuftrag?
 
-    private let erinnerungsWahl: [(String, Int)] = [("Zum Termin", 0), ("5 Min", 5), ("15 Min", 15), ("30 Min", 30), ("1 Std", 60), ("1 Tag", 1440)]
+    /// Hick: drei Vorschläge, der Rest hinter „weitere“
+    private let erinnerungsWahl: [(String, Int)] = [("15 Min", 15), ("1 Std", 60), ("1 Tag", 1440), ("Zum Termin", 0), ("5 Min", 5), ("30 Min", 30)]
 
     var body: some View {
         NavigationStack {
@@ -37,7 +38,7 @@ struct ExternTerminBlatt: View {
                         Picker("Kalender", selection: $d.kalenderID) {
                             ForEach(kalender) { c in Text("\(c.google ? "Google · " : "")\(c.titel)").tag(c.id) }
                         }
-                        ChipReihe(titel: "Erinnerung", auswahl: erinnerungsWahl.map { ($0.0, d.erinnerungen.contains($0.1)) }) { i in
+                        ChipReihe(titel: "Erinnerung", auswahl: erinnerungsWahl.map { ($0.0, d.erinnerungen.contains($0.1)) }, grenze: 3) { i in
                             let m = erinnerungsWahl[i].1
                             if let j = d.erinnerungen.firstIndex(of: m) { d.erinnerungen.remove(at: j) } else { d.erinnerungen.append(m); d.erinnerungen.sort() }
                         }
