@@ -32,7 +32,6 @@ struct ZieleAnsicht: View {
             FortschrittWahl()
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.ziele) }
-            RahmenKnopf(symbol: "plus", beschriftung: "Neues Ziel") { nav.blatt = .neu(.ziel) }
         }) {
             VornKarte(abstand: 12) {
                 ChipReihe(titel: "", auswahl: filterWahl.map { ($0.titel, $0 == filter) }) { i in
@@ -72,6 +71,7 @@ struct ZieleAnsicht: View {
                     ChipReihe(titel: "Sortieren", auswahl: sortierWahl.map { ($0.titel, $0 == sortierung) }) { i in
                         withAnimation(ruhig ? nil : .snappy) { sortierungRoh = sortierWahl[i].rawValue }
                     }
+                HinzufuegenKarte(titel: "Ziel hinzufügen", unter: "mit Frist und Meilensteinen") { nav.blatt = .neu(.ziel) }
                 }
                 GruppierteListe {
                     if alle.isEmpty { LeerZeile(text: leerText) }
@@ -101,7 +101,7 @@ struct ZieleAnsicht: View {
 
     private var leerText: String {
         switch filter {
-        case .alle: "Noch keine Ziele. Oben auf „+“."
+        case .alle: "Noch keine Ziele."
         case .aufKurs: "Gerade ist kein Ziel auf Kurs."
         case .hinterher: "Kein Ziel hinkt hinterher – stark."
         case .erreicht: "Noch kein Ziel erreicht."

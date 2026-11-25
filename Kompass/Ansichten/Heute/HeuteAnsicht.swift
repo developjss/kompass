@@ -24,7 +24,6 @@ struct HeuteAnsicht: View {
             Spacer(minLength: 8)
             MarkenHinweis(text: HomeRechnung.datumText(T))
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.heute) }
-            RahmenKnopf(symbol: "plus", beschriftung: "Neu") { nav.blatt = .neu(nil) }
         }, extra: {
             if HomeRechnung.geschafft(fokus) { Ueberflug(heute: T.text) }
         }) {
@@ -36,6 +35,9 @@ struct HeuteAnsicht: View {
                 }
             }
             .padding(.horizontal, Mass.rand)
+            // Hinzufügen wie bei den Meilensteinen: direkt unter der Überschrift, eine Karte für alles – das Blatt fragt, was es sein soll
+            HinzufuegenKarte(titel: "Hinzufügen", unter: "Aufgabe · Termin · Habit · Ziel") { nav.blatt = .neu(nil) }
+                .padding(.horizontal, Mass.rand).padding(.bottom, 10)
             GruppierteListe {
                 if zeilen.isEmpty {
                     LeerZeile(text: "Nichts mehr mit Uhrzeit. Morgen planen – im Kalender.")

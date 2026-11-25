@@ -381,23 +381,8 @@ private struct NeuerMeilensteinKnopf: View {
     @Environment(Navigation.self) private var nav
 
     var body: some View {
-        let c = Color(hex: ziel.farbe)
-        Button { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(Farbe.aufTon)
-                    .frame(width: 30, height: 30).background(c.gradient, in: Circle())
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen").font(.zeile).foregroundStyle(c)
-                    Text("neu oder aus Aufgaben, Terminen, Habits").font(.klein).foregroundStyle(Farbe.zweitrangig)
-                }
-                Spacer()
-            }
-            .padding(14)
-            .background(c.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(c.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
-        }
-        .buttonStyle(DruckStil())
-        .accessibilityIdentifier("meilenstein.neu")
+        HinzufuegenKarte(titel: ziel.schritte.isEmpty ? "Ersten Meilenstein anlegen" : "Meilenstein hinzufügen", unter: "neu oder aus Aufgaben, Terminen, Habits",
+                         farbe: Color(hex: ziel.farbe), kennung: "meilenstein.neu") { nav.blatt = .meilenstein(ziel: ziel.id, schritt: nil) }
     }
 }
 

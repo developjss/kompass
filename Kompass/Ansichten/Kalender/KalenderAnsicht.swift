@@ -24,7 +24,6 @@ struct KalenderAnsicht: View {
             MarkenTitel(text: "Kalender")
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.kalender) }
-            RahmenKnopf(symbol: "plus", beschriftung: "Neuer Termin") { nav.blatt = .neu(.termin) }
         }) {
             VornKarte(abstand: 10) {
                 ModusWahl(modus: $nav.kalenderModus)
@@ -39,6 +38,7 @@ struct KalenderAnsicht: View {
                 } else {
                     TagKopf(tag: tag)
                 }
+                HinzufuegenKarte(titel: "Termin hinzufügen", unter: "mit Tag, Uhrzeit und Ziel") { nav.blatt = .neu(.termin) }
 
                 switch nav.kalenderModus {
                 case .tag:
