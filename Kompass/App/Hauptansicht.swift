@@ -64,6 +64,7 @@ private extension View {
             .navigationDestination(for: HabitAuswahl.self) { HabitDetail(id: $0.id) }
             .navigationDestination(for: HabitTeilAuswahl.self) { HabitTeilSeite(id: $0.id, teil: $0.teil) }
             .navigationDestination(for: ZielTeilAuswahl.self) { ZielTeilSeite(id: $0.id, teil: $0.teil) }
+            .navigationDestination(for: AnalyseAuswahl.self) { AnalyseSeite(auswahl: $0) }
     }
 }
 
