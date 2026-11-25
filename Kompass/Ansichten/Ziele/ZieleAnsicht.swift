@@ -29,9 +29,8 @@ struct ZieleAnsicht: View {
         let hebel = Self.hebel(z, heute: T)
 
         BuehnenSeite(wort: Self.wort(aufKurs: aufKurs.count, gesamt: aktiv.count), marke: {
-            MarkenTitel(text: "Ziele")
-            Spacer(minLength: 8)
             FortschrittWahl()
+            Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.ziele) }
             RahmenKnopf(symbol: "plus", beschriftung: "Neues Ziel") { nav.blatt = .neu(.ziel) }
         }) {

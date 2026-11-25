@@ -175,8 +175,8 @@ struct VornKarte<Inhalt: View>: View {
 struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
     var hoehe: CGFloat = Mass.buehne
     var wort: Wort
-    /// false = ohne Seitenfuß (Statistik, Rückblick – nichts Überflüssiges)
-    var fuss = true
+    /// true = mit Seitenfuß; Standard ohne – der Speicherort steht in den Einstellungen
+    var fuss = false
     @ViewBuilder var marke: Marke
     @ViewBuilder var extra: Extra
     @ViewBuilder var inhalt: Inhalt
@@ -207,7 +207,7 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
 }
 
 extension BuehnenSeite where Extra == EmptyView {
-    init(hoehe: CGFloat = Mass.buehne, wort: Wort, fuss: Bool = true, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, fuss: Bool = false, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
         self.init(hoehe: hoehe, wort: wort, fuss: fuss, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
     }
 }
@@ -265,6 +265,12 @@ struct MarkenHinweis: View {
     var body: some View {
         Text(text.uppercased()).font(.etikett).tracking(1).opacity(0.75).lineLimit(1)
     }
+}
+
+/// Zurück in der Marke – jede Bühnen-Seite, die im Stapel liegt, braucht ihn (die Navigationsleiste ist versteckt).
+struct ZurueckKnopf: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View { RahmenKnopf(symbol: "chevron.left", beschriftung: "Zurück") { dismiss() } }
 }
 
 /// Runder Knopf mit Rahmen (36 pt) für die Marke: +, i, ‹, ›, ×
