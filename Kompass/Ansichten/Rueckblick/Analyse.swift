@@ -44,13 +44,13 @@ struct HabitAnalyse: View {
             let leer = h.eintraege.isEmpty
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Verlaufskarte(farben: Farbe.verlauf(h.farbe)) {
+                    Bordkarte(schluessel: "habit:\(h.id.uuidString)", links: "Kennzahlen", rechts: "30 Tage") {
                         HStack(spacing: 14) {
-                            Image(systemName: h.symbol).font(.system(size: 22, weight: .bold))
-                                .frame(width: 52, height: 52).background(.white.opacity(0.2), in: Circle())
+                            Image(systemName: h.symbol).font(.system(size: 22, weight: .bold)).foregroundStyle(Color(hex: h.farbe))
+                                .frame(width: 52, height: 52).background(Farbe.akzentWeich, in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(Zahl.prozent(q30)).font(.grosseZahl)
-                                Text("geschafft in den letzten 30 Tagen").font(.unterzeile).opacity(0.92)
+                                Text("geschafft in den letzten 30 Tagen").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
                             }
                             Spacer(minLength: 0)
                         }
@@ -160,17 +160,17 @@ struct ZielAnalyse: View {
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Verlaufskarte(farben: Farbe.verlauf(g.farbe)) {
+                    Bordkarte(schluessel: "ziel:\(g.id.uuidString)", links: "Verlauf", rechts: Kurs.bisText(g.faellig, heute: T)) {
                         HStack(spacing: 14) {
-                            Image(systemName: g.symbol).font(.system(size: 22, weight: .bold))
-                                .frame(width: 52, height: 52).background(.white.opacity(0.2), in: Circle())
+                            Image(systemName: g.symbol).font(.system(size: 22, weight: .bold)).foregroundStyle(Color(hex: g.farbe))
+                                .frame(width: 52, height: 52).background(Farbe.akzentWeich, in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(Zahl.prozent(kurs.fortschritt)).font(.grosseZahl)
                                 Text("\(kurs.lage.text.prefix(1).uppercased() + kurs.lage.text.dropFirst()) · \(Kurs.bisText(g.faellig, heute: T))")
-                                    .font(.unterzeile).opacity(0.92).lineLimit(2)
+                                    .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
                             }
                             Spacer(minLength: 0)
-                            Button { nav.blatt = .rechnung(g.id) } label: { Image(systemName: "info.circle").font(.title3).opacity(0.85) }
+                            Button { nav.blatt = .rechnung(g.id) } label: { Image(systemName: "info.circle").font(.title3).foregroundStyle(Farbe.akzent) }
                                 .accessibilityLabel("So wird gerechnet")
                         }
                         HStack(spacing: 10) {
@@ -293,10 +293,10 @@ private struct Fakt: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(wert).font(.kompass(.title3, .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
-            Text(text).font(.klein).opacity(0.85).lineLimit(1)
+            Text(text).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10).background(.white.opacity(0.16), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(10).background(Farbe.akzentWeich, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }

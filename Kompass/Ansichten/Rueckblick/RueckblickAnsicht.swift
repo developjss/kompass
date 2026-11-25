@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-/// Rückblick einer Woche (Struktur v3 §5): eine Aussage oben, darunter weiße Karten – Plan, Fokuszeit, Zeit je Ziel, Habits, Auslastung.
+/// Rückblick einer Woche (Struktur v3 §5): die Aussage als Bordkarte zum Herausziehen, darunter Karten – Plan, Fokuszeit, Zeit je Ziel, Habits, Auslastung.
 struct RueckblickAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -35,15 +35,13 @@ struct RueckblickAnsicht: View {
             .foregroundStyle(Farbe.akzent)
             .padding(.bottom, 8)
 
-            // Aussage – hinter der Bordkarte der Woche (Gadget)
-            Bordkarte(woche: von.text, kw: von.kalenderwoche, von: von, bis: bis, fokus: gesamt,
-                      ziele: z.ziele.filter { $0.status == .aktiv }.count) {
-            Verlaufskarte(farben: Farbe.indigo) {
+            // Die Aussage der Woche steckt als Bordkarte im Schlitz – herausziehen (Easter Egg 3)
+            Bordkarte(schluessel: von.text, links: "Bericht", rechts: "KW \(von.kalenderwoche)") {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        KartenLabel(text: versatz == 0 ? "Diese Woche bisher" : "Diese Woche")
+                        Etikett(text: versatz == 0 ? "Diese Woche bisher" : "Diese Woche")
                         Text(Zahl.prozent(bilanz.quote)).font(.grosseZahl).contentTransition(.numericText())
-                        Text("deiner Pläne geschafft").font(.unterzeile).opacity(0.9)
+                        Text("deiner Pläne geschafft").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
                     }
                     Spacer()
                     MiniSaeulen(werte: (0..<7).map { i in bilanz.geplantJeTag[i] > 0 ? bilanz.erledigtJeTag[i] / bilanz.geplantJeTag[i] : 0 },
@@ -51,8 +49,7 @@ struct RueckblickAnsicht: View {
                         .padding(.top, 10)
                 }
                 Text("\(bilanz.aufgabenErledigt) von \(bilanz.aufgabenGeplant) Aufgaben · Habits \(Zahl.prozent(habitQuote)) · \(bilanz.termine) Termine")
-                    .font(.klein).opacity(0.9).padding(.top, 6)
-            }
+                    .font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
             }
             .id(von.text)
 

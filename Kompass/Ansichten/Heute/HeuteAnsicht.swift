@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Home (Blattwerk, Hick’s Law): Bühne „Jetzt dran“ mit dem 747, Karte vorn mit genau einer Sache (Fokus · Erledigt),
+/// Home (Nachtblau, Hick’s Law): Bühne „Jetzt dran“, Karte vorn mit genau einer Sache (Fokus · Erledigt),
 /// darunter „Als Nächstes“ (3 + alle) und höchstens ein Hinweis. Abends der Tagesabschluss.
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
@@ -25,6 +25,8 @@ struct HeuteAnsicht: View {
             MarkenHinweis(text: HomeRechnung.datumText(T))
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.heute) }
             RahmenKnopf(symbol: "plus", beschriftung: "Neu") { nav.blatt = .neu(nil) }
+        }, extra: {
+            if HomeRechnung.geschafft(fokus) { Ueberflug(heute: T.text) }
         }) {
             JetztKarte(fokus: fokus)
 
@@ -96,6 +98,9 @@ enum HomeRechnung {
         if let b = naechste.first { return Fokus(block: b, geschafft: geschafft, gesamt: gesamt) }
         return Fokus(geschafft: geschafft, gesamt: gesamt)
     }
+
+    /// Alles geschafft: nichts läuft, nichts offen, nichts mehr mit Uhrzeit – dann der Überflug.
+    static func geschafft(_ f: Fokus) -> Bool { f.block == nil && f.aufgabe == nil && f.habit == nil }
 
     /// Das Wort auf der Bühne – die Aussage des Moments.
     static func wort(_ f: Fokus, heute T: Tag, jetzt: Int) -> Wort {
