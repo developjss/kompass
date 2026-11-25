@@ -11,47 +11,82 @@ struct HabitDetail: View {
     var body: some View {
         let z = speicher.zustand
         if let h = z.habit(id) {
-            let c = Color(hex: h.farbe)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HabitStandKarte(habit: h)
+            let T = speicher.heute
+            let geplant = HabitRechnung.geplant(h, am: T)
+            let voll = h.voll(am: T)
+            let anteil = h.anteil(am: T)
+            let serie = HabitRechnung.serie(h, heute: T)
+            let wochen: Bool = { if case .proWoche = h.rhythmus { return true } else { return false } }()
 
-                    AbschnittKopf(titel: "Einstellungen")
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                        Button { nav.blatt = .habitBearbeiten(h.id, .rhythmus) } label: {
-                            EinstellKachelInhalt(symbol: "calendar", titel: "Wann", wert: HabitRechnung.haeufigkeit(h),
-                                                 unter: h.uhrzeit.map { "um \(Tagesplan.uhr($0))" } ?? "ohne feste Uhrzeit", farbe: c)
+            BuehnenSeite(hoehe: 296, wort: Self.wort(h, geplant: geplant, voll: voll, serie: serie, wochen: wochen),
+                         objekt: .kompass, platz: .analyseHabit, marke: {
+                MarkenTitel(text: "Habit")
+                Spacer(minLength: 8)
+                MarkenHinweis(text: HabitRechnung.haeufigkeit(h))
+                RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.habits) }
+            }) {
+                VornKarte {
+                    HStack(spacing: 14) {
+                        FortschrittRing(anteil: anteil, text: h.menge == nil ? nil : Zahl.prozent(anteil), symbol: h.menge == nil && voll ? "checkmark" : nil)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(!geplant ? "Heute frei" : h.menge != nil ? HabitRechnung.mengenText(h, am: T) : (voll ? "Heute erledigt" : "Heute offen"))
+                                .font(.kompass(.title3, .heavy)).foregroundStyle(Farbe.text).contentTransition(.numericText()).fixedSize(horizontal: false, vertical: true)
+                            Text(serie > 0 ? "Serie \(serie) \(wochen ? "Wochen" : "Tage") · beste \(HabitRechnung.besteSerie(h, heute: T))" : "Noch keine Serie")
+                                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                         }
-                        .buttonStyle(DruckStil())
-                        Button { nav.blatt = .habitBearbeiten(h.id, .menge) } label: {
-                            EinstellKachelInhalt(symbol: "gauge.with.dots.needle.33percent", titel: "Wie viel", wert: mengeText(h), unter: nil, farbe: c)
+                        Spacer(minLength: 0)
+                    }
+                    HStack(spacing: 8) {
+                        if geplant {
+                            Button {
+                                if h.menge != nil { nav.blatt = .habitMenge(h.id, tag: T.text) }
+                                else { let hid = h.id; speicher.aendern { $0.habitUmschalten(hid, am: T) } }
+                            } label: {
+                                Label(h.menge != nil ? "Menge eintragen" : (voll ? "Rückgängig" : "Abhaken"),
+                                      systemImage: h.menge != nil ? "plus" : (voll ? "arrow.uturn.backward" : "checkmark"))
+                            }
+                            .buttonStyle(voll && h.menge == nil ? .leise : .haupt)
                         }
-                        .buttonStyle(DruckStil())
-                        Button { nav.blatt = .habitBearbeiten(h.id, .erinnerung) } label: {
-                            EinstellKachelInhalt(symbol: "bell.fill", titel: "Erinnerung", wert: erinnerungText(h), unter: nil, farbe: c,
-                                                 hinweis: h.erinnerung == nil)
+                        Button { nav.zeigeAnalyse(habit: h.id) } label: { Label("Analyse", systemImage: "chart.bar.fill") }
+                            .buttonStyle(.leise)
+                            .accessibilityIdentifier("habit.analyse")
+                    }
+                    .padding(.top, 4)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        AuswahlKachel(symbol: "calendar", titel: "Wann", unter: "\(HabitRechnung.haeufigkeit(h)) · \(h.uhrzeit.map { Tagesplan.uhr($0) } ?? "ohne Uhrzeit")") {
+                            nav.blatt = .habitBearbeiten(h.id, .rhythmus)
                         }
-                        .buttonStyle(DruckStil())
+                        AuswahlKachel(symbol: "gauge.with.dots.needle.33percent", titel: "Wie viel", unter: mengeText(h)) {
+                            nav.blatt = .habitBearbeiten(h.id, .menge)
+                        }
+                        AuswahlKachel(symbol: "bell.fill", titel: "Erinnerung", unter: erinnerungText(h)) {
+                            nav.blatt = .habitBearbeiten(h.id, .erinnerung)
+                        }
                         NavigationLink(value: HabitTeilAuswahl(id: h.id, teil: .verfeinern)) {
-                            EinstellKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", wert: "Name, Ziel, Kalender …", unter: "Tage nachtragen", farbe: c, hervor: true)
+                            AuswahlKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", unter: "Name · Ziel · Tage nachtragen")
                         }
-                        .buttonStyle(DruckStil())
+                        .buttonStyle(.plain)
                         .accessibilityIdentifier("habit.verfeinern")
                     }
-
                     ZaehltIn(habit: h)
                 }
-                .padding(Mass.rand)
-                .padding(.bottom, 24)
-                .frame(maxWidth: 720)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Mass.rand).padding(.top, 12)
             }
-            .background(Farbe.grund.ignoresSafeArea())
-            .navigationTitle(h.titel)
-            .navigationBarTitleDisplayMode(.inline)
         } else {
             ContentUnavailableView("Habit nicht gefunden", systemImage: "questionmark", description: Text("Er wurde vielleicht gelöscht."))
+                .background(Farbe.grund.ignoresSafeArea())
         }
+    }
+
+    /// Das Wort: Serie, wenn heute steht; sonst „Heute offen“ oder „Heute frei“.
+    nonisolated static func wort(_ h: Habit, geplant: Bool, voll: Bool, serie: Int, wochen: Bool) -> Wort {
+        if !geplant { return Wort(zeilen: ["Heute"], akzent: "frei.", klein: h.titel, groesse: Wort.kleinGroesse) }
+        if voll, serie > 0 { return Wort(zeilen: ["\(serie) \(wochen ? "Wochen" : "Tage")"], akzent: "Serie.", klein: h.titel, groesse: Wort.kleinGroesse) }
+        if voll { return Wort(zeilen: ["Heute"], akzent: "erledigt.", klein: h.titel, groesse: Wort.kleinGroesse) }
+        return Wort(zeilen: ["Heute"], akzent: "offen.", klein: h.titel, groesse: Wort.kleinGroesse)
     }
 
     private func mengeText(_ h: Habit) -> String {
@@ -63,62 +98,6 @@ struct HabitDetail: View {
     private func erinnerungText(_ h: Habit) -> String {
         guard let e = h.erinnerung else { return "aus" }
         return Erinnerungen.aktiv.status == .abgelehnt ? "\(Beispieltermine.uhrzeit(e)) · Mitteilungen aus" : Beispieltermine.uhrzeit(e)
-    }
-}
-
-/// Stand von heute in Habit-Farbe: Ring (Anteil heute) mit Symbol, große Aussage, Serie, eine Handlung, Analyse im Rückblick.
-private struct HabitStandKarte: View {
-    var habit: Habit
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let T = speicher.heute
-        let geplant = HabitRechnung.geplant(habit, am: T)
-        let voll = habit.voll(am: T)
-        let anteil = habit.anteil(am: T)
-        let serie = HabitRechnung.serie(habit, heute: T)
-        let wochen: Bool = { if case .proWoche = habit.rhythmus { return true } else { return false } }()
-        Verlaufskarte(farben: Farbe.verlauf(habit.farbe)) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle().stroke(.white.opacity(0.25), lineWidth: 8)
-                    if anteil > 0 { Circle().trim(from: 0, to: anteil).stroke(Farbe.gold, style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90)) }
-                    Image(systemName: voll ? "checkmark" : habit.symbol).font(.system(size: 22, weight: .bold))
-                }
-                .frame(width: 78, height: 78)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(!geplant ? "Heute frei" : habit.menge != nil ? HabitRechnung.mengenText(habit, am: T) : (voll ? "Heute erledigt" : "Heute offen"))
-                        .font(.kompass(.title2, .heavy)).contentTransition(.numericText()).fixedSize(horizontal: false, vertical: true)
-                    Text(serie > 0 ? "Serie \(serie) \(wochen ? "Wochen" : "Tage")" : "Noch keine Serie").font(.unterzeile).opacity(0.92)
-                }
-                Spacer(minLength: 0)
-            }
-            HStack(spacing: 10) {
-                if geplant {
-                    Button {
-                        if habit.menge != nil { nav.blatt = .habitMenge(habit.id, tag: T.text) }
-                        else { let hid = habit.id; speicher.aendern { $0.habitUmschalten(hid, am: T) } }
-                    } label: {
-                        Label(habit.menge != nil ? "Menge eintragen" : (voll ? "Rückgängig" : "Abhaken"),
-                              systemImage: habit.menge != nil ? "plus" : (voll ? "arrow.uturn.backward" : "checkmark"))
-                            .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.nacht)
-                            .padding(.horizontal, 16).frame(minHeight: 40).background(Farbe.seladon, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-                Button { nav.zeigeAnalyse(habit: habit.id) } label: {
-                    HStack(spacing: 6) { Text("Analyse"); Image(systemName: "arrow.right") }
-                        .font(.kompass(.subheadline, .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 14).frame(minHeight: 40).background(.white.opacity(0.2), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Analyse im Rückblick")
-                .accessibilityIdentifier("habit.analyse")
-            }
-            .padding(.top, 12)
-        }
-        .accessibilityElement(children: .contain)
     }
 }
 

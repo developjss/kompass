@@ -49,6 +49,8 @@ Jede Hauptseite ist wie ein Produktbild aufgebaut (`Buehne.swift`):
 2. **Objekt**: ein echtes, freigestelltes Foto je Seite, nie mittig, nie antippbar; Platzierung je Seite in `Platz` (rechts/oben/Breite/Drehung aus dem Prototyp); Schatten 0 24 26 bei 28 %. Flugzeug = Tun (Home, Aufgabe, Fokus, Ziel), Bordkarte = Woche (Kalender, Habits, Rückblick), Kompass-Kugel = Kurs (Fortschritt, Neu), Tower = Assistent und Einstellungen.
 3. **Karte vorn** (`VornKarte`): Radius 24, Innen 16, Versatz −38 über die Bühne, Schatten 0 18 40; darin genau eine grüne Hauptaktion (`.buttonStyle(.haupt)`, 50 pt) und höchstens eine leise Zweitaktion (`.leise`); Löschen `.rot`. Karten-Titel New York 26, Etikett 12 heavy Versalien.
 
+Die Seiten, Stand Block 4: Home (Bühne „Jetzt dran“, 747 im Anflug), Kalender (kurz, Bordkarte), + Neu und Aufgabe (747 beim Abflug), Termin (ohne Objekt), Fortschritt · Ziele und Ziel-Seite (Messing-Kompass bzw. A380), Fortschritt · Habits (Bordkarte), Habit-Seite (Messing-Kompass). Noch offen: Fokus (Landebahn bei Nacht), Rückblick (Bordkarte zum Abreißen), Assistent und Einstellungen (Tower).
+
 Bilder: `Assets.xcassets/blattwerk-*` (A380, 747 im Anflug, 747 beim Abflug, zwei Tower, Kompass-Kugel, Messing-Kompass, Bordkarte, Landebahn, Landebahn bei Nacht; einzeln skaliert, 1024–2100 px). Entstanden aus Vorlagen des Gründers: freigestellt mit Vision, Schriftzüge entfernt, Leitwerke in Weinrot. [RISIKO] Rechte an den Foto-Vorlagen vor dem Store klären (Presse-/Stock-Fotos); Bordkarte und Messing-Kompass sind erzeugt.
 
 ## 3. Maße

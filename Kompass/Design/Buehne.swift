@@ -31,12 +31,12 @@ struct Platz: Sendable, Equatable {
     static let kalender = Platz(rechts: -60, oben: 140, breite: 270, drehung: -14)
     static let neu = Platz(rechts: -70, oben: 62, breite: 230, drehung: 10)
     static let assistent = Platz(rechts: 6, oben: 34, breite: 150)
-    static let fortschritt = Platz(rechts: -96, oben: 118, breite: 300, drehung: -12)
-    static let ziel = Platz(rechts: -150, oben: 136, breite: 450, drehung: -6)
-    static let habits = Platz(rechts: -130, oben: 44, breite: 300, drehung: -10)
+    static let fortschritt = Platz(rechts: -120, oben: 172, breite: 240, drehung: -12)
+    static let ziel = Platz(rechts: -190, oben: 196, breite: 420, drehung: -6)
+    static let habits = Platz(rechts: -120, oben: 96, breite: 280, drehung: -10)
     static let aufgabe = Platz(rechts: -150, oben: 96, breite: 380, drehung: -4)
     static let analyseZiel = Platz(rechts: -170, oben: 92, breite: 430, drehung: -6)
-    static let analyseHabit = Platz(rechts: -80, oben: 70, breite: 220, drehung: 14)
+    static let analyseHabit = Platz(rechts: -60, oben: 110, breite: 200, drehung: 14)
     static let einstellungen = Platz(rechts: 10, oben: 40, breite: 130)
     static let rueckblick = Platz(rechts: -70, oben: 186, breite: 330, drehung: -16)
     /// Fokus: Flugzeug links unten, fliegt nach rechts oben (Bewegung über `FokusBlatt`)
@@ -109,7 +109,7 @@ struct WortText: View {
         }
         .lineLimit(1)
         .minimumScaleFactor(0.6)
-        .frame(maxWidth: 330, alignment: .leading)
+        .frame(maxWidth: 300, alignment: .leading)
         .accessibilityElement(children: .combine)
         .allowsHitTesting(false)
     }
@@ -283,24 +283,70 @@ struct AuswahlKachel: View {
     var an = false
     var aktion: () -> Void
     var body: some View {
-        Button(action: aktion) {
-            VStack(alignment: .leading, spacing: 6) {
-                ZeichenKreis(symbol: symbol)
-                Spacer(minLength: 2)
-                Text(titel).font(.kompass(.body, .heavy)).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                if let unter {
-                    Text(unter).font(.kompass(.footnote, .semibold)).foregroundStyle(Farbe.zweitrangig).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                }
+        Button(action: aktion) { AuswahlKachelInhalt(symbol: symbol, titel: titel, unter: unter, an: an) }
+            .buttonStyle(.plain)
+            .accessibilityLabel(unter.map { "\(titel): \($0)" } ?? titel)
+            .accessibilityAddTraits(an ? .isSelected : [])
+    }
+}
+
+/// Dieselbe Kachel ohne Knopf – für `NavigationLink` und `Menu`.
+struct AuswahlKachelInhalt: View {
+    var symbol: String
+    var titel: String
+    var unter: String? = nil
+    var an = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZeichenKreis(symbol: symbol)
+            Spacer(minLength: 2)
+            Text(titel).font(.kompass(.body, .heavy)).foregroundStyle(Farbe.text).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            if let unter {
+                Text(unter).font(.kompass(.footnote, .semibold)).foregroundStyle(Farbe.zweitrangig).lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(an ? Farbe.handlung : Farbe.linie, lineWidth: an ? 2.5 : 1.5))
-            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(unter.map { "\(titel): \($0)" } ?? titel)
-        .accessibilityAddTraits(an ? .isSelected : [])
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(an ? Farbe.handlung : Farbe.linie, lineWidth: an ? 2.5 : 1.5))
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Fortschritts-Ring (Blattwerk): Bahn in `linie`, Weg in Kellygrün, Zahl in der Mitte. 56 pt, groß 96 pt.
+struct FortschrittRing: View {
+    var anteil: Double
+    var gross = false
+    /// nil = Prozent aus `anteil`; sonst eigener Text (z. B. „3/5“)
+    var text: String? = nil
+    var symbol: String? = nil
+
+    var body: some View {
+        let s: CGFloat = gross ? 96 : 56
+        let strich: CGFloat = gross ? 8 : 5
+        ZStack {
+            Circle().stroke(Farbe.linie, lineWidth: strich)
+            Circle().trim(from: 0, to: max(0.001, min(1, anteil)))
+                .stroke(Farbe.handlung, style: StrokeStyle(lineWidth: strich, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            if let symbol {
+                Image(systemName: symbol).font(.system(size: gross ? 30 : 18, weight: .bold)).foregroundStyle(Farbe.text)
+            } else {
+                Text(text ?? Zahl.prozent(anteil))
+                    .font(gross ? .zahl : .kompass(.caption, .heavy))
+                    .foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6).padding(gross ? 14 : 7)
+            }
+        }
+        .frame(width: s, height: s)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Lage eines Ziels als Pille, direkt aus der Rechnung (§4).
+extension LagePille {
+    init(_ lage: Kurs.Lage) {
+        self.init(text: lage.text, art: lage == .hinterher ? .hinten : lage == .ueberfaellig ? .kritisch : .gut)
     }
 }
 
@@ -382,4 +428,39 @@ struct LagePille: View {
     }
     .background(Farbe.grund)
     .ignoresSafeArea(edges: .top)
+}
+
+/// Einstell-Kachel (Blattwerk): Zeichen im Rosé-Kreis, Titel, Wert, Unterzeile. Die Farb-Parameter bleiben für
+/// die Aufrufer erhalten, wirken aber nicht mehr – Blattwerk nutzt nur Palette-Farben.
+struct EinstellKachelInhalt: View {
+    var symbol: String
+    var titel: String
+    var wert: String
+    var unter: String? = nil
+    var farbe: Color = Farbe.handlung
+    var hinweis = false
+    var hervor = false
+    var verlauf = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top) {
+                ZeichenKreis(symbol: symbol)
+                Spacer()
+                if hinweis {
+                    Image(systemName: "exclamationmark").font(.caption.weight(.heavy)).foregroundStyle(Farbe.warnungGrund)
+                        .frame(width: 22, height: 22).background(Farbe.warnung, in: Circle())
+                }
+            }
+            Spacer(minLength: 6)
+            Text(titel).font(.kompass(.subheadline, .heavy)).foregroundStyle(Farbe.text)
+            Text(wert).font(.unterzeile).foregroundStyle(Farbe.text).lineLimit(1)
+            if let unter { Text(unter).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(1) }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(hervor ? Farbe.handlung : Farbe.linie, lineWidth: hervor ? 2.5 : 1.5))
+        .accessibilityElement(children: .combine)
+    }
 }
