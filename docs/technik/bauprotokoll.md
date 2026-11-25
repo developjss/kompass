@@ -4,6 +4,7 @@ Neueste oben. Je gemergtem Block eine Zeile: Datum · Kürzel · was · Tests.
 
 | Datum | Kürzel | Was | Tests |
 |---|---|---|---|
+| 25.11.2026 | P2-RB4 | Rückblick neu: `Wochenwort` (§11, 7 Regeln) + `WochenwortTests`, `Statistik` (Werte je Woche/Monat/Jahr), `StatistikKachel`/`KachelGrafik`, `StatistikSeite` mit `StatistikZeile` und „Zeit je Ziel“; `Bordkarte` liegt immer offen; `Saum` weicher. Fortschritt: `FortschrittWahl` als Umschalter, `ZurueckKnopf` auf Ziel- und Habit-Seite, Unterseiten entschlackt; `Navigation.zeigeAnalyse` behält den Rückweg (Analyse auch im Fortschritt-Stapel). Konzept `home-intelligent.md` [VORSCHLAG]; PR #52, #53 | Swift-Tests grün, Simulator; UI-Tests nicht gelaufen |
 | 24.11.2026 | P2-RB | Rückblick als Bordkarte: `Bordkarte` (Abschnitt ziehen/antippen reißt ab, je Woche gemerkt), `BordkarteTests`; PR #34 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-FF | Fokus als Flug: `FlugRechnung` (Strecke, Phasen, FL, Rest, Kürzel) + `FlugTests`, `FokusBlatt` mit `FlugHimmel`, Instrumenten, Haptik; Buchung unverändert; PR #33 | Swift-Tests grün, Simulator |
 | 24.11.2026 | P2-NF | Design Nachtflug: Tokens Indigo/Seladon/Gold hell+dunkel, `Farbe.tonArt` (bunte Farben → Palette) + `NachtflugTests`, Stand-Karten mit Goldschein, Serif-Titel; PR #32 | Swift-Tests grün, Simulator hell/dunkel |
