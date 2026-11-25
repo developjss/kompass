@@ -66,7 +66,7 @@ struct HabitDetail: View {
                             nav.blatt = .habitBearbeiten(h.id, .erinnerung)
                         }
                         NavigationLink(value: HabitTeilAuswahl(id: h.id, teil: .verfeinern)) {
-                            AuswahlKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", unter: "Name · Ziel · Tage nachtragen")
+                            AuswahlKachelInhalt(symbol: "slider.horizontal.3", titel: "Verfeinern", unter: "Name · Ziel · Nachtragen")
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("habit.verfeinern")
@@ -121,18 +121,6 @@ struct HabitTeilSeite: View {
             let c = Color(hex: h.farbe)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if teil != .verfeinern {
-                    HStack(spacing: 12) {
-                        Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufTon)
-                            .frame(width: 40, height: 40).background(c.gradient, in: Circle())
-                        Text(teil == .verfeinern ? "Alles Weitere zu deinem Habit – antippen zum Ändern." : "Vergessen abzuhaken? Tipp auf einen Tag, um ihn nachzutragen.")
-                            .font(.unterzeile).foregroundStyle(Farbe.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(LinearGradient(colors: [Farbe.karte, c.opacity(0.14)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    }
-
                     if teil == .verfeinern {
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                             kachel("textformat", "Name", h.titel, nil) { nav.blatt = .habitBearbeiten(h.id, .titel) }
@@ -141,6 +129,7 @@ struct HabitTeilSeite: View {
                             kachel("target", "Ziel", z.ziel(h.zielID)?.titel ?? "keins", z.ziel(h.zielID) == nil ? "zählt für kein Ziel" : nil) { nav.blatt = .habitBearbeiten(h.id, .ziel) }
                             NavigationLink(value: HabitTeilAuswahl(id: h.id, teil: .nachtragen)) {
                                 EinstellKachelInhalt(symbol: "calendar.badge.clock", titel: "Tage nachtragen", wert: "letzte 14 Tage", unter: nil, farbe: c, verlauf: true)
+                                    .frame(minHeight: 132)
                             }
                             .buttonStyle(DruckStil())
                         }
@@ -183,6 +172,7 @@ struct HabitTeilSeite: View {
     private func kachel(_ symbol: String, _ titel: String, _ wert: String, _ unter: String?, _ aktion: @escaping () -> Void) -> some View {
         Button(action: aktion) {
             EinstellKachelInhalt(symbol: symbol, titel: titel, wert: wert, unter: unter, farbe: Color(hex: speicher.zustand.habit(id)?.farbe ?? "#3B4CCA"), verlauf: true)
+                .frame(minHeight: 132)
         }
         .buttonStyle(DruckStil())
     }

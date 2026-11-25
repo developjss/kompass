@@ -31,7 +31,7 @@ struct HabitsAnsicht: View {
                     Etikett(text: "Heute")
                     Text("Heute ist kein Habit geplant.").font(.karteTitel).foregroundStyle(Farbe.text)
                 } else {
-                    ForEach(Array(offen.enumerated()), id: \.element.id) { i, h in HeuteZeile(habit: h, erster: i == 0) }
+                    ForEach(offen) { HeuteZeile(habit: $0) }
                     if !geschafft.isEmpty {
                         if !offen.isEmpty { Rectangle().fill(Farbe.linie).frame(height: 1) }
                         Button { withAnimation(ruhig ? nil : .snappy(duration: 0.2)) { erledigteZeigen.toggle() } } label: {
@@ -44,7 +44,7 @@ struct HabitsAnsicht: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(erledigteZeigen ? "Erledigte ausblenden" : "\(geschafft.count) erledigte zeigen")
-                        if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0, erster: false) } }
+                        if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0) } }
                     }
                 }
             }
@@ -82,7 +82,6 @@ struct HabitsAnsicht: View {
 private struct HeuteZeile: View {
     var habit: Habit
     /// Nur der erste offene Habit bekommt den grünen Knopf (Hick: eine Hauptaktion)
-    var erster = false
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
@@ -107,9 +106,6 @@ private struct HeuteZeile: View {
             }
             .buttonStyle(.plain)
             .accessibilityHint(habit.menge == nil ? "Öffnet den Habit" : "Menge eintragen")
-            if erster, !voll, habit.menge != nil {
-                Button("Eintragen") { nav.blatt = .habitMenge(habit.id, tag: T.text) }.buttonStyle(.leiseKlein).fixedSize()
-            }
             Haken(an: voll, farbe: Farbe.handlung, beschriftung: habit.titel) {
                 speicher.aendern { $0.habitUmschalten(habit.id, am: T) }
             }

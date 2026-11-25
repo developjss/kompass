@@ -4,6 +4,8 @@ import SwiftUI
 struct AufgabeZeile: View {
     var aufgabe: Aufgabe
     var datumZeigen = false
+    /// false auf der Ziel-Seite: dort wäre der Zielname in jeder Zeile doppelt
+    var zielZeigen = true
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
@@ -45,7 +47,7 @@ struct AufgabeZeile: View {
 
     private func unterzeile(ziel: Ziel?, laeuft: Bool) -> String {
         var teile: [String] = []
-        if let ziel { teile.append(ziel.titel) }
+        if let ziel, zielZeigen { teile.append(ziel.titel) }
         if laeuft { teile.append("Fokus läuft") }
         else if datumZeigen, let d = aufgabe.datum { teile.append(d.datum().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))) }
         else if let u = aufgabe.uhrzeit { teile.append(Beispieltermine.uhrzeit(u)) }

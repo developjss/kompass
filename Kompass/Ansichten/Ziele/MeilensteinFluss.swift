@@ -79,8 +79,8 @@ private struct MeilensteinUebersicht: View {
                             AnpassKachel(symbol: "scalemass", titel: "Wie wichtig?", wert: "\(MeilensteinAssistent.wichtigName(s.gewicht)) · \(Zahl.prozent(anteil))", farbe: c) { bearbeiten = .wichtig }
                         }
 
-                        Button(role: .destructive) { loeschenFragen = true } label: {
-                            Label("Meilenstein löschen", systemImage: "trash").font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
+                        Button { loeschenFragen = true } label: {
+                            Label("Meilenstein löschen", systemImage: "trash").font(.zeile).foregroundStyle(Farbe.warnung).frame(maxWidth: .infinity, minHeight: 50)
                                 .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
                         }
                         .padding(.top, 8)
@@ -435,7 +435,7 @@ struct MeilensteinAssistent: View {
                     let anteil = Fortschritt.anteilVorschau(g, gewicht: w, ersetzt: vorhanden?.id)
                     WahlKachel(symbol: w == 3 ? "star.fill" : w == 2 ? "star.leadinghalf.filled" : "star",
                                titel: Self.wichtigName(w) + (w == 3 ? " · entscheidend" : w == 2 ? " · wichtig" : " · nebenbei"),
-                               beispiel: "Macht dann \(Zahl.prozent(anteil)) deines Ziels aus", an: e.gewicht == w, farbe: Color(hex: g.farbe)) { e.gewicht = w }
+                               beispiel: "\(Zahl.prozent(anteil)) deines Ziels", an: e.gewicht == w, farbe: Color(hex: g.farbe)) { e.gewicht = w }
                 }
             }
         case .fertig: zusammenfassung(g)

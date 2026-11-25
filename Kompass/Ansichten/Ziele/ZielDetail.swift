@@ -107,10 +107,10 @@ enum ZielTeil: String, Hashable, CaseIterable {
     var erklaerung: String {
         switch self {
         case .verfeinern: "Alles rund um dein Ziel. Die Meilensteine änderst du direkt auf der Ziel-Seite."
-        case .aufgaben: "Aufgaben mit diesem Ziel fallen in den nächsten offenen Meilenstein. Ohne passenden Meilenstein zählen sie als Einsatz."
-        case .habits: "Ein Habit zählt in die Prozente, wenn ein Meilenstein ihn misst – sonst als Einsatz."
-        case .termine: "Termin-Serien aus dem Kalender: jeder stattgefundene Termin zählt in einen Zahl- oder Zeit-Meilenstein oder als Einsatz."
-        case .einsatz: "Fokuszeit und Termine für dieses Ziel. Einsatz zeigt, was du investierst – die Prozente ändert er nicht."
+        case .aufgaben: "Zählen in den nächsten offenen Meilenstein – sonst als Einsatz."
+        case .habits: "Zählt in die Prozente, wenn ein Meilenstein den Habit misst – sonst als Einsatz."
+        case .termine: "Jeder stattgefundene Termin zählt in einen Meilenstein – sonst als Einsatz."
+        case .einsatz: "Fokuszeit und Termine für dieses Ziel. Die Prozente ändert das nicht."
         case .details: "Name, Frist, Bereich, Warum und Aussehen – antippen zum Ändern."
         }
     }
@@ -132,6 +132,7 @@ private struct VerfeinernInhalt: View {
             ForEach([ZielTeil.aufgaben, .habits, .termine, .einsatz, .details], id: \.self) { t in
                 NavigationLink(value: ZielTeilAuswahl(id: ziel.id, teil: t)) {
                     EinstellKachelInhalt(symbol: t.symbol, titel: t.titel, wert: wert(t), unter: unter(t), farbe: c, verlauf: true)
+                        .frame(minHeight: 132)
                 }
                 .buttonStyle(DruckStil())
             }
@@ -142,6 +143,7 @@ private struct VerfeinernInhalt: View {
                 EinstellKachelInhalt(symbol: erreicht ? "arrow.uturn.backward" : "flag.checkered", titel: erreicht ? "Erreicht" : "Geschafft?",
                                      wert: erreicht ? "Wieder aktiv setzen" : "Als erreicht markieren", unter: nil,
                                      farbe: erreicht ? Farbe.freude : c, verlauf: true)
+                    .frame(minHeight: 132)
             }
             .buttonStyle(DruckStil())
             .accessibilityIdentifier("ziel.erreicht")
@@ -203,9 +205,9 @@ struct ZielTeilSeite: View {
                     switch teil {
                     case .verfeinern: VerfeinernInhalt(ziel: g)
                     case .aufgaben: ZielAufgaben(ziel: g)
-                    case .habits: ZielHabits(ziel: g)
-                    case .termine: ZielTermine(ziel: g)
-                    case .einsatz: ZielEinsatz(ziel: g)
+                    case .habits: ZielHabits(ziel: g).padding(.top, 16)
+                    case .termine: ZielTermine(ziel: g).padding(.top, 16)
+                    case .einsatz: ZielEinsatz(ziel: g).padding(.top, 16)
                     case .details: details(g)
                     }
                 }
@@ -413,10 +415,10 @@ private struct ZielAufgaben: View {
         let offen = z.aufgaben.filter { $0.zielID == ziel.id && !$0.erledigt }
             .sorted { ($0.datum ?? T.plus(tage: 99_999)) < ($1.datum ?? T.plus(tage: 99_999)) }
         let erledigt = z.aufgaben.filter { $0.zielID == ziel.id && $0.erledigt }.count
-        AbschnittKopf(titel: "Aufgaben") { Text("\(erledigt) erledigt").foregroundStyle(Farbe.zweitrangig) }
+        AbschnittKopf(titel: "Offen") { Text("\(erledigt) erledigt").foregroundStyle(Farbe.zweitrangig) }
         GruppierteListe {
             ForEach(alle ? offen : Array(offen.prefix(5))) { a in
-                AufgabeZeile(aufgabe: a, datumZeigen: true)
+                AufgabeZeile(aufgabe: a, datumZeigen: true, zielZeigen: false)
                     .contextMenu {
                         Button("Vom Ziel lösen", systemImage: "link.badge.minus") {
                             speicher.aendern { $0.aufgabeZuordnen(a.id, ziel: nil, heute: T) }
@@ -441,7 +443,6 @@ private struct ZielHabits: View {
         let z = speicher.zustand
         let T = speicher.heute
         let habits = z.habits.filter { h in h.zielID == ziel.id || ziel.schritte.contains { $0.habitID == h.id } }
-        AbschnittKopf(titel: "Habits")
         GruppierteListe {
             ForEach(habits) { h in
                 let zaehlt = ziel.schritte.contains { $0.art == .habit && $0.habitID == h.id }
@@ -480,7 +481,6 @@ private struct ZielTermine: View {
         let z = speicher.zustand
         let T = speicher.heute
         let links = z.termine.filter { $0.zielID == ziel.id }
-        AbschnittKopf(titel: "Termine")
         GruppierteListe {
             ForEach(links) { l in
                 let n = l.vorkommen.filter { $0.tag >= l.seit && $0.tag <= T }.count
@@ -512,7 +512,6 @@ private struct ZielEinsatz: View {
         let T = speicher.heute
         let woche = Fortschritt.zeit(ziel: ziel.id, in: z, von: T.montag, bis: T)
         let gesamt = Fortschritt.zeit(ziel: ziel.id, in: z)
-        AbschnittKopf(titel: "Einsatz")
         GruppierteListe {
             HStack {
                 Text("Diese Woche").font(.zeile)

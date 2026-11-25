@@ -93,12 +93,15 @@ struct HabitAnalyse: View {
                     }
                     .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
-                    Button { nav.oeffneHabit(h.id) } label: {
-                        Label("Zum Habit", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
-                            .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)
-                            .background(c.opacity(0.12), in: Capsule())
+                    // Aus dem Rückblick geöffnet: ein Weg zur Seite. Von der Seite selbst führt „Zurück“ hin.
+                    if nav.bereich != .fortschritt {
+                        Button { nav.oeffneHabit(h.id) } label: {
+                            Label("Zum Habit", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
+                                .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)
+                                .background(c.opacity(0.12), in: Capsule())
+                        }
+                        .buttonStyle(DruckStil())
                     }
-                    .buttonStyle(DruckStil())
                 }
                 .padding(Mass.rand).padding(.bottom, 24)
                 .frame(maxWidth: 720).frame(maxWidth: .infinity)
@@ -244,12 +247,15 @@ struct ZielAnalyse: View {
                         .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                     }
 
-                    Button { nav.oeffneZiel(g.id) } label: {
-                        Label("Zum Ziel", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
-                            .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)
-                            .background(c.opacity(0.12), in: Capsule())
+                    // Aus dem Rückblick geöffnet: ein Weg zur Seite. Von der Seite selbst führt „Zurück“ hin.
+                    if nav.bereich != .fortschritt {
+                        Button { nav.oeffneZiel(g.id) } label: {
+                            Label("Zum Ziel", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
+                                .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)
+                                .background(c.opacity(0.12), in: Capsule())
+                        }
+                        .buttonStyle(DruckStil())
                     }
-                    .buttonStyle(DruckStil())
                 }
                 .padding(Mass.rand).padding(.bottom, 24)
                 .frame(maxWidth: 720).frame(maxWidth: .infinity)

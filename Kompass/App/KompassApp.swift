@@ -211,14 +211,19 @@ final class Navigation {
     var rueckblickPfad = NavigationPath()
 
     /// Analyse im Rückblick öffnen (aus Habit-/Ziel-Seite, Rückblick oder Lotse)
-    func zeigeAnalyse(habit id: UUID) {
-        rueckblickPfad = NavigationPath([AnalyseAuswahl(art: .habit, id: id)])
-        bereich = .rueckblick
-    }
+    func zeigeAnalyse(habit id: UUID) { zeigeAnalyse(AnalyseAuswahl(art: .habit, id: id)) }
+    func zeigeAnalyse(ziel id: UUID) { zeigeAnalyse(AnalyseAuswahl(art: .ziel, id: id)) }
 
-    func zeigeAnalyse(ziel id: UUID) {
-        rueckblickPfad = NavigationPath([AnalyseAuswahl(art: .ziel, id: id)])
-        bereich = .rueckblick
+    /// Analyse öffnen, ohne den Rückweg zu verlieren: in Fortschritt und Rückblick kommt sie oben auf den Stapel,
+    /// „Zurück“ führt also dorthin, wo man herkam. Aus anderen Bereichen öffnet sie im Rückblick.
+    func zeigeAnalyse(_ a: AnalyseAuswahl) {
+        switch bereich {
+        case .fortschritt: fortschrittPfad.append(a)
+        case .rueckblick: rueckblickPfad.append(a)
+        default:
+            rueckblickPfad = NavigationPath([a])
+            bereich = .rueckblick
+        }
     }
 
     func zeige(_ teil: FortschrittTeil) {
