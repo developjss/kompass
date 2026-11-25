@@ -174,7 +174,7 @@ enum Mass {
     static let knopf: CGFloat = 50
     static let knopfKlein: CGFloat = 40
     /// Saum: die untersten Punkte der Bühne laufen in den Grund aus (kurz 112, lang 190)
-    static func saum(fuer hoehe: CGFloat) -> CGFloat { hoehe <= buehneKurz ? 112 : hoehe >= buehneLang ? 190 : 160 }
+    static func saum(fuer hoehe: CGFloat) -> CGFloat { hoehe <= buehneKurz ? 150 : hoehe >= buehneLang ? 240 : 210 }
 }
 
 extension Font {

@@ -101,6 +101,22 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - Assistent („Womit soll ich anfangen?“) nennt die ersten zwei mit Platz.
 - Swift: `Kompass/Rechnung/Empfehlung.swift`, Tests `KompassTests/EmpfehlungTests.swift`.
 
+## 11. Rückblick: das Wochenwort [ENTSCHEIDUNG – 25.11.2026, PR #52, „Ja, mergen“]
+
+Über dem Rückblick steht ein bis zwei Wörter zur Lage der Woche – deterministisch aus vier Zahlen, keine KI. Erste passende Regel gewinnt:
+
+| Nr | Bedingung | Wort |
+|---|---|---|
+| 1 | kein Tag der Woche mit Daten | Neue Woche. |
+| 2 | höchste Tagesauslastung ≥ 75 % (verplant ÷ wach 7–22 Uhr) | Volle Woche. |
+| 3 | Pläne ≥ 80 % geschafft und Habits ≥ 80 % (oder keine Habits geplant) | Starke Woche. |
+| 4 | weniger als die Hälfte der aktiven Ziele im Plan oder voraus (§4) | Kurs halten. |
+| 5 | Pläne < 40 % geschafft | Luft holen. |
+| 6 | Habits ≥ 80 % | Gut dabei. |
+| 7 | sonst | Im Fluss. |
+
+Pläne = Aufgaben + Habit-Tage (§9 Wochenbilanz). Die vier Kacheln darunter – Erledigt, Habits, Ziele, Zeit – rechnen nur mit §1, §4, §6 und §9; Monat = 4 Wochen, Jahr = 52 Wochen, jeweils zurück ab dem Montag der Woche. Swift: `Kompass/Rechnung/Wochenwort.swift`, Tests `KompassTests/WochenwortTests.swift`.
+
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

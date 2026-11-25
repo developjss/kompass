@@ -18,11 +18,11 @@ struct HabitDetail: View {
             let serie = HabitRechnung.serie(h, heute: T)
             let wochen: Bool = { if case .proWoche = h.rhythmus { return true } else { return false } }()
 
-            BuehnenSeite(hoehe: 296, wort: Self.wort(h, geplant: geplant, voll: voll, serie: serie, wochen: wochen),
+            BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(h, geplant: geplant, voll: voll, serie: serie, wochen: wochen),
                          marke: {
-                MarkenTitel(text: "Habit")
+                ZurueckKnopf()
+                MarkenTitel(text: h.titel)
                 Spacer(minLength: 8)
-                MarkenHinweis(text: HabitRechnung.haeufigkeit(h))
                 RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.habits) }
             }) {
                 VornKarte {
@@ -42,7 +42,7 @@ struct HabitDetail: View {
                                 if h.menge != nil { nav.blatt = .habitMenge(h.id, tag: T.text) }
                                 else { let hid = h.id; speicher.aendern { $0.habitUmschalten(hid, am: T) } }
                             } label: {
-                                Label(h.menge != nil ? "Menge eintragen" : (voll ? "Rückgängig" : "Abhaken"),
+                                Label(h.menge != nil ? "Eintragen" : (voll ? "Rückgängig" : "Abhaken"),
                                       systemImage: h.menge != nil ? "plus" : (voll ? "arrow.uturn.backward" : "checkmark"))
                             }
                             .buttonStyle(voll && h.menge == nil ? .leise : .haupt)
@@ -83,10 +83,10 @@ struct HabitDetail: View {
 
     /// Das Wort: Serie, wenn heute steht; sonst „Heute offen“ oder „Heute frei“.
     nonisolated static func wort(_ h: Habit, geplant: Bool, voll: Bool, serie: Int, wochen: Bool) -> Wort {
-        if !geplant { return Wort(zeilen: ["Heute"], akzent: "frei.", klein: h.titel, groesse: Wort.kleinGroesse) }
-        if voll, serie > 0 { return Wort(zeilen: ["\(serie) \(wochen ? "Wochen" : "Tage")"], akzent: "Serie.", klein: h.titel, groesse: Wort.kleinGroesse) }
-        if voll { return Wort(zeilen: ["Heute"], akzent: "erledigt.", klein: h.titel, groesse: Wort.kleinGroesse) }
-        return Wort(zeilen: ["Heute"], akzent: "offen.", klein: h.titel, groesse: Wort.kleinGroesse)
+        if !geplant { return Wort(zeilen: ["Heute"], akzent: "frei.", groesse: Wort.kleinGroesse) }
+        if voll, serie > 0 { return Wort(zeilen: ["\(serie) \(wochen ? "Wochen" : "Tage")"], akzent: "Serie.", groesse: Wort.kleinGroesse) }
+        if voll { return Wort(zeilen: ["Heute"], akzent: "erledigt.", groesse: Wort.kleinGroesse) }
+        return Wort(zeilen: ["Heute"], akzent: "offen.", groesse: Wort.kleinGroesse)
     }
 
     private func mengeText(_ h: Habit) -> String {
@@ -121,6 +121,7 @@ struct HabitTeilSeite: View {
             let c = Color(hex: h.farbe)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    if teil != .verfeinern {
                     HStack(spacing: 12) {
                         Image(systemName: teil == .verfeinern ? "slider.horizontal.3" : "calendar.badge.clock").font(.system(size: 16, weight: .bold)).foregroundStyle(Farbe.aufTon)
                             .frame(width: 40, height: 40).background(c.gradient, in: Circle())
@@ -130,6 +131,7 @@ struct HabitTeilSeite: View {
                     .padding(14).frame(maxWidth: .infinity, alignment: .leading)
                     .background(LinearGradient(colors: [Farbe.karte, c.opacity(0.14)], startPoint: .topLeading, endPoint: .bottomTrailing),
                                 in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    }
 
                     if teil == .verfeinern {
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
@@ -143,8 +145,8 @@ struct HabitTeilSeite: View {
                             .buttonStyle(DruckStil())
                         }
                         .padding(.top, 16)
-                        Button(role: .destructive) { loeschenFragen = true } label: {
-                            Label("Habit löschen", systemImage: "trash").font(.zeile).frame(maxWidth: .infinity, minHeight: 50)
+                        Button { loeschenFragen = true } label: {
+                            Label("Habit löschen", systemImage: "trash").font(.zeile).foregroundStyle(Farbe.warnung).frame(maxWidth: .infinity, minHeight: 50)
                                 .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
                         }
                         .padding(.top, Mass.abschnitt)

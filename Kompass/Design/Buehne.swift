@@ -91,13 +91,13 @@ struct Schein: View {
     }
 }
 
-/// Ebene 1b: Saum – die untersten Punkte der Bühne laufen in den Grund aus, erst spät (58 % = 5 %, 80 % = 38 %), damit das Wort nicht ausbleicht.
+/// Ebene 1b: Saum – die untersten Punkte der Bühne laufen weich in den Grund aus (40 % = 4 %, 68 % = 22 %, 88 % = 70 %); das Wort steht darüber.
 struct Saum: View {
     var hoehe: CGFloat
     var body: some View {
         VStack { Spacer(minLength: 0)
-            LinearGradient(stops: [.init(color: Farbe.grund.opacity(0), location: 0), .init(color: Farbe.grund.opacity(0.05), location: 0.58),
-                                   .init(color: Farbe.grund.opacity(0.38), location: 0.80), .init(color: Farbe.grund, location: 1)],
+            LinearGradient(stops: [.init(color: Farbe.grund.opacity(0), location: 0), .init(color: Farbe.grund.opacity(0.04), location: 0.40),
+                                   .init(color: Farbe.grund.opacity(0.22), location: 0.68), .init(color: Farbe.grund.opacity(0.70), location: 0.88), .init(color: Farbe.grund, location: 1)],
                            startPoint: .top, endPoint: .bottom)
                 .frame(height: hoehe)
         }
@@ -175,6 +175,8 @@ struct VornKarte<Inhalt: View>: View {
 struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
     var hoehe: CGFloat = Mass.buehne
     var wort: Wort
+    /// true = mit Seitenfuß; Standard ohne – der Speicherort steht in den Einstellungen
+    var fuss = false
     @ViewBuilder var marke: Marke
     @ViewBuilder var extra: Extra
     @ViewBuilder var inhalt: Inhalt
@@ -187,11 +189,13 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
                     VStack(alignment: .leading, spacing: 0) { inhalt }
                         .frame(maxWidth: 720)
                         .frame(maxWidth: .infinity)
-                    SeitenFuss()
-                        .padding(.horizontal, Mass.rand)
-                        .padding(.top, Mass.abschnitt)
-                        .frame(maxWidth: 720)
-                        .frame(maxWidth: .infinity)
+                    if fuss {
+                        SeitenFuss()
+                            .padding(.horizontal, Mass.rand)
+                            .padding(.top, Mass.abschnitt)
+                            .frame(maxWidth: 720)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
                 .padding(.bottom, 32)
             }
@@ -203,8 +207,8 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
 }
 
 extension BuehnenSeite where Extra == EmptyView {
-    init(hoehe: CGFloat = Mass.buehne, wort: Wort, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
-        self.init(hoehe: hoehe, wort: wort, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, fuss: Bool = false, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
+        self.init(hoehe: hoehe, wort: wort, fuss: fuss, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
     }
 }
 
@@ -261,6 +265,12 @@ struct MarkenHinweis: View {
     var body: some View {
         Text(text.uppercased()).font(.etikett).tracking(1).opacity(0.75).lineLimit(1)
     }
+}
+
+/// Zurück in der Marke – jede Bühnen-Seite, die im Stapel liegt, braucht ihn (die Navigationsleiste ist versteckt).
+struct ZurueckKnopf: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View { RahmenKnopf(symbol: "chevron.left", beschriftung: "Zurück") { dismiss() } }
 }
 
 /// Runder Knopf mit Rahmen (36 pt) für die Marke: +, i, ‹, ›, ×
