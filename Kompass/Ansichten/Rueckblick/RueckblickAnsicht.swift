@@ -266,63 +266,48 @@ struct StatistikSeite: View {
                 HStack { ForEach(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], id: \.self) { Text($0).frame(maxWidth: .infinity) } }.font(.caption2).foregroundStyle(Farbe.zweitrangig)
             }
         case .habits:
-            WeisseKarte(titel: "Habits", wert: w.bilanz.habitsGeplant > 0 ? Zahl.prozent(w.habitQuote) : "–",
-                        unter: "\(Zahl.text(w.bilanz.habitsErledigt, stellen: 1)) von \(w.bilanz.habitsGeplant) geplanten Tagen", pfeil: { nav.zeige(.habits) }) {
-                VStack(spacing: 8) {
-                    ForEach(z.habits) { h in
-                        let q = HabitRechnung.quote(alle: [h], von: w.von, bis: w.bis, heute: T)
-                        Button { nav.zeigeAnalyse(habit: h.id) } label: { HStack(spacing: 8) {
-                            Text(h.titel).font(.klein).foregroundStyle(Farbe.text).lineLimit(1).frame(width: 120, alignment: .leading)
-                            Balken(anteil: q.geplant > 0 ? q.erledigt / Double(q.geplant) : 0, farbe: Color(hex: h.farbe), spur: Farbe.linie, hoehe: 6)
-                            Text(q.geplant > 0 ? Zahl.prozent(q.erledigt / Double(q.geplant)) : "–").font(.klein).monospacedDigit()
-                                .lineLimit(1).minimumScaleFactor(0.8).foregroundStyle(Farbe.zweitrangig).frame(width: 50, alignment: .trailing)
-                            Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                        }
-                        .frame(minHeight: 32).contentShape(Rectangle()) }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Analyse öffnen")
-                    }
+            AbschnittKopf(titel: "Je Habit") {
+                Text("\(Zahl.text(w.bilanz.habitsErledigt, stellen: 0)) von \(w.bilanz.habitsGeplant) Tagen").font(.klein).foregroundStyle(Farbe.zweitrangig)
+            }
+            GruppierteListe {
+                ForEach(z.habits) { h in
+                    let q = HabitRechnung.quote(alle: [h], von: w.von, bis: w.bis, heute: T)
+                    let anteil = q.geplant > 0 ? q.erledigt / Double(q.geplant) : 0
+                    StatistikZeile(symbol: h.symbol, farbe: Color(hex: h.farbe), titel: h.titel, anteil: anteil,
+                                   wert: q.geplant > 0 ? Zahl.prozent(anteil) : "–") { nav.zeigeAnalyse(habit: h.id) }
                 }
             }
         case .ziele:
             let aktiv = z.ziele.filter { $0.status == .aktiv }
-            WeisseKarte(titel: "Ziele", wert: "\(w.zieleAufKurs) von \(w.zieleGesamt)", unter: "auf Kurs · Antippen für Verlauf, Prognose und Einsatz") {
-                VStack(spacing: 8) {
-                    ForEach(aktiv) { g in
-                        let k = Kurs.aufKurs(g, in: z, heute: T)
-                        Button { nav.zeigeAnalyse(ziel: g.id) } label: {
-                            HStack(spacing: 8) {
-                                Text(g.titel).font(.klein).foregroundStyle(Farbe.text).lineLimit(1).frame(width: 120, alignment: .leading)
-                                Balken(anteil: k.fortschritt, farbe: Color(hex: g.farbe), spur: Farbe.linie, hoehe: 6)
-                                Text(k.lage.text).font(.klein).foregroundStyle(Farbe.zweitrangig).frame(width: 74, alignment: .trailing)
-                                Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                            }
-                            .frame(minHeight: 32).contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(g.titel), \(Zahl.prozent(k.fortschritt)), \(k.lage.text)")
-                    }
+            AbschnittKopf(titel: "Je Ziel") { EmptyView() }
+            GruppierteListe {
+                ForEach(aktiv) { g in
+                    let k = Kurs.aufKurs(g, in: z, heute: T)
+                    StatistikZeile(symbol: g.symbol, farbe: Color(hex: g.farbe), titel: g.titel, anteil: k.fortschritt,
+                                   wert: "\(Zahl.prozent(k.fortschritt)) · \(k.lage.text)") { nav.zeigeAnalyse(ziel: g.id) }
                 }
             }
             let jeZiel = z.ziele.map { ($0, Fortschritt.zeit(ziel: $0.id, in: z, von: w.von, bis: w.bis)) }.filter { $0.1 > 0 }.sorted { $0.1 > $1.1 }
-            WeisseKarte(titel: "Zeit je Ziel", wert: jeZiel.isEmpty ? "–" : Zahl.dauer(jeZiel.reduce(0) { $0 + $1.1 }),
-                        unter: jeZiel.isEmpty ? "Noch keine Zeit für Ziele in diesem Zeitraum." : "Fokus und zugeordnete Termine") {
-                if !jeZiel.isEmpty {
-                    HStack(spacing: 16) {
-                        Chart(jeZiel, id: \.0.id) { g, s in
-                            SectorMark(angle: .value("Zeit", s), innerRadius: .ratio(0.62), angularInset: 1.5).foregroundStyle(Color(hex: g.farbe))
-                        }
-                        .frame(width: 84, height: 84).accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(jeZiel.prefix(4), id: \.0.id) { g, s in
-                                HStack(spacing: 6) {
-                                    Circle().fill(Color(hex: g.farbe)).frame(width: 8, height: 8)
-                                    Text(g.titel).font(.klein).foregroundStyle(Farbe.text).lineLimit(1)
-                                    Spacer(minLength: 4)
-                                    Text(Zahl.dauer(s)).font(.klein).monospacedDigit().foregroundStyle(Farbe.zweitrangig)
-                                }
-                            }
-                        }
+            let ohne = max(0, w.fokus - w.fokusFuerZiele)
+            let summe = jeZiel.reduce(0) { $0 + $1.1 } + ohne
+            AbschnittKopf(titel: "Zeit je Ziel") {
+                Text(summe > 0 ? Zahl.dauer(summe) : "–").font(.klein).monospacedDigit().foregroundStyle(Farbe.zweitrangig)
+            }
+            .padding(.top, 8)
+            if summe <= 0 {
+                GruppierteListe { LeerZeile(text: "In diesem Zeitraum noch keine Zeit gebucht.") }
+            } else {
+                GruppierteListe {
+                    // Ein Balken, aufgeteilt nach Zielen – die Verteilung auf einen Blick
+                    AnteilsBalken(teile: jeZiel.map { (Color(hex: $0.0.farbe), $0.1) } + (ohne > 0 ? [(Farbe.linie, ohne)] : []))
+                        .padding(16)
+                    ForEach(jeZiel, id: \.0.id) { g, s in
+                        StatistikZeile(symbol: g.symbol, farbe: Color(hex: g.farbe), titel: g.titel, anteil: s / summe,
+                                       wert: "\(Zahl.dauer(s)) · \(Zahl.prozent(s / summe))") { nav.zeigeAnalyse(ziel: g.id) }
+                    }
+                    if ohne > 0 {
+                        StatistikZeile(symbol: "circle.dashed", farbe: Farbe.zweitrangig, titel: "Ohne Ziel", anteil: ohne / summe,
+                                       wert: "\(Zahl.dauer(ohne)) · \(Zahl.prozent(ohne / summe))", aktion: nil)
                     }
                 }
             }
@@ -337,6 +322,76 @@ struct StatistikSeite: View {
                 AuslastungsBalken(verplant: w.bilanz.verplant, heute: versatz == 0 && zeitraum == .woche ? T.wochentag - 1 : nil)
             }
         }
+    }
+}
+
+/// Tippbare Zeile der Statistik: Zeichen im Farbkreis, Name und Wert, darunter der Balken, rechts der Pfeil.
+/// Beim Drücken färbt sich die Zeile (`ZeilenDruck`) – man sieht, dass sie sich öffnen lässt.
+private struct StatistikZeile: View {
+    var symbol: String
+    var farbe: Color
+    var titel: String
+    var anteil: Double
+    var wert: String
+    var aktion: (() -> Void)?
+
+    var body: some View {
+        if let aktion {
+            Button(action: aktion) { inhalt(pfeil: true) }
+                .buttonStyle(ZeilenDruck())
+                .accessibilityLabel("\(titel), \(wert)")
+                .accessibilityHint("Analyse öffnen")
+        } else {
+            inhalt(pfeil: false).accessibilityElement(children: .combine)
+        }
+    }
+
+    private func inhalt(pfeil: Bool) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol).font(.system(size: 15, weight: .bold)).foregroundStyle(Farbe.aufTon)
+                .frame(width: 36, height: 36).background(farbe, in: Circle())
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Text(wert).font(.klein).monospacedDigit().foregroundStyle(Farbe.zweitrangig).lineLimit(1)
+                }
+                Balken(anteil: anteil, farbe: farbe, spur: Farbe.linie, hoehe: 6)
+            }
+            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil).opacity(pfeil ? 1 : 0)
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 66)
+        .contentShape(Rectangle())
+    }
+}
+
+/// Druckzustand für Listenzeilen: weich hinterlegt und minimal kleiner.
+private struct ZeilenDruck: ButtonStyle {
+    func makeBody(configuration c: Configuration) -> some View {
+        c.label
+            .background(Farbe.akzentWeich.opacity(c.isPressed ? 1 : 0))
+            .scaleEffect(c.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.12), value: c.isPressed)
+    }
+}
+
+/// Ein Balken, in Teile nach Anteil aufgeteilt (Zeit je Ziel).
+private struct AnteilsBalken: View {
+    var teile: [(Color, Double)]
+    var body: some View {
+        let summe = max(teile.reduce(0) { $0 + $1.1 }, 0.0001)
+        GeometryReader { g in
+            HStack(spacing: 2) {
+                ForEach(Array(teile.enumerated()), id: \.offset) { _, t in
+                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(t.0)
+                        .frame(width: max(3, (g.size.width - CGFloat(teile.count - 1) * 2) * t.1 / summe))
+                }
+            }
+        }
+        .frame(height: 14)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
     }
 }
 
