@@ -1,6 +1,6 @@
 import Foundation
 
-/// Fokus als Flug (Gadget, design.md §7): nur Anzeige. Die Fokuszeit selbst zählt und bucht weiter `FokusRechnung`.
+/// Fokus-Timer (Easter Egg 2, design.md §7): der echte 747 fliegt die Strecke ab – die Wörter bleiben ruhig. Nur Anzeige. Die Fokuszeit selbst zählt und bucht weiter `FokusRechnung`.
 /// Flugdauer = geplante Dauer der Aufgabe; nach der Landung läuft der Timer normal weiter.
 enum FlugRechnung {
 
@@ -9,12 +9,12 @@ enum FlugRechnung {
 
         var text: String {
             switch self {
-            case .boarding: "Boarding – bereit zum Start"
-            case .steigflug: "Startlauf und Steigflug"
-            case .reiseflug: "Reiseflughöhe – ruhig weiterarbeiten"
-            case .landeanflug: "Landeanflug"
-            case .gelandet: "Gelandet – geplante Zeit geschafft"
-            case .warteschleife: "Warteschleife – Pause"
+            case .boarding: "Bereit"
+            case .steigflug: "Läuft"
+            case .reiseflug: "Läuft – ruhig weiterarbeiten"
+            case .landeanflug: "Fast fertig"
+            case .gelandet: "Geschafft – geplante Zeit voll"
+            case .warteschleife: "Pause"
             }
         }
     }
@@ -34,7 +34,7 @@ enum FlugRechnung {
         return .landeanflug
     }
 
-    /// Flugfläche wie im Cockpit: Sinusbogen bis FL350, auf 10 gerundet („FL240“).
+    /// Höhe des Bogens (nur für die Flugbahn): Sinusbogen bis 350, auf 10 gerundet.
     static func flugflaeche(strecke p: Double) -> Int {
         Int((sin(p * .pi) * 35).rounded()) * 10
     }

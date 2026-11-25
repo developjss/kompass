@@ -45,7 +45,7 @@ Stand: 25. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Nachtflug (24.11.2026):** neues Aussehen in Indigo, Seladon und Gold, hell und dunkel; Kalender mit Termin-Seite und Vorschlags-Leiste (PR #31). Gadgets Fokus als Flug (PR #33) und Rückblick als Bordkarte (PR #34) eingebaut.
 
-**Nachtblau (25.11.2026, Block 1):** Palette Nachtblau · Creme · Schwarz, Messing nur als „jetzt“; Bühne mit Verlauf, Lichtkegel und weichem Saum, Karte vorn −44/Radius 28; keine Objekte mehr auf den Seiten, nur vier echte Fotos (747, Landebahnen). Offen: Block 2 Easter Eggs (Überflug, 747-Timer ohne Flugwörter, Bordkarte als Statistik zum Herausziehen) und Block 3 (Fokus, Rückblick, Assistent, Einstellungen in drei Ebenen). Prototyp: https://claude.ai/artifact/RQGm6b7z7stGnGBBEi8TwT
+**Nachtblau (25.11.2026, Block 1):** Palette Nachtblau · Creme · Schwarz, Messing nur als „jetzt“; Bühne mit Verlauf, Lichtkegel und weichem Saum, Karte vorn −44/Radius 28; keine Objekte mehr auf den Seiten, nur vier echte Fotos (747, Landebahnen). **Block 2 (25.11.2026):** Easter Eggs – Überflug auf Home, Fokus-Timer mit echtem 747 ohne Flugwörter, Statistik als Bordkarte zum Herausziehen (Rückblick, beide Analysen); Lotse-Wissen nachgezogen. Offen: Block 3 (Fokus, Rückblick, Assistent, Einstellungen in drei Ebenen). Prototyp: https://claude.ai/artifact/RQGm6b7z7stGnGBBEi8TwT
 
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 

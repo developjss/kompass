@@ -1,136 +1,123 @@
 import SwiftUI
 
-/// Rückblick als Bordkarte (Gadget, design.md §7): oben eine Bordkarte der Woche. Den goldenen Abschnitt abreißen
-/// (ziehen oder antippen) – dahinter liegt die Aussage der Woche. Abgerissen bleibt abgerissen (je Woche gemerkt).
+/// Statistik als Bordkarte (Easter Egg 3, design.md §7): die Zahlen stecken in einem Schlitz unter der Bühne, nur der
+/// Abriss schaut heraus („Bericht · Herausziehen“). Antippen oder nach unten ziehen holt die Karte heraus – dann liegen
+/// oben die Zahlen, unten der Abriss mit Perforation. Herausgezogen bleibt herausgezogen (je Schlüssel gemerkt, höchstens 26).
+/// Keine Flugwörter: die Karte ist Papier (`Farbe.papier`), die Form ist die Erinnerung.
 struct Bordkarte<Inhalt: View>: View {
-    /// Montag der Woche („2026-11-23“), Schlüssel fürs Merken
-    var woche: String
-    var kw: Int
-    var von: Tag
-    var bis: Tag
-    var fokus: TimeInterval
-    var ziele: Int
+    /// Schlüssel fürs Merken („2026-11-23“, „ziel:…“, „habit:…“)
+    var schluessel: String
+    /// Abriss: links die Bezeichnung („Bericht“), rechts der Wert („KW 48“)
+    var links: String
+    var rechts: String
     @ViewBuilder var inhalt: Inhalt
 
-    @AppStorage("rueckblick.abgerissen") private var abgerissen = ""
+    @AppStorage("bordkarte.gezogen") private var gezogen = ""
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @State private var zug: CGFloat = 0
-    @State private var reisst = false
+    @State private var kommt = false
+
+    /// Höhe des sichtbaren Abrisses, solange die Karte steckt
+    static var abriss: CGFloat { 58 }
+
+    private var draussen: Bool { Self.istAbgerissen(gezogen, woche: schluessel) }
 
     var body: some View {
-        if Self.istAbgerissen(abgerissen, woche: woche) {
-            inhalt.transition(.move(edge: .top).combined(with: .opacity))
-        } else {
-            VStack(spacing: 8) {
-                HStack(spacing: 0) {
-                    haupt
-                    abschnitt
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .compositingGroup()
-                .shadow(color: .black.opacity(0.22), radius: 12, y: 8)
-                Text("Goldenen Abschnitt abreißen – dahinter liegt deine Woche.")
-                    .font(.klein).foregroundStyle(Farbe.zweitrangig).multilineTextAlignment(.center)
+        ZStack(alignment: .bottom) {
+            if draussen {
+                karte
+                    .transition(ruhig ? .opacity : .move(edge: .top).combined(with: .opacity))
+            } else {
+                karte
+                    .offset(y: zug * 0.5)
+                    .frame(height: Self.abriss + zug * 0.5, alignment: .bottom)
+                    .clipped()
+                    .overlay(alignment: .top) { schlitz }
             }
-            .sensoryFeedback(.impact(flexibility: .soft), trigger: reisst)
         }
+        .animation(ruhig ? nil : .spring(response: 0.55, dampingFraction: 0.82), value: draussen)
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: kommt)
     }
 
     // MARK: Teile
 
-    private var haupt: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                feld("Bordkarte", "Woche \(kw)")
-                Spacer()
-                feld("Flug", String(format: "KMP %03d", kw), rechts: true)
-            }
-            HStack(spacing: 6) {
-                Text("MO").font(.system(size: 30, weight: .semibold, design: .serif))
-                ZStack {
-                    Rectangle().fill(.clear).frame(height: 1)
-                        .overlay(Line().stroke(Color(roh: "#9A8F6E"), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4])))
-                    Image(systemName: "airplane").font(.system(size: 14, weight: .bold)).foregroundStyle(Color(roh: "#A27711"))
-                        .padding(.horizontal, 4).background(Color(roh: "#F2EAD6"))
-                }
-                Text("SO").font(.system(size: 30, weight: .semibold, design: .serif))
-            }
-            HStack {
-                feld("Von", kurz(von))
-                Spacer()
-                feld("Nach", kurz(bis))
-                Spacer()
-                feld("Gate", ziele == 1 ? "1 Ziel" : "\(ziele) Ziele")
-                Spacer()
-                feld("Fokus", Zahl.dauer(fokus))
-            }
+    private var karte: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) { inhalt }
+                .padding(EdgeInsets(top: 18, leading: 16, bottom: 14, trailing: 16))
+                .foregroundStyle(Farbe.text)
+                .opacity(draussen ? 1 : 0)
+            perforation
+            abrissZeile
         }
-        .foregroundStyle(Color(roh: "#0B1325"))
-        .padding(14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .background(LinearGradient(colors: [Color(roh: "#F6F1E4"), Color(roh: "#EDE3C8")], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: UnevenRoundedRectangle(topLeadingRadius: 20, bottomLeadingRadius: 20, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Bordkarte Woche \(kw), \(kurz(von)) bis \(kurz(bis)), \(ziele) Ziele, Fokus \(Zahl.dauer(fokus))")
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Farbe.papier, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Farbe.schatten.opacity(draussen ? 0.10 : 0.18), radius: draussen ? 5 : 8, y: 4)
+        .shadow(color: Farbe.schatten.opacity(draussen ? 0.28 : 0), radius: 24, y: 24)
     }
 
-    private var abschnitt: some View {
-        VStack(spacing: 10) {
-            Text("ABREISSEN ›").font(.system(size: 10, weight: .heavy)).tracking(1)
-                .fixedSize().rotationEffect(.degrees(-90)).frame(width: 20, height: 92)
-            Strichcode().frame(width: 52, height: 54)
+    /// Perforation: zwei Kreise in Grundfarbe an den Rändern, dazwischen eine gestrichelte Linie
+    private var perforation: some View {
+        ZStack {
+            Line().stroke(Farbe.linie, style: StrokeStyle(lineWidth: 2, dash: [5, 5]))
+                .frame(height: 2).padding(.horizontal, 14)
+            HStack { Circle().fill(Farbe.grund).frame(width: 20, height: 20).offset(x: -10); Spacer(); Circle().fill(Farbe.grund).frame(width: 20, height: 20).offset(x: 10) }
         }
-        .foregroundStyle(Color(roh: "#0B1325"))
-        .frame(width: 84)
-        .frame(maxHeight: .infinity)
-        .background(LinearGradient(colors: [Farbe.gold, Color(roh: "#D79A20")], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: UnevenRoundedRectangle(bottomTrailingRadius: 20, topTrailingRadius: 20, style: .continuous))
-        .overlay(alignment: .leading) {
-            Line(senkrecht: true).stroke(Color(roh: "#0B1325").opacity(0.45), style: StrokeStyle(lineWidth: 2, dash: [5, 4])).frame(width: 2).padding(.vertical, 12)
+        .frame(height: 20)
+        .opacity(draussen ? 1 : 0)
+        .accessibilityHidden(true)
+    }
+
+    private var abrissZeile: some View {
+        HStack(spacing: 10) {
+            Text(links.uppercased())
+            Spacer()
+            if draussen {
+                Text(rechts.uppercased()).foregroundStyle(Farbe.text)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down").font(.system(size: 11, weight: .heavy))
+                        .offset(y: wippt ? 3 : 0)
+                        .animation(ruhig ? nil : .easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: wippt)
+                    Text("Herausziehen".uppercased())
+                }
+            }
         }
-        .rotationEffect(.degrees(reisst ? 38 : Double(min(zug / 6, 14))), anchor: .topLeading)
-        .offset(x: reisst ? 60 : zug * 0.6, y: reisst ? 320 : 0)
-        .opacity(reisst ? 0 : 1)
+        .font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.3)
+        .foregroundStyle(Farbe.zweitrangig)
+        .padding(EdgeInsets(top: draussen ? 0 : 6, leading: 16, bottom: 15, trailing: 16))
+        .frame(maxWidth: .infinity, minHeight: draussen ? nil : Self.abriss, alignment: .bottom)
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 4)
-                .onChanged { zug = max(0, $0.translation.width) }
-                .onEnded { _ in if zug > 60 { reissen() } else { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { zug = 0 } } }
+                .onChanged { if !draussen { zug = max(0, min(160, $0.translation.height)) } }
+                .onEnded { _ in if !draussen { if zug > 48 { herausziehen() } else { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { zug = 0 } } } }
         )
-        .onTapGesture { reissen() }
+        .onTapGesture { if !draussen { herausziehen() } }
+        .onAppear { wippt = true }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Bordkarte abreißen")
-        .accessibilityHint("Zeigt den Bericht der Woche")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { reissen() }
+        .accessibilityLabel(draussen ? "\(links), \(rechts)" : "\(links) herausziehen")
+        .accessibilityHint(draussen ? "" : "Zeigt die Zahlen")
+        .accessibilityAddTraits(draussen ? [] : .isButton)
+        .accessibilityAction { if !draussen { herausziehen() } }
     }
 
-    private func feld(_ titel: String, _ wert: String, rechts: Bool = false) -> some View {
-        VStack(alignment: rechts ? .trailing : .leading, spacing: 1) {
-            Text(titel.uppercased()).font(.system(size: 8, weight: .bold, design: .monospaced)).tracking(1).foregroundStyle(Color(roh: "#6B6A5E"))
-            Text(wert).font(.system(size: 13, weight: .bold, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.7)
-        }
+    @State private var wippt = false
+
+    /// Der Schlitz: ein dunkler Spalt an der Oberkante, nur solange die Karte steckt
+    private var schlitz: some View {
+        Capsule().fill(Color.black.opacity(0.28)).frame(height: 5).padding(.horizontal, 14).padding(.top, 2)
+            .accessibilityHidden(true)
     }
 
-    private func reissen() {
-        guard !reisst else { return }
-        if ruhig {
-            reisst = true
-            abgerissen = Self.merken(abgerissen, woche: woche)
-            return
-        }
-        withAnimation(.easeIn(duration: 0.45)) { reisst = true }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(420))
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { abgerissen = Self.merken(abgerissen, woche: woche) }
-        }
+    private func herausziehen() {
+        guard !draussen else { return }
+        kommt = true
+        zug = 0
+        gezogen = Self.merken(gezogen, woche: schluessel)
     }
 
-    private func kurz(_ t: Tag) -> String {
-        t.datum().formatted(.dateTime.day(.twoDigits).month(.twoDigits).locale(Locale(identifier: "de_DE")))
-    }
-
-    // MARK: Merken (je Woche, höchstens 26)
+    // MARK: Merken (je Schlüssel, höchstens 26)
 
     nonisolated static func istAbgerissen(_ liste: String, woche: String) -> Bool {
         liste.split(separator: ",").contains { $0 == woche }
@@ -143,24 +130,13 @@ struct Bordkarte<Inhalt: View>: View {
     }
 }
 
-/// Gerade Linie (waagerecht oder senkrecht) für gestrichelte Perforation und Route.
-private struct Line: Shape {
+/// Gerade Linie (waagerecht oder senkrecht) für die gestrichelte Perforation.
+struct Line: Shape {
     var senkrecht = false
     func path(in r: CGRect) -> Path {
         Path { p in
             if senkrecht { p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.midX, y: r.maxY)) }
             else { p.move(to: CGPoint(x: r.minX, y: r.midY)); p.addLine(to: CGPoint(x: r.maxX, y: r.midY)) }
         }
-    }
-}
-
-private struct Strichcode: View {
-    private let breiten: [CGFloat] = [2, 1, 3, 1, 2, 2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 2]
-    var body: some View {
-        HStack(spacing: 1.5) {
-            ForEach(breiten.indices, id: \.self) { i in Rectangle().frame(width: breiten[i]) }
-        }
-        .opacity(0.85)
-        .accessibilityHidden(true)
     }
 }

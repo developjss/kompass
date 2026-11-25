@@ -208,6 +208,37 @@ extension BuehnenSeite where Extra == EmptyView {
     }
 }
 
+/// Easter Egg 1: ist der Tag geschafft, zieht der echte 747 einmal still über die Bühne – 7 s, dann ist er weg.
+/// Einmal je Tag (`gesehen` = Tag-Text). Bei „Bewegung reduzieren“ gar nicht.
+struct Ueberflug: View {
+    var heute: String
+    @AppStorage("ueberflug.gesehen") private var gesehen = ""
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    @State private var fliegt = false
+
+    var body: some View {
+        if !ruhig && Self.faellig(gesehen: gesehen, heute: heute) {
+            GeometryReader { g in
+                Objekt.b747.bild.resizable().scaledToFit().frame(width: Platz.ueberflug.breite)
+                    .rotationEffect(.degrees(Platz.ueberflug.drehung))
+                    .scaleEffect(fliegt ? 1.05 : 0.85)
+                    .opacity(fliegt ? 0 : 0.92)
+                    .shadow(color: .black.opacity(0.35), radius: 12, y: 18)
+                    .offset(x: fliegt ? g.size.width + 120 : Platz.ueberflug.links ?? -260, y: Platz.ueberflug.oben + (fliegt ? -70 : 60))
+                    .onAppear {
+                        withAnimation(.timingCurve(0.3, 0.05, 0.2, 1, duration: 7).delay(0.6)) { fliegt = true }
+                        gesehen = heute
+                    }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// Fällig, wenn heute noch kein Überflug war.
+    nonisolated static func faellig(gesehen: String, heute: String) -> Bool { gesehen != heute }
+}
+
 /// Kleines Etikett in Versalien über dem Karten-Titel („Dein nächster Schritt“)
 struct Etikett: View {
     var text: String

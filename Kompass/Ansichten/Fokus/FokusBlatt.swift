@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Fokus als Flug (Nachtflug, design.md §7): das Flugzeug fliegt die geplante Dauer der Aufgabe ab.
+/// Fokus-Timer (Easter Egg 2, design.md §7): der echte 747 fliegt die geplante Dauer der Aufgabe ab – ohne ein Flugwort.
 /// Pause/Weiter, „Fertig“ bucht die Zeit wie bisher (an Mitternacht geteilt, höchstens 4 h). Nach der Landung läuft der Timer weiter.
 struct FokusBlatt: View {
     var aufgabeID: UUID
@@ -19,11 +19,11 @@ struct FokusBlatt: View {
                         sekunden: z.timer?.aufgabeID == aufgabeID ? z.timerSekunden(jetzt: kontext.date) : 0,
                         meldung: meldung, umschalten: umschalten, fertig: fertig, schliessen: { dismiss() })
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Farbe.wort)
         .padding(.horizontal, 20).padding(.bottom, 16)
         .frame(maxWidth: 560, maxHeight: .infinity)
         .frame(maxWidth: .infinity)
-        .background(LinearGradient(colors: [Color(roh: "#060B18"), Color(roh: "#0B1325"), Color(roh: "#1A2950")], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .background(LinearGradient(colors: [Color(roh: "#0B1017"), Color(roh: "#141C27"), Color(roh: "#1E2A39")], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .onAppear {
             if a != nil, z.timer?.aufgabeID != aufgabeID || z.timer?.laeuftSeit == nil {
                 speicher.aendern { $0.timerStarten(aufgabeID, jetzt: speicher.jetzt()) }
@@ -69,7 +69,7 @@ private struct FlugAnzeige: View {
             himmel
             Text(uhr(sekunden)).font(.system(size: 56, weight: .semibold, design: .serif)).monospacedDigit()
                 .accessibilityLabel("Fokuszeit " + uhr(sekunden))
-            Text(phase.text).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.seladon)
+            Text(phase.text).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.wortAkzent)
             instrumente
             if let meldung { Text(meldung).font(.unterzeile).multilineTextAlignment(.center) }
             knoepfe
@@ -85,7 +85,7 @@ private struct FlugAnzeige: View {
 
     private var kopf: some View {
         VStack(spacing: 4) {
-            Text("Fokus").font(.klein).foregroundStyle(.white.opacity(0.75))
+            Text("Fokus").font(.klein).foregroundStyle(Farbe.wort.opacity(0.75))
             Text(titel).font(.kompass(.title3, .heavy)).multilineTextAlignment(.center).lineLimit(2)
             if let ziel { Text(ziel).font(.unterzeile).opacity(0.8) }
         }
@@ -93,19 +93,18 @@ private struct FlugAnzeige: View {
     }
 
     private var himmel: some View {
-        let beschreibung = "Flug: \(prozent) Prozent der geplanten \(dauer) Minuten. " + phase.text
-        return FlugHimmel(strecke: strecke, von: "KMP", nach: FlugRechnung.kuerzel(ziel ?? titel))
+        let beschreibung = "\(prozent) Prozent der geplanten \(dauer) Minuten. " + phase.text
+        return FlugHimmel(strecke: strecke, von: "Start", nach: "Ende")
             .frame(height: 240)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(beschreibung)
     }
 
     private var instrumente: some View {
-        let hoehe = String(format: "FL%03d", FlugRechnung.flugflaeche(strecke: strecke))
-        return HStack(spacing: 8) {
-            Instrument(wert: hoehe, titel: "Höhe")
-            Instrument(wert: "\(prozent) %", titel: "Strecke")
-            Instrument(wert: ankunft(rest: rest), titel: rest == 0 ? "Gelandet" : "Ankunft")
+        HStack(spacing: 8) {
+            Instrument(wert: "\(dauer) min", titel: "Geplant")
+            Instrument(wert: "\(prozent) %", titel: "Geschafft")
+            Instrument(wert: ankunft(rest: rest), titel: rest == 0 ? "Fertig" : "Ende um")
         }
     }
 
@@ -113,12 +112,12 @@ private struct FlugAnzeige: View {
         HStack(spacing: 12) {
             Button(action: umschalten) {
                 Label(laeuft ? "Pause" : "Weiter", systemImage: laeuft ? "pause.fill" : "play.fill")
-                    .frame(minWidth: 120, minHeight: 50).background(.white.opacity(0.16), in: Capsule())
-                    .overlay(Capsule().strokeBorder(.white.opacity(0.28)))
+                    .frame(minWidth: 120, minHeight: 50).background(Farbe.wort.opacity(0.14), in: Capsule())
+                    .overlay(Capsule().strokeBorder(Farbe.wort.opacity(0.28)))
             }
             Button(action: fertig) {
-                Label("Fertig", systemImage: "airplane.arrival")
-                    .frame(minWidth: 120, minHeight: 50).background(Farbe.gold, in: Capsule()).foregroundStyle(Farbe.nacht)
+                Label("Beenden", systemImage: "checkmark")
+                    .frame(minWidth: 120, minHeight: 50).background(Farbe.wort, in: Capsule()).foregroundStyle(Farbe.nacht)
             }
             .accessibilityHint("Bucht die Fokuszeit")
         }
@@ -138,24 +137,24 @@ private struct FlugAnzeige: View {
     }
 }
 
-/// Ein Cockpit-Instrument: Wert in Gold (Mono), Titel klein.
+/// Eine Kennzahl: Wert (Mono), Titel klein.
 private struct Instrument: View {
     var wert: String
     var titel: String
     var body: some View {
         VStack(spacing: 2) {
-            Text(wert).font(.system(.subheadline, design: .monospaced, weight: .bold)).foregroundStyle(Farbe.gold).monospacedDigit()
+            Text(wert).font(.system(.subheadline, design: .monospaced, weight: .bold)).foregroundStyle(Farbe.wort).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.7)
             Text(titel.uppercased()).font(.system(size: 9, weight: .bold)).tracking(0.8).opacity(0.65)
         }
         .frame(maxWidth: .infinity, minHeight: 52)
-        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Farbe.seladon.opacity(0.18)))
+        .background(Farbe.wort.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Farbe.wort.opacity(0.14)))
         .accessibilityElement(children: .combine)
     }
 }
 
-/// Nachthimmel mit Sternen, ziehenden Wolken, gestrichelter Route und dem Flugzeug an der aktuellen Stelle.
+/// Nachthimmel mit Sternen, ziehenden Wolken, gestrichelter Strecke und dem echten 747 an der aktuellen Stelle (das eine Flugbild der App).
 struct FlugHimmel: View {
     var strecke: Double
     var von: String
@@ -173,8 +172,8 @@ struct FlugHimmel: View {
             let tang = Self.ableitung(min(max(t, 0.001), 0.999), p0, p1, p2, p3)
             let winkel = t >= 1 ? 0 : atan2(tang.y, tang.x)
             ZStack {
-                LinearGradient(stops: [.init(color: Color(roh: "#08101F"), location: 0), .init(color: Color(roh: "#13244A"), location: 0.55),
-                                       .init(color: Color(roh: "#2A4A6B"), location: 0.85), .init(color: Farbe.gold.opacity(0.35), location: 1.2)],
+                LinearGradient(stops: [.init(color: Color(roh: "#0B1017"), location: 0), .init(color: Color(roh: "#18222E"), location: 0.55),
+                                       .init(color: Color(roh: "#33475F"), location: 0.85), .init(color: Farbe.jetzt.opacity(0.30), location: 1.2)],
                                startPoint: .top, endPoint: .bottom)
                 Canvas { c, s in
                     var zufall = UInt64(7)
@@ -188,23 +187,22 @@ struct FlugHimmel: View {
                     }
                 }
                 Wolken(ruhig: ruhig).frame(maxHeight: .infinity, alignment: .bottom)
-                route.stroke(Farbe.seladon.opacity(0.5), style: StrokeStyle(lineWidth: 1.5, dash: [3, 5]))
-                route.trimmedPath(from: 0, to: t).stroke(Farbe.gold, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                    .shadow(color: Farbe.gold.opacity(0.8), radius: 4)
-                Circle().fill(Farbe.seladon).frame(width: 8, height: 8).position(p0)
-                Circle().fill(Farbe.gold).frame(width: 8, height: 8).position(p3)
-                Text(von).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(Farbe.seladon).position(x: p0.x + 6, y: p0.y + 24)
-                Text(nach).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(Farbe.gold).position(x: p3.x - 4, y: p3.y + 24)
-                Image(systemName: "airplane")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.white)
-                    .shadow(color: Farbe.gold.opacity(0.9), radius: 6)
-                    .rotationEffect(.radians(winkel))
+                route.stroke(Farbe.wortAkzent.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [3, 5]))
+                route.trimmedPath(from: 0, to: t).stroke(Farbe.jetzt, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                    .shadow(color: Farbe.jetzt.opacity(0.7), radius: 4)
+                Circle().fill(Farbe.wortAkzent).frame(width: 8, height: 8).position(p0)
+                Circle().fill(Farbe.jetzt).frame(width: 8, height: 8).position(p3)
+                Text(von.uppercased()).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1).foregroundStyle(Farbe.wortAkzent).position(x: p0.x + 8, y: p0.y + 24)
+                Text(nach.uppercased()).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1).foregroundStyle(Farbe.jetzt).position(x: p3.x - 6, y: p3.y + 24)
+                Objekt.b747Abflug.bild.resizable().scaledToFit()
+                    .frame(width: 64)
+                    .shadow(color: .black.opacity(0.45), radius: 8, y: 8)
+                    .rotationEffect(.radians(winkel) + .degrees(8))
                     .position(pos)
                     .animation(ruhig ? nil : .easeInOut(duration: 0.9), value: strecke)
             }
             .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Farbe.gold.opacity(0.25)))
+            .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Farbe.wort.opacity(0.12)))
         }
     }
 
