@@ -87,7 +87,7 @@ final class KompassUITests: XCTestCase {
     func testTerminAnlegenGefuehrt() {
         let app = starten()
         tab(app, "Kalender")
-        app.buttons["+ Neu"].tap()
+        app.buttons["neu.hinzufuegen"].tap()
         let titel = app.textViews.firstMatch.waitForExistence(timeout: 5) ? app.textViews.firstMatch : app.textFields.firstMatch
         XCTAssertTrue(titel.waitForExistence(timeout: 5))
         titel.tap()
@@ -109,7 +109,7 @@ final class KompassUITests: XCTestCase {
     /// Erster Schritt „Was möchtest du anlegen?“ mit vier Kacheln, Habit-Vorschlag aus dem Titel
     func testNeuWasUndHabitVorschlag() {
         let app = starten()
-        app.buttons["+ Neu"].firstMatch.tap()
+        app.buttons["neu.hinzufuegen"].firstMatch.tap()
         XCTAssertTrue(sichtbar(app, "Was möchtest du anlegen?"))
         foto(app, "Neu Was")
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Habit")).firstMatch.tap()

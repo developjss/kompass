@@ -211,7 +211,7 @@ enum Werkzeuge {
 
     static func ziele(_ z: Zustand, _ T: Tag) -> LotseAntwort {
         let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
-        guard !aktiv.isEmpty else { return LotseAntwort(text: "Du hast noch kein Ziel. Leg eins an: + Neu → Ziel.", werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue)) }
+        guard !aktiv.isEmpty else { return LotseAntwort(text: "Du hast noch kein Ziel. Leg eins an: Fortschritt → „Ziel hinzufügen“.", werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue)) }
         let kurse = aktiv.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
         let hinten = kurse.filter { [.hinterher, .ueberfaellig].contains($0.1.lage) }
         let kopf = hinten.isEmpty
@@ -287,7 +287,7 @@ enum Werkzeuge {
                 + (z.ziel(h.zielID).map { " · Ziel: \($0.titel)" } ?? "")
             return LotseAntwort(text: t, werkzeug: .habits, aktion: .habit(h.id))
         }
-        guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: + Neu → Habit.", werkzeug: .habits) }
+        guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: Fortschritt → Habits → „Habit hinzufügen“.", werkzeug: .habits) }
         let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }
         let schwach = z.habits.filter { HabitRechnung.quote($0, heute: T) < 0.5 }
         let stark = z.habits.max { HabitRechnung.quote($0, heute: T) < HabitRechnung.quote($1, heute: T) }

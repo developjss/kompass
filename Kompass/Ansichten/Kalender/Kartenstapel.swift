@@ -200,7 +200,7 @@ struct EmpfehlungStapel: View {
         let v = Empfehlung.fuer(bereich, tag: tag, zustand: speicher.zustand, heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:))
         StapelRahmen(label: "Empfehlung", symbol: "sparkles", aussage: aussage(v.count, T), anzahl: v.count, offen: $offen) {
             if v.isEmpty {
-                Text("Alles eingeplant. Neue Aufgabe? Oben auf „+ Neu“.")
+                Text("Alles eingeplant.")
                     .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).multilineTextAlignment(.center)
             } else {
                 if hinweis == nil {

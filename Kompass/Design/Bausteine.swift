@@ -364,3 +364,34 @@ struct WertKachel: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+
+/// „Etwas hinzufügen“ als gestrichelte Karte – überall gleich, steht dort, wo das Neue landet (Ziele, Habits, Kalender, Home, Meilensteine).
+struct HinzufuegenKarte: View {
+    var titel: String
+    var unter: String? = nil
+    var farbe: Color = Farbe.handlung
+    var kennung = "neu.hinzufuegen"
+    var aktion: () -> Void
+
+    var body: some View {
+        Button(action: aktion) {
+            HStack(spacing: 10) {
+                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(Farbe.aufTon)
+                    .frame(width: 30, height: 30).background(farbe.gradient, in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(titel).font(.zeile).foregroundStyle(farbe)
+                    if let unter { Text(unter).font(.klein).foregroundStyle(Farbe.zweitrangig) }
+                }
+                Spacer()
+            }
+            .padding(14)
+            .frame(minHeight: Mass.zeile)
+            .background(farbe.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(farbe.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(DruckStil())
+        .accessibilityIdentifier(kennung)
+    }
+}
