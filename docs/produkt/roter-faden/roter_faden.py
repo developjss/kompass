@@ -11,8 +11,8 @@ from docx_bau import Doc
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 B = lambda n: os.path.join(HERE, "bilder", n)
-STAND = "23. November 2026"
-VERSION = "1"
+STAND = "25. November 2026"
+VERSION = "4"
 SECTIONS = []          # (Kapitel-Anker, Seiten-Anker, Titel) – für Inhalt und Prüfung
 NR = {}
 GH = "https://github.com/developjss/kompass/blob/main/"
@@ -189,10 +189,9 @@ seite(K1, "Die 6 Prinzipien", "prinzipien", "Aus deiner Ideen-Word – und wo si
 # =============================================================== 2 Heute
 K2 = kapitel("Home", "kap2", ["Die Startseite: was jetzt dran ist, was ansteht und wo es eng wird."],
              [("Home", "heute"), ("Fokus-Modus", "fokus"), ("Tagesabschluss", "reflexion"), ("Assistent", "assistent"), ("Erklärung (i)", "info")])
-seite(K2, "Home", "heute", "Erster Tab: oben die Jetzt-Karte (läuft gerade oder kommt als Nächstes – Termin, Aufgabe oder Habit) mit Fokus, Erledigt oder Menge; dann „Dein Tag im Blick“ als Reel (Slides: Jetzt, Danach, wie voll der Tag ist, Heute offen, Ziele, Los); darunter Hinweise (enger Tag, Überschneidung, zu wenig Zeit), Heute offen, Liegen geblieben, Tagesabschluss. Konzept: " + doc("docs/produkt/konzepte/struktur-v3.md"),
+seite(K2, "Home", "heute", "Erster Tab, in drei Ebenen wie jede Hauptseite: oben die Bühne in Nachtblau mit dem großen Wort – der Aussage des Moments („Jetzt dran“, „In 47 Min dran“, „Läuft gerade“, „Alles geschafft“), die Marke „Kompass“, Datum, (i) und +. Davor die Karte mit genau einer Sache (Termin, der läuft oder gleich beginnt, sonst die wichtigste offene Aufgabe, sonst ein Habit) und einer Handlung: Fokus starten · Erledigt. Darunter „Als Nächstes“ (3, „alle“), höchstens ein Hinweis, abends der Tagesabschluss. Ist der Tag geschafft, zieht einmal still ein Flugzeug über die Bühne. Design: " + doc("docs/produkt/design.md"),
       bilder=[("heute.jpg", "Home")],
-      klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge eintragen direkt auf der Karte", "Hinweis antippen → der Tag im Kalender", "Kreis links → erledigt",
-              "„Liegen geblieben“ → „Alle auf heute“", "+ Neu → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
+      klicks=["Fokus starten → [[Fokus-Modus|fokus]]", "Erledigt / Menge direkt auf der Karte", "Kreis in „Als Nächstes“ → erledigt", "„alle“ → Kalender", "„Liegen geblieben“ → „Alle auf heute“", "+ → [[Hinzufügen|neu]]", "Tagesabschluss → [[Tagesabschluss|reflexion]]"],
       gespeichert=LOKAL)
 seite(K2, "Fokus-Modus", "fokus", "Der Timer: ein Nachthimmel, darin zieht ein Flugzeug die Strecke von Start bis Ende – die Strecke ist die geplante Dauer der Aufgabe (das eine Flugbild der App). Darunter Fokuszeit, Stand (Bereit, Läuft, Fast fertig, Geschafft, Pause) und Geplant, Geschafft, Ende um. Jede Minute zählt für das Ziel und den Schritt der Aufgabe.",
       bilder=[("fokus.jpg", "Fokus")],
@@ -200,15 +199,15 @@ seite(K2, "Fokus-Modus", "fokus", "Der Timer: ein Nachthimmel, darin zieht ein F
       gespeichert="als Fokus-Sitzung je Tag; " + LOKAL)
 seite(K2, "Tagesabschluss", "reflexion", "Drei Fragen am Abend, drei am Wochenende (Prinzip 4).",
       bilder=[("reflexion.jpg", "Tagesabschluss")], klicks=["Täglich / Wöchentlich umschalten", "Speichern → erscheint unter „Frühere“"], gespeichert=LOKAL)
-seite(K2, "Assistent", "assistent", "Tab in der Mitte: Claude beantwortet jede Frage – zu deinem Tag, deinen Zielen, zur App oder ganz allgemein; Aktuelles (Wetter, Sport) über die Websuche mit Quellen. Für deine Daten fragt Claude die App, die rechnet. Antworten mit Absätzen, Überschriften und Listen. Beim Laden rückt die Frage nach oben, darunter das animierte Zeichen mit „Schaut in deinen Kalender …“. „Merk dir …“ speichert Vorlieben nur auf dem Gerät (Einstellungen › Assistent, löschbar). Ohne Netz antworten Regeln auf dem Gerät. Technik: " + doc("docs/technik/lotse-server.md")),
-
+seite(K2, "Assistent", "assistent", "Tab in der Mitte: kurze Bühne „Frag Kompass alles“ (im Gespräch „Kompass hört zu“), darunter der Chat. Claude beantwortet jede Frage – zu deinem Tag, deinen Zielen, zur App oder ganz allgemein; Aktuelles über die Websuche mit Quellen. Für deine Daten fragt Claude die App, die rechnet. „Merk dir …“ speichert Vorlieben nur auf dem Gerät (Einstellungen › App, löschbar). Ohne Netz antworten Regeln auf dem Gerät. Technik: " + doc("docs/technik/lotse-server.md"),
+      bilder=[("assistent.jpg", "Assistent")])
 seite(K2, "Erklärung (i)", "info", "Jede Seite hat oben ein (i). Erklärungen stehen dort statt auf der Seite (Textregel: ≤ ~35 Wörter je Bildschirm).",
       bilder=[("info.jpg", "Erklärung")])
 
 # =============================================================== 3 Kalender
 K3 = kapitel("Kalender", "kap3", ["Planen und Kalender in einem Bereich. Ergänzt Google und Apple."],
              [("Kalender", "kalender"), ("Termin zuordnen", "termin"), ("Einstellungen & Kalender verbinden", "einstellungen")])
-seite(K3, "Kalender", "kalender", "Oben „Als Nächstes“ als Kartenstapel (Kopf „Nächstes in 57 Min“, Karten mit Tag und Ziel), darunter Tag · Woche · Monat · Jahr. Tag: direkt über der Zeitleiste eine Leiste mit Vorschlägen (ziehen oder antippen → „um 11:15 einplanen“); in der Zeitleiste tragen Einträge ein Ziel-Zeichen, wenn sie für ein Ziel zählen, Aufgaben und Habits lassen sich dort abhaken. Jeder Termin – auch aus Apple oder Google – öffnet die Termin-Seite: Zählt für (Ziel), Zählt in (Meilenstein oder nur Einsatz), Erfüllt Habit. Woche/Monat: darunter „Empfehlung“ mit dem freiesten Tag bis zur Frist.",
+seite(K3, "Kalender", "kalender", "Kurze Bühne mit dem Wort („Um 15:00 Zahnarzt“, „Heute frei“ oder der gewählte Tag). Karte vorn: Tag · Woche · Monat und die Wochenleiste. Tag: Leiste „Vorschläge“ (ziehen oder antippen → „um 11:15 einplanen“), darunter die Zeitleiste mit Terminen aus Apple/Google und eigenen; Aufgaben und Habits lassen sich dort abhaken. Jeder Termin öffnet die Termin-Seite: Zählt für (Ziel), Zählt in (Meilenstein oder nur Einsatz), Erfüllt Habit.",
       bilder=[("kalender.jpg", "Kalender (Tag)")],
       klicks=["Freie Stunde antippen → „Was um 14:00?“: neuer Termin (geführt) oder Offenes hierhin legen", "Termin antippen → Termin-Seite", "„+ Neu“ → Termin: Titel, Zeit, zählt für Ziel (mit Meilenstein) oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
               "Monat: Tag antippen, nochmal → Tagesansicht", "Jahr: Tage nach Auslastung eingefärbt"],
@@ -218,24 +217,24 @@ seite(K3, "Termin zuordnen", "termin", "Ein Termin aus Google oder Apple kann ei
       bilder=[("termin.jpg", "Termin")],
       klicks=["Ziel wählen → Zeit jeder stattgefundenen Fahrstunde zählt fürs Ziel", "Habit wählen → wird an Termintagen abgehakt", "„Aufgabe daraus machen“ → Vorbereitung"],
       gespeichert="nur die Zuordnung (Serie → Ziel/Habit); " + LOKAL)
-seite(K3, "Einstellungen & Kalender verbinden", "einstellungen", "Kalender verbinden, neue Aufgaben oben/unten, Daten exportieren und importieren.",
+seite(K3, "Einstellungen & Kalender verbinden", "einstellungen", "Kurze Bühne „Daten & Kalender“. Karte vorn mit drei Schaltern: Apple-Kalender (lesen und schreiben, nach Zustimmung), Farben nach Kategorie, Beispielkalender. Darunter App (Kompass Pro, Assistent, Gemerktes) und Daten (Speicherort nur auf dem Gerät, Demo-Daten neu laden, Version).",
       bilder=[("einstellungen.jpg", "Einstellungen")],
-      klicks=["Schalter Google/Apple → im Klick-Dummy Beispieltermine", "Export kopieren / Import", "Demo-Daten zurücksetzen"],
+      klicks=["Schalter → sofort wirksam", "Kompass Pro → Pro-Seite", "Demo-Daten neu laden (mit Rückfrage)"],
       gespeichert=LOKAL)
 
 # =============================================================== 4 Habits
 K4 = kapitel("Habits", "kap4", ["Das Tägliche: kein Enddatum, sondern eine Serie."], [("Habits", "habits"), ("Ein Habit", "habit")])
-seite(K4, "Habits", "habits", "Oben zwei Kacheln mit senkrechtem Verlauf (bewusst anders als bei Zielen): Heute (x von y, Ring) und Alle Habits (Wochenpunkte); darunter die Liste zur gewählten Kachel. In der App hat ein Habit eine Menge mit Einheit (Minuten, Seiten, Gramm, km …) oder wird nur abgehakt; halb geschafft zählt halb.",
+seite(K4, "Habits", "habits", "Fortschritt-Tab, Chip „Habits“: kurze Bühne mit dem Wort „x von y heute“. Karte vorn = die Habits von heute mit Haken oder „Eintragen“ (Menge mit Einheit – Minuten, Seiten, km –, halb geschafft zählt halb). Darunter „Diese Woche“ mit Serie und Wochenpunkten je Habit.",
       bilder=[("habits.jpg", "Habits")], klicks=["Zeile mit Menge → Menge eintragen (Schnellwahl ½, ganz …)", "Haken → ganz erledigt / zurücknehmen", "Name → [[Ein Habit|habit]]"], gespeichert=LOKAL)
-seite(K4, "Ein Habit", "habit", "Geführt wie ein Ziel: oben Stand heute mit genau einer Handlung (Abhaken oder Menge) und „Analyse“; darunter Kacheln Wann · Wie viel · Erinnerung · Verfeinern (Name, Aussehen, Im Kalender, Ziel, Tage nachtragen, Löschen); darunter „Zählt für“. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit an dem Tag offen ist.",
+seite(K4, "Ein Habit", "habit", "Kurze Bühne „Heute offen“ bzw. „x Tage Serie“. Karte vorn: Ring, Stand heute, Serie, eine Handlung (Abhaken oder Menge) und „Analyse“. Darunter Kacheln Wann · Wie viel · Erinnerung · Verfeinern (Name, Ziel, Tage nachtragen, Löschen), dann „Zählt für“. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit offen ist.",
       bilder=[("habit.jpg", "Habit")], klicks=["Kachel → Editor (Sichern)", "Analyse → [[Rückblick|rueckblick]] (Habit-Analyse)", "Verfeinern › Tage nachtragen → Tag antippen", "Erinnerung einschalten → einmal Erlaubnis für Mitteilungen", "Habit löschen"], gespeichert=LOKAL)
 
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],
              [("Ziele", "ziele"), ("Ein Ziel", "ziel"), ("So wird gerechnet", "rechnung"), ("Ein Schritt", "schritt"), ("Vorschläge", "vorschlaege")])
-seite(K5, "Ziele", "ziele", "Oben vier Filter-Kacheln mit Verlauf von Weiß zu Farbe: Alle · Auf Kurs · Hinterher · Erreicht. Darunter „Deine Ziele“ mit „Sortieren“ (Frist, Jahr, Fortschritt, Hinterher zuerst, Bereich, Name; Jahr und Bereich als Gruppen). Jede Zielkarte: Ring mit Prozent, voller Titel, Pfeil – ein leuchtender Rand läuft langsam um die Karte.",
+seite(K5, "Ziele", "ziele", "Fortschritt-Tab, Chip „Ziele“: Bühne mit dem Wort „x von y auf Kurs“ (Rechenregel §4). Karte vorn: Filter Alle · Hinterher · Erreicht und das Ziel mit dem größten Hebel (Ring, nächster Schritt, Lage). Darunter „Alle Ziele“ mit Ring, Frist und Lage, „Mehr“ zum Sortieren (Frist, Fortschritt, Hinterher zuerst).",
       bilder=[("ziele.jpg", "Ziele")], klicks=["Karte → [[Ein Ziel|ziel]]", "Erreicht › → erreichte Ziele", "+ Neu → Ziel: Meilenstein-Vorlagen aus dem Titel (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte)"], gespeichert=LOKAL)
-seite(K5, "Ein Ziel", "ziel", "Oben minimal der Stand: Ring, Prozent, Lage und Restzeit, „Als Nächstes“, Knopf „Analyse im Rückblick“. Darunter vier Einstellungs-Kacheln: Bis wann · Warum · Name · Verfeinern. Darunter die Meilensteine als Karten (Ring mit Symbol, Stand, Prozent) und „Meilenstein hinzufügen – geführt“. Verfeinern: Meilensteine mit Anteil am Ziel, darunter Kacheln Aufgaben, Habits, Termine, Einsatz und Details.",
+seite(K5, "Ein Ziel", "ziel", "Bühne mit dem Wort „54 % voraus“ (Prozent und Lage), Marke mit Frist und (i). Karte vorn: „Dein nächster Schritt“ mit einem Knopf (Meilenstein öffnen oder Fokus) und „Analyse“. Darunter zwei Kacheln Meilensteine · Verfeinern (Bis wann, Warum, Name, mehr), dann die Meilensteine als Zeilen und „Meilenstein hinzufügen – geführt“.",
       bilder=[("ziel.jpg", "Ziel")], klicks=["Satz oder (i) → [[So wird gerechnet|rechnung]]", "Meilenstein → [[Ein Schritt|schritt]]", "Fakten-Zeile → Editor (Sichern)", "✓ Ziel erreicht"], gespeichert=LOKAL)
 seite(K5, "So wird gerechnet", "rechnung", "Die Rechnung mit echten Zahlen, für jedes Ziel aufklappbar: Tabelle der Schritte, Auf Kurs, Prognose, gelernter Zeitfaktor.",
       bilder=[("rechnung.jpg", "Rechnung")], gespeichert="Formeln: " + doc("docs/produkt/rechenregeln.md") + " (Kapitel [[Rechenregeln|kap7]])")
@@ -251,9 +250,9 @@ K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und 
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
 seite(K6, "Rückblick", "rueckblick", "Oben steckt die Aussage der Woche („62 % deiner Pläne geschafft“) als Papierkarte in einem Schlitz – nur der Abriss „Bericht · Herausziehen“ schaut heraus; antippen oder nach unten ziehen holt sie heraus (je Woche gemerkt). Darunter Karten: Fokuszeit (12 Wochen), Ziele (Balken, Lage), Zeit je Ziel, Habits je Habit, Auslastung je Tag, Wochenreflexion. Ziel oder Habit antippen öffnet die Analyse: beim Ziel Verlauf mit gestricheltem Plan, Prognose, Meilensteine, Einsatz; beim Habit Quote, Serie, 12-Wochen-Raster, Anteil je Woche.",
       bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Ziel oder Habit → Analyse", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
-seite(K6, "Hinzufügen", "neu", "„+ Neu“ oben auf jeder Seite, geführt in Schritten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Beispielen) → Wann → Details → bei Ziel „Was zählt schon dafür?“ (Habits, Termine, Aufgaben; Bisheriges zählt mit), bei Habit „Gehört er zu etwas?“ → „Passt das so?“ → Anlegen.",
+seite(K6, "Hinzufügen", "neu", "„+“ oben auf jeder Bühne, geführt in Schritten mit Punkten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Beispielen) → Wann (Tag, dann Uhrzeit, dann Dauer) → Zählt für (3 + weitere) → Fertig. Bei Ziel „Was zählt schon dafür?“ (Habits, Termine, Aufgaben; Bisheriges zählt mit).",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])
-seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Titel, wann (Heute, Morgen, Eingang, Datum, Uhrzeit), wichtig oder weitere, Ziel und „Zählt in“ (welcher Meilenstein; ohne passenden sagt die App, dass sie nur als Einsatz zählt).",
+seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Aufgabe-Seite in drei Ebenen: kurze Bühne mit dem Wort („Heute 16:00“, „Heute offen“), Karte vorn mit Haken, Titel, Fokus starten · Wichtig. Darunter Zählt für (Ziel, Meilenstein – ohne passenden sagt die App, dass sie nur als Einsatz zählt) und Wann in Stufen.",
       bilder=[("neu-aufgabe.jpg", "Aufgabe")], gespeichert="Aufgabe fällt zuerst in den nächsten offenen Aufgaben- oder Zeit-Meilenstein, „Zählt in“ ändert das; " + LOKAL)
 seite(K6, "Erster Start", "willkommen", "Neue Nutzer wählen: Beispieldaten ansehen oder leer starten.",
       bilder=[("willkommen.jpg", "Willkommen")])
@@ -296,13 +295,14 @@ K8 = kapitel("Über dieses Dokument", "kap8", ["Wie es aktuell bleibt und was si
 seite(K8, "Pflege und /roterfaden", "pflege", "Damit hier nie etwas fehlt oder veraltet.",
       extra=lambda: d.bullets([
           "**/roterfaden** in Claude Code: zeigt, wo das Dokument liegt, prüft es gegen Klick-Dummy und Code und bringt es auf Stand.",
-          "**Bei jeder sichtbaren Änderung:** Bilder neu (`python3 scripts/bilder.py`), Text in roter_faden.py, bauen, `pruefen.py`.",
+          "**Bei jeder sichtbaren Änderung:** Bilder neu aus der App im Simulator (Demo-Daten, 420 px), Text in roter_faden.py, bauen, `pruefen.py`.",
           "**Zentraldatei:** hier nur kurz; Ausführliches in Fahrplan, Landkarte, Rechenregeln, Fachdokumenten.",
           "Ablage: " + doc("docs/produkt/roter-faden/kompass-roter-faden.docx") + " und auf dem Mac eine Kopie in iCloud Drive › Kompass.",
       ]))
 seite(K8, "Änderungsverlauf", "verlauf", "Neueste oben.",
       extra=lambda: d.table([
           ["Datum", "Fassung", "Was sich geändert hat"],
+          ["25.11.2026", "4", "Nachtblau: alle Hauptseiten in drei Ebenen (Bühne mit Wort, Karte vorn), Farben Nachtblau · Creme · Schwarz, Fliegerei nur noch als drei Easter Eggs (Überflug, Fokus-Timer, Bordkarte zum Herausziehen). Bilder jetzt aus der App statt aus dem Klick-Dummy (noch alt: Termin, (i), Tagesabschluss, Rechnung, Schritt, Vorschläge, Erster Start)."],
           ["24.11.2026", "3", "Ziele neu: Filter-Kacheln, Sortieren nach Jahr u. a., Zielkarten mit Lichtrand, Ziel-Seite mit Einstellungs-Kacheln, Meilensteine geführt und als Karten."],
           ["24.11.2026", "2", "Ziele minimal mit „Dein nächster Schritt“, Kalender-Empfehlungen als Kartenstapel, Assistent mit Claude (Websuche, Gedächtnis, Ladeanzeige)."],
           ["23.11.2026", "1", "Erste Fassung: Klick-Dummy Seite für Seite, Rechenregeln, Personen-Test, Fahrplan und Landkarte."],
