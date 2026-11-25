@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-/// Rückblick einer Woche (Struktur v3 §5): die Aussage als Bordkarte zum Herausziehen, darunter Karten – Plan, Fokuszeit, Zeit je Ziel, Habits, Auslastung.
+/// Rückblick einer Woche (Nachtblau, drei Ebenen): Bühne „Deine Woche“, Karte vorn = Bordkarte zum Herausziehen, darunter Karten – Plan, Fokuszeit, Zeit je Ziel, Habits, Auslastung.
 struct RueckblickAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -23,19 +23,17 @@ struct RueckblickAnsicht: View {
         let jeZiel = z.ziele.map { ($0, Fortschritt.zeit(ziel: $0.id, in: z, von: von, bis: bis)) }.filter { $0.1 > 0 }.sorted { $0.1 > $1.1 }
         let habitQuote = bilanz.habitsGeplant > 0 ? bilanz.habitsErledigt / Double(bilanz.habitsGeplant) : 0
 
-        Seite(titel: "Rückblick", info: .rueckblick) {
-            HStack {
-                Button { versatz -= 1 } label: { Image(systemName: "chevron.left").font(.body.weight(.semibold)).frame(width: 44, height: 44) }.accessibilityLabel("Woche zurück")
-                Text("\(kurz(von)) – \(kurz(bis))").font(.kompass(.title3, .bold)).foregroundStyle(Farbe.text)
-                Button { versatz += 1 } label: { Image(systemName: "chevron.right").font(.body.weight(.semibold)).frame(width: 44, height: 44) }.accessibilityLabel("Woche vor")
-                    .disabled(versatz >= 0)
-                Spacer()
-                if versatz != 0 { Button("Diese Woche") { versatz = 0 }.font(.kompass(.subheadline, .bold)) }
-            }
-            .foregroundStyle(Farbe.akzent)
-            .padding(.bottom, 8)
-
-            // Die Aussage der Woche steckt als Bordkarte im Schlitz – herausziehen (Easter Egg 3)
+        let gezogen = Bordkarte<EmptyView>.istAbgerissen(gezogenListe, woche: von.text)
+        BuehnenSeite(wort: gezogen ? Wort(zeilen: [Zahl.prozent(bilanz.quote)], akzent: "geschafft.", groesse: Wort.kleinGroesse)
+                                   : Wort(zeilen: ["Deine"], akzent: "Woche.", klein: "\(kurz(von)) – \(kurz(bis))", groesse: Wort.kleinGroesse), marke: {
+            MarkenTitel(text: "Rückblick")
+            Spacer(minLength: 8)
+            RahmenKnopf(symbol: "chevron.left", beschriftung: "Woche zurück") { versatz -= 1 }
+            RahmenKnopf(symbol: "chevron.right", beschriftung: "Woche vor") { versatz = min(0, versatz + 1) }
+            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.rueckblick) }
+            RahmenKnopf(symbol: "gearshape", beschriftung: "Einstellungen") { nav.blatt = .einstellungen }
+        }) {
+            // Karte vorn: die Aussage der Woche steckt als Bordkarte im Schlitz – herausziehen (Easter Egg 3)
             Bordkarte(schluessel: von.text, links: "Bericht", rechts: "KW \(von.kalenderwoche)") {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -45,13 +43,15 @@ struct RueckblickAnsicht: View {
                     }
                     Spacer()
                     MiniSaeulen(werte: (0..<7).map { i in bilanz.geplantJeTag[i] > 0 ? bilanz.erledigtJeTag[i] / bilanz.geplantJeTag[i] : 0 },
-                                hoehe: 56, hervor: versatz == 0 ? T.wochentag - 1 : nil)
+                                hoehe: 56, farbe: Farbe.buehne, hervor: versatz == 0 ? T.wochentag - 1 : nil)
                         .padding(.top, 10)
                 }
                 Text("\(bilanz.aufgabenErledigt) von \(bilanz.aufgabenGeplant) Aufgaben · Habits \(Zahl.prozent(habitQuote)) · \(bilanz.termine) Termine")
                     .font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
             }
             .id(von.text)
+            .padding(.horizontal, Mass.rand)
+            .padding(.top, Mass.karteVornVersatz)
 
             VStack(spacing: 12) {
                 WeisseKarte(titel: "Fokuszeit", wert: Zahl.dauer(gesamt),
@@ -139,8 +139,11 @@ struct RueckblickAnsicht: View {
                 }
             }
             .padding(.top, 12)
+            .padding(.horizontal, Mass.rand)
         }
     }
+
+    @AppStorage("bordkarte.gezogen") private var gezogenListe = ""
 
     private func kurz(_ t: Tag) -> String {
         t.datum().formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "de_DE")))

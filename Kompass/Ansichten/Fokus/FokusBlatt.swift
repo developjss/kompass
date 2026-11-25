@@ -117,7 +117,7 @@ private struct FlugAnzeige: View {
             }
             Button(action: fertig) {
                 Label("Beenden", systemImage: "checkmark")
-                    .frame(minWidth: 120, minHeight: 50).background(Farbe.wort, in: Capsule()).foregroundStyle(Farbe.nacht)
+                    .frame(minWidth: 120, minHeight: 50).background(Farbe.wort, in: Capsule()).foregroundStyle(Color(roh: "#0F141B"))
             }
             .accessibilityHint("Bucht die Fokuszeit")
         }

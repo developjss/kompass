@@ -11,7 +11,7 @@ struct ProBlatt: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Verlaufskarte(farben: Farbe.indigo) {
+                    Verlaufskarte(farben: Farbe.buehneVerlauf) {
                         KartenLabel(text: "Kompass Pro")
                         Text(pro ? "Pro ist aktiv." : "Der Assistent ohne Grenze.").font(.kompass(.title2, .heavy))
                         Text(pro ? "Unbegrenzte Fragen und Gespräche." : "Ohne Pro: \(k?.limit ?? 5) freie Fragen pro Tag. Klare Fragen beantwortet der Assistent immer kostenlos.")

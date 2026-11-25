@@ -47,7 +47,7 @@ private struct MeilensteinUebersicht: View {
                         HStack(spacing: 16) {
                             ZStack {
                                 Circle().stroke(.white.opacity(0.25), lineWidth: 7)
-                                Circle().trim(from: 0, to: max(0.001, st.anteil)).stroke(Farbe.gold, style: StrokeStyle(lineWidth: 7, lineCap: .round)).rotationEffect(.degrees(-90))
+                                Circle().trim(from: 0, to: max(0.001, st.anteil)).stroke(Farbe.jetzt, style: StrokeStyle(lineWidth: 7, lineCap: .round)).rotationEffect(.degrees(-90))
                                 Text(Zahl.prozent(st.anteil)).font(.kompass(.subheadline, .heavy)).monospacedDigit().minimumScaleFactor(0.7)
                             }
                             .frame(width: 72, height: 72)
@@ -60,7 +60,7 @@ private struct MeilensteinUebersicht: View {
                         .foregroundStyle(.white)
                         .padding(18)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(LinearGradient(colors: Farbe.indigo, startPoint: .bottomTrailing, endPoint: .topLeading),
+                        .background(LinearGradient(colors: Farbe.buehneVerlauf, startPoint: .bottomTrailing, endPoint: .topLeading),
                                     in: RoundedRectangle(cornerRadius: Mass.verlaufskarte, style: .continuous))
                         .accessibilityElement(children: .combine)
 

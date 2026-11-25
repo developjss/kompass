@@ -11,21 +11,18 @@ struct LotseAnsicht: View {
 
     var body: some View {
         let chat = speicher.zustand.chat
+        GeometryReader { g in
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                RunderKnopf(symbol: "clock.arrow.circlepath", beschriftung: "Frühere Chats") { nav.blatt = .chats }
-                HStack(spacing: 8) {
-                    AssistentZeichen(groesse: 30)
-                    Text("Assistent").font(.kompass(.title2, .heavy)).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
-                }
+            Buehne(hoehe: Mass.buehneKurz, wort: chat.isEmpty ? Wort(zeilen: ["Frag Kompass"], akzent: "alles.", groesse: Wort.kleinGroesse)
+                                                               : Wort(zeilen: ["Kompass"], akzent: "hört zu.", groesse: Wort.kleinGroesse),
+                   sicherOben: g.safeAreaInsets.top, marke: {
+                MarkenTitel(text: "Assistent")
                 Spacer(minLength: 8)
-                if !chat.isEmpty {
-                    RunderKnopf(symbol: "square.and.pencil", beschriftung: "Neuer Chat") { Lotse.neuerChat(speicher: speicher) }
-                }
-                RunderKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.lotse) }
-            }
-            .padding(.horizontal, Mass.rand).padding(.top, 14)
-            StatusPille().padding(.horizontal, Mass.rand).padding(.top, 10)
+                if !chat.isEmpty { RahmenKnopf(symbol: "square.and.pencil", beschriftung: "Neuer Chat") { Lotse.neuerChat(speicher: speicher) } }
+                RahmenKnopf(symbol: "clock.arrow.circlepath", beschriftung: "Frühere Chats") { nav.blatt = .chats }
+                RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.lotse) }
+            })
+            StatusPille().padding(.horizontal, Mass.rand).padding(.top, 8)
 
             if chat.isEmpty {
                 Begruessung(frage: senden)
@@ -34,11 +31,7 @@ struct LotseAnsicht: View {
             }
             Eingabe
         }
-        .frame(maxWidth: 720)
-        .frame(maxWidth: .infinity)
-        .background(alignment: .top) {
-            LinearGradient(stops: [.init(color: Farbe.grundOben, location: 0), .init(color: Farbe.grund, location: 0.64)], startPoint: .top, endPoint: .bottom)
-                .frame(height: 420).ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
         }
         .background(Farbe.grund.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -150,12 +143,9 @@ private struct Begruessung: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            AssistentZeichen(groesse: 88, schein: true).accessibilityHidden(true)
-            Text("Bereit, wenn du es bist.")
-                .font(.kompass(.title, .heavy)).foregroundStyle(Farbe.text)
-                .multilineTextAlignment(.center).padding(.top, 18)
+            AssistentZeichen(groesse: 72, schein: true).accessibilityHidden(true)
             Text("Zu deinem Tag, deinen Zielen – oder ganz allgemein.")
-                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).padding(.top, 6)
+                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).multilineTextAlignment(.center).padding(.top, 12)
             Spacer()
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(vorschlaege, id: \.1) { symbol, text in
@@ -219,7 +209,7 @@ private struct DenktAnzeige: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .stroke(AngularGradient(colors: [Farbe.indigo[1], Farbe.violett[1], Farbe.violett[1].opacity(0), Farbe.indigo[1]], center: .center),
+                    .stroke(AngularGradient(colors: [Farbe.wortAkzent, Farbe.jetzt, Farbe.wortAkzent, Farbe.buehne], center: .center),
                             style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .frame(width: 40, height: 40)
                     .rotationEffect(.degrees(dreh ? 360 : 0))
@@ -395,14 +385,14 @@ struct AssistentZeichen: View {
     var schein = false
     var body: some View {
         ZStack {
-            // Nachtflug: Seladon-Kugel mit goldenem Ring (wie die Klangschale im Vorbild)
-            Circle().fill(LinearGradient(colors: [Color(roh: "#4F8A76"), Color(roh: "#CFE6DC")], startPoint: .bottomLeading, endPoint: .topTrailing))
-            Circle().strokeBorder(Farbe.gold.opacity(0.9), lineWidth: max(1, groesse / 22))
+            // Nachtblau: Kugel aus Nachtblau und Dunst mit Messing-Ring
+            Circle().fill(LinearGradient(colors: [Color(roh: "#33475F"), Color(roh: "#9FBAD6")], startPoint: .bottomLeading, endPoint: .topTrailing))
+            Circle().strokeBorder(Farbe.jetzt.opacity(0.9), lineWidth: max(1, groesse / 22))
             Circle().fill(.white.opacity(0.18)).frame(width: groesse * 0.7, height: groesse * 0.7).blur(radius: groesse / 6).offset(x: -groesse / 6, y: -groesse / 6)
-            Image(systemName: "sparkles").font(.system(size: groesse * 0.46, weight: .bold)).foregroundStyle(Farbe.nacht)
+            Image(systemName: "sparkles").font(.system(size: groesse * 0.46, weight: .bold)).foregroundStyle(Color(roh: "#F3F1E6"))
         }
         .frame(width: groesse, height: groesse)
-        .shadow(color: schein ? Farbe.violett[0].opacity(0.45) : .clear, radius: groesse / 4, y: groesse / 8)
+        .shadow(color: schein ? Farbe.buehne.opacity(0.45) : .clear, radius: groesse / 4, y: groesse / 8)
         .accessibilityLabel("Assistent")
     }
 }

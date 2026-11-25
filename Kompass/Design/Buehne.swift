@@ -251,7 +251,7 @@ struct Etikett: View {
 struct MarkenTitel: View {
     var text: String
     var body: some View {
-        Text(text.uppercased()).font(.marke).tracking(2.4).accessibilityAddTraits(.isHeader)
+        Text(text.uppercased()).font(.marke).tracking(2.4).lineLimit(1).minimumScaleFactor(0.7).accessibilityAddTraits(.isHeader)
     }
 }
 
