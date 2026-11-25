@@ -881,10 +881,10 @@ extension NeuArt {
     }
     var verlauf: [Color] {
         switch self {
-        case .aufgabe: Farbe.indigo
+        case .aufgabe: [Color(roh: "#26364B"), Color(roh: "#415671")]
         case .termin: [Color(roh: "#0E1A2F"), Color(roh: "#1F4560")]
-        case .habit: Farbe.violett
-        case .ziel: Farbe.gruen
+        case .habit: [Color(roh: "#1E2A39"), Color(roh: "#3F5571")]
+        case .ziel: [Color(roh: "#141C27"), Color(roh: "#33475F")]
         }
     }
 }

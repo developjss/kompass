@@ -111,19 +111,8 @@ enum Farbe {
     static let kritischGrund = Color(hell: Nachtblau.blau, dunkel: Nachtblau.creme)
     static let linie = Color(hell: Nachtblau.linieHell, dunkel: Nachtblau.linieDunkel)
 
-    // Alte Namen – zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind
-    static let gold = jetzt
-    static let goldText = akzent
-    static let seladon = handlung
-    static let nacht = Color(roh: "#0F141B")
-
     /// Ziel- und Habit-Farben zur Auswahl – je eine Familie der Palette (gespeichert als Hex, angezeigt über `tonArt`)
     static let ziele = ["#1F7AC2", "#15803D", "#9A6700", "#3B4CCA", "#7A4FD6", "#B8456E"]
-
-    /// Verläufe der Kopf- und Reel-Karten: Nachtblau in drei Tönungen (bleiben dunkel, Schrift Creme)
-    static let indigo = [Color(roh: "#26364B"), Color(roh: "#415671")]
-    static let violett = [Color(roh: "#1E2A39"), Color(roh: "#3F5571")]
-    static let gruen = [Color(roh: "#141C27"), Color(roh: "#33475F")]
 
     /// Töne der Palette für bunte Farben (Ziele, Habits, Kalender): Blau-, Dunst- und Schiefertöne
     enum TonArt: CaseIterable, Sendable {
