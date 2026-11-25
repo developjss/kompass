@@ -47,6 +47,8 @@ Stand: 25. November 2026 (Europe/Berlin) · **Lebendes Dokument:** nach jedem ge
 
 **Nachtblau (25.11.2026, Block 1):** Palette Nachtblau · Creme · Schwarz, Messing nur als „jetzt“; Bühne mit Verlauf, Lichtkegel und weichem Saum, Karte vorn −44/Radius 28; keine Objekte mehr auf den Seiten, nur vier echte Fotos (747, Landebahnen). **Block 2 (25.11.2026):** Easter Eggs – Überflug auf Home, Fokus-Timer mit echtem 747 ohne Flugwörter, Statistik als Bordkarte zum Herausziehen (Rückblick, beide Analysen); Lotse-Wissen nachgezogen. **Block 3 (25.11.2026):** Rückblick, Assistent und Einstellungen in drei Ebenen (Bühne mit Wort, Karte vorn), alte Farbnamen (`gold`, `seladon`, `indigo` …) und `TagReel` entfernt. Offen: Roter Faden für Home/Kalender/Fortschritt (nächster `/roterfaden`-Lauf), Marken-Geste. Prototyp: https://claude.ai/artifact/RQGm6b7z7stGnGBBEi8TwT
 
+**Rückblick und Fortschritt (25.11.2026, PR #52, #53):** Rückblick zeigt das Wochenwort (neue Rechenregel §11, vom Gründer freigegeben) und vier Kacheln Erledigt · Habits · Ziele · Zeit; Zeitraum erst auf der Statistik-Seite. Fortschritt mit Umschalter „Ziele | Habits“, Zurück auf Ziel- und Habit-Seite, Unterseiten entschlackt; Analyse führt zurück, woher man kam. [OFFEN] Habit-Blätter (Wann, Wie viel, Erinnerung), Meilenstein anlegen, Dunkelmodus und UI-Tests nicht geprüft. [VORSCHLAG] Home als intelligenter Überblick mit Signalen: `docs/produkt/konzepte/home-intelligent.md` – bräuchte Rechenregel §12.
+
 **Rechnung Fassung 2 (23.11.2026, entschieden und gemergt):** Ziele bestehen nur aus Meilensteinen; Aufgaben, Habits, Termine fließen über Meilensteine ein, der Rest zählt als Einsatz. Ziel-Detail zum Bearbeiten. Analyse: `docs/produkt/konzepte/ziele-und-rechnung.md`.
 
 ## 3. Nächste Schritte

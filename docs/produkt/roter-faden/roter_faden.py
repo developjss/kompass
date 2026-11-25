@@ -12,7 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 B = lambda n: os.path.join(HERE, "bilder", n)
 STAND = "25. November 2026"
-VERSION = "4"
+VERSION = "5"
 SECTIONS = []          # (Kapitel-Anker, Seiten-Anker, Titel) – für Inhalt und Prüfung
 NR = {}
 GH = "https://github.com/developjss/kompass/blob/main/"
@@ -224,18 +224,17 @@ seite(K3, "Einstellungen & Kalender verbinden", "einstellungen", "Kurze Bühne �
 
 # =============================================================== 4 Habits
 K4 = kapitel("Habits", "kap4", ["Das Tägliche: kein Enddatum, sondern eine Serie."], [("Habits", "habits"), ("Ein Habit", "habit")])
-seite(K4, "Habits", "habits", "Fortschritt-Tab, Chip „Habits“: kurze Bühne mit dem Wort „x von y heute“. Karte vorn = die Habits von heute mit Haken oder „Eintragen“ (Menge mit Einheit – Minuten, Seiten, km –, halb geschafft zählt halb). Darunter „Diese Woche“ mit Serie und Wochenpunkten je Habit.",
-      bilder=[("habits.jpg", "Habits")], klicks=["Zeile mit Menge → Menge eintragen (Schnellwahl ½, ganz …)", "Haken → ganz erledigt / zurücknehmen", "Name → [[Ein Habit|habit]]"], gespeichert=LOKAL)
-seite(K4, "Ein Habit", "habit", "Kurze Bühne „Heute offen“ bzw. „x Tage Serie“. Karte vorn: Ring, Stand heute, Serie, eine Handlung (Abhaken oder Menge) und „Analyse“. Darunter Kacheln Wann · Wie viel · Erinnerung · Verfeinern (Name, Ziel, Tage nachtragen, Löschen), dann „Zählt für“. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit offen ist.",
-      bilder=[("habit.jpg", "Habit")], klicks=["Kachel → Editor (Sichern)", "Analyse → [[Rückblick|rueckblick]] (Habit-Analyse)", "Verfeinern › Tage nachtragen → Tag antippen", "Erinnerung einschalten → einmal Erlaubnis für Mitteilungen", "Habit löschen"], gespeichert=LOKAL)
-
+seite(K4, "Habits", "habits", "Fortschritt-Tab, Umschalter „Ziele | Habits“ oben links (beide immer sichtbar): kurze Bühne mit dem Wort „x von y heute“. Karte vorn = die Habits von heute mit Stand und Haken (halb geschafft zählt halb). Darunter „Diese Woche“ mit Wochenpunkten je Habit.",
+      bilder=[("habits.jpg", "Habits")], klicks=["Zeile mit Menge → Menge eintragen (Schnellwahl ½, ganz …)", "Haken → ganz erledigt / zurücknehmen", "Zeile unter „Diese Woche“ → [[Ein Habit|habit]]"], gespeichert=LOKAL)
+seite(K4, "Ein Habit", "habit", "Oben Zurück und der Name des Habits; kurze Bühne „Heute offen“ bzw. „x Tage Serie“. Karte vorn: Ring, Stand heute, Serie, eine Handlung (Abhaken oder Eintragen) und „Analyse“. Darunter vier Kacheln Wann · Wie viel · Erinnerung · Verfeinern (Name, Aussehen, Im Kalender, Ziel, Tage nachtragen, Löschen), dann „Zählt für“. Zur Erinnerungszeit kommt eine Mitteilung, solange der Habit offen ist.",
+      bilder=[("habit.jpg", "Habit")], klicks=["Kachel → Editor (Sichern)", "Analyse → Quote, Serie, 12-Wochen-Raster; Zurück führt wieder zum Habit", "Verfeinern › Tage nachtragen → Tag antippen", "Erinnerung einschalten → einmal Erlaubnis für Mitteilungen"], gespeichert=LOKAL)
 # =============================================================== 5 Ziele
 K5 = kapitel("Ziele", "kap5", ["Wohin du willst – mit ehrlicher, nachvollziehbarer Rechnung."],
              [("Ziele", "ziele"), ("Ein Ziel", "ziel"), ("So wird gerechnet", "rechnung"), ("Ein Schritt", "schritt"), ("Vorschläge", "vorschlaege")])
-seite(K5, "Ziele", "ziele", "Fortschritt-Tab, Chip „Ziele“: Bühne mit dem Wort „x von y auf Kurs“ (Rechenregel §4). Karte vorn: Filter Alle · Hinterher · Erreicht und das Ziel mit dem größten Hebel (Ring, nächster Schritt, Lage). Darunter „Alle Ziele“ mit Ring, Frist und Lage, „Mehr“ zum Sortieren (Frist, Fortschritt, Hinterher zuerst).",
-      bilder=[("ziele.jpg", "Ziele")], klicks=["Karte → [[Ein Ziel|ziel]]", "Erreicht › → erreichte Ziele", "+ Neu → Ziel: Meilenstein-Vorlagen aus dem Titel (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte)"], gespeichert=LOKAL)
-seite(K5, "Ein Ziel", "ziel", "Bühne mit dem Wort „54 % voraus“ (Prozent und Lage), Marke mit Frist und (i). Karte vorn: „Dein nächster Schritt“ mit einem Knopf (Meilenstein öffnen oder Fokus) und „Analyse“. Darunter zwei Kacheln Meilensteine · Verfeinern (Bis wann, Warum, Name, mehr), dann die Meilensteine als Zeilen und „Meilenstein hinzufügen – geführt“.",
-      bilder=[("ziel.jpg", "Ziel")], klicks=["Satz oder (i) → [[So wird gerechnet|rechnung]]", "Meilenstein → [[Ein Schritt|schritt]]", "Fakten-Zeile → Editor (Sichern)", "✓ Ziel erreicht"], gespeichert=LOKAL)
+seite(K5, "Ziele", "ziele", "Fortschritt-Tab, Umschalter „Ziele | Habits“ oben links: Bühne mit dem Wort „x von y auf Kurs“ (Rechenregel §4). Karte vorn: Filter Alle · Hinterher · Erreicht und das Ziel mit dem größten Hebel (Ring, nächster Schritt, Lage). Darunter „Alle Ziele“ mit Ring, Frist und Lage, „Mehr“ zum Sortieren (Frist, Fortschritt, Hinterher zuerst).",
+      bilder=[("ziele.jpg", "Ziele")], klicks=["Zeile → [[Ein Ziel|ziel]]", "Erreicht → erreichte Ziele", "+ → Ziel: Meilenstein-Vorlagen aus dem Titel (Prüfung, Gewicht, Geld, Ausdauer, Bücher, Sprache, Projekt, Drei Schritte)"], gespeichert=LOKAL)
+seite(K5, "Ein Ziel", "ziel", "Oben Zurück, der Name des Ziels und (i); Bühne mit dem Wort „54 % voraus“ (Prozent und Lage). Karte vorn: „Dein nächster Schritt“ mit einem Knopf (Meilenstein öffnen oder Fokus), „Analyse“ und die Frist. Darunter die Meilensteine als Karten mit ihrem Anteil am Ziel, zuletzt eine Zeile „Verfeinern“ (Aufgaben, Habits, Termine, Einsatz, Details, Geschafft?).",
+      bilder=[("ziel.jpg", "Ziel")], klicks=["(i) → [[So wird gerechnet|rechnung]]", "Meilenstein → [[Ein Schritt|schritt]]", "Analyse → Verlauf mit Plan, Prognose, Meilensteine; Zurück führt wieder zum Ziel", "Verfeinern › Details → Name, Warum, Frist, Löschen", "Verfeinern › Geschafft? → Ziel erreicht"], gespeichert=LOKAL)
 seite(K5, "So wird gerechnet", "rechnung", "Die Rechnung mit echten Zahlen, für jedes Ziel aufklappbar: Tabelle der Schritte, Auf Kurs, Prognose, gelernter Zeitfaktor.",
       bilder=[("rechnung.jpg", "Rechnung")], gespeichert="Formeln: " + doc("docs/produkt/rechenregeln.md") + " (Kapitel [[Rechenregeln|kap7]])")
 seite(K5, "Ein Schritt", "schritt", "Meilenstein antippen: Stand oben, Anteil am Ziel, genau eine Hauptaktion (Abhaken, Stand eintragen, Fokus, Habit öffnen), „Anpassen“-Kacheln (Name, Woran merkst du es, Ziel-Wert, Wie wichtig); Löschen zeigt die Neuverteilung. Neu anlegen geführt: Name mit Vorschlägen → Woran merkst du es → Wert → Wie wichtig (mit Live-Anteil) → „Passt das so?“ mit Aufteilung des Ziels.",
@@ -248,8 +247,8 @@ seite(K5, "Vorschläge", "vorschlaege", "Passende Schritte aus Vorlagen – oder
 # =============================================================== 6 Rückblick & Hinzufügen
 K6 = kapitel("Rückblick und Hinzufügen", "kap6", ["Die Woche im Blick – und wie Neues in die App kommt."],
              [("Rückblick", "rueckblick"), ("Hinzufügen", "neu"), ("Aufgabe anlegen", "neu-aufgabe"), ("Erster Start", "willkommen")])
-seite(K6, "Rückblick", "rueckblick", "Oben steckt die Aussage der Woche („62 % deiner Pläne geschafft“) als Papierkarte in einem Schlitz – nur der Abriss „Bericht · Herausziehen“ schaut heraus; antippen oder nach unten ziehen holt sie heraus (je Woche gemerkt). Darunter Karten: Fokuszeit (12 Wochen), Ziele (Balken, Lage), Zeit je Ziel, Habits je Habit, Auslastung je Tag, Wochenreflexion. Ziel oder Habit antippen öffnet die Analyse: beim Ziel Verlauf mit gestricheltem Plan, Prognose, Meilensteine, Einsatz; beim Habit Quote, Serie, 12-Wochen-Raster, Anteil je Woche.",
-      bilder=[("rueckblick.jpg", "Rückblick")], klicks=["‹ › → andere Woche", "Ziel oder Habit → Analyse", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
+seite(K6, "Rückblick", "rueckblick", "Oben das **Wochenwort**: ein bis zwei Wörter zur Lage der Woche („Im Fluss“, „Volle Woche“, „Kurs halten“ – Rechenregel §11). Darunter vier Kacheln mit je einer Zahl und einer kleinen Grafik: Erledigt · Habits · Ziele · Zeit. Kein Zeitraum-Wähler auf dieser Seite, nichts zum Herausziehen. Eine Kachel öffnet ihre Statistik-Seite – erst dort stehen Woche · Monat · Jahr und Zurück/Vor.",
+      bilder=[("rueckblick.jpg", "Rückblick")], klicks=["Kachel → Statistik (Woche · Monat · Jahr)", "Statistik › Ziel oder Habit → Analyse; Zurück führt zur Statistik", "Wochenreflexion → [[Tagesabschluss|reflexion]]"])
 seite(K6, "Hinzufügen", "neu", "„+“ oben auf jeder Bühne, geführt in Schritten mit Punkten: Was (vier Kacheln: Aufgabe, Termin, Habit, Ziel) → Titel (mit Beispielen) → Wann (Tag, dann Uhrzeit, dann Dauer) → Zählt für (3 + weitere) → Fertig. Bei Ziel „Was zählt schon dafür?“ (Habits, Termine, Aufgaben; Bisheriges zählt mit).",
       bilder=[("neu.jpg", "Hinzufügen")], klicks=["Aufgabe → [[Aufgabe anlegen|neu-aufgabe]]", "Habit → Name, Rhythmus, Ziel", "Ziel → Name, Datum, dann [[Vorschläge|vorschlaege]]", "Idee → Aufgabe ohne Datum in den Eingang"])
 seite(K6, "Aufgabe anlegen", "neu-aufgabe", "Aufgabe-Seite in drei Ebenen: kurze Bühne mit dem Wort („Heute 16:00“, „Heute offen“), Karte vorn mit Haken, Titel, Fokus starten · Wichtig. Darunter Zählt für (Ziel, Meilenstein – ohne passenden sagt die App, dass sie nur als Einsatz zählt) und Wann in Stufen.",
@@ -278,6 +277,7 @@ seite(K7, "Auf Kurs, Prognose, Lernen", "kurs", "",
           "**Habits:** Serie ohne Obergrenze; heute zählt erst, wenn abgehakt; Tage vor der Anlage zählen nicht.",
           "**Zeitfaktor:** (Σ tatsächlich÷geplant + 3) ÷ (Anzahl + 3) – passt Zeit-Vorschläge an dein Tempo an.",
           "**Übernahme-Quote:** (übernommen + 1) ÷ (gezeigt + 2) – ab 40 % vorausgewählt.",
+          "**Wochenwort (§11):** sieben feste Regeln, die erste passende gewinnt – Neue Woche · Volle Woche (Auslastung ab 75 %) · Starke Woche · Kurs halten · Luft holen · Gut dabei · Im Fluss.",
           "**Timer:** an Mitternacht geteilt, höchstens 4 Stunden am Stück. **Wiederholung:** ohne Abrutschen (31. bleibt Monatsende).",
       ]))
 seite(K7, "Wie geprüft wird", "test", "Vier erfundene Personen über zwei Jahre, Tag für Tag, mit zufälligen Eingriffen – jede Zahl gegen eine zweite, unabhängig geschriebene Rechnung.",
@@ -302,6 +302,7 @@ seite(K8, "Pflege und /roterfaden", "pflege", "Damit hier nie etwas fehlt oder v
 seite(K8, "Änderungsverlauf", "verlauf", "Neueste oben.",
       extra=lambda: d.table([
           ["Datum", "Fassung", "Was sich geändert hat"],
+          ["25.11.2026", "5", "Rückblick neu: Wochenwort (§11) und vier Kacheln, Zeitraum erst auf der Statistik-Seite, nichts mehr zum Herausziehen. Fortschritt: Umschalter „Ziele | Habits“, Zurück auf Ziel- und Habit-Seite, Seiten entschlackt; Analyse behält den Rückweg. Fünf Bilder neu."],
           ["25.11.2026", "4", "Nachtblau: alle Hauptseiten in drei Ebenen (Bühne mit Wort, Karte vorn), Farben Nachtblau · Creme · Schwarz, Fliegerei nur noch als drei Easter Eggs (Überflug, Fokus-Timer, Bordkarte zum Herausziehen). Bilder jetzt aus der App statt aus dem Klick-Dummy (noch alt: Termin, (i), Tagesabschluss, Rechnung, Schritt, Vorschläge, Erster Start)."],
           ["24.11.2026", "3", "Ziele neu: Filter-Kacheln, Sortieren nach Jahr u. a., Zielkarten mit Lichtrand, Ziel-Seite mit Einstellungs-Kacheln, Meilensteine geführt und als Karten."],
           ["24.11.2026", "2", "Ziele minimal mit „Dein nächster Schritt“, Kalender-Empfehlungen als Kartenstapel, Assistent mit Claude (Websuche, Gedächtnis, Ladeanzeige)."],
