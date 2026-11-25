@@ -19,7 +19,7 @@ struct HabitDetail: View {
             let wochen: Bool = { if case .proWoche = h.rhythmus { return true } else { return false } }()
 
             BuehnenSeite(hoehe: 296, wort: Self.wort(h, geplant: geplant, voll: voll, serie: serie, wochen: wochen),
-                         objekt: .kompass, platz: .analyseHabit, marke: {
+                         marke: {
                 MarkenTitel(text: "Habit")
                 Spacer(minLength: 8)
                 MarkenHinweis(text: HabitRechnung.haeufigkeit(h))

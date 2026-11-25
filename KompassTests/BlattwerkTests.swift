@@ -3,11 +3,11 @@ import Testing
 import UIKit
 @testable import Kompass
 
-// Blattwerk-Palette: bunte Farben (Ziele, Habits, Kalender) landen in Weinrot-, Rosé- oder Grüntönen; Dunkles, Helles, Graues bleibt.
-// Kontraste nach WCAG, Bilder vorhanden, Platzierungen plausibel.
+// Nachtblau-Palette: bunte Farben (Ziele, Habits, Kalender) landen in Blau-, Dunst- und Schiefertönen; Dunkles, Helles, Graues bleibt.
+// Kontraste nach WCAG, Bilder vorhanden, Bühne und Karte in den Maßen des Prototyps.
 
-@Suite("Blattwerk · Palette")
-struct BlattwerkTests {
+@Suite("Nachtblau · Palette")
+struct NachtblauTests {
     @Test func familienDerDemoFarben() {
         #expect(Farbe.tonArt("#1F7AC2") == .beere)       // Führerschein (Blau)
         #expect(Farbe.tonArt("#15803D") == .gruen)       // Fit (Grün)
@@ -18,8 +18,8 @@ struct BlattwerkTests {
     }
 
     @Test func dunkleHelleUndGraueBleiben() {
-        #expect(Farbe.tonArt("#2E0816") == nil)
-        #expect(Farbe.tonArt("#FBEDF1") == nil)
+        #expect(Farbe.tonArt("#0F141B") == nil)
+        #expect(Farbe.tonArt("#F3F1E6") == nil)
         #expect(Farbe.tonArt("#6B7285") == nil)
         #expect(Farbe.tonArt("kaputt") == nil)
     }
@@ -31,28 +31,36 @@ struct BlattwerkTests {
     }
 
     @Test func kontrasteHell() {
-        #expect(Blattwerk.kontrast(Blattwerk.weinrot, Blattwerk.roseHell) >= 7)        // Text auf Grund
-        #expect(Blattwerk.kontrast(Blattwerk.weinrot, Blattwerk.rose) >= 7)            // Wort auf Bühne
-        #expect(Blattwerk.kontrast(Blattwerk.zweitrangigHell, Blattwerk.roseHell) >= 4.5)
-        #expect(Blattwerk.kontrast(Blattwerk.gruenTief, Blattwerk.roseHell) >= 4.5)    // Handlung als Text
-        #expect(Blattwerk.kontrast(Blattwerk.weinrotTief, Blattwerk.gruen) >= 4.5)     // Schrift auf Grün
-        #expect(Blattwerk.kontrast(Blattwerk.gruen, Blattwerk.rose) < 4.5)             // Grün nie als Text auf Rosé
+        #expect(Nachtblau.kontrast(Nachtblau.creme, Nachtblau.blau) >= 7)                // Wort auf Bühne
+        #expect(Nachtblau.kontrast(Nachtblau.schwarz, Nachtblau.cremeKarte) >= 7)        // Text auf Karte
+        #expect(Nachtblau.kontrast(Nachtblau.schwarz, Nachtblau.creme) >= 7)             // Text auf Grund
+        #expect(Nachtblau.kontrast(Nachtblau.zweitrangigHell, Nachtblau.cremeKarte) >= 4.5)
+        #expect(Nachtblau.kontrast(Nachtblau.akzentHell, Nachtblau.creme) >= 4.5)        // Handlung als Text
+        #expect(Nachtblau.kontrast(Nachtblau.creme, Nachtblau.schwarz) >= 7)             // Schrift auf dem Knopf
+        #expect(Nachtblau.kontrast(Nachtblau.dunst, Nachtblau.blau) >= 4.5)              // letztes Wort auf der Bühne
     }
 
     @Test func kontrasteDunkel() {
-        #expect(Blattwerk.kontrast(Blattwerk.rose, Blattwerk.weinrotTief) >= 7)
-        #expect(Blattwerk.kontrast(Blattwerk.rose, Blattwerk.weinrotKarte) >= 7)
-        #expect(Blattwerk.kontrast(Blattwerk.zweitrangigDunkel, Blattwerk.weinrotTief) >= 4.5)
-        #expect(Blattwerk.kontrast(Blattwerk.gruen, Blattwerk.weinrotTief) >= 4.5)
+        #expect(Nachtblau.kontrast(Nachtblau.creme, Nachtblau.nacht) >= 7)
+        #expect(Nachtblau.kontrast(Nachtblau.creme, Nachtblau.nachtKarte) >= 7)
+        #expect(Nachtblau.kontrast(Nachtblau.zweitrangigDunkel, Nachtblau.nachtKarte) >= 4.5)
+        #expect(Nachtblau.kontrast(Nachtblau.dunst, Nachtblau.nacht) >= 4.5)
+        #expect(Nachtblau.kontrast(Nachtblau.dunst, Nachtblau.blauDunkel) >= 4.5)
+        #expect(Nachtblau.kontrast(Nachtblau.nacht, Nachtblau.creme) >= 7)               // Schrift auf dem Creme-Knopf
+    }
+
+    @Test func messingNurAlsMarke() {
+        // Messing ist nie Text auf Creme – nur Punkt, Linie, Strecke
+        #expect(Nachtblau.kontrast(Nachtblau.messing, Nachtblau.creme) < 4.5)
     }
 
     @Test func kontrastFormel() {
-        #expect(abs(Blattwerk.kontrast(0xFFFFFF, 0x000000) - 21) < 0.01)
-        #expect(abs(Blattwerk.kontrast(0x808080, 0x808080) - 1) < 0.01)
+        #expect(abs(Nachtblau.kontrast(0xFFFFFF, 0x000000) - 21) < 0.01)
+        #expect(abs(Nachtblau.kontrast(0x808080, 0x808080) - 1) < 0.01)
     }
 }
 
-@Suite("Blattwerk · Bühne")
+@Suite("Nachtblau · Bühne")
 struct BuehneTests {
     @Test func jedesObjektHatEinBild() {
         for o in Objekt.allCases {
@@ -60,14 +68,18 @@ struct BuehneTests {
         }
     }
 
-    @Test func platzierungenPassenAufDieBuehne() {
-        let alle: [Platz] = [.home, .kalender, .neu, .assistent, .fortschritt, .ziel, .habits, .aufgabe, .analyseZiel, .analyseHabit, .einstellungen, .rueckblick]
-        for p in alle {
-            #expect(p.breite >= 120 && p.breite <= 460)
-            #expect(p.oben >= 0 && p.oben < Mass.buehne)
-            #expect(abs(p.drehung) <= 20)
-            #expect(p.rechts >= -p.breite / 2, "Objekt ragt mehr als zur Hälfte hinaus")
-        }
+    @Test func nurFokusUndUeberflugHabenEinObjekt() {
+        #expect(Objekt.allCases.count == 4)
+        #expect(Platz.fokus.links == 0 && Platz.fokus.breite == 190)
+        #expect(Platz.ueberflug.links! < 0, "der Überflug beginnt außerhalb der Bühne")
+    }
+
+    @Test func masseDerEbenen() {
+        #expect(Mass.buehne == 360 && Mass.buehneKurz == 250 && Mass.buehneLang == 430)
+        #expect(Mass.karteVorn == 28 && Mass.karteVornVersatz == -44)
+        #expect(Mass.saum(fuer: Mass.buehneKurz) == 112)
+        #expect(Mass.saum(fuer: Mass.buehne) == 160)
+        #expect(Mass.saum(fuer: Mass.buehneLang) == 190)
     }
 
     @Test func wortGroessen() {

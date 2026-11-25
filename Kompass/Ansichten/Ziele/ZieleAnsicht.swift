@@ -28,7 +28,7 @@ struct ZieleAnsicht: View {
         let aufKurs = aktiv.filter { !Kurs.aufKurs($0, in: z, heute: T).lage.hinten }
         let hebel = Self.hebel(z, heute: T)
 
-        BuehnenSeite(wort: Self.wort(aufKurs: aufKurs.count, gesamt: aktiv.count), objekt: .kompass, platz: .fortschritt, marke: {
+        BuehnenSeite(wort: Self.wort(aufKurs: aufKurs.count, gesamt: aktiv.count), marke: {
             MarkenTitel(text: "Ziele")
             Spacer(minLength: 8)
             FortschrittWahl()

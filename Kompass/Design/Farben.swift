@@ -2,11 +2,12 @@ import SwiftUI
 import UIKit
 
 // Farben, Maße und Schrift nach docs/produkt/design.md (Vorbild Gapless „Harbor 2“, kein geteilter Code).
-// Blattwerk (Entscheidung 24.11.2026): Rosé trägt, Weinrot spricht, Kellygrün ist die eine Handlung. Hell und dunkel.
+// Nachtblau (Entscheidung 25.11.2026): Nachtblau trägt, Creme spricht, Schwarz ist die Handlung – hell und dunkel.
+// Messing ist die eine warme Marke („jetzt“) und sonst nirgends. Löst Blattwerk (Rosé/Weinrot/Grün) ab.
 
 extension Color {
-    /// Farbe aus Hex – bunte Farben (Ziele, Habits, Kalender) werden auf die Blattwerk-Palette gelegt
-    /// (Weinrot-, Rosé- und Grüntöne; je hell/dunkel). Dunkle, helle und graue Farben bleiben, wie sie sind.
+    /// Farbe aus Hex – bunte Farben (Ziele, Habits, Kalender) werden auf die Nachtblau-Palette gelegt
+    /// (Blau-, Dunst- und Schiefertöne; je hell/dunkel). Dunkle, helle und graue Farben bleiben, wie sie sind.
     init(hex: String) {
         if let t = Farbe.tonArt(hex) { self = t.farbe } else { self.init(roh: hex) }
     }
@@ -14,7 +15,7 @@ extension Color {
     /// Farbe genau aus Hex, ohne Palette
     init(roh hex: String) {
         let s = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        let v = UInt64(s, radix: 16) ?? 0x4A0F24
+        let v = UInt64(s, radix: 16) ?? 0x33475F
         self.init(.sRGB, red: Double((v >> 16) & 0xFF) / 255, green: Double((v >> 8) & 0xFF) / 255, blue: Double(v & 0xFF) / 255)
     }
 
@@ -27,17 +28,33 @@ extension Color {
     }
 }
 
-/// Die Blattwerk-Palette als Zahlen – damit Tests Kontraste rechnen können (WCAG).
-enum Blattwerk {
-    static let rose: UInt32 = 0xF6CBD4
-    static let roseHell: UInt32 = 0xFBEDF1
-    static let weinrot: UInt32 = 0x4A0F24
-    static let weinrotTief: UInt32 = 0x2E0816
-    static let weinrotKarte: UInt32 = 0x5A1C33
-    static let gruen: UInt32 = 0x2DC92A
-    static let gruenTief: UInt32 = 0x1B7A1A
-    static let zweitrangigHell: UInt32 = 0x85536A
-    static let zweitrangigDunkel: UInt32 = 0xD4A3B4
+/// Die Nachtblau-Palette als Zahlen – damit Tests Kontraste rechnen können (WCAG).
+enum Nachtblau {
+    // Hell
+    static let creme: UInt32 = 0xF3F1E6
+    static let cremeKarte: UInt32 = 0xFDFCF6
+    static let papier: UInt32 = 0xFBF9F1
+    static let blau: UInt32 = 0x33475F
+    static let blauOben: UInt32 = 0x26364B
+    static let blauUnten: UInt32 = 0x415671
+    static let schwarz: UInt32 = 0x141B24
+    static let akzentHell: UInt32 = 0x3F5571
+    static let zweitrangigHell: UInt32 = 0x5E6B7C
+    static let linieHell: UInt32 = 0xD6D5CD
+    static let weichHell: UInt32 = 0xDCDDD6
+    // Dunkel
+    static let nacht: UInt32 = 0x0F141B
+    static let nachtKarte: UInt32 = 0x182029
+    static let nachtPapier: UInt32 = 0x1F2935
+    static let blauDunkel: UInt32 = 0x141C27
+    static let blauDunkelOben: UInt32 = 0x0B1017
+    static let blauDunkelUnten: UInt32 = 0x1E2A39
+    static let zweitrangigDunkel: UInt32 = 0x9AA8B9
+    static let linieDunkel: UInt32 = 0x2F3337
+    static let weichDunkel: UInt32 = 0x262A2F
+    // Beide
+    static let dunst: UInt32 = 0x9FBAD6
+    static let messing: UInt32 = 0xC9A227
 
     /// Kontrastverhältnis zweier Farben (1 … 21) nach WCAG 2.1
     nonisolated static func kontrast(_ a: UInt32, _ b: UInt32) -> Double {
@@ -52,61 +69,73 @@ enum Blattwerk {
 }
 
 enum Farbe {
-    static let grund = Color(hell: Blattwerk.roseHell, dunkel: Blattwerk.weinrotTief)
-    /// Bühne (Ebene 1) – auch der Verlauf oben auf Seiten ohne Bühne
-    static let buehne = Color(hell: Blattwerk.rose, dunkel: Blattwerk.weinrot)
+    static let grund = Color(hell: Nachtblau.creme, dunkel: Nachtblau.nacht)
+    /// Bühne (Ebene 1) als Fläche; der Verlauf dazu in `buehneVerlauf`
+    static let buehne = Color(hell: Nachtblau.blau, dunkel: Nachtblau.blauDunkel)
+    static let buehneVerlauf = [Color(hell: Nachtblau.blauOben, dunkel: Nachtblau.blauDunkelOben),
+                                Color(hell: Nachtblau.blau, dunkel: Nachtblau.blauDunkel),
+                                Color(hell: Nachtblau.blauUnten, dunkel: Nachtblau.blauDunkelUnten)]
     static let grundOben = buehne
-    static let karte = Color(hell: 0xFFFFFF, dunkel: Blattwerk.weinrotKarte)
-    static let text = Color(hell: Blattwerk.weinrot, dunkel: Blattwerk.rose)
-    /// Das große Wort auf der Bühne, die Marke, die Statusleiste
-    static let wort = text
-    static let zweitrangig = Color(hell: Blattwerk.zweitrangigHell, dunkel: Blattwerk.zweitrangigDunkel)
-    static let pfeil = Color(hell: 0xA77A8A, dunkel: 0xB98FA0)
-    /// Handlung als Text und Zeichen (lesbar auf dem Grund): hell Grün tief, dunkel Kellygrün
-    static let akzent = Color(hell: Blattwerk.gruenTief, dunkel: Blattwerk.gruen)
-    /// Handlung als Fläche (Hauptknopf, Ring, Haken, heutiger Tag): Kellygrün – Schrift darauf `aufFarbe`
-    static let handlung = Color(roh: "#2DC92A")
+    /// Lichtkegel hinter dem Wort (Ebene 1a) – mit Deckkraft verwenden
+    static let schein = Color(hell: 0x9EBCDC, dunkel: 0x6084B0)
+    static let karte = Color(hell: Nachtblau.cremeKarte, dunkel: Nachtblau.nachtKarte)
+    /// Die Bordkarte (Statistik): einen Hauch wärmer als die Karte
+    static let papier = Color(hell: Nachtblau.papier, dunkel: Nachtblau.nachtPapier)
+    static let text = Color(hell: Nachtblau.schwarz, dunkel: Nachtblau.creme)
+    /// Das große Wort auf der Bühne, die Marke, die Statusleiste: immer Creme
+    static let wort = Color(roh: "#F3F1E6")
+    /// Das letzte Wort auf der Bühne: Dunst
+    static let wortAkzent = Color(roh: "#9FBAD6")
+    static let zweitrangig = Color(hell: Nachtblau.zweitrangigHell, dunkel: Nachtblau.zweitrangigDunkel)
+    static let pfeil = Color(hell: 0x8C98A8, dunkel: 0x6F7C8C)
+    /// Handlung als Text und Zeichen (lesbar auf dem Grund): hell Nachtblau, dunkel Dunst
+    static let akzent = Color(hell: Nachtblau.akzentHell, dunkel: Nachtblau.dunst)
+    /// Handlung als Fläche (Hauptknopf, Ring, Haken, gewählter Tag): hell Schwarz, dunkel Creme – Schrift darauf `aufFarbe`
+    static let handlung = Color(hell: Nachtblau.schwarz, dunkel: Nachtblau.creme)
+    /// Die eine warme Marke: Punkt am heutigen Tag, Zeitlinie, Strecke im Fokus – sonst nirgends
+    static let jetzt = Color(roh: "#C9A227")
     /// Pille, Vorschläge, „dein Normal“, Tab-Pille
-    static let akzentWeich = Color(hell: 0xDDF5DC, dunkel: 0x3B4D30)
-    /// Schrift und Zeichen auf Grün
-    static let aufFarbe = Color(roh: "#2E0816")
-    /// Schrift und Zeichen auf Zielfarben-Flächen (`tonArt`): hell sind die Töne dunkel → Weiß; dunkel sind sie hell → Weinrot tief
-    static let aufTon = Color(hell: 0xFFFFFF, dunkel: Blattwerk.weinrotTief)
-    /// Schatten unter Karte vorn und Objekten (mit Deckkraft verwenden)
-    static let schatten = Color(hell: Blattwerk.weinrot, dunkel: 0x000000)
+    static let akzentWeich = Color(hell: Nachtblau.weichHell, dunkel: Nachtblau.weichDunkel)
+    /// Schrift und Zeichen auf der Handlungsfläche
+    static let aufFarbe = Color(hell: Nachtblau.creme, dunkel: Nachtblau.nacht)
+    /// Schrift und Zeichen auf Zielfarben-Flächen (`tonArt`): hell sind die Töne dunkel → Creme; dunkel sind sie hell → Nacht
+    static let aufTon = Color(hell: Nachtblau.creme, dunkel: Nachtblau.nacht)
+    /// Schatten unter Karte vorn (mit Deckkraft verwenden)
+    static let schatten = Color(hell: Nachtblau.schwarz, dunkel: 0x000000)
     static let freude = akzent
-    /// „hinterher“: Weinrot auf Rosé (dunkel umgekehrt)
-    static let warnung = Color(hell: Blattwerk.weinrot, dunkel: Blattwerk.rose)
-    static let warnungGrund = Color(hell: Blattwerk.rose, dunkel: Blattwerk.weinrot)
-    /// „überfällig“: kräftiges Weinrot, dunkel helles Rosé – kein neuer Farbton
-    static let kritisch = Color(hell: 0x8E1B3C, dunkel: 0xFF9FB8)
-    static let linie = Color(hell: 0xE6D2D8, dunkel: 0x4E2734)
+    /// „hinterher“: Nachtblau auf Dunst hell (dunkel umgekehrt)
+    static let warnung = Color(hell: Nachtblau.blau, dunkel: Nachtblau.dunst)
+    static let warnungGrund = Color(hell: 0xDCE4EE, dunkel: 0x22303F)
+    /// „überfällig“: Creme auf Nachtblau, dunkel Nacht auf Creme – kein neuer Farbton
+    static let kritisch = Color(hell: Nachtblau.creme, dunkel: Nachtblau.nacht)
+    static let kritischGrund = Color(hell: Nachtblau.blau, dunkel: Nachtblau.creme)
+    static let linie = Color(hell: Nachtblau.linieHell, dunkel: Nachtblau.linieDunkel)
 
-    // Alte Namen aus Nachtflug – zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind
-    static let gold = handlung
+    // Alte Namen – zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind
+    static let gold = jetzt
     static let goldText = akzent
     static let seladon = handlung
-    static let nacht = Color(roh: "#2E0816")
+    static let nacht = Color(roh: "#0F141B")
 
     /// Ziel- und Habit-Farben zur Auswahl – je eine Familie der Palette (gespeichert als Hex, angezeigt über `tonArt`)
     static let ziele = ["#1F7AC2", "#15803D", "#9A6700", "#3B4CCA", "#7A4FD6", "#B8456E"]
 
-    /// Verläufe der Kopf- und Reel-Karten: Weinrot in drei Tönungen (bleiben dunkel, Schrift Rosé/Weiß)
-    static let indigo = [Color(roh: "#2E0816"), Color(roh: "#6B1F3F")]
-    static let violett = [Color(roh: "#3A0E22"), Color(roh: "#7A2E4A")]
-    static let gruen = [Color(roh: "#3A0E22"), Color(roh: "#8E1B3C")]
+    /// Verläufe der Kopf- und Reel-Karten: Nachtblau in drei Tönungen (bleiben dunkel, Schrift Creme)
+    static let indigo = [Color(roh: "#26364B"), Color(roh: "#415671")]
+    static let violett = [Color(roh: "#1E2A39"), Color(roh: "#3F5571")]
+    static let gruen = [Color(roh: "#141C27"), Color(roh: "#33475F")]
 
-    /// Töne der Palette für bunte Farben (Ziele, Habits, Kalender): Weinrot- und Rosétöne, zwei Grüntöne
+    /// Töne der Palette für bunte Farben (Ziele, Habits, Kalender): Blau-, Dunst- und Schiefertöne
     enum TonArt: CaseIterable, Sendable {
         case weinrot, beere, rosa, wein, gruen, gruenTief
         var farbe: Color {
             switch self {
-            case .weinrot: Color(hell: 0x4A0F24, dunkel: 0xF6CBD4)
-            case .beere: Color(hell: 0x8E1B3C, dunkel: 0xF4A3B8)
-            case .rosa: Color(hell: 0xB04A72, dunkel: 0xF2B5C8)
-            case .wein: Color(hell: 0x7A2E4A, dunkel: 0xE8A9C0)
-            case .gruen: Color(hell: 0x1B7A1A, dunkel: 0x2DC92A)
-            case .gruenTief: Color(hell: 0x2F6B2E, dunkel: 0x8FDC8C)
+            case .weinrot: Color(hell: 0x33475F, dunkel: 0x9FBAD6)   // Nachtblau · Dunst
+            case .beere: Color(hell: 0x2A3F58, dunkel: 0xB7CBE2)     // tief · hell
+            case .rosa: Color(hell: 0x5E6B7C, dunkel: 0xC5CED9)      // Schiefer
+            case .wein: Color(hell: 0x4B6480, dunkel: 0x8FA9C8)      // Stahl
+            case .gruen: Color(hell: 0x3F5571, dunkel: 0xA6BED8)     // Nachtblau hell
+            case .gruenTief: Color(hell: 0x6E7B4F, dunkel: 0xC9A227) // Oliv · Messing (Gold, Gelb)
             }
         }
     }
@@ -147,14 +176,16 @@ enum Mass {
     static let ueberschrift: CGFloat = 12
     static let zeile: CGFloat = 64
     static let zeileKompakt: CGFloat = 52
-    /// Blattwerk: Bühne, Karte vorn, Knopf
+    /// Nachtblau: Bühne, Karte vorn, Knopf
     static let buehne: CGFloat = 360
-    static let buehneKurz: CGFloat = 260
+    static let buehneKurz: CGFloat = 250
     static let buehneLang: CGFloat = 430
-    static let karteVorn: CGFloat = 24
-    static let karteVornVersatz: CGFloat = -38
+    static let karteVorn: CGFloat = 28
+    static let karteVornVersatz: CGFloat = -44
     static let knopf: CGFloat = 50
     static let knopfKlein: CGFloat = 40
+    /// Saum: die untersten Punkte der Bühne laufen in den Grund aus (kurz 112, lang 190)
+    static func saum(fuer hoehe: CGFloat) -> CGFloat { hoehe <= buehneKurz ? 112 : hoehe >= buehneLang ? 190 : 160 }
 }
 
 extension Font {
@@ -169,7 +200,7 @@ extension Font {
     static let unterzeile = Font.kompass(.subheadline, .medium)
     static let klein = Font.kompass(.footnote, .semibold)
     static let grosseZahl = Font.system(.largeTitle, design: .serif, weight: .semibold)
-    /// Blattwerk: das Wort auf der Bühne (New York, Großbuchstaben), feste Größe mit Mindestskalierung
+    /// Das Wort auf der Bühne (New York, Großbuchstaben), feste Größe mit Mindestskalierung
     static func wort(_ groesse: CGFloat) -> Font { .system(size: groesse, weight: .regular, design: .serif) }
     /// Titel in der Karte vorn (die eine Sache)
     static let karteTitel = Font.system(size: 26, weight: .regular, design: .serif)

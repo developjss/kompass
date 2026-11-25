@@ -15,7 +15,7 @@ struct HabitsAnsicht: View {
         let offen = heute.filter { !$0.voll(am: T) }
         let geschafft = heute.filter { $0.voll(am: T) }
 
-        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(geschafft: geschafft.count, geplant: heute.count), objekt: .bordkarte, platz: .habits, marke: {
+        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(geschafft: geschafft.count, geplant: heute.count), marke: {
             MarkenTitel(text: "Habits")
             Spacer(minLength: 8)
             FortschrittWahl()

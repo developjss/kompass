@@ -17,41 +17,44 @@ Gemessen 23.11.2026 (iPhone, Wörter je Bildschirm): Gapless Insights 32, Net wo
 
 Höchstens 3–5 Wahlmöglichkeiten je Entscheidung, eine Hauptaktion je Bildschirm, Voreinstellung statt Frage, Stufen statt Listen („Mehr“, „Details“). Analyse je Bereich und Plan: `konzepte/hicks-law.md`.
 
-## 2. Farben „Blattwerk“ (hell / dunkel) [ENTSCHEIDUNG – 24.11.2026, Gründer: „Ja, so bauen“]
+## 2. Farben „Nachtblau“ (hell / dunkel) [ENTSCHEIDUNG – 25.11.2026, Gründer: „Ja, in die App“]
 
-Rosé trägt, Weinrot spricht, Kellygrün ist die eine Handlung. Löst „Nachtflug“ (Indigo, Seladon, Gold; 24.11.2026 vormittags) ab. Prototyp mit allen Seiten, Bildern und Maßen: https://claude.ai/artifact/HzWoB8fnKe61TxXBUjEUrf (Code: `Kompass/Design/Farben.swift`, `Buehne.swift`; Tests `KompassTests/BlattwerkTests.swift`).
+Nachtblau trägt, Creme spricht, Schwarz ist die Handlung; Messing ist die eine warme Marke („jetzt“). Löst „Blattwerk“ (Rosé/Weinrot/Grün, 24.11.2026) ab. Prototyp mit allen Seiten und Maßen: https://claude.ai/artifact/RQGm6b7z7stGnGBBEi8TwT (Code: `Kompass/Design/Farben.swift`, `Buehne.swift`; Tests `KompassTests/BlattwerkTests.swift`).
 
 | Token | Hell | Dunkel | Verwendung |
 |---|---|---|---|
-| grund | #FBEDF1 | #2E0816 | Seitengrund |
-| buehne (= grundOben) | #F6CBD4 Rosé | #4A0F24 Weinrot | Ebene 1, Chips, Zeichen-Kreise |
-| karte | #FFFFFF | #5A1C33 | Karten, Listen, Tabbar |
-| text / wort | #4A0F24 | #F6CBD4 | Text, Bühnen-Wort, Marke |
-| zweitrangig | #85536A | #D4A3B4 | Unterzeilen, Etiketten |
-| akzent (Text) | #1B7A1A | #2DC92A | Handlung als Text und Zeichen |
-| handlung (Fläche) | #2DC92A | #2DC92A | Hauptknopf, Ring, Haken, heutiger Tag, letztes Wort |
-| aufFarbe | #2E0816 | #2E0816 | Schrift auf Grün |
-| akzentWeich | #DDF5DC | #3B4D30 | Tab-Pille, Vorschläge, Band „dein Normal“, Pille „im Plan“ |
-| linie | #E6D2D8 | #4E2734 | Trennlinien, Rahmen |
-| warnung / warnungGrund | Weinrot / Rosé | Rosé / Weinrot | „hinterher“ als Pille |
-| kritisch | #8E1B3C | #FF9FB8 | „überfällig“ |
+| grund | #F3F1E6 Creme | #0F141B Nacht | Seitengrund |
+| buehne | Verlauf #26364B → #33475F → #415671 (168°) | #0B1017 → #141C27 → #1E2A39 | Ebene 1; Fläche allein #33475F / #141C27 |
+| schein | Dunst 30 % | #6084B0 24 % | Lichtkegel 380 pt oben rechts |
+| saum | → grund | → grund | untere 160 pt (kurz 112, lang 190): 58 % = 5 %, 80 % = 38 %, unten voll |
+| karte | #FDFCF6 | #182029 | Karten, Listen, Tabbar |
+| papier | #FBF9F1 | #1F2935 | Bordkarte (Statistik) |
+| text | #141B24 | #F3F1E6 | Text auf Karten und Grund |
+| wort / wortAkzent | #F3F1E6 / #9FBAD6 Dunst | gleich | Bühnen-Wort, Marke; das letzte Wort in Dunst |
+| zweitrangig | #5E6B7C | #9AA8B9 | Unterzeilen, Etiketten |
+| akzent (Text) | #3F5571 | #9FBAD6 | Handlung als Text und Zeichen |
+| handlung (Fläche) | #141B24 Schwarz | #F3F1E6 Creme | Hauptknopf, Ring, Haken, gewählter Tag |
+| aufFarbe | #F3F1E6 | #0F141B | Schrift auf der Handlungsfläche |
+| jetzt | #C9A227 Messing | gleich | Punkt am heutigen Tag, Zeitlinie, Strecke im Fokus – sonst nirgends |
+| akzentWeich | #DCDDD6 | #262A2F | Tab-Pille, Vorschläge, Band „dein Normal“ |
+| linie | #D6D5CD | #2F3337 | Trennlinien, Rahmen |
+| warnung / warnungGrund | Nachtblau / #DCE4EE | Dunst / #22303F | „hinterher“ |
+| kritisch / kritischGrund | Creme / Nachtblau | Nacht / Creme | „überfällig“ |
 
-Alte Namen `gold`, `goldText`, `seladon`, `nacht` zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind.
+Alte Namen `gold`, `goldText`, `seladon`, `nacht`, `indigo`, `violett`, `gruen` zeigen auf die neuen Rollen, bis alle Seiten umgebaut sind.
 
-Ziel-, Habit- und Kalenderfarben: `Farbe.tonArt` legt jede bunte Hex-Farbe nach Farbton auf weinrot, beere, rosa, wein, gruen oder gruenTief (je hell/dunkel).
+Ziel-, Habit- und Kalenderfarben: `Farbe.tonArt` legt jede bunte Hex-Farbe nach Farbton auf sechs Blau-, Dunst- und Schiefertöne (je hell/dunkel); Gold/Gelb wird Oliv bzw. Messing.
 
-Kontraste (WCAG): Weinrot auf Grund 13 : 1, auf Rosé 10 : 1; Grün tief als Text 4,8 : 1; Schrift auf Grün 8,2 : 1. Grün ist nie Text auf Rosé (2,1 : 1) – das grüne Bühnen-Wort gilt als Dekoration ≥ 48 pt, die Zahl steht immer zusätzlich in der Karte.
+Kontraste (WCAG): Creme auf Nachtblau 8,4 : 1, Text auf Karte 14,5 : 1, Akzent als Text 6,7 : 1, Dunst-Wort auf der Bühne 4,7 : 1; dunkel Creme auf Karte 14,5 : 1, Zweitrangig 7,3 : 1. Messing ist nie Text auf Creme (2,5 : 1).
 
-### 2a. Drei Ebenen: Bühne · Objekt · Karte
+### 2a. Drei Ebenen: Bühne · (Objekt) · Karte
 
-Jede Hauptseite ist wie ein Produktbild aufgebaut (`Buehne.swift`):
-1. **Bühne** (Rosé): Marke bei y 62 (Name in Versalien, New York 17, Laufweite; rechts Datum oder Knöpfe 36 pt mit Rahmen), **Wort** bei y 118 / x 20 (New York, Großbuchstaben, 72 pt; klein 56, mittel 64, riesig 98; Zeilenabstand 0,86; das letzte Wort in Grün). Das Wort ist die Aussage der Seite, nie ein Etikett. Höhe 360, kurz 250, lang 430; Fokus: Foto Landebahn über die ganze Höhe.
-2. **Objekt**: ein echtes, freigestelltes Foto je Seite, nie mittig, nie antippbar; Platzierung je Seite in `Platz` (rechts/oben/Breite/Drehung aus dem Prototyp); Schatten 0 24 26 bei 28 %. Flugzeug = Tun (Home, Aufgabe, Fokus, Ziel), Bordkarte = Woche (Kalender, Habits, Rückblick), Kompass-Kugel = Kurs (Fortschritt, Neu), Tower = Assistent und Einstellungen.
-3. **Karte vorn** (`VornKarte`): Radius 24, Innen 16, Versatz −38 über die Bühne, Schatten 0 18 40; darin genau eine grüne Hauptaktion (`.buttonStyle(.haupt)`, 50 pt) und höchstens eine leise Zweitaktion (`.leise`); Löschen `.rot`. Karten-Titel New York 26, Etikett 12 heavy Versalien.
+Jede Hauptseite ist wie ein Produktbild aufgebaut (`Buehne.swift`) – aber Kompass ist eine **Kalender-App**: die Seiten tragen keine Flugbilder und keine Flugbegriffe.
+1. **Bühne**: Verlauf 168°, darüber der **Lichtkegel** (`Schein`), Marke bei y 62 (Name in Versalien, New York 17; rechts Datum oder Knöpfe 36 pt mit Rahmen), **Wort** bei y 118 / x 20 (New York, Großbuchstaben, 72 pt; klein 56, mittel 64, riesig 98; Zeilenabstand 0,86; das letzte Wort in Dunst). Unten der **Saum** (`Saum`): die Bühne läuft weich in den Grund aus, kein harter Schnitt. Höhe 360, kurz 250, lang 430.
+2. **Objekt**: auf den Seiten leer. Die Ebene lebt in drei Momenten (Easter Eggs, Block 2): Überflug auf Home (echter 747, einmal, nur wenn alles geschafft ist; Reduce Motion: aus), 747 im Fokus (fliegt die Strecke ab), Bordkarte als Statistik (steckt hinter der Karte, zum Herausziehen; Rückblick, Analyse Ziel, Analyse Habit). Schatten zweistufig 0 6 8 (22 %) + 0 26 34 (28 %).
+3. **Karte vorn** (`VornKarte`): Radius 28, Innen 18, Versatz −44 über die Bühne, Doppelschatten 0 4 10 (10 %) + 0 24 48 (28 %), oben eine Innenlinie 1 pt in Creme 55 %; darin genau eine Hauptaktion (`.buttonStyle(.haupt)`, 50 pt) und höchstens eine leise Zweitaktion (`.leise`); Löschen `.rot`. Karten-Titel New York 26, Etikett 12 heavy Versalien.
 
-Die Seiten, Stand Block 4: Home (Bühne „Jetzt dran“, 747 im Anflug), Kalender (kurz, Bordkarte), + Neu und Aufgabe (747 beim Abflug), Termin (ohne Objekt), Fortschritt · Ziele und Ziel-Seite (Messing-Kompass bzw. A380), Fortschritt · Habits (Bordkarte), Habit-Seite (Messing-Kompass). Noch offen: Fokus (Landebahn bei Nacht), Rückblick (Bordkarte zum Abreißen), Assistent und Einstellungen (Tower).
-
-Bilder: `Assets.xcassets/blattwerk-*` (A380, 747 im Anflug, 747 beim Abflug, zwei Tower, Kompass-Kugel, Messing-Kompass, Bordkarte, Landebahn, Landebahn bei Nacht; einzeln skaliert, 1024–2100 px). Entstanden aus Vorlagen des Gründers: freigestellt mit Vision, Schriftzüge entfernt, Leitwerke in Weinrot. [RISIKO] Rechte an den Foto-Vorlagen vor dem Store klären (Presse-/Stock-Fotos); Bordkarte und Messing-Kompass sind erzeugt.
+Bilder: `Assets.xcassets/nachtblau-*` – nur echte Fotos: 747 im Anflug (Überflug), 747 beim Abflug (Fokus), Landebahn, Landebahn bei Nacht (Heck der 747 auf Nachtblau getönt, Kennzeichen retuschiert). Keine erzeugten Bilder. [RISIKO] Rechte an den Foto-Vorlagen vor dem Store klären (Presse-/Stock-Fotos).
 
 ## 3. Maße
 

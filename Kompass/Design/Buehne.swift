@@ -1,25 +1,20 @@
 import SwiftUI
 
-// Blattwerk: jede Hauptseite in drei Ebenen – Bühne (Fläche, Marke, Wort), Objekt (echtes Foto) davor, Karte vorn.
-// Maße wie im Prototyp (docs/produkt/design.md §2a): Bühne 360 (kurz 250, lang 430), Marke bei y 62, Wort bei y 118 / x 20.
+// Nachtblau: jede Hauptseite in drei Ebenen – Bühne (Verlauf, Lichtkegel, Marke, Wort, Saum), eine meist leere
+// zweite Ebene und die Karte vorn. Kompass ist eine Kalender-App; die Fliegerei steckt in drei Momenten (Überflug auf
+// Home, 747 im Fokus, Bordkarte als Statistik), nicht in Bildern auf den Seiten (docs/produkt/design.md §2a).
 
-/// Die echten Bilder (Assets „blattwerk-…“, einzeln skaliert, freigestellt).
+/// Die echten Fotos (Assets „nachtblau-…“, freigestellt; Heck der 747 auf Nachtblau getönt).
 enum Objekt: String, CaseIterable, Sendable {
-    case a380 = "blattwerk-a380"
-    case b747 = "blattwerk-b747"
-    case b747Abflug = "blattwerk-b747-abflug"
-    case tower = "blattwerk-tower"
-    case tower2 = "blattwerk-tower-2"
-    case kompassKugel = "blattwerk-kompass-kugel"
-    case kompass = "blattwerk-kompass"
-    case bordkarte = "blattwerk-bordkarte"
-    case landebahn = "blattwerk-landebahn"
-    case landebahnNacht = "blattwerk-landebahn-nacht"
+    case b747 = "nachtblau-b747"
+    case b747Abflug = "nachtblau-b747-abflug"
+    case landebahn = "nachtblau-landebahn"
+    case landebahnNacht = "nachtblau-landebahn-nacht"
     var bild: Image { Image(rawValue) }
 }
 
-/// Wo ein Objekt auf der Bühne liegt: Abstand vom rechten Rand (negativ = ragt hinaus), Abstand von oben, Breite, Drehung in Grad.
-/// Werte aus dem Prototyp – je Seite genau eine Platzierung; `links` statt `rechts` für Objekte am linken Rand.
+/// Wo ein Objekt liegt: Abstand vom rechten Rand (negativ = ragt hinaus), von oben, Breite, Drehung in Grad.
+/// Nur noch der Fokus hat ein Objekt; `ueberflug` ist die Startlage des 747 auf Home (Easter Egg, `Ueberflug`).
 struct Platz: Sendable, Equatable {
     var rechts: CGFloat = 0
     var oben: CGFloat
@@ -27,23 +22,13 @@ struct Platz: Sendable, Equatable {
     var drehung: Double = 0
     var links: CGFloat? = nil
 
-    static let home = Platz(rechts: -90, oben: 166, breite: 360, drehung: -8)
-    static let kalender = Platz(rechts: -60, oben: 140, breite: 270, drehung: -14)
-    static let neu = Platz(rechts: -70, oben: 62, breite: 230, drehung: 10)
-    static let assistent = Platz(rechts: 6, oben: 34, breite: 150)
-    static let fortschritt = Platz(rechts: -120, oben: 172, breite: 240, drehung: -12)
-    static let ziel = Platz(rechts: -190, oben: 196, breite: 420, drehung: -6)
-    static let habits = Platz(rechts: -120, oben: 96, breite: 280, drehung: -10)
-    static let aufgabe = Platz(rechts: -150, oben: 96, breite: 380, drehung: -4)
-    static let analyseZiel = Platz(rechts: -170, oben: 92, breite: 430, drehung: -6)
-    static let analyseHabit = Platz(rechts: -60, oben: 110, breite: 200, drehung: 14)
-    static let einstellungen = Platz(rechts: 10, oben: 40, breite: 130)
-    static let rueckblick = Platz(rechts: -70, oben: 186, breite: 330, drehung: -16)
     /// Fokus: Flugzeug links unten, fliegt nach rechts oben (Bewegung über `FokusBlatt`)
     static let fokus = Platz(oben: 0, breite: 190, drehung: -8, links: 0)
+    /// Home: der 747 startet links außerhalb und zieht einmal über die Bühne
+    static let ueberflug = Platz(oben: 150, breite: 240, drehung: -6, links: -260)
 }
 
-/// Das Wort auf der Bühne: Zeilen in Großbuchstaben, die letzte in Grün; optional eine kleine Zeile darunter.
+/// Das Wort auf der Bühne: Zeilen in Großbuchstaben, die letzte in Dunst; optional eine kleine Zeile darunter.
 /// Das Wort ist die Aussage der Seite („3 von 4 auf Kurs“) – nie ein Etikett.
 struct Wort: Sendable, Equatable {
     var zeilen: [String]
@@ -57,12 +42,11 @@ struct Wort: Sendable, Equatable {
     static let riesig: CGFloat = 98
 }
 
-/// Ebene 1 + 2: Rosé-Fläche mit Marke (Titel, Hinweis, Knöpfe), dem Wort und dem Objekt. Ragt oben unter die Statusleiste.
+/// Ebene 1: Nachtblau-Verlauf (168°) mit Lichtkegel oben rechts, Marke (Titel, Hinweis, Knöpfe), dem Wort und dem
+/// Saum, mit dem die Bühne unten in den Grund ausläuft. Ragt oben unter die Statusleiste.
 struct Buehne<Marke: View, Extra: View>: View {
     var hoehe: CGFloat = Mass.buehne
     var wort: Wort
-    var objekt: Objekt? = nil
-    var platz: Platz = .home
     /// Höhe der Statusleiste, die die Bühne überdeckt (0 in Blättern ohne Statusleiste)
     var sicherOben: CGFloat = 54
     @ViewBuilder var marke: Marke
@@ -70,11 +54,12 @@ struct Buehne<Marke: View, Extra: View>: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Farbe.buehne
+            LinearGradient(colors: Farbe.buehneVerlauf, startPoint: .top, endPoint: UnitPoint(x: 0.2, y: 1))
+            Schein()
+            Saum(hoehe: Mass.saum(fuer: hoehe))
             WortText(wort: wort)
                 .padding(.leading, 20)
                 .padding(.top, sicherOben + 60)
-            if let objekt { ObjektBild(objekt: objekt, platz: platz) }
             extra
             HStack(spacing: 10) { marke }
                 .padding(.horizontal, 20)
@@ -88,12 +73,40 @@ struct Buehne<Marke: View, Extra: View>: View {
 }
 
 extension Buehne where Extra == EmptyView {
-    init(hoehe: CGFloat = Mass.buehne, wort: Wort, objekt: Objekt? = nil, platz: Platz = .home, sicherOben: CGFloat = 54, @ViewBuilder marke: () -> Marke) {
-        self.init(hoehe: hoehe, wort: wort, objekt: objekt, platz: platz, sicherOben: sicherOben, marke: marke, extra: { EmptyView() })
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, sicherOben: CGFloat = 54, @ViewBuilder marke: () -> Marke) {
+        self.init(hoehe: hoehe, wort: wort, sicherOben: sicherOben, marke: marke, extra: { EmptyView() })
     }
 }
 
-/// Das Wort: Serif, Großbuchstaben, Zeilenabstand 0,86, letztes Wort in Grün.
+/// Ebene 1a: Lichtkegel – ein weicher Kreis (380 pt) oben rechts, wie das Licht hinter einem Produktfoto.
+struct Schein: View {
+    var body: some View {
+        GeometryReader { g in
+            RadialGradient(colors: [Farbe.schein.opacity(0.30), .clear], center: .center, startRadius: 0, endRadius: 190 * 0.68)
+                .frame(width: 380, height: 380)
+                .position(x: g.size.width + 90 - 190, y: -70 + 190)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Ebene 1b: Saum – die untersten Punkte der Bühne laufen in den Grund aus, erst spät (58 % = 5 %, 80 % = 38 %), damit das Wort nicht ausbleicht.
+struct Saum: View {
+    var hoehe: CGFloat
+    var body: some View {
+        VStack { Spacer(minLength: 0)
+            LinearGradient(stops: [.init(color: Farbe.grund.opacity(0), location: 0), .init(color: Farbe.grund.opacity(0.05), location: 0.58),
+                                   .init(color: Farbe.grund.opacity(0.38), location: 0.80), .init(color: Farbe.grund, location: 1)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: hoehe)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Das Wort: Serif, Großbuchstaben, Zeilenabstand 0,86, letztes Wort in Dunst.
 struct WortText: View {
     var wort: Wort
     var body: some View {
@@ -101,7 +114,7 @@ struct WortText: View {
             ForEach(Array(wort.zeilen.enumerated()), id: \.offset) { _, z in
                 Text(z.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.wort)
             }
-            Text(wort.akzent.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.handlung)
+            Text(wort.akzent.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.wortAkzent)
             if let k = wort.klein {
                 Text(k.uppercased()).font(.etikett).tracking(1).foregroundStyle(Farbe.wort.opacity(0.85))
                     .padding(.top, 12 + wort.groesse * 0.34).frame(maxWidth: 250, alignment: .leading).lineLimit(2)
@@ -115,7 +128,7 @@ struct WortText: View {
     }
 }
 
-/// Ebene 2: Foto, freigestellt, mit weichem Schatten, nie antippbar.
+/// Ebene 2: Foto, freigestellt, mit zweistufigem Schatten, nie antippbar (Fokus, Überflug).
 struct ObjektBild: View {
     var objekt: Objekt
     var platz: Platz
@@ -123,7 +136,8 @@ struct ObjektBild: View {
         GeometryReader { g in
             let bild = objekt.bild.resizable().scaledToFit().frame(width: platz.breite)
                 .rotationEffect(.degrees(platz.drehung))
-                .shadow(color: Farbe.schatten.opacity(0.28), radius: 13, y: 24)
+                .shadow(color: Farbe.schatten.opacity(0.22), radius: 4, y: 6)
+                .shadow(color: Farbe.schatten.opacity(0.28), radius: 17, y: 26)
             if let l = platz.links {
                 bild.offset(x: l, y: platz.oben)
             } else {
@@ -135,16 +149,22 @@ struct ObjektBild: View {
     }
 }
 
-/// Ebene 3: weiße Karte, schiebt sich 38 pt über die Bühne – genau eine Hauptaktion darin.
+/// Ebene 3: Creme-Karte, schiebt sich 44 pt über die Bühne – genau eine Hauptaktion darin.
+/// Oben eine Innenlinie 1 pt in Creme, Doppelschatten (eng und weit).
 struct VornKarte<Inhalt: View>: View {
     var abstand: CGFloat = 8
     @ViewBuilder var inhalt: Inhalt
     var body: some View {
         VStack(alignment: .leading, spacing: abstand) { inhalt }
-            .padding(16)
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karteVorn, style: .continuous))
-            .shadow(color: Farbe.schatten.opacity(0.28), radius: 20, y: 18)
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: Mass.karteVorn, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [Farbe.wort.opacity(0.55), .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.15)), lineWidth: 1)
+            }
+            .shadow(color: Farbe.schatten.opacity(0.10), radius: 5, y: 4)
+            .shadow(color: Farbe.schatten.opacity(0.28), radius: 24, y: 24)
             .padding(.horizontal, Mass.rand)
             .padding(.top, Mass.karteVornVersatz)
     }
@@ -155,8 +175,6 @@ struct VornKarte<Inhalt: View>: View {
 struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
     var hoehe: CGFloat = Mass.buehne
     var wort: Wort
-    var objekt: Objekt? = nil
-    var platz: Platz = .home
     @ViewBuilder var marke: Marke
     @ViewBuilder var extra: Extra
     @ViewBuilder var inhalt: Inhalt
@@ -165,7 +183,7 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
         GeometryReader { g in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Buehne(hoehe: hoehe, wort: wort, objekt: objekt, platz: platz, sicherOben: g.safeAreaInsets.top, marke: { marke }, extra: { extra })
+                    Buehne(hoehe: hoehe, wort: wort, sicherOben: g.safeAreaInsets.top, marke: { marke }, extra: { extra })
                     VStack(alignment: .leading, spacing: 0) { inhalt }
                         .frame(maxWidth: 720)
                         .frame(maxWidth: .infinity)
@@ -185,8 +203,8 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
 }
 
 extension BuehnenSeite where Extra == EmptyView {
-    init(hoehe: CGFloat = Mass.buehne, wort: Wort, objekt: Objekt? = nil, platz: Platz = .home, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
-        self.init(hoehe: hoehe, wort: wort, objekt: objekt, platz: platz, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
+        self.init(hoehe: hoehe, wort: wort, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
     }
 }
 
@@ -235,7 +253,7 @@ struct RahmenKnopf: View {
     }
 }
 
-/// Knöpfe: haupt (Grün, füllt die Breite), leise (Rahmen), rot (Rosé/Weinrot, z. B. Löschen). 50 pt, klein 40 pt.
+/// Knöpfe: haupt (Schwarz, dunkel Creme; füllt die Breite), leise (Rahmen), rot (Löschen, in Palette). 50 pt, klein 40 pt.
 enum KnopfArt: Sendable { case haupt, leise, rot }
 
 struct KnopfStil: ButtonStyle {
@@ -275,7 +293,7 @@ extension ButtonStyle where Self == KnopfStil {
     static var rotBreit: KnopfStil { KnopfStil(art: .rot, breit: true) }
 }
 
-/// Auswahl-Kachel (Was anlegen, Einstellungen): Zeichen im Rosé-Kreis, Titel, Unterzeile; gewählt = grüner Rand.
+/// Auswahl-Kachel (Was anlegen, Einstellungen): Zeichen im Kreis, Titel, Unterzeile; gewählt = schwarzer Rand.
 struct AuswahlKachel: View {
     var symbol: String
     var titel: String
@@ -314,7 +332,7 @@ struct AuswahlKachelInhalt: View {
     }
 }
 
-/// Fortschritts-Ring (Blattwerk): Bahn in `linie`, Weg in Kellygrün, Zahl in der Mitte. 56 pt, groß 96 pt.
+/// Fortschritts-Ring: Bahn in `linie`, Weg in `handlung`, Zahl in der Mitte. 56 pt, groß 96 pt.
 struct FortschrittRing: View {
     var anteil: Double
     var gross = false
@@ -350,12 +368,12 @@ extension LagePille {
     }
 }
 
-/// Die Frage eines Schritts: Serif 40, das Fragezeichen in Grün („Wann?“)
+/// Die Frage eines Schritts: Serif 40, das Fragezeichen in Akzent („Wann?“)
 struct FrageWort: View {
     var text: String
     var body: some View {
         let frage = text.hasSuffix("?")
-        (Text(frage ? String(text.dropLast()) : text) + Text(frage ? "?" : "").foregroundStyle(Farbe.handlung))
+        (Text(frage ? String(text.dropLast()) : text) + Text(frage ? "?" : "").foregroundStyle(Farbe.akzent))
             .font(.system(size: 40, weight: .regular, design: .serif))
             .foregroundStyle(Farbe.text)
             .lineLimit(2)
@@ -395,7 +413,7 @@ struct MehrKnopf: View {
     }
 }
 
-/// Lage als Pille: im Plan / voraus (grün weich), hinterher (Rosé mit Weinrot), überfällig (Weinrot mit Rosé)
+/// Lage als Pille: im Plan / voraus (weich), hinterher (Dunst mit Nachtblau), überfällig (Nachtblau mit Creme)
 struct LagePille: View {
     var text: String
     var art: Art = .gut
@@ -404,14 +422,14 @@ struct LagePille: View {
         Text(text).font(.kompass(.caption, .heavy)).padding(.horizontal, 10).padding(.vertical, 4)
             .background(grund, in: Capsule()).foregroundStyle(vorn).lineLimit(1)
     }
-    private var grund: Color { switch art { case .gut: Farbe.akzentWeich; case .hinten: Farbe.warnungGrund; case .kritisch: Farbe.warnung } }
-    private var vorn: Color { switch art { case .gut: Farbe.text; case .hinten: Farbe.warnung; case .kritisch: Farbe.warnungGrund } }
+    private var grund: Color { switch art { case .gut: Farbe.akzentWeich; case .hinten: Farbe.warnungGrund; case .kritisch: Farbe.kritischGrund } }
+    private var vorn: Color { switch art { case .gut: Farbe.text; case .hinten: Farbe.warnung; case .kritisch: Farbe.kritisch } }
 }
 
 #Preview("Bühne") {
     ScrollView {
         VStack(spacing: 0) {
-            Buehne(wort: Wort(zeilen: ["Jetzt"], akzent: "dran."), objekt: .b747, platz: .home) {
+            Buehne(wort: Wort(zeilen: ["Jetzt"], akzent: "dran.")) {
                 MarkenTitel(text: "Kompass"); Spacer(); MarkenHinweis(text: "Di · 24. Nov")
                 RahmenKnopf(symbol: "plus", beschriftung: "Neu") {}
             }
@@ -430,7 +448,7 @@ struct LagePille: View {
     .ignoresSafeArea(edges: .top)
 }
 
-/// Einstell-Kachel (Blattwerk): Zeichen im Rosé-Kreis, Titel, Wert, Unterzeile. Die Farb-Parameter bleiben für
+/// Einstell-Kachel (Blattwerk): Zeichen im Kreis, Titel, Wert, Unterzeile. Die Farb-Parameter bleiben für
 /// die Aufrufer erhalten, wirken aber nicht mehr – Blattwerk nutzt nur Palette-Farben.
 struct EinstellKachelInhalt: View {
     var symbol: String
