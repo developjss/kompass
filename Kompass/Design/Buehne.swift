@@ -175,6 +175,8 @@ struct VornKarte<Inhalt: View>: View {
 struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
     var hoehe: CGFloat = Mass.buehne
     var wort: Wort
+    /// false = ohne Seitenfuß (Statistik, Rückblick – nichts Überflüssiges)
+    var fuss = true
     @ViewBuilder var marke: Marke
     @ViewBuilder var extra: Extra
     @ViewBuilder var inhalt: Inhalt
@@ -187,11 +189,13 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
                     VStack(alignment: .leading, spacing: 0) { inhalt }
                         .frame(maxWidth: 720)
                         .frame(maxWidth: .infinity)
-                    SeitenFuss()
-                        .padding(.horizontal, Mass.rand)
-                        .padding(.top, Mass.abschnitt)
-                        .frame(maxWidth: 720)
-                        .frame(maxWidth: .infinity)
+                    if fuss {
+                        SeitenFuss()
+                            .padding(.horizontal, Mass.rand)
+                            .padding(.top, Mass.abschnitt)
+                            .frame(maxWidth: 720)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
                 .padding(.bottom, 32)
             }
@@ -203,8 +207,8 @@ struct BuehnenSeite<Marke: View, Extra: View, Inhalt: View>: View {
 }
 
 extension BuehnenSeite where Extra == EmptyView {
-    init(hoehe: CGFloat = Mass.buehne, wort: Wort, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
-        self.init(hoehe: hoehe, wort: wort, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
+    init(hoehe: CGFloat = Mass.buehne, wort: Wort, fuss: Bool = true, @ViewBuilder marke: () -> Marke, @ViewBuilder inhalt: () -> Inhalt) {
+        self.init(hoehe: hoehe, wort: wort, fuss: fuss, marke: marke, extra: { EmptyView() }, inhalt: inhalt)
     }
 }
 

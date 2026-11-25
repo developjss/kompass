@@ -13,17 +13,15 @@ struct RueckblickAnsicht: View {
         let w = Statistik.werte(zustand: z, heute: T, wochen: 1, versatz: 0, termine: speicher.termine(am:))
         let (zeile, akzent) = Wochenwort.wort(w.lage)
 
-        BuehnenSeite(wort: Wort(zeilen: [zeile], akzent: akzent, klein: w.zeitraumText), marke: {
-            MarkenTitel(text: "Rückblick")
+        BuehnenSeite(wort: Wort(zeilen: [zeile], akzent: akzent), fuss: false, marke: {
             Spacer(minLength: 8)
-            MarkenHinweis(text: "KW \(T.montag.kalenderwoche)")
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.rueckblick) }
             RahmenKnopf(symbol: "gearshape", beschriftung: "Einstellungen") { nav.blatt = .einstellungen }
         }) {
             // Vier Kacheln – die wichtigsten Dinge der App: Pläne, Habits, Ziele, Zeit
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(Statistik.Art.allCases, id: \.self) { art in
-                    NavigationLink(value: StatistikAuswahl(art: art)) { StatistikKachel(art: art, werte: w) }
+                    NavigationLink(value: StatistikAuswahl(art: art)) { StatistikKachel(art: art, werte: w, heute: T.wochentag - 1) }
                         .buttonStyle(.plain)
                         .accessibilityLabel("\(art.titel): \(art.zahl(w)). \(art.satz(w))")
                         .accessibilityHint("Öffnet die Statistik")
@@ -103,6 +101,9 @@ enum Statistik {
         var auslastungJeTag: [Double]
         /// Fortschritt je aktives Ziel (für die kleinen Säulen)
         var fortschrittJeZiel: [Double]
+        var zieleFarben: [String]
+        /// Fokusstunden je Woche, die letzten 12 Wochen bis zum Ende des Zeitraums
+        var zwoelfWochen: [Double]
         var zeitraumText: String
         var lage: Wochenwort.Lage
     }
@@ -142,7 +143,8 @@ enum Statistik {
                                    auslastung: auslastung.max() ?? 0, tageMitDaten: mitDaten)
         let f = { (t: Tag) in t.datum().formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "de_DE"))) }
         return Werte(von: von, bis: bis, bilanz: bilanz, habitQuote: habitQuote, zieleAufKurs: aufKurs, zieleGesamt: aktiv.count, fortschrittMittel: mittel,
-                     fokus: fokus, fokusFuerZiele: fuerZiele, tage: tage, volleTage: volle, jeTag: jeTag, auslastungJeTag: auslastung, fortschrittJeZiel: kurse.map(\.fortschritt),
+                     fokus: fokus, fokusFuerZiele: fuerZiele, tage: tage, volleTage: volle, jeTag: jeTag, auslastungJeTag: auslastung, fortschrittJeZiel: kurse.map(\.fortschritt), zieleFarben: aktiv.map(\.farbe),
+                     zwoelfWochen: (0..<12).map { k -> Double in let a = bis.plus(tage: -7 * (11 - k) - 6); return z.sitzungen.filter { $0.tag >= a && $0.tag <= a.plus(tage: 6) }.reduce(0) { $0 + $1.sekunden } / 3600 },
                      zeitraumText: "\(f(von)) – \(f(bis))", lage: lage)
     }
 }
@@ -151,6 +153,7 @@ enum Statistik {
 private struct StatistikKachel: View {
     var art: Statistik.Art
     var werte: Statistik.Werte
+    var heute: Int?
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
@@ -160,23 +163,58 @@ private struct StatistikKachel: View {
                 Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
             }
             .foregroundStyle(Farbe.zweitrangig)
-            Text(art.zahl(werte)).font(.zahl).foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
-            Text(art.satz(werte)).font(.klein).foregroundStyle(Farbe.zweitrangig).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 4)
-            MiniSaeulen(werte: saeulen, hoehe: 28, farbe: Farbe.buehne, hervor: nil)
+            Text(art.zahl(werte)).font(.system(size: 32, weight: .regular, design: .serif)).foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            KachelGrafik(art: art, werte: werte, heute: heute)
         }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 148, alignment: .topLeading)
         .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Farbe.schatten.opacity(0.10), radius: 5, y: 4)
         .shadow(color: Farbe.schatten.opacity(0.22), radius: 20, y: 18)
         .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
-    private var saeulen: [Double] {
+}
+
+/// Die Grafik je Kachel – sofort lesbar, ohne Beschriftung: Erledigt = sieben Tage, Habits = Ring, Ziele = ein Balken je Ziel, Zeit = Kurve der 12 Wochen.
+private struct KachelGrafik: View {
+    var art: Statistik.Art
+    var werte: Statistik.Werte
+    var heute: Int?
+    var body: some View {
         switch art {
-        case .erledigt, .habits: werte.jeTag
-        case .ziele: werte.fortschrittJeZiel.isEmpty ? [0] : werte.fortschrittJeZiel
-        case .zeit: werte.auslastungJeTag
+        case .erledigt:
+            HStack(alignment: .bottom, spacing: 5) {
+                ForEach(0..<7, id: \.self) { i in
+                    let v = werte.jeTag[i]
+                    let geplant = werte.bilanz.geplantJeTag[i] > 0
+                    Capsule().fill(heute == i ? Farbe.jetzt : (geplant ? Farbe.buehne.opacity(0.35 + 0.65 * v) : Farbe.linie))
+                        .frame(height: max(6, 34 * (geplant ? max(v, 0.18) : 0.18)))
+                        .frame(maxWidth: .infinity, maxHeight: 34, alignment: .bottom)
+                }
+            }
+            .frame(height: 34)
+        case .habits:
+            HStack(spacing: 10) {
+                FortschrittRing(anteil: werte.habitQuote, text: "")
+                    .scaleEffect(0.68).frame(width: 38, height: 38)
+                HStack(spacing: 4) {
+                    ForEach(0..<7, id: \.self) { i in
+                        Circle().fill(werte.jeTag[i] >= 0.999 ? Farbe.buehne : werte.jeTag[i] > 0 ? Farbe.buehne.opacity(0.4) : Farbe.linie)
+                            .frame(width: 7, height: 7)
+                    }
+                }
+            }
+            .frame(height: 34)
+        case .ziele:
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(Array(werte.zieleFarben.prefix(4).enumerated()), id: \.offset) { i, f in
+                    Balken(anteil: werte.fortschrittJeZiel[i], farbe: Color(hex: f), spur: Farbe.linie, hoehe: 5)
+                }
+            }
+            .frame(height: 34, alignment: .bottom)
+        case .zeit:
+            Kurve(werte: werte.zwoelfWochen, farbe: Farbe.buehne).frame(height: 34)
         }
     }
 }
@@ -186,6 +224,7 @@ struct StatistikSeite: View {
     var auswahl: StatistikAuswahl
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @Environment(\.dismiss) private var dismiss
     @State private var zeitraum: Statistik.Zeitraum = .woche
     @State private var versatz = 0
 
@@ -193,7 +232,8 @@ struct StatistikSeite: View {
         let z = speicher.zustand
         let T = speicher.heute
         let w = Statistik.werte(zustand: z, heute: T, wochen: zeitraum.wochen, versatz: versatz, termine: speicher.termine(am:))
-        BuehnenSeite(hoehe: Mass.buehneKurz, wort: auswahl.art.wort(w), marke: {
+        BuehnenSeite(hoehe: Mass.buehneKurz, wort: auswahl.art.wort(w), fuss: false, marke: {
+            RahmenKnopf(symbol: "chevron.left", beschriftung: "Zurück") { dismiss() }
             MarkenTitel(text: auswahl.art.titel)
             Spacer(minLength: 8)
             MarkenHinweis(text: w.zeitraumText)
@@ -287,13 +327,9 @@ struct StatistikSeite: View {
                 }
             }
         case .zeit:
-            let zwoelf = (0..<12).map { k -> Double in
-                let a = w.bis.plus(tage: -7 * (11 - k) - 6)
-                return z.sitzungen.filter { $0.tag >= a && $0.tag <= a.plus(tage: 6) }.reduce(0) { $0 + $1.sekunden } / 3600
-            }
             WeisseKarte(titel: "Fokuszeit", wert: Zahl.dauer(w.fokus),
                         unter: "Ø \(Zahl.dauer(w.fokus / Double(w.tage))) pro Tag · \(w.fokus > 0 ? Int((w.fokusFuerZiele / w.fokus * 100).rounded()) : 0) % für Ziele") {
-                Kurve(werte: zwoelf, farbe: Farbe.akzent).frame(height: 64)
+                Kurve(werte: w.zwoelfWochen, farbe: Farbe.akzent).frame(height: 64)
                 HStack { Text("vor 12 Wochen"); Spacer(); Text("jetzt") }.font(.caption2).foregroundStyle(Farbe.zweitrangig)
             }
             WeisseKarte(titel: "Auslastung", wert: Zahl.dauer(TimeInterval(w.bilanz.verplant.reduce(0, +) * 60)),
