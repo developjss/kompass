@@ -29,6 +29,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 24.11.2026 | [ENTSCHEIDUNG] Assistent: Websuche über Anthropic und Gedächtnis „merken“ (nur Gerät, löschbar) (PR #20, „Ja, mergen“) | `docs/technik/lotse-server.md` §1 |
 | 24.11.2026 | [ENTSCHEIDUNG] Arbeitsweise: Full-/UI-Tests auf Ansage oder nach Rückfrage etwa alle 10 Builds; Doku gebündelt alle 3–4 Blöcke; jedes Update sofort auf iPhone und Simulator | `docs/team/arbeitsweise.md` |
 | 24.11.2026 | [ENTSCHEIDUNG] Meilenstein aus Bestehendem (Aufgabe, Termine, Habit); Termine wahlweise alle bisherigen, Habit wahlweise seit Anlage des Habits (PR #27, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §3 |
+| 25.11.2026 | [ENTSCHEIDUNG] Rechenregel „Wochenwort“: ein bis zwei Wörter über der Woche, sieben feste Regeln, die erste passende gewinnt; Rückblick mit vier Kacheln, Zeitraum erst auf der Statistik-Seite (PR #52, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §11 |
 
 ## 2. Offen (Gründer entscheidet)
 

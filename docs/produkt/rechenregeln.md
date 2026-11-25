@@ -101,7 +101,7 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - Assistent („Womit soll ich anfangen?“) nennt die ersten zwei mit Platz.
 - Swift: `Kompass/Rechnung/Empfehlung.swift`, Tests `KompassTests/EmpfehlungTests.swift`.
 
-## 11. Rückblick: das Wochenwort [VORSCHLAG – 25.11.2026, Freigabe des Gründers offen]
+## 11. Rückblick: das Wochenwort [ENTSCHEIDUNG – 25.11.2026, PR #52, „Ja, mergen“]
 
 Über dem Rückblick steht ein bis zwei Wörter zur Lage der Woche – deterministisch aus vier Zahlen, keine KI. Erste passende Regel gewinnt:
 
