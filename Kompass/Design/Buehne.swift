@@ -59,7 +59,7 @@ struct Buehne<Marke: View, Extra: View>: View {
             Saum(hoehe: Mass.saum(fuer: hoehe))
             WortText(wort: wort)
                 .padding(.leading, 20)
-                .padding(.top, sicherOben + 60)
+                .padding(.top, sicherOben + (hoehe <= Mass.buehneKurz ? 48 : 60))
             extra
             HStack(spacing: 10) { marke }
                 .padding(.horizontal, 20)

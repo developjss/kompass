@@ -167,7 +167,7 @@ enum Mass {
     static let zeileKompakt: CGFloat = 52
     /// Nachtblau: Bühne, Karte vorn, Knopf
     static let buehne: CGFloat = 360
-    static let buehneKurz: CGFloat = 250
+    static let buehneKurz: CGFloat = 270
     static let buehneLang: CGFloat = 430
     static let karteVorn: CGFloat = 28
     static let karteVornVersatz: CGFloat = -44
