@@ -117,6 +117,29 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 
 Pläne = Aufgaben + Habit-Tage (§9 Wochenbilanz). Die vier Kacheln darunter – Erledigt, Habits, Ziele, Zeit – rechnen nur mit §1, §4, §6 und §9; Monat = 4 Wochen, Jahr = 52 Wochen, jeweils zurück ab dem Montag der Woche. Swift: `Kompass/Rechnung/Wochenwort.swift`, Tests `KompassTests/WochenwortTests.swift`.
 
+## 12. Home: Signale [VORSCHLAG – 26.11.2026, Freigabe des Gründers offen]
+
+Home zeigt unter der Karte, was gerade wichtig ist – höchstens drei Zeilen, jede mit genau einer Handlung. Alles deterministisch, keine KI.
+
+| Signal | Bedingung | Gewicht | Handlung |
+|---|---|---|---|
+| Serie in Gefahr | Habit heute geplant und offen, Serie ≥ 7 Tage, ab 18 Uhr (nicht bei „n-mal pro Woche“) | 100 | Habit |
+| Liegengeblieben | offene Aufgaben mit Datum vor heute | 90 | alle auf heute |
+| Überschneidung | zwei Blöcke ≥ 5 Min gleichzeitig, heute bis in 6 Tagen (§9) | 85 | Tag im Kalender |
+| Voller Tag | Auslastung ≥ 75 % (verplant ÷ wach 7–22 Uhr), heute bis in 7 Tagen | 80 | Tag im Kalender |
+| Zu wenig Zeit | Offenes ohne Uhrzeit braucht mehr als frei ist (§9) | 75 | Tag im Kalender |
+| Ziel hinter Plan | Lage „hinterher“ oder „überfällig“ (§4) oder Prognose nach der Frist (§5) | 70 | Ziel |
+| Frist nah | aktives Ziel unter 100 %, fällig in 0–14 Tagen | 60 | Ziel |
+| Freier Tag | Auslastung ≤ 25 % morgen bis in 3 Tagen **und** offene Aufgaben ohne Datum | 40 | Tag im Kalender |
+| Serie geschafft | Serie steht heute genau bei 7, 30 oder 100 | 30 | Analyse |
+
+- **Rang = Gewicht ÷ (1 + Tage bis zum Ereignis)**; heute = 0 Tage. Bei Gleichstand gewinnt das höhere Gewicht.
+- **Je Art höchstens ein Signal:** der früheste Tag, das Ziel mit dem größten Rückstand (erwartet − Fortschritt), die früheste Frist, die längste Serie.
+- **Home zeigt die drei mit dem höchsten Rang.**
+- **„Passt nicht“** stellt die Art 56 Tage stumm (nur auf dem Gerät, `lernen.signaleStumm`). Gelernt wird nur, was gezeigt wird – nie die Rechnung.
+- Noch nicht gebaut: Anlässe aus dem Kalender (Geburtstag, Prüfung …) und Wochenstart – Konzept `konzepte/home-intelligent.md`.
+- Swift: `Kompass/Rechnung/Signale.swift`, Tests `KompassTests/SignaleTests.swift`.
+
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

@@ -69,7 +69,8 @@ struct ZielDetail: View {
 
     /// Das Wort: Prozent und Lage (§4), darunter der Zieltitel.
     nonisolated static func wort(_ g: Ziel, kurs: Kurs.Ergebnis) -> Wort {
-        Wort(zeilen: [Zahl.prozent(kurs.fortschritt)], akzent: kurs.lage.text + ".", groesse: Wort.riesig)
+        // Lange Lagen („hinterher“, „überfällig“) passen in voller Größe nicht in die Zeile
+        Wort(zeilen: [Zahl.prozent(kurs.fortschritt)], akzent: kurs.lage.text + ".", groesse: kurs.lage.text.count > 8 ? 64 : Wort.riesig)
     }
 
 }

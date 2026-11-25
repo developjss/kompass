@@ -1,4 +1,4 @@
-# Home als intelligenter Überblick – Konzept [VORSCHLAG – 25.11.2026, Entscheidung des Gründers offen]
+# Home als intelligenter Überblick – Konzept [VORSCHLAG – 25.11.2026; Stufe 1 und 2 gebaut am 26.11.2026 als Rechenregel §12, Freigabe des Gründers offen]
 
 Auftrag des Gründers: Home soll „das Leben auf einen Blick“ zeigen – gebündelt und ausgewertet aus Zielen, Habits, Aufgaben, Meilensteinen, Kalender, Rückblick und Assistent; dynamisch, je Person das, was gerade wichtig ist. Kompass soll der intelligenteste Tagesplaner sein.
 
