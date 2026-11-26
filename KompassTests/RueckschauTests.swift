@@ -124,4 +124,33 @@ struct RueckschauTests {
         #expect(Rueckschau.erkenntnisZeit(fokus: 3600, fuerZiele: 900).titel == "Wenig Fokus für Ziele")
         #expect(Rueckschau.erkenntnisZeit(fokus: 3600, fuerZiele: 1800).titel == "Fokus zahlt auf Ziele ein")
     }
+
+    // §14: das Auffälligste vorn – handeln vor Hinweis vor gut vor leer, bei Gleichstand die feste Folge.
+    @Test func reelsOrdnenNachStufeUndBleibenStabil() {
+        func r(_ a: Statistik.Art, _ s: Rueckschau.Stufe) -> Rueckschau.Reel {
+            Rueckschau.Reel(art: a, zahl: "", erkenntnis: Rueckschau.Erkenntnis(titel: "", text: "", stufe: s))
+        }
+        let o = Rueckschau.ordnen([r(.erledigt, .gut), r(.habits, .leer), r(.ziele, .handeln), r(.zeit, .hinweis)])
+        #expect(o.map(\.art) == [.ziele, .zeit, .erledigt, .habits])
+        let gleich = Rueckschau.ordnen([r(.erledigt, .handeln), r(.habits, .gut), r(.ziele, .handeln), r(.zeit, .gut)])
+        #expect(gleich.map(\.art) == [.erledigt, .ziele, .habits, .zeit])
+    }
+
+    @Test func jedeErkenntnisRegelHatIhreStufe() {
+        #expect(Rueckschau.erkenntnisErledigt(geplantJeTag: [0, 0, 0, 0, 0, 0, 0], erledigtJeTag: [0, 0, 0, 0, 0, 0, 0], tage: 3).stufe == .leer)
+        #expect(Rueckschau.erkenntnisErledigt(geplantJeTag: [4, 4, 0, 0, 0, 0, 0], erledigtJeTag: [1, 1, 0, 0, 0, 0, 0], tage: 2).stufe == .handeln)
+        #expect(Rueckschau.erkenntnisErledigt(geplantJeTag: [4, 4, 0, 0, 0, 0, 0], erledigtJeTag: [4, 2, 0, 0, 0, 0, 0], tage: 2).stufe == .hinweis)
+        #expect(Rueckschau.erkenntnisErledigt(geplantJeTag: [4, 4, 0, 0, 0, 0, 0], erledigtJeTag: [4, 4, 0, 0, 0, 0, 0], tage: 2).stufe == .gut)
+        #expect(Rueckschau.erkenntnisZeit(fokus: 0, fuerZiele: 0).stufe == .leer)
+        #expect(Rueckschau.erkenntnisZeit(fokus: 3600, fuerZiele: 600).stufe == .hinweis)
+        #expect(Rueckschau.erkenntnisZeit(fokus: 3600, fuerZiele: 3000).stufe == .gut)
+    }
+
+    @Test func reelsEinerLeerenAppSindVierUndAlleLeer() {
+        let z = Zustand()
+        let w = Statistik.werte(zustand: z, heute: T, wochen: 1, versatz: 0, termine: { _ in [] })
+        let reels = Rueckschau.reels(werte: w, zustand: z, heute: T)
+        #expect(reels.map(\.art) == Statistik.Art.allCases)
+        #expect(reels.allSatisfy { $0.erkenntnis.stufe == .leer })
+    }
 }

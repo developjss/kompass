@@ -179,6 +179,42 @@ enum Rueckschau {
         var titel: String
         var text: String
         var ziel: Ziel = .keins
+        /// Wie auffällig der Satz ist (§14) – bestimmt die Reihenfolge der Rückblick-Karten auf Home.
+        var stufe: Stufe = .gut
+    }
+
+    /// §14: handeln (etwas läuft schief) vor hinweis (etwas fällt auf) vor gut vor leer (noch keine Daten).
+    enum Stufe: Int, Comparable, Sendable {
+        case leer, gut, hinweis, handeln
+        static func < (a: Stufe, b: Stufe) -> Bool { a.rawValue < b.rawValue }
+    }
+
+    /// Eine Rückblick-Karte auf Home: Analyse, ihre Zahl der laufenden Woche und der Satz zum Mitnehmen.
+    struct Reel: Equatable, Identifiable, Sendable {
+        var art: Statistik.Art
+        var zahl: String
+        var erkenntnis: Erkenntnis
+        var id: String { art.rawValue }
+    }
+
+    /// §14 Rückblick-Karten: je Analyse eine Karte für die laufende Woche; das Auffälligste steht vorn.
+    /// Reihenfolge: Stufe absteigend, bei Gleichstand die feste Folge Erledigt · Habits · Ziele · Zeit.
+    static func reels(werte w: Statistik.Werte, zustand z: Zustand, heute T: Tag) -> [Reel] {
+        let alle = Statistik.Art.allCases.map { art -> Reel in
+            let e: Erkenntnis = switch art {
+            case .erledigt: erkenntnisErledigt(geplantJeTag: w.bilanz.geplantJeTag, erledigtJeTag: w.bilanz.erledigtJeTag, tage: w.tage, laufend: T.wochentag - 1)
+            case .habits: erkenntnisHabits(zustand: z, von: w.von, bis: w.bis, heute: T)
+            case .ziele: erkenntnisZiele(zustand: z, von: w.von, bis: w.bis, heute: T)
+            case .zeit: erkenntnisZeit(fokus: w.fokus, fuerZiele: w.fokusFuerZiele)
+            }
+            return Reel(art: art, zahl: art.zahl(w), erkenntnis: e)
+        }
+        return ordnen(alle)
+    }
+
+    /// Stabil: gleiche Stufe behält die Reihenfolge der Eingabe.
+    static func ordnen(_ reels: [Reel]) -> [Reel] {
+        reels.enumerated().sorted { ($1.element.erkenntnis.stufe, $0.offset) < ($0.element.erkenntnis.stufe, $1.offset) }.map(\.element)
     }
 
     static let tagNamen = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
@@ -187,15 +223,15 @@ enum Rueckschau {
     /// `laufend` = Index des heutigen Tages: er ist noch nicht vorbei und kann nicht der schwächste sein.
     static func erkenntnisErledigt(geplantJeTag g: [Double], erledigtJeTag e: [Double], tage: Int, laufend: Int? = nil) -> Erkenntnis {
         let geplant = g.reduce(0, +), erledigt = e.reduce(0, +)
-        guard geplant > 0 else { return Erkenntnis(titel: "Noch nichts geplant", text: "Aufgaben mit Datum und Habits zählen hier.", ziel: .kalender) }
+        guard geplant > 0 else { return Erkenntnis(titel: "Noch nichts geplant", text: "Aufgaben mit Datum und Habits zählen hier.", ziel: .kalender, stufe: .leer) }
         let quote = erledigt / geplant
         if quote < 0.6 {
             let n = Double(max(1, tage))
-            return Erkenntnis(titel: "Mehr geplant als geschafft", text: "Je Tag \(Zahl.text(geplant / n, stellen: 1)) geplant, \(Zahl.text(erledigt / n, stellen: 1)) geschafft – plane weniger ein.", ziel: .kalender)
+            return Erkenntnis(titel: "Mehr geplant als geschafft", text: "Je Tag \(Zahl.text(geplant / n, stellen: 1)) geplant, \(Zahl.text(erledigt / n, stellen: 1)) geschafft – plane weniger ein.", ziel: .kalender, stufe: .handeln)
         }
         let q = g.indices.filter { g[$0] > 0 && $0 != laufend }.map { ($0, e[$0] / g[$0]) }
         if let schwach = q.min(by: { ($0.1, $0.0) < ($1.1, $1.0) }), let stark = q.max(by: { $0.1 < $1.1 }), stark.1 - schwach.1 >= 0.3 {
-            return Erkenntnis(titel: "\(tagNamen[schwach.0]) ist dein schwächster Tag", text: "\(Zahl.prozent(schwach.1)) geschafft, am \(tagNamen[stark.0]) \(Zahl.prozent(stark.1)).", ziel: .kalender)
+            return Erkenntnis(titel: "\(tagNamen[schwach.0]) ist dein schwächster Tag", text: "\(Zahl.prozent(schwach.1)) geschafft, am \(tagNamen[stark.0]) \(Zahl.prozent(stark.1)).", ziel: .kalender, stufe: .hinweis)
         }
         if quote >= 0.8 { return Erkenntnis(titel: "Fast alles geschafft", text: "\(Zahl.prozent(quote)) deiner Pläne – das Maß passt.") }
         return Erkenntnis(titel: "Solide", text: "\(Zahl.prozent(quote)) deiner Pläne geschafft, gleichmäßig über die Tage.")
@@ -207,9 +243,9 @@ enum Rueckschau {
             let x = HabitRechnung.quote(alle: [h], von: von, bis: bis, heute: T)
             return x.geplant > 0 ? (h, x.erledigt / Double(x.geplant), x.erledigt, x.geplant) : nil
         }
-        guard !q.isEmpty else { return Erkenntnis(titel: "Noch kein Habit geplant", text: "Geplante Habit-Tage zählen hier.") }
+        guard !q.isEmpty else { return Erkenntnis(titel: "Noch kein Habit geplant", text: "Geplante Habit-Tage zählen hier.", stufe: .leer) }
         if let s = q.min(by: { ($0.1, $0.0.titel) < ($1.1, $1.0.titel) }), s.1 < 0.6 {
-            return Erkenntnis(titel: "„\(s.0.titel)“ fällt zurück", text: "\(Zahl.text(s.2, stellen: 1)) von \(s.3) geschafft – kleiner machen oder fest einplanen.", ziel: .habitSeite(s.0.id))
+            return Erkenntnis(titel: "„\(s.0.titel)“ fällt zurück", text: "\(Zahl.text(s.2, stellen: 1)) von \(s.3) geschafft – kleiner machen oder fest einplanen.", ziel: .habitSeite(s.0.id), stufe: .handeln)
         }
         return Erkenntnis(titel: "Alle Habits stabil", text: "Keiner unter 60 % in diesem Zeitraum.")
     }
@@ -217,24 +253,24 @@ enum Rueckschau {
     /// Ziele: größter Rückstand (§4) – sonst ein aktives Ziel ohne Zeit im Zeitraum – sonst „alle im Plan“.
     static func erkenntnisZiele(zustand z: Zustand, von: Tag, bis: Tag, heute T: Tag) -> Erkenntnis {
         let aktiv = z.ziele.filter { $0.status == .aktiv }
-        guard !aktiv.isEmpty else { return Erkenntnis(titel: "Noch kein Ziel", text: "Aktive Ziele mit Meilensteinen zählen hier.") }
+        guard !aktiv.isEmpty else { return Erkenntnis(titel: "Noch kein Ziel", text: "Aktive Ziele mit Meilensteinen zählen hier.", stufe: .leer) }
         let kurse = aktiv.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
         let hinten = kurse.filter { $0.1.lage == .hinterher || $0.1.lage == .ueberfaellig }
             .max { ($0.1.erwartet - $0.1.fortschritt, $1.0.titel) < ($1.1.erwartet - $1.1.fortschritt, $0.0.titel) }
         if let (g, k) = hinten {
-            return Erkenntnis(titel: "„\(g.titel)“ braucht dich", text: "\(Zahl.prozent(k.fortschritt)) statt \(Zahl.prozent(k.erwartet)) – dort bringt der nächste Schritt am meisten.", ziel: .zielSeite(g.id))
+            return Erkenntnis(titel: "„\(g.titel)“ braucht dich", text: "\(Zahl.prozent(k.fortschritt)) statt \(Zahl.prozent(k.erwartet)) – dort bringt der nächste Schritt am meisten.", ziel: .zielSeite(g.id), stufe: .handeln)
         }
         if let g = aktiv.sorted(by: { ($0.faellig, $0.titel) < ($1.faellig, $1.titel) }).first(where: { Fortschritt.zeit(ziel: $0.id, in: z, von: von, bis: min(bis, T)) <= 0 }) {
-            return Erkenntnis(titel: "Keine Zeit für „\(g.titel)“", text: "In diesem Zeitraum nichts gebucht – ein Block reicht für den Anfang.", ziel: .zielSeite(g.id))
+            return Erkenntnis(titel: "Keine Zeit für „\(g.titel)“", text: "In diesem Zeitraum nichts gebucht – ein Block reicht für den Anfang.", ziel: .zielSeite(g.id), stufe: .hinweis)
         }
         return Erkenntnis(titel: "Alle Ziele im Plan", text: "Jedes Ziel hatte in diesem Zeitraum Zeit.")
     }
 
     /// Zeit: kein Fokus · unter der Hälfte für Ziele · sonst der Anteil.
     static func erkenntnisZeit(fokus: TimeInterval, fuerZiele: TimeInterval) -> Erkenntnis {
-        guard fokus > 0 else { return Erkenntnis(titel: "Noch kein Fokus gemessen", text: "Fokuszeit entsteht nur mit dem Timer – starte ihn bei der nächsten Aufgabe.") }
+        guard fokus > 0 else { return Erkenntnis(titel: "Noch kein Fokus gemessen", text: "Fokuszeit entsteht nur mit dem Timer – starte ihn bei der nächsten Aufgabe.", stufe: .leer) }
         let a = fuerZiele / fokus
-        if a < 0.5 { return Erkenntnis(titel: "Wenig Fokus für Ziele", text: "\(Zahl.prozent(a)) deiner Fokuszeit zahlt auf ein Ziel ein – ordne Aufgaben einem Ziel zu.") }
+        if a < 0.5 { return Erkenntnis(titel: "Wenig Fokus für Ziele", text: "\(Zahl.prozent(a)) deiner Fokuszeit zahlt auf ein Ziel ein – ordne Aufgaben einem Ziel zu.", stufe: .hinweis) }
         return Erkenntnis(titel: "Fokus zahlt auf Ziele ein", text: "\(Zahl.prozent(a)) deiner Fokuszeit gehört zu einem Ziel.")
     }
 

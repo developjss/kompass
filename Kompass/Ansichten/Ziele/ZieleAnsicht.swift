@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Ziele (Tab Fortschritt, Blattwerk): Bühne mit dem Wort „x von y auf Kurs“ und dem Kompass, Karte vorn mit
+/// Ziele (eigener Tab, Blattwerk): Bühne mit dem Wort „x von y auf Kurs“ und dem Kompass, Karte vorn mit
 /// Filter (Alle · Hinterher · Erreicht) und dem Ziel mit dem größten Hebel, darunter alle Ziele mit Ring und Lage.
 /// Hick: drei Filter, Sortieren (drei) unter „Mehr“.
 struct ZieleAnsicht: View {
@@ -29,7 +29,7 @@ struct ZieleAnsicht: View {
         let hebel = Self.hebel(z, heute: T)
 
         BuehnenSeite(wort: Self.wort(aufKurs: aufKurs.count, gesamt: aktiv.count), marke: {
-            FortschrittWahl()
+            MarkenTitel(text: "Ziele")
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.ziele) }
         }) {
@@ -71,8 +71,8 @@ struct ZieleAnsicht: View {
                     ChipReihe(titel: "Sortieren", auswahl: sortierWahl.map { ($0.titel, $0 == sortierung) }) { i in
                         withAnimation(ruhig ? nil : .snappy) { sortierungRoh = sortierWahl[i].rawValue }
                     }
-                HinzufuegenKarte(titel: "Ziel hinzufügen", unter: "mit Frist und Meilensteinen") { nav.blatt = .neu(.ziel) }
                 }
+                HinzufuegenKarte(titel: "Ziel hinzufügen", unter: "mit Frist und Meilensteinen") { nav.blatt = .neu(.ziel) }
                 GruppierteListe {
                     if alle.isEmpty { LeerZeile(text: leerText) }
                     ForEach(alle) { ZielListenZeile(ziel: $0) }

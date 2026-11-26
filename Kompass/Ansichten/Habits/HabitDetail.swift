@@ -160,7 +160,7 @@ struct HabitTeilSeite: View {
             .confirmationDialog("Habit wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
                 Button("Löschen", role: .destructive) {
                     let hid = h.id
-                    nav.fortschrittPfad = NavigationPath()
+                    nav.zurListe()
                     speicher.aendern { $0.habitLoeschen(hid) }
                 }
             } message: { Text("Einträge und Serie gehen verloren. Meilensteine bleiben und zeigen „Habit wählen“.") }

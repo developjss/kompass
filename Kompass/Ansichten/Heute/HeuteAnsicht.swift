@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Home (Nachtblau, Hick’s Law): Bühne „Jetzt dran“, Karte vorn mit genau einer Sache (Fokus · Erledigt),
-/// darunter „Wichtig“ (höchstens drei Signale, §12) und „Als Nächstes“ (3 + alle). Abends der Tagesabschluss.
+/// darunter „Wichtig“ (höchstens drei Signale, §12), der Rückblick als Karten zum Wischen (§14) und „Als Nächstes“ (3 + alle). Abends der Tagesabschluss.
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -37,6 +37,9 @@ struct HeuteAnsicht: View {
                 }
                 .padding(.horizontal, Mass.rand)
             }
+
+            // Rückblick (§14): Karten zum Wischen, das Auffälligste vorn
+            RueckblickReihe()
 
             AbschnittKopf(titel: "Als Nächstes") {
                 if gesamt > zeilen.count {

@@ -343,7 +343,7 @@ private struct Blase: View {
         case .ziel: "Ziel öffnen ›"
         case .aufgabe: "Aufgabe öffnen ›"
         case .habit: "Habit öffnen ›"
-        case .bereich(let b): "\(Bereich(rawValue: b)?.titel ?? "Bereich") öffnen ›"
+        case .bereich(let b): "\(Bereich.aus(b)?.titel ?? "Bereich") öffnen ›"
         case .pro: "Kompass Pro ansehen ›"
         }
     }
@@ -353,7 +353,7 @@ private struct Blase: View {
         case .ziel(let id): nav.oeffneZiel(id)
         case .aufgabe(let id): nav.blatt = .aufgabe(id)
         case .habit(let id): nav.oeffneHabit(id)
-        case .bereich(let b): if let x = Bereich(rawValue: b) { nav.bereich = x }
+        case .bereich(let b): if let x = Bereich.aus(b) { nav.bereich = x }
         case .pro: nav.blatt = .pro
         }
     }
