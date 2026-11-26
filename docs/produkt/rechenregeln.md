@@ -117,6 +117,32 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 
 Pläne = Aufgaben + Habit-Tage (§9 Wochenbilanz). Die vier Kacheln darunter – Erledigt, Habits, Ziele, Zeit – rechnen nur mit §1, §4, §6 und §9; Monat = 4 Wochen, Jahr = 52 Wochen, jeweils zurück ab dem Montag der Woche. Swift: `Kompass/Rechnung/Wochenwort.swift`, Tests `KompassTests/WochenwortTests.swift`.
 
+## 13. Rückblick konkret: Listen, Auslastung, Vorschläge, Erkenntnis [VORSCHLAG – 26.11.2026, Freigabe des Gründers offen]
+
+Jede Statistik-Seite zeigt oben **einen Satz zum Mitnehmen**, unten „Was zählt hier?“. Alles deterministisch, keine KI.
+
+- **Erledigt:** Aufgaben mit Datum im Zeitraum bis heute. „Noch offen“: hohe Priorität zuerst, dann mit Ziel, dann älter. „Erledigt“: mit Ziel zuerst, dann mehr Fokuszeit, dann neuer. Je drei Zeilen, der Rest klappt auf.
+- **Zeit:** „Im Fokus“ = Timer-Sitzungen im Zeitraum je Aufgabe, längste zuerst; Sitzungen ohne Aufgabe als „Ohne Aufgabe“. „Ohne Timer erledigt“ = erledigte Aufgaben ohne jede gemessene Zeit.
+- **Auslastung:** Ø = Mittel der sieben Tagesanteile (verplant ÷ wach 7–22 Uhr, §9); voll ab 75 %. Darunter Minuten je Art (Termine · Aufgaben · Habits; Überschneidungen zählen doppelt), vollster und leerster Tag.
+- **Vorschläge** (nur laufende Woche, für heute + 6 Tage, höchstens einer je Art):
+
+| Art | Bedingung | Übernehmen |
+|---|---|---|
+| Entlasten | ein Tag ≥ 75 %; seine längste offene Aufgabe passt auf den leersten anderen Tag ab morgen, der danach ≤ 60 % hat | Aufgabe auf diesen Tag, ohne Uhrzeit |
+| Luft nutzen | ein Tag ab morgen ≤ 25 % und es gibt Aufgaben ohne Datum | wichtigste Aufgabe ohne Datum (Priorität, dann mit Ziel) auf diesen Tag |
+
+- **Lernen:** „Übernehmen“ und „Passt nicht“ zählen je Art (`lernen.vorschlaege["auslastung.…"]`). Übernahme-Quote wie §7: (übernommen + 1) ÷ (entschieden + 2). Unter 25 % wird die Art nicht mehr gezeigt (drei Ablehnungen ohne Übernahme); höhere Quote steht zuerst.
+- **Erkenntnis**, erste passende Regel:
+
+| Analyse | Regeln der Reihe nach |
+|---|---|
+| Erledigt | nichts geplant · unter 60 % → „Mehr geplant als geschafft“ (geplant und geschafft je Tag) · schwächster Wochentag, wenn ≥ 30 Punkte unter dem besten (der laufende Tag zählt nicht) · ab 80 % „Fast alles geschafft“ · sonst „Solide“ |
+| Habits | kein Habit geplant · schwächster Habit unter 60 % → „… fällt zurück“ · sonst „Alle Habits stabil“ |
+| Ziele | kein Ziel · größter Rückstand bei „hinterher“/„überfällig“ (§4) → „… braucht dich“ · aktives Ziel ohne Zeit im Zeitraum (früheste Frist) · sonst „Alle Ziele im Plan“ |
+| Zeit | kein Fokus · unter 50 % der Fokuszeit für Ziele → „Wenig Fokus für Ziele“ · sonst der Anteil |
+
+- Swift: `Kompass/Rechnung/Rueckschau.swift`, Tests `KompassTests/RueckschauTests.swift`.
+
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

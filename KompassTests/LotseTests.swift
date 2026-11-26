@@ -152,6 +152,11 @@ struct AppWissenTests {
         for b in Bereich.allCases { #expect(!(AppWissen.bereiche[b] ?? "").isEmpty, "\(b)") }
     }
 
+    @Test func rueckblickWissenNenntErkenntnisUndVorschlaege() {
+        let t = AppWissen.bereiche[.rueckblick] ?? ""
+        #expect(t.contains("Das nimmst du mit") && t.contains("Was zählt hier?") && t.contains("Übernehmen"))
+    }
+
     @Test func hilfeZurErinnerungNenntDenEditor() {
         let a = Werkzeuge.hilfe("Wie kann ich eine Erinnerung für einen Habit einstellen?")
         #expect(a.text.contains("Erinnerung") && a.text.contains("Mitteilung"))

@@ -233,12 +233,15 @@ struct MiniSaeulen: View {
     var hoehe: CGFloat = 48
     var farbe: Color = .white
     var hervor: Int? = nil
+    /// true = Säulen über die ganze Breite verteilt (stehen dann über Mo…So)
+    var gestreckt = false
     var body: some View {
         let mx = max(werte.max() ?? 0, 0.0001)
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(Array(werte.enumerated()), id: \.offset) { i, v in
                 Capsule().fill(farbe.opacity(hervor == nil || hervor == i ? 1 : 0.55))
-                    .frame(width: 7, height: max(4, hoehe * v / mx))
+                    .frame(width: gestreckt ? 14 : 7, height: max(4, hoehe * v / mx))
+                    .frame(maxWidth: gestreckt ? .infinity : nil)
             }
         }
         .frame(height: hoehe, alignment: .bottom)
