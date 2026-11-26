@@ -32,6 +32,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 25.11.2026 | [ENTSCHEIDUNG] Rechenregel „Wochenwort“: ein bis zwei Wörter über der Woche, sieben feste Regeln, die erste passende gewinnt; Rückblick mit vier Kacheln, Zeitraum erst auf der Statistik-Seite (PR #52, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §11 |
 | 26.11.2026 | [ENTSCHEIDUNG] Rechenregel „Signale“: Home zeigt unter „Wichtig“ höchstens drei Signale mit je einer Handlung, Rang = Gewicht ÷ (1 + Tage), je Art eines; „Passt nicht“ blendet eine Art 8 Wochen aus (PR #55, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §12 |
 | 26.11.2026 | [ENTSCHEIDUNG] Rechenregel „Rückblick konkret“: Listen „Noch offen“/„Erledigt“, Fokus je Aufgabe, Auslastung mit Vorschlägen „Entlasten“/„Luft nutzen“ (lernen über die Übernahme-Quote §7), eine Erkenntnis je Analyse, „Was zählt hier?“ (PR #57, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §13 |
+| 26.11.2026 | [ENTSCHEIDUNG] Rechenregel „Rückblick auf Home“: Rückblick als Karten zum Wischen auf Home, das Auffälligste vorn (Stufe handeln › Hinweis › gut › leer, bei Gleichstand Erledigt · Habits · Ziele · Zeit); Tab-Leiste Home · Kalender · Assistent · Habits · Ziele, Tab „Rückblick“ entfällt (PR #58, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §14 |
 
 ## 2. Offen (Gründer entscheidet)
 

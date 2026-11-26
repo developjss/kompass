@@ -165,7 +165,7 @@ Jede Statistik-Seite zeigt oben **einen Satz zum Mitnehmen**, unten „Was zähl
 
 - Swift: `Kompass/Rechnung/Rueckschau.swift`, Tests `KompassTests/RueckschauTests.swift`.
 
-## 14. Rückblick auf Home: Karten, das Auffälligste vorn [VORSCHLAG – 26.11.2026, Freigabe des Gründers offen]
+## 14. Rückblick auf Home: Karten, das Auffälligste vorn [ENTSCHEIDUNG – 26.11.2026, PR #58, „Ja, mergen“]
 
 Der Rückblick ist kein eigener Tab mehr. Home zeigt vier Karten zum Wischen (Erledigt · Habits · Ziele · Zeit) für die laufende Woche; antippen öffnet die Statistik (§13).
 
