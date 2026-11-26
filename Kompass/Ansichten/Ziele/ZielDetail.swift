@@ -221,7 +221,7 @@ struct ZielTeilSeite: View {
             .confirmationDialog("Ziel wirklich löschen?", isPresented: $loeschenFragen, titleVisibility: .visible) {
                 Button("Löschen", role: .destructive) {
                     let zid = g.id
-                    nav.fortschrittPfad = NavigationPath()
+                    nav.zurListe()
                     speicher.aendern { $0.zielLoeschen(zid) }
                 }
             } message: { Text("Aufgaben, Habits und Termine bleiben erhalten.") }

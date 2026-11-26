@@ -28,15 +28,24 @@ struct KompassApp: App {
 
 /// Die fünf Tabs in Reihenfolge; der Lotse steht in der Mitte. Ziele und Habits teilen sich „Fortschritt“ (Umschalter oben).
 enum Bereich: String, Hashable, CaseIterable {
-    case heute, kalender, lotse, fortschritt, rueckblick
+    case heute, kalender, lotse, habits, ziele
+
+    /// Aus gespeicherten Chats: alte Namen (bis 26.11.2026) führen weiter – Fortschritt → Ziele, Rückblick → Home.
+    static func aus(_ roh: String) -> Bereich? {
+        switch roh {
+        case "fortschritt": .ziele
+        case "rueckblick": .heute
+        default: Bereich(rawValue: roh)
+        }
+    }
 
     var titel: String {
         switch self {
         case .heute: "Home"
         case .kalender: "Kalender"
-        case .fortschritt: "Fortschritt"
         case .lotse: "Assistent"
-        case .rueckblick: "Rückblick"
+        case .habits: "Habits"
+        case .ziele: "Ziele"
         }
     }
 
@@ -44,17 +53,11 @@ enum Bereich: String, Hashable, CaseIterable {
         switch self {
         case .heute: "house"
         case .kalender: "calendar"
-        case .fortschritt: "target"
         case .lotse: "sparkles"
-        case .rueckblick: "chart.bar"
+        case .habits: "repeat"
+        case .ziele: "target"
         }
     }
-}
-
-/// Was im Tab „Fortschritt“ gezeigt wird – getrennt, nie vermischt.
-enum FortschrittTeil: String, Hashable, CaseIterable {
-    case ziele, habits
-    var titel: String { self == .ziele ? "Ziele" : "Habits" }
 }
 
 enum NeuArt: String, Hashable, Identifiable {
@@ -106,7 +109,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
         case .kalender: "Oben die nächsten drei Einträge. Darunter Tag, Woche, Monat oder Jahr. Aufgaben und Habits ohne Uhrzeit ziehst du von unten in den Tag. Termine legst du mit „Termin hinzufügen“ an – sie können für ein Ziel zählen oder einen Habit erfüllen."
         case .habits: "Habits sind das Tägliche. Unter „Heute“ hakst du ab oder trägst eine Menge ein – halb geschafft zählt halb. „Diese Woche“ zeigt Tages- und Wochen-Habits, „Alle Habits“ Soll, Rhythmus, Quote und Serie. Die Serie zählt nur volle Tage."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."
-        case .rueckblick: "Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
+        case .rueckblick: "Der Rückblick liegt auf Home: vier Karten zum Wischen, das Auffälligste vorn. Antippen öffnet die Statistik. Fokuszeit zählt alle Timer-Minuten der Woche, die Kurve zeigt die letzten 12 Wochen. Die Habit-Quote zählt nur geplante Tage – den heutigen erst, wenn er abgehakt ist."
         case .lotse: "Der Assistent kennt deine Ziele, Habits, Aufgaben und Termine. Frag ihn, was als Nächstes ansteht, wie voll dein Tag ist oder warum ein Ziel bei 54 % steht – oder lass ihn Aufgaben und Termine anlegen. Jeder Start der App beginnt einen neuen Chat; frühere findest du oben links. Er rechnet nie selbst: Zahlen kommen immer aus der App."
         }
     }
@@ -177,7 +180,6 @@ final class Navigation {
     }
 
     var bereich: Bereich = .heute
-    var fortschrittTeil: FortschrittTeil = .ziele
     /// Kalender: gewählter Tag (nil = heute) und Ansicht
     var kalenderTag: Tag?
     var kalenderModus: KalenderModus = .tag
@@ -189,46 +191,68 @@ final class Navigation {
         bereich = .kalender
     }
     var blatt: Blatt?
-    /// Navigationspfad im Tab Fortschritt (Ziel- und Habit-Seiten; der Lotse öffnet darüber)
-    var fortschrittPfad = NavigationPath()
+    /// Stapel je Tab: Home (Rückblick-Karten, Analysen), Habits, Ziele – der Assistent öffnet darüber
+    var heutePfad = NavigationPath()
+    var habitsPfad = NavigationPath()
+    var zielePfad = NavigationPath()
 
     func oeffneZiel(_ id: UUID) {
-        zeige(.ziele)
-        fortschrittPfad = NavigationPath([ZielAuswahl(id: id)])
-    }
-
-    /// Habit-Seite im Tab Fortschritt öffnen (auch aus Heute, Ziel oder Lotse)
-    func oeffneHabit(_ id: UUID) {
-        if bereich == .fortschritt, fortschrittTeil == .habits {
-            fortschrittPfad.append(HabitAuswahl(id: id))
+        if bereich == .ziele || bereich == .habits || bereich == .heute {
+            haengeAn(ZielAuswahl(id: id))
         } else {
-            zeige(.habits)
-            fortschrittPfad = NavigationPath([HabitAuswahl(id: id)])
+            zielePfad = NavigationPath([ZielAuswahl(id: id)])
+            bereich = .ziele
         }
     }
 
-    /// Stapel im Tab Rückblick (Analyse eines Habits oder Ziels)
-    var rueckblickPfad = NavigationPath()
+    /// Habit-Seite öffnen (auch aus Home, Ziel oder Assistent): im eigenen Stapel bleibt der Rückweg erhalten
+    func oeffneHabit(_ id: UUID) {
+        if bereich == .ziele || bereich == .habits || bereich == .heute {
+            haengeAn(HabitAuswahl(id: id))
+        } else {
+            habitsPfad = NavigationPath([HabitAuswahl(id: id)])
+            bereich = .habits
+        }
+    }
 
-    /// Analyse im Rückblick öffnen (aus Habit-/Ziel-Seite, Rückblick oder Lotse)
+    /// Analyse öffnen (aus Habit-/Ziel-Seite, Rückblick-Karte oder Assistent)
     func zeigeAnalyse(habit id: UUID) { zeigeAnalyse(AnalyseAuswahl(art: .habit, id: id)) }
     func zeigeAnalyse(ziel id: UUID) { zeigeAnalyse(AnalyseAuswahl(art: .ziel, id: id)) }
 
-    /// Analyse öffnen, ohne den Rückweg zu verlieren: in Fortschritt und Rückblick kommt sie oben auf den Stapel,
-    /// „Zurück“ führt also dorthin, wo man herkam. Aus anderen Bereichen öffnet sie im Rückblick.
+    /// Analyse öffnen, ohne den Rückweg zu verlieren: auf Home, Habits und Ziele kommt sie oben auf den Stapel.
+    /// Aus Kalender und Assistent öffnet sie auf Home – dort liegt der Rückblick.
     func zeigeAnalyse(_ a: AnalyseAuswahl) {
-        switch bereich {
-        case .fortschritt: fortschrittPfad.append(a)
-        case .rueckblick: rueckblickPfad.append(a)
-        default:
-            rueckblickPfad = NavigationPath([a])
-            bereich = .rueckblick
+        if bereich == .ziele || bereich == .habits || bereich == .heute {
+            haengeAn(a)
+        } else {
+            heutePfad = NavigationPath([a])
+            bereich = .heute
         }
     }
 
-    func zeige(_ teil: FortschrittTeil) {
-        fortschrittTeil = teil
-        bereich = .fortschritt
+    /// Statistik des Rückblicks (Erledigt · Habits · Ziele · Zeit) auf Home öffnen
+    func zeigeStatistik(_ art: Statistik.Art) {
+        if bereich == .heute { heutePfad.append(StatistikAuswahl(art: art)) }
+        else { heutePfad = NavigationPath([StatistikAuswahl(art: art)]); bereich = .heute }
+    }
+
+    /// Zurück zur Liste des aktuellen Tabs (nach dem Löschen eines Ziels oder Habits)
+    func zurListe() {
+        switch bereich {
+        case .heute: heutePfad = NavigationPath()
+        case .habits: habitsPfad = NavigationPath()
+        case .ziele: zielePfad = NavigationPath()
+        default: break
+        }
+    }
+
+    private func haengeAn<W: Hashable>(_ wert: W) {
+        switch bereich {
+        case .heute: heutePfad.append(wert)
+        case .habits: habitsPfad.append(wert)
+        case .ziele: zielePfad.append(wert)
+        default: break
+        }
     }
 }
 

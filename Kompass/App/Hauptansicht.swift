@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Lade-, Fehler- und Bereit-Zustand der ganzen App; danach die fünf Bereiche als Tab-Leiste.
+/// Lade-, Fehler- und Bereit-Zustand der ganzen App; danach die fünf Bereiche als Tab-Leiste (Home · Kalender · Assistent · Habits · Ziele).
 struct Hauptansicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -45,11 +45,11 @@ private struct Bereiche: View {
     var body: some View {
         @Bindable var nav = nav
         TabView(selection: $nav.bereich) {
-            Tab(Bereich.heute.titel, systemImage: Bereich.heute.symbol, value: Bereich.heute) { NavigationStack { HeuteAnsicht().zielZiel() } }
+            Tab(Bereich.heute.titel, systemImage: Bereich.heute.symbol, value: Bereich.heute) { NavigationStack(path: $nav.heutePfad) { HeuteAnsicht().zielZiel() } }
             Tab(Bereich.kalender.titel, systemImage: Bereich.kalender.symbol, value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
             Tab(Bereich.lotse.titel, systemImage: Bereich.lotse.symbol, value: Bereich.lotse) { NavigationStack { LotseAnsicht().zielZiel() } }
-            Tab(Bereich.fortschritt.titel, systemImage: Bereich.fortschritt.symbol, value: Bereich.fortschritt) { NavigationStack(path: $nav.fortschrittPfad) { FortschrittAnsicht().zielZiel() } }
-            Tab(Bereich.rueckblick.titel, systemImage: Bereich.rueckblick.symbol, value: Bereich.rueckblick) { NavigationStack(path: $nav.rueckblickPfad) { RueckblickAnsicht().navigationDestination(for: AnalyseAuswahl.self) { AnalyseSeite(auswahl: $0) }.navigationDestination(for: StatistikAuswahl.self) { StatistikSeite(auswahl: $0) } } }
+            Tab(Bereich.habits.titel, systemImage: Bereich.habits.symbol, value: Bereich.habits) { NavigationStack(path: $nav.habitsPfad) { HabitsAnsicht().zielZiel() } }
+            Tab(Bereich.ziele.titel, systemImage: Bereich.ziele.symbol, value: Bereich.ziele) { NavigationStack(path: $nav.zielePfad) { ZieleAnsicht().zielZiel() } }
         }
         .tint(Farbe.akzent)
         .sheet(item: $nav.blatt) { blatt in
@@ -65,6 +65,7 @@ private extension View {
             .navigationDestination(for: HabitTeilAuswahl.self) { HabitTeilSeite(id: $0.id, teil: $0.teil) }
             .navigationDestination(for: ZielTeilAuswahl.self) { ZielTeilSeite(id: $0.id, teil: $0.teil) }
             .navigationDestination(for: AnalyseAuswahl.self) { AnalyseSeite(auswahl: $0) }
+            .navigationDestination(for: StatistikAuswahl.self) { StatistikSeite(auswahl: $0) }
     }
 }
 

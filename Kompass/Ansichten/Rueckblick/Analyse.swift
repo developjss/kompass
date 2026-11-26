@@ -94,7 +94,7 @@ struct HabitAnalyse: View {
                     .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                     // Aus dem Rückblick geöffnet: ein Weg zur Seite. Von der Seite selbst führt „Zurück“ hin.
-                    if nav.bereich != .fortschritt {
+                    if nav.bereich == .heute {
                         Button { nav.oeffneHabit(h.id) } label: {
                             Label("Zum Habit", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
                                 .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)
@@ -248,7 +248,7 @@ struct ZielAnalyse: View {
                     }
 
                     // Aus dem Rückblick geöffnet: ein Weg zur Seite. Von der Seite selbst führt „Zurück“ hin.
-                    if nav.bereich != .fortschritt {
+                    if nav.bereich == .heute {
                         Button { nav.oeffneZiel(g.id) } label: {
                             Label("Zum Ziel", systemImage: "arrow.right").font(.kompass(.subheadline, .bold))
                                 .frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(c)

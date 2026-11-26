@@ -165,6 +165,23 @@ Jede Statistik-Seite zeigt oben **einen Satz zum Mitnehmen**, unten „Was zähl
 
 - Swift: `Kompass/Rechnung/Rueckschau.swift`, Tests `KompassTests/RueckschauTests.swift`.
 
+## 14. Rückblick auf Home: Karten, das Auffälligste vorn [VORSCHLAG – 26.11.2026, Freigabe des Gründers offen]
+
+Der Rückblick ist kein eigener Tab mehr. Home zeigt vier Karten zum Wischen (Erledigt · Habits · Ziele · Zeit) für die laufende Woche; antippen öffnet die Statistik (§13).
+
+- Jede Karte trägt die Zahl der Analyse und ihre Erkenntnis (§13). Jede Erkenntnis-Regel hat eine **Stufe**:
+
+| Stufe | Regeln |
+|---|---|
+| handeln | „Mehr geplant als geschafft“ · „… fällt zurück“ · „… braucht dich“ |
+| Hinweis | schwächster Wochentag · „Keine Zeit für …“ · „Wenig Fokus für Ziele“ |
+| gut | alle übrigen Aussagen mit Daten |
+| leer | noch nichts geplant · kein Habit · kein Ziel · kein Fokus |
+
+- **Reihenfolge:** Stufe absteigend (handeln · Hinweis · gut · leer); bei Gleichstand die feste Folge Erledigt · Habits · Ziele · Zeit. Die erste Karte ist die vordere (nachtblau, mit dem ganzen Satz).
+- Innerhalb einer Stufe wird nicht nach Größe des Abstands gewichtet – bewusst einfach.
+- Swift: `Rueckschau.reels`, `Rueckschau.ordnen`; Tests `KompassTests/RueckschauTests.swift`.
+
 ## 10. Prüfung
 
 Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).

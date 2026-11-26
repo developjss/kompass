@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Habits (Tab Fortschritt, Blattwerk): Bühne mit dem Wort „x von y heute“ und der Bordkarte, Karte vorn mit den
+/// Habits (eigener Tab, Blattwerk): Bühne mit dem Wort „x von y heute“ und der Bordkarte, Karte vorn mit den
 /// heutigen Habits (ein Haken je Zeile, ein grüner Knopf für den offenen), darunter „Diese Woche“.
 struct HabitsAnsicht: View {
     @Environment(Speicher.self) private var speicher
@@ -16,7 +16,7 @@ struct HabitsAnsicht: View {
         let geschafft = heute.filter { $0.voll(am: T) }
 
         BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(geschafft: geschafft.count, geplant: heute.count), marke: {
-            FortschrittWahl()
+            MarkenTitel(text: "Habits")
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.habits) }
         }) {

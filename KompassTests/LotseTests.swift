@@ -154,8 +154,16 @@ struct AppWissenTests {
     }
 
     @Test func rueckblickWissenNenntErkenntnisUndVorschlaege() {
-        let t = AppWissen.bereiche[.rueckblick] ?? ""
+        let t = AppWissen.fenster["rueckblick"] ?? ""
         #expect(t.contains("Das nimmst du mit") && t.contains("Was zählt hier?") && t.contains("Übernehmen"))
+    }
+
+    @Test func habitsUndZieleSindEigeneTabsUndDerRueckblickLiegtAufHome() {
+        #expect(Bereich.allCases.map(\.titel) == ["Home", "Kalender", "Assistent", "Habits", "Ziele"])
+        #expect((AppWissen.bereiche[.heute] ?? "").contains("Rückblick"))
+        #expect((AppWissen.fenster["rueckblick"] ?? "").contains("Auffälligste"))
+        let a = Werkzeuge.hilfe("Wo finde ich den Rückblick?")
+        #expect(a.text.contains("Rückblick") && a.text.contains("Home"))
     }
 
     @Test func hilfeZurErinnerungNenntDenEditor() {

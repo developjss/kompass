@@ -1,9 +1,10 @@
 import Charts
 import SwiftUI
 
-/// Rückblick (Nachtblau, Hick): Bühne mit dem Wochenwort (§11), darunter genau vier Kacheln – Erledigt, Habits, Ziele, Zeit –
-/// als Vorschau. Antippen öffnet die Statistik mit Zeitraum (Woche · Monat · Jahr) und Blättern. Unten die Wochenreflexion.
-struct RueckblickAnsicht: View {
+/// Rückblick auf Home (§14): eine Reihe hoher Karten zum Wischen – Erledigt, Habits, Ziele, Zeit –, das Auffälligste vorn.
+/// Die vordere Karte ist nachtblau und trägt den ganzen Satz; die anderen zeigen Zahl, Aussage und Grafik.
+/// Antippen öffnet die Statistik mit Zeitraum (Woche · Monat · Jahr), Listen und Vorschlägen.
+struct RueckblickReihe: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
@@ -12,29 +13,71 @@ struct RueckblickAnsicht: View {
         let T = speicher.heute
         let w = Statistik.werte(zustand: z, heute: T, wochen: 1, versatz: 0, termine: speicher.termine(am:))
         let (zeile, akzent) = Wochenwort.wort(w.lage)
+        let reels = Rueckschau.reels(werte: w, zustand: z, heute: T)
 
-        BuehnenSeite(wort: Wort(zeilen: [zeile], akzent: akzent), fuss: false, marke: {
-            Spacer(minLength: 8)
-            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.rueckblick) }
-            RahmenKnopf(symbol: "gearshape", beschriftung: "Einstellungen") { nav.blatt = .einstellungen }
-        }) {
-            // Vier Kacheln – die wichtigsten Dinge der App: Pläne, Habits, Ziele, Zeit
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                ForEach(Statistik.Art.allCases, id: \.self) { art in
-                    NavigationLink(value: StatistikAuswahl(art: art)) { StatistikKachel(art: art, werte: w, heute: T.wochentag - 1) }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(art.titel): \(art.zahl(w)). \(art.satz(w))")
+        AbschnittKopf(titel: "Rückblick") {
+            Text("\(zeile) \(akzent)").foregroundStyle(Farbe.zweitrangig)
+        }
+        .padding(.horizontal, Mass.rand)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(Array(reels.enumerated()), id: \.element.id) { i, r in
+                    NavigationLink(value: StatistikAuswahl(art: r.art)) { ReelKarte(reel: r, vorn: i == 0, werte: w, heute: T.wochentag - 1) }
+                        .buttonStyle(DruckStil())
+                        .accessibilityLabel("\(r.art.titel): \(r.zahl). \(r.erkenntnis.titel). \(r.erkenntnis.text)")
                         .accessibilityHint("Öffnet die Statistik")
+                        .accessibilityIdentifier("reel.\(r.art.rawValue)")
                 }
             }
-            .padding(.horizontal, Mass.rand)
-            .padding(.top, Mass.karteVornVersatz)
-
-            PfeilZeile(symbol: "moon", text: z.reflexionen["woche:\(T.montag.text)"] == nil ? "Wochenreflexion · 3 Fragen" : "Wochenreflexion ✓") {
-                nav.blatt = .reflexion(woche: true)
-            }
-            .padding(.horizontal, Mass.rand).padding(.top, Mass.abschnitt)
+            .padding(.horizontal, Mass.rand).padding(.bottom, 26)
+            .scrollTargetLayout()
         }
+        .scrollTargetBehavior(.viewAligned)
+        .padding(.bottom, -26)
+        PfeilZeile(symbol: "moon", text: z.reflexionen["woche:\(T.montag.text)"] == nil ? "Wochenreflexion · 3 Fragen" : "Wochenreflexion ✓") {
+            nav.blatt = .reflexion(woche: true)
+        }
+        .padding(.horizontal, Mass.rand).padding(.top, 16)
+    }
+}
+
+/// Eine Rückblick-Karte im Hochformat: Analyse, Zahl, Aussage – vorn nachtblau mit dem Satz, sonst hell mit Grafik.
+private struct ReelKarte: View {
+    var reel: Rueckschau.Reel
+    var vorn: Bool
+    var werte: Statistik.Werte
+    var heute: Int?
+    @Environment(\.dynamicTypeSize) private var schrift
+
+    var body: some View {
+        let gross = schrift.isAccessibilitySize
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: reel.art.symbol).font(.caption.weight(.heavy))
+                Etikett(text: reel.art.titel)
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption2.weight(.bold))
+            }
+            .foregroundStyle(vorn ? Farbe.wort.opacity(0.7) : Farbe.zweitrangig)
+            Text(reel.zahl).font(.system(size: 40, weight: .regular, design: .serif)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                .foregroundStyle(vorn ? Farbe.wort : Farbe.text)
+            Text(reel.erkenntnis.titel).font(.kompass(.subheadline, .bold)).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(vorn ? Farbe.wort : Farbe.text)
+            Spacer(minLength: 6)
+            if vorn {
+                Text(reel.erkenntnis.text).font(.kompass(.footnote, .medium)).lineLimit(gross ? 6 : 4).fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(Farbe.wort.opacity(0.8))
+            } else {
+                KachelGrafik(art: reel.art, werte: werte, heute: heute)
+            }
+        }
+        .padding(16)
+        .frame(width: vorn ? (gross ? 280 : 204) : (gross ? 240 : 164), alignment: .topLeading)
+        .frame(minHeight: gross ? 300 : 236, alignment: .topLeading)
+        .background(vorn ? Farbe.buehne : Farbe.karte, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Farbe.schatten.opacity(0.10), radius: 5, y: 4)
+        .shadow(color: Farbe.schatten.opacity(0.20), radius: 18, y: 14)
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
 
@@ -149,35 +192,8 @@ enum Statistik {
     }
 }
 
-/// Eine der vier Kacheln: Titel, Zahl, ein Satz, kleine Säulen – alles Vorschau, nichts zum Bedienen außer Antippen.
-private struct StatistikKachel: View {
-    var art: Statistik.Art
-    var werte: Statistik.Werte
-    var heute: Int?
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: art.symbol).font(.caption.weight(.heavy))
-                Etikett(text: art.titel)
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Farbe.pfeil)
-            }
-            .foregroundStyle(Farbe.zweitrangig)
-            Text(art.zahl(werte)).font(.system(size: 32, weight: .regular, design: .serif)).foregroundStyle(Farbe.text).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
-            Spacer(minLength: 8)
-            KachelGrafik(art: art, werte: werte, heute: heute)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 148, alignment: .topLeading)
-        .background(Farbe.karte, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Farbe.schatten.opacity(0.10), radius: 5, y: 4)
-        .shadow(color: Farbe.schatten.opacity(0.22), radius: 20, y: 18)
-        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-    }
-}
-
 /// Die Grafik je Kachel – sofort lesbar, ohne Beschriftung: Erledigt = sieben Tage, Habits = Ring, Ziele = ein Balken je Ziel, Zeit = Kurve der 12 Wochen.
-private struct KachelGrafik: View {
+struct KachelGrafik: View {
     var art: Statistik.Art
     var werte: Statistik.Werte
     var heute: Int?

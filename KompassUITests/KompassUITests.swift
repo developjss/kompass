@@ -53,18 +53,20 @@ final class KompassUITests: XCTestCase {
         XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: 5) || app.textFields.firstMatch.waitForExistence(timeout: 2))
         foto(app, "Lotse")
 
-        tab(app, "Fortschritt")
-        XCTAssertTrue(app.buttons["Ziele"].waitForExistence(timeout: 5))
-        XCTAssertTrue(sichtbar(app, "Auf Kurs"))
-        foto(app, "Fortschritt Ziele")
-        app.buttons["Habits"].tap()
-        XCTAssertTrue(sichtbar(app, "Alle Habits"))
-        foto(app, "Fortschritt Habits")
+        tab(app, "Ziele")
+        XCTAssertTrue(sichtbar(app, "Alle Ziele"))
+        foto(app, "Ziele")
+        tab(app, "Habits")
+        XCTAssertTrue(sichtbar(app, "Diese Woche"))
+        foto(app, "Habits")
 
-        tab(app, "Rückblick")
-        XCTAssertTrue(sichtbar(app, "deiner Pläne geschafft"))
-        XCTAssertTrue(sichtbar(app, "Fokuszeit"))
-        foto(app, "Rückblick")
+        // Rückblick liegt auf Home: Karten zum Wischen, antippen öffnet die Statistik
+        tab(app, "Home")
+        let reel = app.buttons["reel.zeit"]
+        var n = 0
+        while !reel.exists && n < 6 { app.swipeUp(); n += 1 }
+        XCTAssertTrue(reel.exists, "Rückblick-Karten fehlen auf Home")
+        foto(app, "Home Rückblick")
     }
 
     // MARK: Kalender
@@ -144,8 +146,7 @@ final class KompassUITests: XCTestCase {
 
     func testHabitSeiteUndEditor() {
         let app = starten()
-        tab(app, "Fortschritt")
-        app.buttons["Habits"].tap()
+        tab(app, "Habits")
         // Zeile unter „Diese Woche“ öffnet die Habit-Seite (die Heute-Zeile öffnet „Menge eintragen“)
         let zeile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Buch lesen", "diese Woche")).firstMatch
         var versuche = 0
@@ -163,8 +164,7 @@ final class KompassUITests: XCTestCase {
 
     func testZielSeite() {
         let app = starten()
-        tab(app, "Fortschritt")
-        app.buttons["Ziele"].tap()
+        tab(app, "Ziele")
         let karte = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "%")).element(boundBy: 0)
         XCTAssertTrue(karte.waitForExistence(timeout: 5))
         karte.tap()
@@ -211,7 +211,7 @@ final class KompassUITests: XCTestCase {
 
     func testGrosseSchriftAlleTabs() {
         let app = starten(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"])
-        for t in ["Home", "Kalender", "Fortschritt", "Rückblick"] {
+        for t in ["Home", "Kalender", "Habits", "Ziele"] {
             tab(app, t)
             sleep(1)
             foto(app, "Große Schrift \(t)")

@@ -214,14 +214,14 @@ enum Werkzeuge {
 
     static func ziele(_ z: Zustand, _ T: Tag) -> LotseAntwort {
         let aktiv = z.ziele.filter { $0.status == .aktiv }.sorted { $0.faellig < $1.faellig }
-        guard !aktiv.isEmpty else { return LotseAntwort(text: "Du hast noch kein Ziel. Leg eins an: Fortschritt → „Ziel hinzufügen“.", werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue)) }
+        guard !aktiv.isEmpty else { return LotseAntwort(text: "Du hast noch kein Ziel. Leg eins an: Tab Ziele → „Ziel hinzufügen“.", werkzeug: .ziele, aktion: .bereich(Bereich.ziele.rawValue)) }
         let kurse = aktiv.map { ($0, Kurs.aufKurs($0, in: z, heute: T)) }
         let hinten = kurse.filter { [.hinterher, .ueberfaellig].contains($0.1.lage) }
         let kopf = hinten.isEmpty
             ? "Deine \(aktiv.count) Ziele liegen im Plan oder voraus."
             : (hinten.count == 1 ? "Ein Ziel braucht Aufmerksamkeit: \(hinten[0].0.titel) liegt \(hinten[0].1.lage.text)." : "\(hinten.count) Ziele liegen hinterher: " + Satz.liste(hinten.map(\.0.titel)) + ".")
         let zeilen = kurse.map { g, k in "• \(g.titel): \(Zahl.prozent(k.fortschritt)) · \(k.lage.text) · \(Kurs.bisText(g.faellig, heute: T))" }
-        return LotseAntwort(text: ([kopf] + zeilen).joined(separator: "\n"), werkzeug: .ziele, aktion: .bereich(Bereich.fortschritt.rawValue))
+        return LotseAntwort(text: ([kopf] + zeilen).joined(separator: "\n"), werkzeug: .ziele, aktion: .bereich(Bereich.ziele.rawValue))
     }
 
     /// Ziel nach Name finden: bestes Wort-Überlappen, mindestens ein Wort mit 4+ Zeichen
@@ -290,7 +290,7 @@ enum Werkzeuge {
                 + (z.ziel(h.zielID).map { " · Ziel: \($0.titel)" } ?? "")
             return LotseAntwort(text: t, werkzeug: .habits, aktion: .habit(h.id))
         }
-        guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: Fortschritt → Habits → „Habit hinzufügen“.", werkzeug: .habits) }
+        guard !z.habits.isEmpty else { return LotseAntwort(text: "Noch keine Habits. Leg einen an: Tab Habits → „Habit hinzufügen“.", werkzeug: .habits) }
         let offen = z.habits.filter { HabitRechnung.geplant($0, am: T) && !$0.voll(am: T) }
         let schwach = z.habits.filter { HabitRechnung.quote($0, heute: T) < 0.5 }
         let stark = z.habits.max { HabitRechnung.quote($0, heute: T) < HabitRechnung.quote($1, heute: T) }
@@ -299,7 +299,7 @@ enum Werkzeuge {
         if let s = stark { zeilen.append("Am stabilsten läuft „\(s.titel)“ mit \(Zahl.prozent(HabitRechnung.quote(s, heute: T))) in 30 Tagen und Serie \(HabitRechnung.serie(s, heute: T)).") }
         zeilen += z.habits.map { h in "• \(h.titel): Serie \(HabitRechnung.serie(h, heute: T)) · \(Zahl.prozent(HabitRechnung.quote(h, heute: T)))" }
         if !schwach.isEmpty { zeilen.append((schwach.count == 1 ? "„\(schwach[0].titel)“ liegt unter 50 %" : Satz.liste(schwach.map(\.titel)) + " liegen unter 50 %") + " – kleiner machen oder Wochentage anpassen?") }
-        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .habits, aktion: .bereich(Bereich.fortschritt.rawValue))
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .habits, aktion: .bereich(Bereich.habits.rawValue))
     }
 
     static func analyse(_ z: Zustand, _ T: Tag, _ kalender: Calendar, letzte: Bool) -> LotseAntwort {
@@ -315,7 +315,7 @@ enum Werkzeuge {
         t += h.geplant > 0 ? ", Habits zu \(Zahl.prozent(h.erledigt / Double(h.geplant))) (\(Zahl.text(h.erledigt, stellen: 1)) von \(h.geplant))." : "."
         if let erstes = jeZiel.first { t += "\nDie meiste Zeit ging in \(erstes.0) (\(Zahl.dauer(erstes.1)))" + (jeZiel.count > 1 ? ", dann " + Satz.liste(jeZiel.dropFirst().prefix(3).map { "\($0.0) (\(Zahl.dauer($0.1)))" }) + "." : ".") }
         if gesamt > 0 && fuerZiele / gesamt < 0.5 { t += "\nWeniger als die Hälfte zahlt auf Ziele ein – soll ich dir zeigen, welche Aufgaben noch kein Ziel haben?" }
-        return LotseAntwort(text: t, werkzeug: .analyse, aktion: .bereich(Bereich.rueckblick.rawValue))
+        return LotseAntwort(text: t, werkzeug: .analyse, aktion: .bereich(Bereich.heute.rawValue))
     }
 
     static func hilfe(_ thema: String) -> LotseAntwort {
@@ -333,7 +333,9 @@ enum Werkzeuge {
         let bereichPunkte = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 } ?? 0
         let fenster = AppWissen.fenster.values.max { treffer($0) < treffer($1) }
         let fensterPunkte = fenster.map(treffer) ?? 0
-        if let f = fenster, fensterPunkte > bereichPunkte { return LotseAntwort(text: f, werkzeug: .hilfe) }
+        // Fenster gegen Bereich: nur Treffer im Text vergleichen – der Tab-Titel („Habits“) darf ein genaueres Fenster nicht verdrängen.
+        let bereichText = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") } ?? 0
+        if let f = fenster, fensterPunkte > bereichText { return LotseAntwort(text: f, werkzeug: .hilfe) }
         if let b = bereich, bereichPunkte > 0 { return LotseAntwort(text: AppWissen.bereiche[b] ?? "", werkzeug: .hilfe, aktion: .bereich(b.rawValue)) }
         return LotseAntwort(text: "Kompass hat fünf Bereiche:\n" + Bereich.allCases.map { "• \(AppWissen.bereiche[$0] ?? $0.titel)" }.joined(separator: "\n"), werkzeug: .hilfe)
     }
