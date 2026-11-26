@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Home (Nachtblau, Hick’s Law): Bühne „Jetzt dran“, Karte vorn mit genau einer Sache (Fokus · Erledigt),
-/// darunter „Als Nächstes“ (3 + alle) und höchstens ein Hinweis. Abends der Tagesabschluss.
+/// darunter „Wichtig“ (höchstens drei Signale, §12) und „Als Nächstes“ (3 + alle). Abends der Tagesabschluss.
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
@@ -12,8 +12,8 @@ struct HeuteAnsicht: View {
         let jetzt = speicher.jetztMinuten
         let naechste = Tagesplan.naechste(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:), anzahl: 6)
         let fokus = HomeRechnung.fokus(zustand: z, heute: T, jetzt: jetzt, naechste: naechste)
-        let hinweise = Tagesplan.hinweise(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:))
-        let liegen = z.aufgaben.filter { a in a.datum.map { $0 < T } == true && !a.erledigt }
+        let signale = Signale.oben(Signale.alle(zustand: z, heute: T, jetzt: jetzt, termine: speicher.termine(am:)),
+                                   stumm: z.lernen.signaleStumm, heute: T)
         let ohne = Tagesplan.ohneZeit(am: T, zustand: z)
         let offenH = ohne.habits.filter { !$0.voll(am: T) && $0.id != fokus.habit?.id }
         let zeilen = HomeRechnung.alsNaechstes(bloecke: naechste, habits: offenH, fokus: fokus, anzahl: 3)
@@ -28,6 +28,15 @@ struct HeuteAnsicht: View {
             if HomeRechnung.geschafft(fokus) { Ueberflug(heute: T.text) }
         }) {
             JetztKarte(fokus: fokus)
+
+            // Wichtig (§12): höchstens drei Signale, jedes mit genau einer Handlung
+            if !signale.isEmpty {
+                AbschnittKopf(titel: "Wichtig").padding(.horizontal, Mass.rand)
+                GruppierteListe {
+                    ForEach(signale) { SignalZeile(signal: $0) }
+                }
+                .padding(.horizontal, Mass.rand)
+            }
 
             AbschnittKopf(titel: "Als Nächstes") {
                 if gesamt > zeilen.count {
@@ -50,19 +59,6 @@ struct HeuteAnsicht: View {
                 }
             }
             .padding(.horizontal, Mass.rand)
-
-            // Ein Hinweis, der wichtigste: Liegengebliebenes vor engem Tag
-            if !liegen.isEmpty {
-                GruppierteListe {
-                    LiegenZeile(anzahl: liegen.count) {
-                        speicher.aendern { s in for a in liegen { if let i = s.aufgaben.firstIndex(where: { $0.id == a.id }) { s.aufgaben[i].datum = T } } }
-                    }
-                }
-                .padding(.horizontal, Mass.rand).padding(.top, 12)
-            } else if let h = hinweise.first {
-                GruppierteListe { HinweisZeile(hinweis: h) }
-                    .padding(.horizontal, Mass.rand).padding(.top, 12)
-            }
 
             if jetzt >= 18 * 60 || z.reflexionen["tag:\(T.text)"] != nil {
                 PfeilZeile(symbol: "moon", text: z.reflexionen["tag:\(T.text)"] == nil ? "Tagesabschluss · 2 Min." : "Tagesabschluss ✓") {
@@ -201,74 +197,59 @@ private struct JetztKarte: View {
     private var habitID: UUID? { fokus.block?.art == .habit ? fokus.block?.habitID : fokus.habit?.id }
 }
 
-/// Hinweis: Symbol im Kreis, Text, Tag; Tipp öffnet den Tag im Kalender.
-private struct HinweisZeile: View {
-    var hinweis: Tagesplan.Hinweis
+/// Ein Signal (§12): Symbol im Kreis, Aussage, ein Fakt; Tipp führt zur Handlung. Lange drücken: „Passt nicht“.
+private struct SignalZeile: View {
+    var signal: Signale.Signal
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
 
     var body: some View {
-        Button { nav.oeffneKalender(hinweis.tag) } label: {
-            HStack(spacing: 12) {
-                SymbolKachel(symbol: symbol, farbe: Farbe.warnung)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(titel).font(.zeile).foregroundStyle(Farbe.text)
-                    Text(hinweis.text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(2)
-                }
-                Spacer(minLength: 4)
-                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .frame(minHeight: Mass.zeile)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var tagText: String {
-        let T = speicher.heute
-        if hinweis.tag == T { return "Heute" }
-        if hinweis.tag == T.plus(tage: 1) { return "Morgen" }
-        return hinweis.tag.datum().formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "de_DE")))
-    }
-
-    private var titel: String {
-        switch hinweis.art {
-        case .eng: "\(tagText): enger Tag"
-        case .ueberschneidung: "\(tagText): Überschneidung"
-        case .keinPlatz: "\(tagText): zu wenig Zeit"
-        }
-    }
-
-    private var symbol: String {
-        switch hinweis.art {
-        case .eng: "gauge.with.dots.needle.67percent"
-        case .ueberschneidung: "rectangle.on.rectangle"
-        case .keinPlatz: "hourglass"
-        }
-    }
-}
-
-/// Liegengebliebenes als ein Hinweis mit einer Handlung: alles auf heute.
-private struct LiegenZeile: View {
-    var anzahl: Int
-    var aufHeute: () -> Void
-    @Environment(Navigation.self) private var nav
-    var body: some View {
         HStack(spacing: 12) {
-            SymbolKachel(symbol: "tray.full", farbe: Farbe.warnung)
-            Button { nav.oeffneKalender(nil) } label: {
+            SymbolKachel(symbol: signal.art.symbol, farbe: gut ? Farbe.akzent : Farbe.warnung)
+            Button(action: oeffnen) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(anzahl == 1 ? "1 Aufgabe liegen geblieben" : "\(anzahl) Aufgaben liegen geblieben").font(.zeile).foregroundStyle(Farbe.text)
-                    Text("Antippen zeigt sie im Kalender").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                    Text(signal.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                    Text(signal.text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            Button("Auf heute", action: aufHeute).buttonStyle(.hauptKlein)
+            if signal.handlung == .aufHeute {
+                Button("Auf heute", action: aufHeute).buttonStyle(.hauptKlein)
+            } else {
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
+            }
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
         .frame(minHeight: Mass.zeile)
+        .contextMenu {
+            Button("Passt nicht – 8 Wochen ausblenden", systemImage: "eye.slash", action: stumm)
+        }
+        .accessibilityAction(named: "Passt nicht", stumm)
+        .accessibilityIdentifier("signal.\(signal.art.rawValue)")
+    }
+
+    /// Gute Nachricht (Luft, Serie geschafft) in Akzent, alles andere als Warnung
+    private var gut: Bool { signal.art == .luft || signal.art == .serieGeschafft }
+
+    private func oeffnen() {
+        switch signal.handlung {
+        case .kalender(let d): nav.oeffneKalender(d)
+        case .ziel(let id): nav.oeffneZiel(id)
+        case .habit(let id): nav.oeffneHabit(id)
+        case .habitAnalyse(let id): nav.zeigeAnalyse(habit: id)
+        case .aufHeute: nav.oeffneKalender(nil)
+        }
+    }
+
+    private func aufHeute() {
+        let T = speicher.heute
+        speicher.aendern { s in for i in s.aufgaben.indices where !s.aufgaben[i].erledigt && s.aufgaben[i].datum.map({ $0 < T }) == true { s.aufgaben[i].datum = T } }
+    }
+
+    private func stumm() {
+        let art = signal.art.rawValue, bis = Signale.stummBis(heute: speicher.heute)
+        speicher.aendern { $0.lernen.signaleStumm[art] = bis }
     }
 }
 

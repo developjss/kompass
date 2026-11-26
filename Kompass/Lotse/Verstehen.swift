@@ -44,6 +44,10 @@ enum Verstehen {
            hat(t, "aufgabe", "erinnere", "notier", "todo", "to do") || t.hasPrefix("erstelle") || t.hasPrefix("lege") {
             return aufgabe(aus: frage, t: t, z: z, T: T)
         }
+        // 1b. Signale von Home: „Was ist gerade wichtig?“, „Wo wird es eng?“ (vor der Beratung, die „am wichtigsten“ fängt)
+        if hat(t, "was ist wichtig", "was ist gerade wichtig", "was ist heute wichtig", "was ist diese woche wichtig", "wo wird es eng", "engpass", "engpaess", "was draengt") {
+            return WerkzeugAufruf(name: .signale)
+        }
         // 2. Beratung: „Was soll ich zuerst …“, „worauf konzentrieren“, „was raetst du“ → Empfehlung (mit Server: Gespräch)
         if hat(t, "was soll ich", "womit anfang", "womit fange", "womit soll", "worauf", "konzentrier", "priorisier", "raetst du", "raten", "empfiehlst", "empfehl", "was wuerdest du", "zuerst machen", "zuerst angehen", "am wichtigsten") {
             return WerkzeugAufruf(name: .empfehlen, parameter: ["zeitraum": hat(t, "woche") ? "woche" : "heute"])

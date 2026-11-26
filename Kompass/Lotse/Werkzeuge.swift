@@ -6,7 +6,7 @@ import Foundation
 
 struct Werkzeug: Sendable, Hashable {
     enum Name: String, CaseIterable, Sendable {
-        case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen, merken
+        case heute, naechstes, tagesplan, woche, freieZeit, aufgabeAnlegen, terminAnlegen, ziele, ziel, fortschrittErklaeren, habits, analyse, hilfe, empfehlen, merken, signale
     }
 
     let name: Name
@@ -65,6 +65,8 @@ enum Werkzeuge {
                  parameter: ["thema": "Begriff oder Frage"], beispiele: ["Wie fange ich an?", "Wie wird der Fortschritt gerechnet?", "Wo finde ich den Fokus-Timer?"]),
         Werkzeug(name: .empfehlen, beschreibung: "Empfiehlt, womit du anfangen solltest: Liegengebliebenes, Ziele hinterher, wichtige Aufgaben – mit Begründung.",
                  parameter: ["zeitraum": "heute | woche"], beispiele: ["Was soll ich diese Woche zuerst machen?", "Worauf soll ich mich konzentrieren?"]),
+        Werkzeug(name: .signale, beschreibung: "Was gerade wichtig ist – dieselben Signale wie auf Home unter „Wichtig“ (Rechenregel §12): volle Tage, Überschneidungen, zu wenig Zeit, Liegengebliebenes, Ziele hinter Plan, nahe Fristen, Serien in Gefahr, freie Tage. Nach Rang sortiert.",
+                 parameter: [:], beispiele: ["Was ist gerade wichtig?", "Wo wird es eng?"]),
         Werkzeug(name: .merken, beschreibung: "Merkt sich etwas Dauerhaftes über den Nutzer (Vorlieben, Gewohnheiten, Umstände, z. B. „trainiert lieber morgens“, „wohnt in Ulm“) – nur auf dem Gerät, der Nutzer kann es löschen. Nur nutzen, wenn der Nutzer es sagt oder es für künftige Antworten klar hilft; nichts Sensibles (Gesundheit, Geld, Dritte) ohne Bitte. „vergessen“ entfernt passende Einträge.",
                  parameter: ["notiz": "kurzer Satz in der dritten Person", "vergessen": "Stichwort eines Eintrags, der weg soll (optional)"],
                  beispiele: ["Merk dir: Ich trainiere lieber morgens.", "Vergiss, dass ich in Ulm wohne."]),
@@ -95,6 +97,7 @@ enum Werkzeuge {
         case .hilfe: return hilfe(a.parameter["thema"] ?? "")
         case .empfehlen: return empfehlen(z, T, woche: a.parameter["zeitraum"] == "woche", jetzt: minuten(jetzt, kalender))
         case .merken: return LotseAntwort(text: "Was soll ich mir merken?", werkzeug: .merken) // echtes Merken in Lotse
+        case .signale: return signale(z, T, jetzt: minuten(jetzt, kalender))
         }
     }
 
@@ -336,6 +339,19 @@ enum Werkzeuge {
     }
 
     /// Empfehlung ohne Sprachmodell: deterministische Reihenfolge – Liegengebliebenes, Ziel hinterher mit größtem Hebel, wichtigste Aufgabe heute, offene Habits.
+    /// Was gerade wichtig ist: die Signale von Home (§12), nach Rang – der Assistent liest nur vor, er rechnet nicht.
+    static func signale(_ z: Zustand, _ T: Tag, jetzt: Int = 8 * 60) -> LotseAntwort {
+        let alle = Signale.alle(zustand: z, heute: T, jetzt: jetzt, termine: { termine(z, $0, T) })
+        guard let erstes = alle.first else {
+            return LotseAntwort(text: "Gerade drängt nichts: kein voller Tag, nichts liegen geblieben, alle Ziele im Plan.", werkzeug: .signale, aktion: .bereich(Bereich.heute.rawValue))
+        }
+        var zeilen = ["Am wichtigsten: \(erstes.titel) – \(erstes.text)."]
+        for s in alle.dropFirst().prefix(4) { zeilen.append("– \(s.titel): \(s.text)") }
+        zeilen.append("Die ersten drei stehen auf Home unter „Wichtig“.")
+        let aktion: ChatNachricht.Aktion = { if case .ziel(let id) = erstes.handlung { return .ziel(id) }; return .bereich(Bereich.heute.rawValue) }()
+        return LotseAntwort(text: zeilen.joined(separator: "\n"), werkzeug: .signale, aktion: aktion)
+    }
+
     static func empfehlen(_ z: Zustand, _ T: Tag, woche: Bool, jetzt: Int = 8 * 60) -> LotseAntwort {
         var zeilen: [String] = []
         let liegen = z.aufgaben.filter { a in a.datum.map { $0 < T } == true && !a.erledigt }

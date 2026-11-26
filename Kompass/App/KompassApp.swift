@@ -102,7 +102,7 @@ enum InfoThema: String, Hashable, Identifiable, CaseIterable {
 
     var text: String {
         switch self {
-        case .heute: "Home zeigt, was jetzt dran ist: oben läuft oder kommt der nächste Eintrag – mit Fokus und Erledigt. Hinweise warnen vor engen Tagen, Überschneidungen und zu wenig Zeit. Darunter: als Nächstes, was heute noch offen ist, und deine Ziele."
+        case .heute: "Home zeigt, was jetzt dran ist: oben läuft oder kommt der nächste Eintrag – mit Fokus und Erledigt. Unter „Wichtig“ stehen höchstens drei Signale: volle Tage, Überschneidungen, Liegengebliebenes, Ziele hinter Plan, nahe Fristen, Serien. Lange drücken und „Passt nicht“ blendet eine Art 8 Wochen aus. Darunter: als Nächstes."
         case .kalender: "Oben die nächsten drei Einträge. Darunter Tag, Woche, Monat oder Jahr. Aufgaben und Habits ohne Uhrzeit ziehst du von unten in den Tag. Termine legst du mit „Termin hinzufügen“ an – sie können für ein Ziel zählen oder einen Habit erfüllen."
         case .habits: "Habits sind das Tägliche. Unter „Heute“ hakst du ab oder trägst eine Menge ein – halb geschafft zählt halb. „Diese Woche“ zeigt Tages- und Wochen-Habits, „Alle Habits“ Soll, Rhythmus, Quote und Serie. Die Serie zählt nur volle Tage."
         case .ziele: "Ziele haben ein Datum und einen Fortschritt in Prozent. „Voraus“, „im Plan“ oder „hinterher“ vergleicht den Fortschritt mit der Zeit seit Anlage. Wie gerechnet wird, steht in jedem Ziel unter „So wird gerechnet“."

@@ -14,6 +14,7 @@ struct VerstehenTests {
     @Test(arguments: [
         ("Was steht heute an?", Werkzeug.Name.heute), ("Was ist jetzt dran?", .heute),
         ("Was soll ich diese Woche zuerst machen?", .empfehlen), ("Worauf soll ich mich konzentrieren?", .empfehlen), ("Was würdest du mir raten?", .empfehlen),
+        ("Was ist gerade wichtig?", .signale), ("Wo wird es eng?", .signale), ("Gibt es Engpässe diese Woche?", .signale),
         ("Wie sieht meine Woche aus?", .woche), ("Was steht nächste Woche an?", .woche), ("Welche Termine habe ich?", .woche),
         ("Wann habe ich diese Woche Zeit?", .freieZeit), ("Habe ich morgen Zeit?", .freieZeit),
         ("Wie stehen meine Ziele?", .ziele), ("Welches Ziel hinkt?", .ziele),

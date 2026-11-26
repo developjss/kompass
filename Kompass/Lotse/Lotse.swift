@@ -134,6 +134,7 @@ enum Lotse {
         switch n {
         case .heute, .naechstes, .tagesplan, .woche, .freieZeit: "Schaut in deinen Kalender …"
         case .empfehlen: "Wägt ab, was zuerst kommt …"
+        case .signale: "Schaut, was gerade wichtig ist …"
         case .ziele, .ziel, .fortschrittErklaeren: "Prüft deine Ziele …"
         case .habits: "Schaut auf deine Habits …"
         case .analyse: "Wertet deine Woche aus …"

@@ -437,6 +437,8 @@ struct Lernen: Codable, Sendable, Hashable {
     var vorschlaege: [String: VorschlagZaehler] = [:]
     /// Was der Lotse aus Rückmeldungen lernt
     var lotse = LotseLernen()
+    /// Signale auf Home (§12): Art → stumm bis zu diesem Tag („Passt nicht“)
+    var signaleStumm: [String: Tag] = [:]
 
     struct VorschlagZaehler: Codable, Sendable, Hashable {
         var gezeigt = 0
@@ -450,6 +452,7 @@ struct Lernen: Codable, Sendable, Hashable {
         zeitVerhaeltnisse = try c.decodeIfPresent([Double].self, forKey: .zeitVerhaeltnisse) ?? []
         vorschlaege = try c.decodeIfPresent([String: VorschlagZaehler].self, forKey: .vorschlaege) ?? [:]
         lotse = try c.decodeIfPresent(LotseLernen.self, forKey: .lotse) ?? LotseLernen()
+        signaleStumm = try c.decodeIfPresent([String: Tag].self, forKey: .signaleStumm) ?? [:]
     }
 }
 

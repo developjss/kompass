@@ -245,7 +245,7 @@ struct PersonenTests {
             }
             // Lotse antwortet (alle 30 Tage), rechnet nicht selbst
             if n % 30 == 0 {
-                for name in [Werkzeug.Name.heute, .naechstes, .tagesplan, .woche, .freieZeit, .ziele, .habits, .analyse, .empfehlen] {
+                for name in [Werkzeug.Name.heute, .naechstes, .tagesplan, .woche, .freieZeit, .ziele, .habits, .analyse, .empfehlen, .signale] {
                     let x = Werkzeuge.ausfuehren(WerkzeugAufruf(name: name), z: z, heute: tag, jetzt: jetzt, kalender: k)
                     pruefe(!x.text.isEmpty && !x.text.contains("nan") && !x.text.contains("inf"), "\(tag) Lotse \(name): „\(x.text.prefix(60))“")
                 }

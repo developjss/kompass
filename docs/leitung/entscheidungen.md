@@ -30,6 +30,7 @@ Stand: 23. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | 24.11.2026 | [ENTSCHEIDUNG] Arbeitsweise: Full-/UI-Tests auf Ansage oder nach Rückfrage etwa alle 10 Builds; Doku gebündelt alle 3–4 Blöcke; jedes Update sofort auf iPhone und Simulator | `docs/team/arbeitsweise.md` |
 | 24.11.2026 | [ENTSCHEIDUNG] Meilenstein aus Bestehendem (Aufgabe, Termine, Habit); Termine wahlweise alle bisherigen, Habit wahlweise seit Anlage des Habits (PR #27, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §3 |
 | 25.11.2026 | [ENTSCHEIDUNG] Rechenregel „Wochenwort“: ein bis zwei Wörter über der Woche, sieben feste Regeln, die erste passende gewinnt; Rückblick mit vier Kacheln, Zeitraum erst auf der Statistik-Seite (PR #52, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §11 |
+| 26.11.2026 | [ENTSCHEIDUNG] Rechenregel „Signale“: Home zeigt unter „Wichtig“ höchstens drei Signale mit je einer Handlung, Rang = Gewicht ÷ (1 + Tage), je Art eines; „Passt nicht“ blendet eine Art 8 Wochen aus (PR #55, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §12 |
 | 26.11.2026 | [ENTSCHEIDUNG] Rechenregel „Rückblick konkret“: Listen „Noch offen“/„Erledigt“, Fokus je Aufgabe, Auslastung mit Vorschlägen „Entlasten“/„Luft nutzen“ (lernen über die Übernahme-Quote §7), eine Erkenntnis je Analyse, „Was zählt hier?“ (PR #57, „Ja, mergen“) | `docs/produkt/rechenregeln.md` §13 |
 
 ## 2. Offen (Gründer entscheidet)
