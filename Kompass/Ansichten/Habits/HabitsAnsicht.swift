@@ -19,13 +19,12 @@ struct HabitsAnsicht: View {
             FortschrittWahl()
             Spacer(minLength: 8)
             RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.habits) }
-            RahmenKnopf(symbol: "plus", beschriftung: "Neuer Habit") { nav.blatt = .neu(.habit) }
         }) {
             VornKarte(abstand: 0) {
                 if z.habits.isEmpty {
                     Etikett(text: "Heute")
                     Text("Noch keine Habits.").font(.karteTitel).foregroundStyle(Farbe.text)
-                    Text("Zum Beispiel „20 Minuten lesen“ – oben auf „+“.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
+                    Text("Zum Beispiel „20 Minuten lesen“.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
                     Button { nav.blatt = .neu(.habit) } label: { Label("Habit anlegen", systemImage: "plus") }.buttonStyle(.haupt).padding(.top, 8)
                 } else if heute.isEmpty {
                     Etikett(text: "Heute")
@@ -57,6 +56,7 @@ struct HabitsAnsicht: View {
                         Text("\(z.habits.count) Habit\(z.habits.count == 1 ? "" : "s")").font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig)
                     }
                     .padding(.top, 8)
+                    HinzufuegenKarte(titel: "Habit hinzufügen", unter: "täglich, an Wochentagen oder n-mal pro Woche") { nav.blatt = .neu(.habit) }
                     GruppierteListe {
                         ForEach(z.habits.sorted { wochenReihenfolge($0) < wochenReihenfolge($1) }) { WochenZeile(habit: $0) }
                     }

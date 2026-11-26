@@ -233,12 +233,15 @@ struct MiniSaeulen: View {
     var hoehe: CGFloat = 48
     var farbe: Color = .white
     var hervor: Int? = nil
+    /// true = Säulen über die ganze Breite verteilt (stehen dann über Mo…So)
+    var gestreckt = false
     var body: some View {
         let mx = max(werte.max() ?? 0, 0.0001)
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(Array(werte.enumerated()), id: \.offset) { i, v in
                 Capsule().fill(farbe.opacity(hervor == nil || hervor == i ? 1 : 0.55))
-                    .frame(width: 7, height: max(4, hoehe * v / mx))
+                    .frame(width: gestreckt ? 14 : 7, height: max(4, hoehe * v / mx))
+                    .frame(maxWidth: gestreckt ? .infinity : nil)
             }
         }
         .frame(height: hoehe, alignment: .bottom)
@@ -362,5 +365,36 @@ struct WertKachel: View {
         .padding(.horizontal, 8)
         .background(Farbe.karte, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+/// „Etwas hinzufügen“ als gestrichelte Karte – überall gleich, steht dort, wo das Neue landet (Ziele, Habits, Kalender, Home, Meilensteine).
+struct HinzufuegenKarte: View {
+    var titel: String
+    var unter: String? = nil
+    var farbe: Color = Farbe.handlung
+    var kennung = "neu.hinzufuegen"
+    var aktion: () -> Void
+
+    var body: some View {
+        Button(action: aktion) {
+            HStack(spacing: 10) {
+                Image(systemName: "plus").font(.system(size: 15, weight: .heavy)).foregroundStyle(Farbe.aufTon)
+                    .frame(width: 30, height: 30).background(farbe.gradient, in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(titel).font(.zeile).foregroundStyle(farbe)
+                    if let unter { Text(unter).font(.klein).foregroundStyle(Farbe.zweitrangig) }
+                }
+                Spacer()
+            }
+            .padding(14)
+            .frame(minHeight: Mass.zeile)
+            .background(farbe.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(farbe.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(DruckStil())
+        .accessibilityIdentifier(kennung)
     }
 }
