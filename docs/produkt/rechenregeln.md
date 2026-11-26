@@ -117,7 +117,7 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 
 Pläne = Aufgaben + Habit-Tage (§9 Wochenbilanz). Die vier Kacheln darunter – Erledigt, Habits, Ziele, Zeit – rechnen nur mit §1, §4, §6 und §9; Monat = 4 Wochen, Jahr = 52 Wochen, jeweils zurück ab dem Montag der Woche. Swift: `Kompass/Rechnung/Wochenwort.swift`, Tests `KompassTests/WochenwortTests.swift`.
 
-## 13. Rückblick konkret: Listen, Auslastung, Vorschläge, Erkenntnis [VORSCHLAG – 26.11.2026, Freigabe des Gründers offen]
+## 13. Rückblick konkret: Listen, Auslastung, Vorschläge, Erkenntnis [ENTSCHEIDUNG – 26.11.2026, PR #57, „Ja, mergen“]
 
 Jede Statistik-Seite zeigt oben **einen Satz zum Mitnehmen**, unten „Was zählt hier?“. Alles deterministisch, keine KI.
 
