@@ -252,8 +252,31 @@ struct StatistikSeite: View {
                     Button { versatz = max(0, versatz - 1) } label: { Label("Vor", systemImage: "chevron.right") }.buttonStyle(.leiseKlein).disabled(versatz == 0)
                 }
             }
-            VStack(spacing: 12) { inhalt(w: w, z: z, T: T) }
-                .padding(.horizontal, Mass.rand).padding(.top, 12)
+            VStack(spacing: 12) {
+                ErkenntnisKarte(erkenntnis: erkenntnis(w: w, z: z, T: T))
+                inhalt(w: w, z: z, T: T)
+                WasZaehlt(text: Rueckschau.wasZaehlt(auswahl.art.rawValue))
+            }
+            .padding(.horizontal, Mass.rand).padding(.top, 12)
+        }
+    }
+
+    /// Unterzeile einer Aufgabe: Ziel · Tag
+    private func aufgabeUnter(_ a: Aufgabe, z: Zustand) -> String {
+        var teile: [String] = []
+        if let g = z.ziel(a.zielID) { teile.append(g.titel) }
+        if let d = a.datum { teile.append(d.datum().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))) }
+        return teile.joined(separator: " · ")
+    }
+
+    /// Der eine Satz zum Mitnehmen (§13) – je Analyse eine feste Regelfolge.
+    private func erkenntnis(w: Statistik.Werte, z: Zustand, T: Tag) -> Rueckschau.Erkenntnis {
+        switch auswahl.art {
+        case .erledigt: Rueckschau.erkenntnisErledigt(geplantJeTag: w.bilanz.geplantJeTag, erledigtJeTag: w.bilanz.erledigtJeTag, tage: w.tage,
+                                                         laufend: versatz == 0 && zeitraum == .woche ? T.wochentag - 1 : nil)
+        case .habits: Rueckschau.erkenntnisHabits(zustand: z, von: w.von, bis: w.bis, heute: T)
+        case .ziele: Rueckschau.erkenntnisZiele(zustand: z, von: w.von, bis: w.bis, heute: T)
+        case .zeit: Rueckschau.erkenntnisZeit(fokus: w.fokus, fuerZiele: w.fokusFuerZiele)
         }
     }
 
@@ -262,9 +285,16 @@ struct StatistikSeite: View {
         switch auswahl.art {
         case .erledigt:
             WeisseKarte(titel: "Pläne", wert: Zahl.prozent(w.bilanz.quote), unter: "\(w.bilanz.aufgabenErledigt) von \(w.bilanz.aufgabenGeplant) Aufgaben · Habits \(Zahl.prozent(w.habitQuote)) · \(w.bilanz.termine) Termine") {
-                MiniSaeulen(werte: w.jeTag, hoehe: 56, farbe: Farbe.buehne, hervor: versatz == 0 && zeitraum == .woche ? T.wochentag - 1 : nil)
+                MiniSaeulen(werte: w.jeTag, hoehe: 56, farbe: Farbe.buehne, hervor: versatz == 0 && zeitraum == .woche ? T.wochentag - 1 : nil, gestreckt: true)
                 HStack { ForEach(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], id: \.self) { Text($0).frame(maxWidth: .infinity) } }.font(.caption2).foregroundStyle(Farbe.zweitrangig)
             }
+            let liste = Rueckschau.aufgaben(zustand: z, von: w.von, bis: w.bis, heute: T)
+            PostenListe(titel: "Noch offen", leer: "Nichts mehr offen.", posten: liste.offen.map { a in
+                Posten(id: a.id.uuidString, symbol: a.prio == .hoch ? "exclamationmark" : "circle", titel: a.titel, unter: aufgabeUnter(a, z: z), wert: nil) { nav.blatt = .aufgabe(a.id) }
+            })
+            PostenListe(titel: "Erledigt", leer: "Noch nichts erledigt.", posten: liste.erledigt.map { a in
+                Posten(id: a.id.uuidString, symbol: "checkmark", titel: a.titel, unter: aufgabeUnter(a, z: z), wert: a.fokusSekunden > 0 ? Zahl.dauer(a.fokusSekunden) : nil) { nav.blatt = .aufgabe(a.id) }
+            })
         case .habits:
             AbschnittKopf(titel: "Je Habit") {
                 Text("\(Zahl.text(w.bilanz.habitsErledigt, stellen: 0)) von \(w.bilanz.habitsGeplant) Tagen").font(.klein).foregroundStyle(Farbe.zweitrangig)
@@ -317,11 +347,176 @@ struct StatistikSeite: View {
                 Kurve(werte: w.zwoelfWochen, farbe: Farbe.akzent).frame(height: 64)
                 HStack { Text("vor 12 Wochen"); Spacer(); Text("jetzt") }.font(.caption2).foregroundStyle(Farbe.zweitrangig)
             }
-            WeisseKarte(titel: "Auslastung", wert: Zahl.dauer(TimeInterval(w.bilanz.verplant.reduce(0, +) * 60)),
-                        unter: "verplant (7–22 Uhr) · Linie = voller Tag", pfeil: { nav.oeffneKalender(w.bis, modus: .woche) }) {
+            let f = Rueckschau.fokus(zustand: z, von: w.von, bis: w.bis, heute: T)
+            PostenListe(titel: "Im Fokus", leer: "Noch keine Zeit mit dem Timer gemessen.", posten: f.posten.map { p in
+                Posten(id: p.id, symbol: "timer", titel: p.titel, unter: z.ziel(p.zielID)?.titel ?? "Ohne Ziel", wert: Zahl.dauer(p.sekunden),
+                       aktion: UUID(uuidString: p.id).map { id in { nav.blatt = .aufgabe(id) } })
+            })
+            PostenListe(titel: "Ohne Timer erledigt", leer: "Alles Erledigte wurde gemessen.", posten: f.ohneTimer.map { a in
+                Posten(id: a.id.uuidString, symbol: "checkmark", titel: a.titel, unter: aufgabeUnter(a, z: z), wert: nil) { nav.blatt = .aufgabe(a.id) }
+            })
+
+            let last = Rueckschau.auslastung(zustand: z, montag: w.bis.plus(tage: -6), termine: speicher.termine(am:))
+            WeisseKarte(titel: "Auslastung", wert: "Ø \(Zahl.prozent(last.mittel))",
+                        unter: "von 7–22 Uhr verplant · Linie = voll (75 %)", pfeil: { nav.oeffneKalender(w.bis, modus: .woche) }) {
                 AuslastungsBalken(verplant: w.bilanz.verplant, heute: versatz == 0 && zeitraum == .woche ? T.wochentag - 1 : nil)
+                Text("Termine \(Zahl.dauer(Double(last.termine) * 60)) · Aufgaben \(Zahl.dauer(Double(last.aufgaben) * 60)) · Habits \(Zahl.dauer(Double(last.habits) * 60))")
+                    .font(.klein).foregroundStyle(Farbe.zweitrangig).padding(.top, 4)
+                Text(last.volleTage > 0 ? "Voll: \(Rueckschau.tagNamen[last.vollster]) · am meisten Luft: \(Rueckschau.tagNamen[last.leerster])"
+                     : "Kein voller Tag · am meisten Luft: \(Rueckschau.tagNamen[last.leerster])")
+                    .font(.klein).foregroundStyle(Farbe.zweitrangig)
+            }
+            // Umplanen geht nur nach vorn: Vorschläge für die nächsten 7 Tage, nur in der laufenden Woche
+            if versatz == 0 && zeitraum == .woche {
+                let vor = Rueckschau.zeigen(Rueckschau.vorschlaege(zustand: z, heute: T, jetzt: speicher.jetztMinuten, termine: speicher.termine(am:)), lernen: z.lernen)
+                if !vor.isEmpty {
+                    AbschnittKopf(titel: "Vorschläge").padding(.top, 4)
+                    GruppierteListe { ForEach(vor) { VorschlagZeile(vorschlag: $0) } }
+                }
             }
         }
+    }
+}
+
+/// Das nimmst du mit: eine Aussage, ein Fakt, höchstens ein Weg (§13).
+private struct ErkenntnisKarte: View {
+    var erkenntnis: Rueckschau.Erkenntnis
+    @Environment(Navigation.self) private var nav
+
+    var body: some View {
+        let tippbar = erkenntnis.ziel != .keins
+        Button(action: oeffnen) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Etikett(text: "Das nimmst du mit")
+                    Text(erkenntnis.titel).font(.kompass(.headline, .heavy)).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
+                    Text(erkenntnis.text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+                }
+                .multilineTextAlignment(.leading)
+                Spacer(minLength: 4)
+                if tippbar { Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil) }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Farbe.akzentWeich, in: RoundedRectangle(cornerRadius: Mass.karte, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .allowsHitTesting(tippbar)
+        .accessibilityIdentifier("rueckblick.erkenntnis")
+    }
+
+    private func oeffnen() {
+        switch erkenntnis.ziel {
+        case .keins: break
+        case .kalender: nav.oeffneKalender(nil, modus: .woche)
+        case .zielSeite(let id): nav.oeffneZiel(id)
+        case .habitSeite(let id): nav.oeffneHabit(id)
+        }
+    }
+}
+
+/// Ein Eintrag einer konkreten Liste (Aufgabe, Fokus-Posten)
+private struct Posten: Identifiable {
+    var id: String
+    var symbol: String
+    var titel: String
+    var unter: String
+    var wert: String?
+    var aktion: (() -> Void)?
+}
+
+/// Konkrete Liste mit Anzahl: zeigt die ersten drei, der Rest klappt auf (Hick).
+private struct PostenListe: View {
+    var titel: String
+    var leer: String
+    var posten: [Posten]
+    @State private var alle = false
+
+    var body: some View {
+        AbschnittKopf(titel: titel) { Text("\(posten.count)").font(.klein).monospacedDigit().foregroundStyle(Farbe.zweitrangig) }
+            .padding(.top, 4)
+        GruppierteListe {
+            if posten.isEmpty { LeerZeile(text: leer) }
+            ForEach(alle ? posten : Array(posten.prefix(3))) { p in
+                Button { p.aktion?() } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: p.symbol).font(.system(size: 13, weight: .bold)).foregroundStyle(Farbe.akzent)
+                            .frame(width: 30, height: 30).background(Farbe.akzentWeich, in: Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(p.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
+                            if !p.unter.isEmpty { Text(p.unter).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).lineLimit(1) }
+                        }
+                        Spacer(minLength: 4)
+                        if let w = p.wert { Text(w).font(.unterzeile).monospacedDigit().foregroundStyle(Farbe.text) }
+                    }
+                    .padding(.horizontal, 14).frame(minHeight: Mass.zeile)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .allowsHitTesting(p.aktion != nil)
+            }
+            if posten.count > 3 {
+                Button(alle ? "Weniger" : "Alle \(posten.count) zeigen") { withAnimation(.snappy(duration: 0.2)) { alle.toggle() } }
+                    .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent).frame(maxWidth: .infinity, minHeight: 44)
+            }
+        }
+    }
+}
+
+/// Vorschlag zum Umplanen: Übernehmen verschiebt die Aufgabe, „Passt nicht“ zählt als Ablehnung – beides lernt (§7).
+private struct VorschlagZeile: View {
+    var vorschlag: Rueckschau.Vorschlag
+    @Environment(Speicher.self) private var speicher
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(vorschlag.titel).font(.zeile).foregroundStyle(Farbe.text)
+                Text(vorschlag.text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Button("Übernehmen") { entscheiden(true) }.buttonStyle(.hauptKlein)
+                Button("Passt nicht") { entscheiden(false) }.buttonStyle(.leiseKlein)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func entscheiden(_ ja: Bool) {
+        let v = vorschlag
+        speicher.aendern { s in
+            var c = s.lernen.vorschlaege[v.schluessel] ?? Lernen.VorschlagZaehler()
+            c.gezeigt += 1
+            if ja {
+                c.uebernommen += 1
+                if let i = s.aufgaben.firstIndex(where: { $0.id == v.aufgabeID }) { s.aufgaben[i].datum = v.nach; s.aufgaben[i].uhrzeit = nil }
+            }
+            s.lernen.vorschlaege[v.schluessel] = c
+        }
+    }
+}
+
+/// „Was zählt hier?“ – ein Satz, erst auf Wunsch.
+private struct WasZaehlt: View {
+    var text: String
+    @State private var offen = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button { withAnimation(.snappy(duration: 0.2)) { offen.toggle() } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle")
+                    Text("Was zählt hier?")
+                    Image(systemName: offen ? "chevron.up" : "chevron.down").font(.caption2.weight(.bold))
+                }
+                .font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.akzent).frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            if offen { Text(text).font(.unterzeile).foregroundStyle(Farbe.zweitrangig).fixedSize(horizontal: false, vertical: true) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
