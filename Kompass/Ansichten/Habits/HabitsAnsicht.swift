@@ -27,6 +27,7 @@ struct HabitsAnsicht: View {
                 ScrollView(.horizontal) {
                     HStack(alignment: .top, spacing: 11) {
                         ForEach(habits, id: \.name) { h in HabitKreis(name: h.name, bild: h.bild) }
+                        HabitPlus()
                     }
                     .padding(.horizontal, 17)
                 }
@@ -74,5 +75,24 @@ private struct HabitKreis: View {
         .frame(width: durchmesser)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
+    }
+}
+
+/// Plus-Feld am Ende der Reihe (Vorlage: dunkler Kreis mit feiner heller Kante, weißes Plus, graue Beschriftung) – noch ohne Funktion.
+private struct HabitPlus: View {
+    private let durchmesser: CGFloat = 73
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle().fill(LinearGradient(colors: [Color(0x232323), Color(0x1C1C1C)], startPoint: .top, endPoint: .bottom))
+                Circle().strokeBorder(LinearGradient(colors: [.white.opacity(0.05), .white.opacity(0.28)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
+                Image(systemName: "plus").font(.system(size: durchmesser * 0.3, weight: .bold)).foregroundStyle(.white)
+            }
+            .frame(width: durchmesser, height: durchmesser)
+            Text("Neu").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(0x9A9A9A))
+        }
+        .frame(width: durchmesser)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Neuer Habit")
     }
 }
