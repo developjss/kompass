@@ -67,8 +67,14 @@ struct FokusAnsicht: View {
         .preferredColorScheme(.dark)
         .statusBarHidden(phase == .laeuft)
         .onChange(of: phase) { _, p in UIApplication.shared.isIdleTimerDisabled = (p == .laeuft || p == .pause) }
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = (phase == .laeuft) }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onAppear {
+            UIApplication.shared.isIdleTimerDisabled = (phase == .laeuft)
+            if phase == .laeuft { FokusLive.starten(name: habit.name, gesamt: gesamt, rest: gesamt) }
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
+            if phase != .fertig { FokusLive.beendenSofort() }
+        }
         .sensoryFeedback(.success, trigger: feier)
         .sensoryFeedback(.impact(weight: .medium), trigger: phase)
     }
@@ -200,15 +206,18 @@ struct FokusAnsicht: View {
         gesamt = fest ?? Int(minuten) * 60
         ende = Date().addingTimeInterval(TimeInterval(gesamt))
         withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.85)) { phase = .laeuft }
+        FokusLive.starten(name: habit.name, gesamt: gesamt, rest: gesamt)
     }
 
     private func pausieren() {
         rest = restSekunden(jetzt: Date())
+        FokusLive.pausieren(gesamt: gesamt, rest: rest)
         withAnimation(.easeInOut(duration: 0.3)) { phase = .pause }
     }
 
     private func weiter() {
         ende = Date().addingTimeInterval(TimeInterval(rest))
+        FokusLive.weiter(name: habit.name, gesamt: gesamt, rest: rest)
         withAnimation(.easeInOut(duration: 0.3)) { phase = .laeuft }
     }
 
@@ -217,9 +226,13 @@ struct FokusAnsicht: View {
         let fokussiert = max(gesamt - (fertig ? 0 : restSekunden(jetzt: Date())), 0)
         wert = Fokus.ergebnis(wert: wert, einheit: habit.einheit, ziel: habit.tagesziel, sekunden: fokussiert, fertig: fertig)
         if fertig {
+            // Zweimal vibrieren – nur wenn das Ende gerade eben war (nicht beim späteren Zurückkommen in die App)
+            if let ende, Date().timeIntervalSince(ende) < 3 { FokusLive.doppeltVibrieren() }
+            FokusLive.fertig(gesamt: gesamt)
             feier += 1
             withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.75)) { phase = .fertig }
         } else {
+            FokusLive.beendenSofort()
             dismiss()
         }
     }
