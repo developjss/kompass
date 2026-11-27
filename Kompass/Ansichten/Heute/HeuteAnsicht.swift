@@ -5,6 +5,7 @@ import SwiftUI
 struct HeuteAnsicht: View {
     @Environment(Speicher.self) private var speicher
     @Environment(Navigation.self) private var nav
+    @State private var serieOffen = false
 
     var body: some View {
         let z = speicher.zustand
@@ -19,57 +20,213 @@ struct HeuteAnsicht: View {
         let zeilen = HomeRechnung.alsNaechstes(bloecke: naechste, habits: offenH, fokus: fokus, anzahl: 3)
         let gesamt = naechste.count + offenH.count
 
-        BuehnenSeite(wort: HomeRechnung.wort(fokus, heute: T, jetzt: jetzt), marke: {
-            MarkenTitel(text: "Kompass")
-            Spacer(minLength: 8)
-            MarkenHinweis(text: HomeRechnung.datumText(T))
-            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.heute) }
-        }, extra: {
-            if HomeRechnung.geschafft(fokus) { Ueberflug(heute: T.text) }
-        }) {
-            JetztKarte(fokus: fokus)
+        let serie = KompassSerie.laenge(z, heute: T)
+        let muster = Muster.befunde(z, heute: T).first
 
-            // Wichtig (§12): höchstens drei Signale, jedes mit genau einer Handlung
-            if !signale.isEmpty {
-                AbschnittKopf(titel: "Wichtig").padding(.horizontal, Mass.rand)
-                GruppierteListe {
-                    ForEach(signale) { SignalZeile(signal: $0) }
+        ScrollView {
+            VStack(spacing: 14) {
+                // Kopf wie im Vorbild: Marke links, rechts Serie (Flamme), Pro, Profil
+                HStack(spacing: 12) {
+                    Text("Kompass").font(.system(size: 30, weight: .semibold)).accessibilityAddTraits(.isHeader)
+                    Spacer(minLength: 8)
+                    Button { serieOffen = true } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "flame.fill").foregroundStyle(LinearGradient(colors: [Color(0xFFD27A), Color(0xFF8A3D)], startPoint: .top, endPoint: .bottom))
+                            Text("\(serie)").font(.system(.body, weight: .semibold)).foregroundStyle(Color(0xFFC766))
+                        }
+                        .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Serie \(serie) Tage")
+                    if z.einstellungen.pro { Plakette(text: "PRO") }
+                    Button { nav.blatt = .einstellungen } label: {
+                        Image(systemName: "person.fill").font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(DFarbe.akzent)
+                            .frame(width: 36, height: 40)
+                            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay { RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(DFarbe.akzent.opacity(0.8), lineWidth: 1) }
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Profil und Einstellungen")
                 }
-                .padding(.horizontal, Mass.rand)
-            }
+                .padding(.horizontal, Dunkel.rand_)
 
-            // Rückblick (§14): Karten zum Wischen, das Auffälligste vorn
-            RueckblickReihe()
+                HomeBuehne(erfolg: HomeRechnung.geschafft(fokus))
 
-            AbschnittKopf(titel: "Als Nächstes") {
-                if gesamt > zeilen.count {
-                    Button("alle \(gesamt) ›") { nav.oeffneKalender(T) }
-                }
-            }
-            .padding(.horizontal, Mass.rand)
-            // Hinzufügen wie bei den Meilensteinen: direkt unter der Überschrift, eine Karte für alles – das Blatt fragt, was es sein soll
-            HinzufuegenKarte(titel: "Hinzufügen", unter: "Aufgabe · Termin · Habit · Ziel") { nav.blatt = .neu(nil) }
-                .padding(.horizontal, Mass.rand).padding(.bottom, 10)
-            GruppierteListe {
-                if zeilen.isEmpty {
-                    LeerZeile(text: "Nichts mehr mit Uhrzeit. Morgen planen – im Kalender.")
-                }
-                ForEach(zeilen) { e in
-                    switch e {
-                    case .block(let b): NaechsteZeile(block: b)
-                    case .habit(let h): HomeHabitZeile(habit: h)
+                // Aussage und drei Werte (§19 Tageswert, §17 Ablenkung, Habits heute)
+                VStack(spacing: 16) {
+                    (Text(HomeRechnung.wort(fokus, heute: T, jetzt: jetzt).zeilen.joined(separator: " ") + " " + HomeRechnung.wort(fokus, heute: T, jetzt: jetzt).akzent).font(.system(.body, weight: .semibold))
+                     + Text("  " + HomeRechnung.datumText(T)).font(.system(.body)).foregroundStyle(DFarbe.zweitrangig))
+                    HStack(alignment: .top, spacing: 0) {
+                        HomeWert(titel: "Tageswert", wert: "\(Tageswert.wert(z, am: T))")
+                        HomeWert(titel: "Ablenkung", wert: Bildschirm.ablenkung(z.bildschirmzeit, am: T).map { Zahl.dauer(Double($0) * 60) } ?? "–")
+                        HomeWert(titel: "Geschafft", wert: "\(fokus.geschafft)/\(fokus.gesamt)")
                     }
                 }
-            }
-            .padding(.horizontal, Mass.rand)
+                .padding(.top, -18)
+                .padding(.bottom, 8)
 
-            if jetzt >= 18 * 60 || z.reflexionen["tag:\(T.text)"] != nil {
-                PfeilZeile(symbol: "moon", text: z.reflexionen["tag:\(T.text)"] == nil ? "Tagesabschluss · 2 Min." : "Tagesabschluss ✓") {
-                    nav.blatt = .reflexion(woche: false)
+                JetztKarte(fokus: fokus).padding(.horizontal, Dunkel.rand_)
+
+                // Wichtig (§12): höchstens drei Signale, jedes mit genau einer Handlung
+                if !signale.isEmpty {
+                    GlasKarte {
+                        Text("Wichtig").font(DSchrift.zeileFett).foregroundStyle(DFarbe.zweitrangig)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 18).padding(.top, 16)
+                        ForEach(signale) { SignalZeile(signal: $0) }
+                    }
+                    .padding(.horizontal, Dunkel.rand_)
                 }
-                .padding(.horizontal, Mass.rand).padding(.top, Mass.abschnitt)
+
+                // Erkenntnisse (§15): das stärkste Muster, sonst der Hinweis, dass Daten fehlen
+                GlasKarte {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Erkenntnisse").font(DSchrift.zeileFett).foregroundStyle(DFarbe.zweitrangig)
+                        if let m = muster {
+                            Text(m.text).font(.system(.title3, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+                            Text("Zusammenhang, keine Ursache · \(m.tage) Tage verglichen").font(DSchrift.unterzeile).foregroundStyle(DFarbe.zweitrangig)
+                        } else {
+                            Text("Deine ersten Erkenntnisse brauchen 14 Tage mit Journal.").font(DSchrift.zeile).foregroundStyle(DFarbe.text)
+                                .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 28)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(18)
+                }
+                .padding(.horizontal, Dunkel.rand_)
+
+                // Rückblick (§14): Karten zum Wischen, das Auffälligste vorn
+                RueckblickReihe()
+
+                AbschnittKopf(titel: "Als Nächstes") {
+                    if gesamt > zeilen.count {
+                        Button("alle \(gesamt) ›") { nav.oeffneKalender(T) }
+                    }
+                }
+                .padding(.horizontal, Dunkel.rand_)
+                GlasKarte {
+                    if zeilen.isEmpty {
+                        LeerZeile(text: "Nichts mehr mit Uhrzeit.")
+                    }
+                    ForEach(zeilen) { e in
+                        switch e {
+                        case .block(let b): NaechsteZeile(block: b)
+                        case .habit(let h): HomeHabitZeile(habit: h)
+                        }
+                    }
+                }
+                .padding(.horizontal, Dunkel.rand_)
+                HinzufuegenKarte(titel: "Hinzufügen", unter: "Aufgabe · Habit · Ziel") { nav.blatt = .neu(nil) }
+                    .padding(.horizontal, Dunkel.rand_)
+
+                if jetzt >= 18 * 60 || z.reflexionen["tag:\(T.text)"] != nil {
+                    PfeilZeile(symbol: "moon", text: z.reflexionen["tag:\(T.text)"] == nil ? "Tagesabschluss · 2 Min." : "Tagesabschluss ✓") {
+                        nav.blatt = .reflexion(woche: false)
+                    }
+                    .padding(.horizontal, Dunkel.rand_)
+                }
             }
+            .padding(.top, 4)
+            .padding(.bottom, 110)
         }
+        .dunkelGrund()
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $serieOffen) { SerieBlatt(serie: serie) }
+    }
+}
+
+/// Bühne: die Figur auf dem Sockel im Fels. Bild „home-fels“ aus den Assets, sonst gezeichneter Fels.
+private struct HomeBuehne: View {
+    var erfolg: Bool
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            BildPlatz(name: "home-fels") { FelsZeichnung() }
+                .frame(height: 330).frame(maxWidth: .infinity).clipped()
+                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.22), .init(color: .black, location: 0.72), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+            VStack(spacing: -44) {
+                Figur(zustand: erfolg ? .erfolg : .ruhig, groesse: 112)
+                // Sockel
+                Ellipse().fill(LinearGradient(colors: [Color(0x2A2D2B), Color(0x0C0D0C)], startPoint: .top, endPoint: .bottom))
+                    .frame(width: 92, height: 18)
+                    .overlay { Ellipse().strokeBorder(Color.white.opacity(0.12), lineWidth: 1) }
+            }
+            .padding(.bottom, 62)
+        }
+        .frame(height: 330)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Gezeichneter Fels (Ersatz, bis das erzeugte Bild in den Assets liegt): zwei dunkle Wände, ein Vorsprung, Sternenstaub.
+private struct FelsZeichnung: View {
+    var body: some View {
+        Canvas { ctx, g in
+            func wand(_ punkte: [CGPoint], _ farben: [Color]) {
+                var p = Path(); p.addLines(punkte.map { CGPoint(x: $0.x * g.width, y: $0.y * g.height) }); p.closeSubpath()
+                ctx.fill(p, with: .linearGradient(Gradient(colors: farben), startPoint: .zero, endPoint: CGPoint(x: g.width, y: g.height)))
+            }
+            // Sternenstaub
+            var z = Zufall(27)
+            for _ in 0..<70 {
+                let r = CGRect(x: 0.3 * g.width + z.zahl() * 0.4 * g.width, y: z.zahl() * 0.5 * g.height, width: 1.4, height: 1.4)
+                ctx.fill(Path(ellipseIn: r), with: .color(.white.opacity(0.15 + z.zahl() * 0.4)))
+            }
+            wand([.init(x: 0, y: 0), .init(x: 0.36, y: 0), .init(x: 0.3, y: 0.22), .init(x: 0.22, y: 0.48), .init(x: 0.28, y: 0.74), .init(x: 0.12, y: 1), .init(x: 0, y: 1)],
+                 [Color(0x39413A), Color(0x151816), Color(0x050605)])
+            wand([.init(x: 1, y: 0), .init(x: 0.68, y: 0), .init(x: 0.74, y: 0.2), .init(x: 0.82, y: 0.44), .init(x: 0.76, y: 0.7), .init(x: 0.9, y: 1), .init(x: 1, y: 1)],
+                 [Color(0x1B1F1C), Color(0x2F362F), Color(0x070807)])
+            // Vorsprung, auf dem der Sockel steht
+            wand([.init(x: 0.16, y: 0.8), .init(x: 0.34, y: 0.72), .init(x: 0.7, y: 0.73), .init(x: 0.86, y: 0.82), .init(x: 0.8, y: 1), .init(x: 0.2, y: 1)],
+                 [Color(0x3A403B), Color(0x1A1D1B), Color(0x050605)])
+        }
+    }
+}
+
+private struct HomeWert: View {
+    var titel: String
+    var wert: String
+    var body: some View {
+        VStack(spacing: 6) {
+            Text(titel.uppercased()).font(.system(.caption, weight: .medium)).tracking(0.6).foregroundStyle(DFarbe.zweitrangig)
+            Text(wert).font(.system(.title2, weight: .semibold)).monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Glaskarte des Vorbilds: Radius 28, dunkles Glas mit grünem Schimmer oben, feiner heller Rand.
+struct GlasKarte<Inhalt: View>: View {
+    @ViewBuilder var inhalt: Inhalt
+    var body: some View {
+        VStack(spacing: 0) { inhalt }
+            .background {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(0x232B25), Color(0x141615)], startPoint: .top, endPoint: .bottom))
+            }
+            .overlay { RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.18), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+    }
+}
+
+/// Serie (§18): Flamme groß, Zahl, „Tage in Folge“ – als Glas-Blatt.
+private struct SerieBlatt: View {
+    var serie: Int
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack { RundKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }; Spacer() }
+            Image(systemName: "flame.fill").font(.system(size: 76))
+                .foregroundStyle(LinearGradient(colors: [Color(0xFFE29A), Color(0xFF8A3D)], startPoint: .top, endPoint: .bottom))
+                .shadow(color: Color(0xFFB347).opacity(0.7), radius: 24)
+            Text("\(serie)").font(.system(size: 52, weight: .heavy)).foregroundStyle(Color(0xFFD27A))
+            Text(serie == 1 ? "TAG IN FOLGE" : "TAGE IN FOLGE").font(.system(.title3, weight: .bold)).foregroundStyle(Color(0xFFC766))
+            Text("Ein Tag zählt mit Fokus, allen Habits oder einem Journal-Eintrag.").font(DSchrift.unterzeile).foregroundStyle(Color(0xFFC766).opacity(0.85)).multilineTextAlignment(.center)
+            Spacer()
+        }
+        .padding(16)
+        .presentationDetents([.height(380)])
+        .glasBlatt()
     }
 }
 
@@ -144,16 +301,26 @@ private struct JetztKarte: View {
     var body: some View {
         let z = speicher.zustand
         let T = speicher.heute
-        VornKarte {
-            Etikett(text: label)
-            Text(titel).font(.karteTitel).foregroundStyle(Farbe.text).fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-            knoepfe.padding(.top, 4)
-            if fokus.gesamt > 0 {
-                let sek = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: speicher.jetzt())
-                Balken(anteil: Double(fokus.geschafft) / Double(fokus.gesamt), farbe: Farbe.handlung, spur: Farbe.linie).padding(.top, 8)
-                Text("\(fokus.geschafft) von \(fokus.gesamt) geschafft · \(Zahl.dauer(sek)) Fokus").font(.klein).foregroundStyle(Farbe.zweitrangig)
+        GlasKarte {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: fokus.habit != nil ? "repeat" : fokus.block?.art == .termin ? "calendar" : "scope")
+                        .font(.system(size: 20, weight: .semibold)).foregroundStyle(DFarbe.akzent)
+                        .frame(width: 44, height: 44).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(titel).font(DSchrift.zeileFett).fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
+                        Text(label).font(DSchrift.unterzeile).foregroundStyle(DFarbe.zweitrangig)
+                    }
+                    Spacer(minLength: 0)
+                }
+                knoepfe
+                if fokus.gesamt > 0 {
+                    let sek = z.sitzungen.filter { $0.tag == T }.reduce(0) { $0 + $1.sekunden } + z.timerSekunden(jetzt: speicher.jetzt())
+                    Balken(anteil: Double(fokus.geschafft) / Double(fokus.gesamt), farbe: Color(Dunkel.akzentA), spur: Color.white.opacity(0.1))
+                    Text("\(fokus.geschafft) von \(fokus.gesamt) geschafft · \(Zahl.dauer(sek)) Fokus").font(.system(.footnote)).foregroundStyle(DFarbe.zweitrangig)
+                }
             }
+            .padding(18)
         }
     }
 
@@ -169,7 +336,7 @@ private struct JetztKarte: View {
         return "Heute"
     }
 
-    private var titel: String { fokus.block?.titel ?? fokus.aufgabe?.titel ?? fokus.habit?.titel ?? "Nichts mehr offen. Gute Landung." }
+    private var titel: String { fokus.block?.titel ?? fokus.aufgabe?.titel ?? fokus.habit?.titel ?? "Nichts mehr offen." }
 
     @ViewBuilder private var knoepfe: some View {
         let T = speicher.heute
