@@ -6,11 +6,14 @@ import SwiftUI
 struct HabitsAnsicht: View {
     /// Startargument „-habitsDetail“ öffnet die Detailseite direkt (Prüfen im Simulator)
     @State private var detail = ProcessInfo.processInfo.arguments.contains("-habitsDetail")
+    /// Startargument „-habitNeu“ öffnet das Blatt direkt (Prüfen im Simulator)
+    @State private var neu = ProcessInfo.processInfo.arguments.contains("-habitNeu")
 
     var body: some View {
         NavigationStack {
             inhalt
                 .navigationDestination(isPresented: $detail) { HabitsDetail() }
+                .sheet(isPresented: $neu) { HabitNeuBlatt() }
                 .toolbar(.hidden, for: .navigationBar)
         }
     }
@@ -20,7 +23,7 @@ struct HabitsAnsicht: View {
             VStack(alignment: .leading, spacing: 44) {
                 KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
                            eintraege: [("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5")],
-                           oeffnen: { detail = true })
+                           oeffnen: { detail = true }, plus: { neu = true })
                 // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
                            eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
@@ -44,6 +47,8 @@ private struct KreisReihe: View {
     var eintraege: [(name: String, bild: String)]
     /// Tipp auf Überschrift oder Pfeil öffnet die Detailseite (nur wo gesetzt)
     var oeffnen: (() -> Void)? = nil
+    /// Tipp auf das Plus-Feld (nur wo gesetzt)
+    var plus: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -68,7 +73,7 @@ private struct KreisReihe: View {
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 11) {
                     ForEach(eintraege, id: \.name) { e in HabitKreis(name: e.name, bild: e.bild) }
-                    HabitPlus()
+                    Button { plus?() } label: { HabitPlus() }.buttonStyle(.plain)
                 }
                 .padding(.horizontal, 17)
             }
