@@ -34,8 +34,8 @@ struct HabitsDetail: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                ZeitAbschnitt(titel: "Habits heute", summe: "1h 55m", zeilen: heute,
-                              mehr: Zeile(name: "Wasser", bild: "habit-5", wert: "", anteil: 0))
+                // Habits heute: immer alle sichtbar, daher ohne „Alle anzeigen“
+                ZeitAbschnitt(titel: "Habits heute", summe: "1h 55m", zeilen: heute, mehr: nil)
                 Trennlinie()
                 ZeitAbschnitt(titel: "Weitere Habits", summe: "1h 50m", zeilen: weitere,
                               mehr: Zeile(name: "Stretching", bild: "habit-3", wert: "", anteil: 0), start: 0.3)
@@ -85,7 +85,8 @@ private struct ZeitAbschnitt: View {
     var titel: String
     var summe: String
     var zeilen: [Zeile]
-    var mehr: Zeile
+    /// „Alle anzeigen“-Zeile (nil = keine)
+    var mehr: Zeile?
     /// Verzögerung des ersten Balkens (Abschnitte fahren nacheinander ein)
     var start: Double = 0
     private let maxBalken: CGFloat = 113
@@ -110,13 +111,15 @@ private struct ZeitAbschnitt: View {
                     }
                     .accessibilityElement(children: .combine)
                 }
-                HStack(spacing: 18) {
-                    HabitBild(bild: mehr.bild, groesse: 32).frame(width: HabitsDetail.bildGroesse)
-                    Text("Alle anzeigen").font(.system(size: 17, weight: .semibold))
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 15, weight: .medium)).foregroundStyle(Color(0x8E8E93))
+                if let mehr {
+                    HStack(spacing: 18) {
+                        HabitBild(bild: mehr.bild, groesse: 32).frame(width: HabitsDetail.bildGroesse)
+                        Text("Alle anzeigen").font(.system(size: 17, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.down").font(.system(size: 15, weight: .medium)).foregroundStyle(Color(0x8E8E93))
+                    }
+                    .padding(.top, 2)
                 }
-                .padding(.top, 2)
             }
         }
         .padding(.horizontal, 24)
@@ -137,7 +140,14 @@ private struct QuotenAbschnitt: View {
             HStack {
                 Text(titel).font(.system(size: 17, weight: .semibold))
                 Spacer()
-                Text(schnitt).font(.system(size: 17)).foregroundStyle(Color(0x9E9E9E)).monospacedDigit()
+                // Durchschnitt: kleines „Ø“ in derselben grauen Schrift vor dem Wert
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("Ø").font(.system(size: 16, weight: .medium))
+                    Text(schnitt).font(.system(size: 17)).monospacedDigit()
+                }
+                .foregroundStyle(Color(0x9E9E9E))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Durchschnitt \(schnitt)")
             }
             .padding(.bottom, 18)
             VStack(alignment: .leading, spacing: 19) {
