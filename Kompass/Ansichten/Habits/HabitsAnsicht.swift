@@ -4,42 +4,14 @@ import SwiftUI
 /// Oben die Kreis-Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring,
 /// Bild und Dreieck, Name darunter. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen.
 struct HabitsAnsicht: View {
-    private let habits: [(name: String, bild: String)] = [
-        ("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5"),
-    ]
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Text("Habits").font(.system(size: 19, weight: .semibold))
-                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
-                    }
-                    Text("Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.")
-                        .font(.system(size: 17)).foregroundStyle(Color(0x8E8E93)).lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.horizontal, 30)
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(.isHeader)
-
-                ScrollView(.horizontal) {
-                    HStack(alignment: .top, spacing: 11) {
-                        ForEach(habits, id: \.name) { h in HabitKreis(name: h.name, bild: h.bild) }
-                        HabitPlus()
-                    }
-                    .padding(.horizontal, 17)
-                }
-                .scrollIndicators(.hidden)
-                .padding(.top, 24)
-
-                VStack(spacing: 12) {
-                    Text("Mein Weg").font(DSchrift.grosserTitel)
-                    Text("Wird neu gebaut.").font(DSchrift.zeile).foregroundStyle(DFarbe.zweitrangig)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 150)
+            VStack(alignment: .leading, spacing: 44) {
+                KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
+                           eintraege: [("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5")])
+                // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
+                KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
+                           eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
             }
             .padding(.top, 28)
             .padding(.bottom, 170)
@@ -48,6 +20,41 @@ struct HabitsAnsicht: View {
         .foregroundStyle(DFarbe.text)
         .strahlenGrund()
         .accessibilityIdentifier("seite.habits")
+    }
+}
+
+/// Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring, Bild und Dreieck,
+/// Name darunter, am Ende ein Plus-Feld. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen. Noch ohne Funktion.
+private struct KreisReihe: View {
+    var titel: String
+    var text: String
+    var eintraege: [(name: String, bild: String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(titel).font(.system(size: 19, weight: .semibold))
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                }
+                Text(text)
+                    .font(.system(size: 17)).foregroundStyle(Color(0x8E8E93)).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 30)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: 11) {
+                    ForEach(eintraege, id: \.name) { e in HabitKreis(name: e.name, bild: e.bild) }
+                    HabitPlus()
+                }
+                .padding(.horizontal, 17)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.top, 24)
+        }
     }
 }
 
