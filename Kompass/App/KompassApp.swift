@@ -8,7 +8,11 @@ struct KompassApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Hauptansicht()
+            Group {
+                if ProcessInfo.processInfo.arguments.contains("-designVorschau") { DesignVorschau() } else { Hauptansicht() }
+            }
+                // Kompass ist nur dunkel [ENTSCHEIDUNG – 27.11.2026]
+                .preferredColorScheme(.dark)
                 .environment(speicher)
                 .environment(nav)
                 .task {

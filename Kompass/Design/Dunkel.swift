@@ -1,0 +1,538 @@
+import SwiftUI
+
+/// Designsystem „Dunkel“ (Umbau nach Vorbild, `docs/produkt/konzepte/umbau-nach-vorbild.md` §2).
+/// Kompass ist nur dunkel [ENTSCHEIDUNG – 27.11.2026]. Werte aus den Vorbild-Bildern gemessen (393 × 852 pt).
+enum Dunkel {
+    // MARK: Farben (Hex)
+    static let grund: UInt32 = 0x000000
+    /// Glas-Blätter und gruppierte Zeilen
+    static let blatt: UInt32 = 0x2B2B2B
+    /// Auswahl-Kapseln
+    static let kapsel: UInt32 = 0x202020
+    /// Eingabefelder
+    static let eingabe: UInt32 = 0x1C1C1E
+    static let rand: UInt32 = 0x3A3A3C
+    /// Fläche des Hauptknopfs
+    static let knopf: UInt32 = 0x313532
+    static let text: UInt32 = 0xFFFFFF
+    static let zweitrangig: UInt32 = 0x96969B   // Vorbild ≈ #8E8E93, aufgehellt für AA auf Blättern
+    /// Antwort im Gespräch
+    static let antwort: UInt32 = 0x8AB994
+    /// Licht oben – Standard, Pro/Belohnung, Intro
+    static let lichtGruen: UInt32 = 0x779373
+    static let lichtLila: UInt32 = 0x6F63B0
+    static let lichtBlau: UInt32 = 0x5B6878
+    /// Akzent-Verlauf Limette → Aqua
+    static let akzentA: UInt32 = 0xD3FFA0
+    static let akzentB: UInt32 = 0xA9FBEF
+    /// Lila für Pro
+    static let pro: UInt32 = 0xB8A8FF
+    /// Rot für Notfall und Löschen
+    static let rot: UInt32 = 0xFF5A5F
+
+    // MARK: Maße (pt)
+    static let rand_: CGFloat = 20
+    static let knopfHoehe: CGFloat = 54
+    static let auswahlHoehe: CGFloat = 58
+    static let zeilenHoehe: CGFloat = 52
+    static let gruppenRadius: CGFloat = 22
+    static let blattRadius: CGFloat = 40
+    static let kartenRadius: CGFloat = 32
+    static let rundKnopf: CGFloat = 44
+    /// Tiefe des Lichtkegels: nach 200 pt fast schwarz
+    static let lichtTiefe: CGFloat = 200
+}
+
+extension Color {
+    init(_ hex: UInt32, deckkraft: Double = 1) {
+        self.init(.sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
+                  blue: Double(hex & 0xFF) / 255, opacity: deckkraft)
+    }
+}
+
+/// Farben als `Color` – nur dunkel.
+enum DFarbe {
+    static let grund = Color(Dunkel.grund)
+    static let blatt = Color(Dunkel.blatt)
+    static let kapsel = Color(Dunkel.kapsel)
+    static let eingabe = Color(Dunkel.eingabe)
+    static let rand = Color(Dunkel.rand)
+    static let knopf = Color(Dunkel.knopf)
+    static let text = Color(Dunkel.text)
+    static let zweitrangig = Color(Dunkel.zweitrangig)
+    static let antwort = Color(Dunkel.antwort)
+    static let pro = Color(Dunkel.pro)
+    static let rot = Color(Dunkel.rot)
+    static let akzent = LinearGradient(colors: [Color(Dunkel.akzentA), Color(Dunkel.akzentB)], startPoint: .leading, endPoint: .trailing)
+    static let akzentFarben = [Color(Dunkel.akzentA), Color(Dunkel.akzentB)]
+    /// Glas-Fläche über unscharfem Grund
+    static let glas = Color.white.opacity(0.08)
+    static let glasRand = Color.white.opacity(0.14)
+}
+
+/// Schrift-Stufen (SF Pro, Dynamic Type). Größen aus dem Vorbild, jeweils an eine Textstufe gebunden.
+enum DSchrift {
+    static let grosserTitel = Font.system(.largeTitle, weight: .bold)            // 34
+    static let gespraech = Font.system(size: 20, weight: .regular, design: .default)
+    static let ueberschrift = Font.system(.title2, weight: .semibold)            // 22
+    static let zeile = Font.system(.body)                                       // 17
+    static let zeileFett = Font.system(.body, weight: .semibold)
+    static let knopf = Font.system(.body, weight: .medium)
+    static let unterzeile = Font.system(.subheadline)                           // 15
+    static let etikett = Font.system(.footnote, weight: .semibold)              // 13
+    static let tab = Font.system(size: 10, weight: .medium)
+    static let walze = Font.system(size: 56, weight: .heavy)
+    static let grosseZahl = Font.system(size: 40, weight: .bold)
+    static let aufforderung = Font.system(.subheadline, weight: .semibold)
+}
+
+/// Gespräch skaliert mit Dynamic Type wie `.title3`.
+struct GespraechSchrift: ViewModifier {
+    @ScaledMetric(relativeTo: .title3) private var groesse: CGFloat = 20
+    func body(content: Content) -> some View { content.font(.system(size: groesse)) }
+}
+
+extension View {
+    func gespraechSchrift() -> some View { modifier(GespraechSchrift()) }
+}
+
+// MARK: - Grund und Licht
+
+enum LichtArt: Sendable { case gruen, lila, blau, aus
+    var farbe: Color {
+        switch self {
+        case .gruen: Color(Dunkel.lichtGruen)
+        case .lila: Color(Dunkel.lichtLila)
+        case .blau: Color(Dunkel.lichtBlau)
+        case .aus: .clear
+        }
+    }
+}
+
+/// Weicher Lichtkegel von oben über schwarzem Grund. Verlauf gemessen im Vorbild (Mitte oben → 200 pt fast schwarz,
+/// Ränder oben ≈ ein Drittel der Mitte): elliptisch, Breite 1,6 × Bildschirm, Tiefe 200 pt.
+struct LichtOben: View {
+    var art: LichtArt = .gruen
+    var body: some View {
+        GeometryReader { g in
+            Rectangle()
+                .fill(EllipticalGradient(stops: [
+                    .init(color: art.farbe, location: 0),
+                    .init(color: art.farbe.opacity(0.78), location: 0.2),
+                    .init(color: art.farbe.opacity(0.52), location: 0.4),
+                    .init(color: art.farbe.opacity(0.17), location: 0.75),
+                    .init(color: .clear, location: 1)
+                ], center: .top, startRadiusFraction: 0, endRadiusFraction: 0.5))
+                .frame(width: g.size.width * 1.6, height: Dunkel.lichtTiefe * 2)
+                .position(x: g.size.width / 2, y: Dunkel.lichtTiefe)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Schwarzer Grund mit Licht oben – für jede Seite.
+struct DunkelGrund: ViewModifier {
+    var licht: LichtArt = .gruen
+    func body(content: Content) -> some View {
+        content
+            .background { ZStack { DFarbe.grund; LichtOben(art: licht) }.ignoresSafeArea() }
+            .foregroundStyle(DFarbe.text)
+            .preferredColorScheme(.dark)
+    }
+}
+
+extension View {
+    func dunkelGrund(_ licht: LichtArt = .gruen) -> some View { modifier(DunkelGrund(licht: licht)) }
+}
+
+// MARK: - Knöpfe
+
+enum KapselArt: Sendable { case haupt, hell, kauf, rot, leise }
+
+/// Hauptknopf: Kapsel 54 pt, dunkles Glas, unten Glühen Limette → Aqua.
+struct KapselStil: ButtonStyle {
+    var art: KapselArt = .haupt
+    @Environment(\.isEnabled) private var an
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(art == .kauf ? .system(.title3, weight: .medium) : DSchrift.knopf)
+            .foregroundStyle(vorder)
+            .frame(maxWidth: .infinity, minHeight: Dunkel.knopfHoehe)
+            .padding(.horizontal, 20)
+            .background { flaeche }
+            .clipShape(Capsule())
+            .overlay { Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(an ? 0.22 : 0.08), .clear], startPoint: .top, endPoint: .center), lineWidth: 1) }
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+            .contentShape(Capsule())
+    }
+
+    private var vorder: Color {
+        guard an else { return DFarbe.zweitrangig.opacity(0.7) }
+        switch art {
+        case .hell: return .black
+        case .leise: return DFarbe.text
+        default: return DFarbe.text
+        }
+    }
+
+    @ViewBuilder private var flaeche: some View {
+        switch art {
+        case .haupt:
+            ZStack(alignment: .bottom) {
+                DFarbe.knopf
+                if an {
+                    Ellipse().fill(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .leading, endPoint: .trailing))
+                        .frame(height: 30).offset(y: 22).blur(radius: 14).opacity(0.75)
+                }
+            }
+            .opacity(an ? 1 : 0.55)
+        case .hell:
+            LinearGradient(colors: [.white, Color(0xEAF8F2)], startPoint: .top, endPoint: .bottom)
+        case .kauf:
+            LinearGradient(colors: [Color(0xB6E6C2), Color(0x5C8A68)], startPoint: .top, endPoint: .bottom)
+        case .rot:
+            ZStack(alignment: .bottom) {
+                DFarbe.knopf
+                Ellipse().fill(DFarbe.rot).frame(height: 30).offset(y: 22).blur(radius: 14).opacity(0.8)
+            }
+        case .leise:
+            Color.clear
+        }
+    }
+}
+
+extension ButtonStyle where Self == KapselStil {
+    static var kapsel: KapselStil { KapselStil() }
+    static func kapsel(_ art: KapselArt) -> KapselStil { KapselStil(art: art) }
+}
+
+/// „Gedrückt halten zum Festlegen“: füllt sich in `dauer` Sekunden mit Licht, dann `aktion`.
+struct HaltenKnopf: View {
+    var titel: String
+    var dauer: Double = 1.2
+    var art: KapselArt = .haupt
+    var aktion: () -> Void
+
+    @State private var fuellung: CGFloat = 0
+    @State private var fertig = false
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+
+    var body: some View {
+        Text(titel)
+            .font(DSchrift.knopf)
+            .frame(maxWidth: .infinity, minHeight: Dunkel.knopfHoehe)
+            .background {
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        DFarbe.knopf
+                        LinearGradient(colors: art == .rot ? [DFarbe.rot.opacity(0.6), DFarbe.rot] : DFarbe.akzentFarben.map { $0.opacity(0.85) },
+                                       startPoint: .leading, endPoint: .trailing)
+                            .frame(width: g.size.width * fuellung)
+                        Ellipse().fill(LinearGradient(colors: art == .rot ? [DFarbe.rot, DFarbe.rot] : DFarbe.akzentFarben, startPoint: .leading, endPoint: .trailing))
+                            .frame(height: 30).offset(y: 22).blur(radius: 14).opacity(0.7)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
+                    }
+                }
+            }
+            .foregroundStyle(fuellung > 0.5 ? Color.black : DFarbe.text)
+            .clipShape(Capsule())
+            .overlay { Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center), lineWidth: 1) }
+            .contentShape(Capsule())
+            .onLongPressGesture(minimumDuration: dauer, maximumDistance: 40) {
+                fertig.toggle()
+                aktion()
+                withAnimation(.easeOut(duration: 0.3)) { fuellung = 0 }
+            } onPressingChanged: { drueckt in
+                withAnimation(drueckt ? .linear(duration: dauer) : .easeOut(duration: 0.25)) { fuellung = drueckt ? 1 : 0 }
+            }
+            .sensoryFeedback(.success, trigger: fertig)
+            .accessibilityElement()
+            .accessibilityLabel(titel)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { aktion() }
+    }
+}
+
+/// Runder Glas-Knopf (Schließen, Zurück, Bearbeiten), Ø 44.
+struct RundKnopf: View {
+    var symbol: String
+    var beschriftung: String
+    var aktion: () -> Void
+    var body: some View {
+        Button(action: aktion) {
+            Image(systemName: symbol).font(.system(size: 17, weight: .semibold))
+                .frame(width: Dunkel.rundKnopf, height: Dunkel.rundKnopf)
+                .background(Color.white.opacity(0.12), in: Circle())
+                .foregroundStyle(DFarbe.text)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(beschriftung)
+    }
+}
+
+// MARK: - Auswahl und Eingabe
+
+/// Auswahl-Zeile als Kapsel: Symbol grün links, Text.
+struct AuswahlKapsel: View {
+    var symbol: String?
+    var titel: String
+    var gewaehlt = false
+    var aktion: () -> Void
+    var body: some View {
+        Button(action: aktion) {
+            HStack(spacing: 14) {
+                if let symbol {
+                    Image(systemName: symbol).font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(DFarbe.akzent).frame(width: 22)
+                }
+                Text(titel).font(DSchrift.zeile).foregroundStyle(DFarbe.text)
+                Spacer(minLength: 0)
+                if gewaehlt { Image(systemName: "checkmark.circle.fill").foregroundStyle(DFarbe.akzent) }
+            }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity, minHeight: Dunkel.auswahlHoehe)
+            .background(gewaehlt ? Color(0x2C3A30) : DFarbe.kapsel, in: Capsule())
+            .overlay { Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(gewaehlt ? .isSelected : [])
+    }
+}
+
+/// Eingabefeld als Kapsel.
+struct EingabeKapsel: View {
+    var platzhalter: String
+    @Binding var text: String
+    var body: some View {
+        TextField("", text: $text, prompt: Text(platzhalter).foregroundStyle(DFarbe.zweitrangig))
+            .font(DSchrift.zeile)
+            .padding(.horizontal, 20)
+            .frame(minHeight: Dunkel.knopfHoehe)
+            .background(DFarbe.eingabe, in: Capsule())
+            .overlay { Capsule().strokeBorder(DFarbe.rand, lineWidth: 1) }
+            .tint(Color(Dunkel.akzentA))
+    }
+}
+
+// MARK: - Gruppen und Zeilen
+
+/// Gruppe aus Zeilen auf Glas, Radius 22, Trennlinien zwischen den Zeilen.
+struct GlasGruppe<Inhalt: View>: View {
+    @ViewBuilder var inhalt: Inhalt
+    var body: some View {
+        VStack(spacing: 0) {
+            Group(subviews: inhalt) { teile in
+                ForEach(Array(teile.enumerated()), id: \.offset) { i, teil in
+                    if i > 0 { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, 18) }
+                    teil
+                }
+            }
+        }
+        .background(DFarbe.glas, in: RoundedRectangle(cornerRadius: Dunkel.gruppenRadius, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: Dunkel.gruppenRadius, style: .continuous).strokeBorder(DFarbe.glasRand.opacity(0.6), lineWidth: 0.5) }
+    }
+}
+
+/// Zeile: Symbol, Titel, Unterzeile, Wert rechts, Pfeil.
+struct GlasZeile: View {
+    var symbol: String?
+    var titel: String
+    var unter: String?
+    var wert: String?
+    var pfeil = true
+    var body: some View {
+        HStack(spacing: 14) {
+            if let symbol { Image(systemName: symbol).font(.system(size: 16)).foregroundStyle(DFarbe.zweitrangig).frame(width: 22) }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(titel).font(DSchrift.zeile)
+                if let unter { Text(unter).font(DSchrift.unterzeile).foregroundStyle(DFarbe.zweitrangig) }
+            }
+            Spacer(minLength: 8)
+            if let wert { Text(wert).font(DSchrift.zeile).foregroundStyle(DFarbe.zweitrangig) }
+            if pfeil { Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(DFarbe.zweitrangig) }
+        }
+        .padding(.horizontal, 18)
+        .frame(minHeight: Dunkel.zeilenHoehe)
+        .padding(.vertical, unter == nil ? 0 : 8)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Abschnitts-Kopf über einer Gruppe.
+struct DAbschnitt: View {
+    var titel: String
+    var body: some View {
+        Text(titel).font(DSchrift.zeileFett).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 4).padding(.top, 8)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Wochentage als Kreise (Mo–So), an = weiß.
+struct TageWahl: View {
+    @Binding var tage: Set<Int>
+    private let namen = ["M", "D", "M", "D", "F", "S", "S"]
+    private let lang = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<7, id: \.self) { i in
+                let an = tage.contains(i + 1)
+                Button { if an { tage.remove(i + 1) } else { tage.insert(i + 1) } } label: {
+                    Text(namen[i]).font(.system(.subheadline, weight: .semibold))
+                        .frame(width: 36, height: 36)
+                        .foregroundStyle(an ? Color.black : DFarbe.text)
+                        .background(an ? Color.white : Color.white.opacity(0.12), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityLabel(lang[i])
+                .accessibilityAddTraits(an ? .isSelected : [])
+            }
+        }
+    }
+}
+
+/// Von/Bis mit Punkt, gestrichelter Linie und Kreis.
+struct VonBis: View {
+    var von: String
+    var bis: String
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(spacing: 2) {
+                Circle().fill(DFarbe.zweitrangig).frame(width: 6, height: 6)
+                Line(senkrecht: true).stroke(DFarbe.zweitrangig, style: StrokeStyle(lineWidth: 1, dash: [2, 3])).frame(width: 1, height: 34)
+                Circle().strokeBorder(DFarbe.zweitrangig, lineWidth: 1).frame(width: 7, height: 7)
+            }
+            VStack(spacing: 0) {
+                zeile("Von", von)
+                Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5)
+                zeile("Bis", bis)
+            }
+        }
+        .padding(.leading, 18)
+    }
+    private func zeile(_ t: String, _ w: String) -> some View {
+        HStack { Text(t).font(DSchrift.zeile); Spacer(); Text(w).font(DSchrift.zeile).foregroundStyle(DFarbe.zweitrangig)
+            Image(systemName: "chevron.up.chevron.down").font(.system(size: 12, weight: .semibold)).foregroundStyle(DFarbe.zweitrangig) }
+            .padding(.trailing, 18).frame(minHeight: Dunkel.zeilenHoehe)
+    }
+}
+
+/// Regler mit drei Stufen (Schwierigkeit): Leicht · Steigend · Durchziehen.
+struct StufenRegler: View {
+    @Binding var stufe: Int
+    var stufen: [String]
+    var body: some View {
+        GeometryReader { g in
+            let breite = g.size.width - 44
+            let x = breite * CGFloat(stufe) / CGFloat(max(stufen.count - 1, 1))
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.08))
+                Capsule().fill(LinearGradient(colors: DFarbe.akzentFarben.map { $0.opacity(0.35) }, startPoint: .leading, endPoint: .trailing))
+                    .frame(width: x + 44)
+                HStack { ForEach(stufen.indices, id: \.self) { i in
+                    Circle().fill(Color.white.opacity(0.5)).frame(width: 5, height: 5)
+                    if i < stufen.count - 1 { Spacer() } } }
+                    .padding(.horizontal, 20)
+                Capsule().fill(.white).frame(width: 40, height: 40)
+                    .overlay { Image(systemName: "chart.bar.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(.black) }
+                    .offset(x: x + 2)
+                    .gesture(DragGesture(minimumDistance: 0).onChanged { w in
+                        let n = Int(((w.location.x / max(breite, 1)) * CGFloat(stufen.count - 1)).rounded())
+                        let neu = min(max(n, 0), stufen.count - 1)
+                        if neu != stufe { stufe = neu }
+                    })
+            }
+        }
+        .frame(height: 44)
+        .sensoryFeedback(.selection, trigger: stufe)
+        .accessibilityElement()
+        .accessibilityLabel("Schwierigkeit")
+        .accessibilityValue(stufen[stufe])
+        .accessibilityAdjustableAction { r in
+            switch r { case .increment: stufe = min(stufe + 1, stufen.count - 1)
+            case .decrement: stufe = max(stufe - 1, 0)
+            @unknown default: break }
+        }
+    }
+}
+
+/// Plakette: Kapsel mit Rand („Pro“, „Besitzt …“).
+struct Plakette: View {
+    var text: String
+    var farbe: Color = DFarbe.pro
+    var symbol: String?
+    var body: some View {
+        HStack(spacing: 4) {
+            if let symbol { Image(systemName: symbol).font(.system(size: 11, weight: .bold)) }
+            Text(text).font(.system(.caption, weight: .semibold))
+        }
+        .foregroundStyle(farbe)
+        .padding(.horizontal, 8).frame(minHeight: 22)
+        .overlay { Capsule().strokeBorder(farbe.opacity(0.8), lineWidth: 1) }
+    }
+}
+
+/// Seitenpunkte (Karussell), aktiv weiß.
+struct DSeitenPunkte: View {
+    var anzahl: Int
+    var aktiv: Int
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<anzahl, id: \.self) { i in
+                Circle().fill(i == aktiv ? Color.white : Color.white.opacity(0.3)).frame(width: 6, height: 6)
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Seite \(aktiv + 1) von \(anzahl)")
+    }
+}
+
+/// Kopf eines Glas-Blatts: links Schließen/Zurück, Mitte Titel, rechts optional Bearbeiten.
+struct BlattKopf: View {
+    var titel: String
+    var zurueck = false
+    var schliessen: () -> Void
+    var rechts: (symbol: String, beschriftung: String, aktion: () -> Void)?
+    var body: some View {
+        ZStack {
+            Text(titel).font(.system(.title3, weight: .semibold)).accessibilityAddTraits(.isHeader)
+            HStack {
+                RundKnopf(symbol: zurueck ? "chevron.left" : "xmark", beschriftung: zurueck ? "Zurück" : "Schließen", aktion: schliessen)
+                Spacer()
+                if let rechts { RundKnopf(symbol: rechts.symbol, beschriftung: rechts.beschriftung, aktion: rechts.aktion) }
+            }
+        }
+        .padding(.horizontal, 16).padding(.top, 16)
+    }
+}
+
+/// Glas-Blatt: Hintergrund für `.sheet` (dunkles Glas, Radius 40).
+extension View {
+    func glasBlatt() -> some View {
+        self
+            .presentationBackground { ZStack { Color(Dunkel.blatt).opacity(0.82); Rectangle().fill(.ultraThinMaterial) } }
+            .presentationCornerRadius(Dunkel.blattRadius)
+            .presentationDragIndicator(.visible)
+            .preferredColorScheme(.dark)
+    }
+}
+
+/// Aufforderung „Tippen zum Weiter“: Großbuchstaben mit Akzent-Verlauf.
+struct Aufforderung: View {
+    var text: String
+    var body: some View {
+        Text(text.uppercased()).font(DSchrift.aufforderung).tracking(0.6).foregroundStyle(DFarbe.akzent)
+    }
+}
+
+/// Große Zahl mit Akzent-Verlauf (Walze, Werte).
+struct AkzentZahl: View {
+    var text: String
+    var font: Font = DSchrift.walze
+    var body: some View { Text(text).font(font).foregroundStyle(DFarbe.akzent).monospacedDigit() }
+}
