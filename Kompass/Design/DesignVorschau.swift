@@ -16,6 +16,17 @@ struct DesignVorschau: View {
             VStack(alignment: .leading, spacing: 28) {
                 Text("Designsystem").font(DSchrift.grosserTitel)
 
+                gruppe("Figur") {
+                    HStack(spacing: 0) {
+                        Figur(zustand: .stein, groesse: 34)
+                        Figur(zustand: .ruhig, groesse: 34)
+                        Figur(zustand: .erfolg, groesse: 34)
+                        Figur(zustand: .belohnung, groesse: 34)
+                    }
+                    .frame(maxWidth: .infinity)
+                    Figur(zustand: .ruhig, groesse: 150).frame(maxWidth: .infinity)
+                }
+
                 gruppe("Gespräch") {
                     VStack(alignment: .leading, spacing: 18) {
                         Text("Ich helfe dir, dranzubleiben.").gespraechSchrift().foregroundStyle(DFarbe.zweitrangig).blur(radius: 1.5)
