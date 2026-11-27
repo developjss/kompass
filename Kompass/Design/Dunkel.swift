@@ -558,3 +558,36 @@ extension Dunkel {
         return (x + 0.05) / (y + 0.05)
     }
 }
+
+/// Sternenstaub wie im Vorbild: feine weiße Punkte in drei Größen, fest verteilt (gleicher Himmel bei jedem Start),
+/// einzelne funkeln langsam. Bei „Bewegung reduzieren“ stehen sie still.
+struct Sterne: View {
+    var anzahl = 190
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 12, paused: ruhig)) { kontext in
+            let t = ruhig ? 0 : kontext.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, g in
+                var s: UInt64 = 0x5EED_C0DE
+                func zufall() -> Double {   // SplitMix64, fester Startwert
+                    s &+= 0x9E37_79B9_7F4A_7C15
+                    var z = s
+                    z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+                    z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+                    return Double((z ^ (z >> 31)) >> 11) / Double(1 << 53)
+                }
+                for i in 0..<anzahl {
+                    let x = zufall() * g.width, y = zufall() * g.height
+                    let art = zufall()
+                    let r = art > 0.93 ? 1.6 : art > 0.6 ? 1.0 : 0.6
+                    var hell = 0.4 + zufall() * 0.6
+                    if i % 7 == 0 { hell *= 0.55 + 0.45 * sin(t * 0.9 + Double(i)) }
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(.white.opacity(max(0.08, hell))))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}

@@ -12,6 +12,7 @@
 
 # Zusammenarbeit
 - Zuerst `docs/stand.md` und `docs/plan.md` lesen.
+- **Der Gründer gibt die Schritte vor** [ENTSCHEIDUNG – 27.11.2026]: Er nennt, was als Nächstes eingebaut wird. Vor dem Bauen kommt eine kurze Vorab-Info: wie es umgesetzt wird, wie nah es dem Vorbild kommt (in Prozent, mit Grund für jede Lücke) und was dafür fehlt. Gebaut wird erst nach seinem Ja. `docs/plan.md` ist nur die Übersicht, keine Reihenfolge.
 - Antworten auf Deutsch, kurz und klar. Kritischer Sparringspartner: Schwächen und Alternativen nennen.
 - Kennzeichnungen: [FAKT – Quelle, Datum] · [HYPOTHESE] · [VORSCHLAG] · [ENTSCHEIDUNG – Datum] · [OFFEN] · [RISIKO] · [SCHÄTZUNG]. Nichts erfinden; Rechtliches nur als Prüffrage.
 - **Nach jedem Bau:** durch die App gehen, jede geänderte Seite ablichten und neben das passende Opal-Bild legen; Unterschiede nennen. Dann auf das iPhone des Gründers und den Simulator iPhone 18 Pro installieren.
