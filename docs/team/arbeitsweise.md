@@ -24,7 +24,7 @@ Stand: 23. November 2026 · Gilt für jede Sitzung. Die Kurzfassung steht in `CL
 
 - **Nur Demo-Daten.** Keine echten Kalender, Termine, Kontakte (Geburtstage!), Schlüssel, Zugangsdaten.
 - Die E-Mail-Adresse des Gründers ist privat: nicht in Code, Commits, Texte oder externe Dienste.
-- Screenshots fremder Apps (z. B. „Quest“ in der Ideen-Word) nur als interne Inspiration, nie nach außen, nie nachbauen.
+- **Vorbild-Apps** [VORSCHLAG – 27.11.2026, Gründer: „genau so nachbauen“; Freigabe mit PR]: Aufbau, Abläufe, Maße, Schriftgrößen, Farben, Licht und Bewegung dürfen genau nachgebaut werden. Bilder, 3D-Figuren, Fotos, Icons, Logos, Markennamen, Texte und lizenzpflichtige Schriften fremder Apps nie – auch nicht vorübergehend. Screenshots fremder Apps nur lokal, nie ins Repo, nie nach außen. Vor dem Store wird das Design eigenständig gemacht (`docs/produkt/konzepte/umbau-nach-vorbild.md` §7, Block 14).
 - Echte Schlüssel und Passwörter nie in den Chat und nie ins Repo. Der Gründer legt Konten bei Diensten selbst an.
 
 ## 3. Bauen und testen

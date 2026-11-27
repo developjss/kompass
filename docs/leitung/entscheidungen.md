@@ -48,4 +48,6 @@ Stand: 27. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | [OFFEN] Aufgaben bleiben in Kompass (kein Abgleich mit Apple Erinnerungen) | ja | `docs/produkt/konzepte/journal-und-berater.md` §8 |
 | [OFFEN] Google zuerst nur über die Konten im iPhone, kein eigenes Google-Login | ja | `docs/produkt/konzepte/journal-und-berater.md` §7 |
 | [OFFEN] Journal standardmäßig nur auf dem Gerät, zum Server nur mit Einwilligung | ja | `docs/produkt/konzepte/journal-und-berater.md` §10 |
-| [OFFEN] Neues Design (Entwurf 27.11.2026) | – | Artefakt, Link in `docs/stand.md` |
+| [OFFEN] Design und Onboarding nach Vorbild Opal nachbauen (Aufbau, Maße, Farben, Bewegung – keine fremden Bilder, Texte, Logos); Kompass nur dunkel; löst Nachtblau und den hellen Entwurf vom 27.11. ab | ja, mit Block 14 „eigenständig machen“ vor dem Store | `docs/produkt/konzepte/umbau-nach-vorbild.md` |
+| [OFFEN] Bildschirmzeit (Apple FamilyControls): messen über Schwellen, später Apps sperren im Fokus; Berechtigung beantragt der Gründer | ja, Stufe 1 zuerst | `docs/produkt/konzepte/umbau-nach-vorbild.md` §5 |
+| [OFFEN] Rechenregeln §16 Handy-Jahre, §17 Bildschirmzeit-Signale, §18 Meilensteine | so freigeben | `docs/produkt/konzepte/umbau-nach-vorbild.md` §6 |

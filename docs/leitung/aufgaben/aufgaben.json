@@ -21,13 +21,37 @@
   ],
   "aufgaben": [
     {
-      "id": "j-design",
-      "titel": "Design neu entwerfen (Artefakt), Gründer entscheidet",
-      "wer": "claude",
-      "status": "laeuft",
+      "id": "v-entscheiden",
+      "titel": "Entscheiden: Vorbild-Regel, nur dunkel, Bildschirmzeit, Foto-Quelle, Rechenregeln §16–§18",
+      "wer": "ceo",
+      "status": "offen",
       "prio": 1,
       "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §7 Block 0",
+      "landkarte": "decide"
+    },
+    {
+      "id": "v-bilder",
+      "titel": "Vorbild: Bilder von Opals Haupt-Home und Bildschirmaufnahmen der Animationen nachliefern",
+      "wer": "ceo",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §8",
       "landkarte": "design"
+    },
+    {
+      "id": "j-design",
+      "titel": "Design und Onboarding nach Vorbild Opal (Bauplan Blöcke 1–14)",
+      "wer": "claude",
+      "status": "wartet",
+      "prio": 1,
+      "phase": 2,
+      "landkarte": "design",
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §7",
+      "nach": [
+        "v-entscheiden"
+      ]
     },
     {
       "id": "j-entscheiden",

@@ -15,7 +15,7 @@ Stand: 27. November 2026. `docs/` ist gegliedert **wie die Landkarte**: Jeder As
 | Ordner | Landkarte | Was drin ist |
 |---|---|---|
 | `leitung/` | Leitung & Strategie | `fahrplan.md` (Phasen, Bausteine, Plattformen) · `entscheidungen.md` (Register) · `aufgaben/` (`/fahrplan`) |
-| `produkt/` | Produkt & Design | **`roter-faden/kompass-roter-faden.docx` (zentrales Dokument)** · `grundlage.md` (Idee, 6 Prinzipien, Zielgruppe, Funktionen) · `rechenregeln.md` (alle Formeln) · `design.md` (Nachtblau, Neuentwurf läuft) · `inhalte-und-assets.md` · `konzepte/` (noch nicht gebaut: `journal-und-berater.md` – der neue Plan, `lotse.md`, `lernen-ueber-alle-nutzer.md`) |
+| `produkt/` | Produkt & Design | **`roter-faden/kompass-roter-faden.docx` (zentrales Dokument)** · `grundlage.md` (Idee, 6 Prinzipien, Zielgruppe, Funktionen) · `rechenregeln.md` (alle Formeln) · `design.md` (Nachtblau, Neuentwurf läuft) · `inhalte-und-assets.md` · `konzepte/` (noch nicht gebaut: `journal-und-berater.md` – der neue Plan, `umbau-nach-vorbild.md` – Design und Onboarding nach Opal, `lotse.md`, `lernen-ueber-alle-nutzer.md`) |
 | `technik/` | Technik | `app.md` (SwiftUI-App: öffnen, Aufbau) · `lotse-server.md` (Server des Lotsen) · `bauprotokoll.md` (jede gemergte Änderung) · `plattformen-und-speicherung.md` (SwiftUI, Sync, Kalender-APIs) · `berichte/` (Personen-Test) |
 | `marketing/` | Marketing & Wachstum | Store-Texte, Website (kommt) |
 | `support/` | Support | FAQ, Hilfetexte (kommt) |
