@@ -18,7 +18,8 @@ enum Dunkel {
     /// Antwort im Gespräch
     static let antwort: UInt32 = 0x8AB994
     /// Licht oben – Standard, Pro/Belohnung, Intro
-    static let lichtGruen: UInt32 = 0x779373
+    /// Compass-Türkis (Farbton des Kompass-Scheins auf Home), in Helligkeit und Sättigung wie das Salbeigrün des Vorbilds (#779373)
+    static let lichtGruen: UInt32 = 0x6E9A94
     static let lichtLila: UInt32 = 0x6F63B0
     static let lichtBlau: UInt32 = 0x5B6878
     /// Akzent-Verlauf Limette → Aqua
