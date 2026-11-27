@@ -21,7 +21,7 @@ enum Bereich: String, CaseIterable, Hashable {
         switch self {
         case .home: "Home"
         case .apps: "Meine Apps"
-        case .habits: "Habits"
+        case .habits: "Mein Weg"   // später englisch „Path“
         }
     }
 
@@ -73,7 +73,11 @@ struct TabKapsel: View {
                 let an = b == bereich
                 Button { withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { bereich = b } } label: {
                     VStack(spacing: 5) {
-                        Image(systemName: b.symbol).font(.system(size: 21, weight: .semibold)).frame(height: 24)
+                        Group {
+                            if b == .habits { WegSymbol().frame(width: 28, height: 28) }
+                            else { Image(systemName: b.symbol).font(.system(size: 21, weight: .semibold)) }
+                        }
+                        .frame(height: 24)
                         Text(b.titel).font(.system(size: 10, weight: .medium))
                     }
                     .foregroundStyle(an ? Color.white : Color(0x8B908D))
@@ -165,5 +169,32 @@ struct LeereSeite: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .strahlenGrund()
         .accessibilityIdentifier("seite.\(bereich.rawValue)")
+    }
+}
+
+/// Zeichen für „Mein Weg“ (Vorlage des Gründers): zwei Punkte, eine geschwungene Linie, in der Mitte ein Pfeil –
+/// einfarbig in der Farbe des Tabs (der Pfeil bleibt grau bzw. weiß wie der Rest, nicht blau).
+struct WegSymbol: View {
+    var body: some View {
+        Canvas { ctx, g in
+            let s = min(g.width, g.height) / 24
+            func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * s, y: y * s) }
+            let farbe = GraphicsContext.Shading.foreground
+            let strich = StrokeStyle(lineWidth: 1.9 * s, lineCap: .round, lineJoin: .round)
+            // Punkte (Ringe)
+            for m in [p(20.4, 4.4), p(3.6, 19.6)] {
+                ctx.stroke(Path(ellipseIn: CGRect(x: m.x - 2.4 * s, y: m.y - 2.4 * s, width: 4.8 * s, height: 4.8 * s)), with: farbe, style: strich)
+            }
+            // Linie oben und unten
+            var oben = Path(); oben.move(to: p(18.0, 4.6)); oben.addCurve(to: p(13.6, 6.9), control1: p(15.9, 4.6), control2: p(14.4, 5.4))
+            var unten = Path(); unten.move(to: p(6.0, 19.6)); unten.addCurve(to: p(10.6, 17.6), control1: p(8.2, 19.6), control2: p(9.7, 19.0))
+            ctx.stroke(oben, with: farbe, style: strich); ctx.stroke(unten, with: farbe, style: strich)
+            // Pfeil in der Mitte
+            var pfeil = Path()
+            pfeil.move(to: p(15.9, 8.6)); pfeil.addLine(to: p(8.3, 12.6)); pfeil.addLine(to: p(11.5, 13.1)); pfeil.addLine(to: p(12.8, 16.0)); pfeil.closeSubpath()
+            ctx.fill(pfeil, with: farbe)
+            ctx.stroke(pfeil, with: farbe, style: StrokeStyle(lineWidth: 0.7 * s, lineJoin: .round))
+        }
+        .accessibilityHidden(true)
     }
 }
