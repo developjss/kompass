@@ -5,12 +5,25 @@ import SwiftUI
 struct HabitNeuBlatt: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tage: Set<Int> = [6, 7]
+    @State private var name = ""
+    @FocusState private var schreibt: Bool
 
     var body: some View {
         VStack(spacing: 12) {
             // Kopf: Schließen · Titel · Bearbeiten
             ZStack {
-                Text("Wochenend-Limit").font(.system(size: 18, weight: .semibold))
+                // Name des Habits: kleines Feld in grauer Kapsel, mittig
+                TextField("", text: $name, prompt: Text("Name").foregroundStyle(Color(0x8E8E93)))
+                    .font(.system(size: 17, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                    .focused($schreibt)
+                    .submitLabel(.done)
+                    .padding(.horizontal, 14)
+                    .frame(width: 180, height: 38)
+                    .background(Color(0x3A3A3A).opacity(0.75), in: Capsule())
+                    .overlay { Capsule().strokeBorder(Color.white.opacity(schreibt ? 0.22 : 0.08), lineWidth: 0.5) }
+                    .tint(Color(Dunkel.akzentA))
+                    .accessibilityLabel("Name des Habits")
                 HStack {
                     BlattKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }
                     Spacer()
