@@ -12,6 +12,7 @@ struct HabitsAnsicht: View {
                 // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
                            eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
+                ZieleReihe()
             }
             .padding(.top, 28)
             .padding(.bottom, 170)
@@ -101,5 +102,76 @@ private struct HabitPlus: View {
         .frame(width: durchmesser)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Neuer Habit")
+    }
+}
+
+/// Ziele – Aufbau 1:1 wie die „Digital Detox“-Reihe des Vorbilds: Überschrift ohne Pfeil, graue Zeile, hohe Bildkarten
+/// (229 × 294 pt, Radius 32), unten unscharf und dunkel, Titel, getönte Unterzeile und eine Glas-Pille mit Dreieck. Noch ohne Funktion.
+private struct ZieleReihe: View {
+    private let ziele: [(titel: String, unter: String, dauer: String, bild: String)] = [
+        ("Pilotenschein", "Theorie und Praxis", "4 Monate", "ziel-1"),
+        ("Erster Alleinflug", "Ohne Fluglehrer", "6 Wochen", "ziel-2"),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Ziele").font(.system(size: 19, weight: .semibold))
+                Text("Wohin du langfristig willst.").font(.system(size: 17)).foregroundStyle(Color(0x8E8E93))
+            }
+            .padding(.horizontal, 32)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal) {
+                HStack(spacing: 16) {
+                    ForEach(ziele, id: \.titel) { z in ZielKarte(titel: z.titel, unter: z.unter, dauer: z.dauer, bild: z.bild) }
+                }
+                .padding(.horizontal, 16)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.top, 26)
+        }
+    }
+}
+
+private struct ZielKarte: View {
+    var titel: String
+    var unter: String
+    var dauer: String
+    var bild: String
+    private let breite: CGFloat = 229, hoehe: CGFloat = 294, radius: CGFloat = 32
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            // Bild, unten weich unscharf (gleiches Bild unscharf darübergelegt, nach unten eingeblendet)
+            ZStack {
+                Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
+                Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
+                    .blur(radius: 18)
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0.42), .init(color: .black, location: 0.7)], startPoint: .top, endPoint: .bottom))
+                LinearGradient(stops: [.init(color: .clear, location: 0.45), .init(color: .black.opacity(0.55), location: 0.78), .init(color: .black.opacity(0.92), location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(titel).font(.system(size: 24, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
+                Text(unter).font(.system(size: 16)).foregroundStyle(.white.opacity(0.42)).lineLimit(1)
+                HStack(spacing: 6) {
+                    Image(systemName: "play.fill").font(.system(size: 14))
+                    Text(dauer).font(.system(size: 18, weight: .medium))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14).frame(height: 40)
+                .background { ZStack { Capsule().fill(.ultraThinMaterial); Capsule().fill(Color.black.opacity(0.38)) } }
+                .environment(\.colorScheme, .dark)
+                .padding(.top, 20)
+            }
+            .padding(.leading, 24).padding(.bottom, 23)
+        }
+        .frame(width: breite, height: hoehe)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.4), .white.opacity(0.08), .white.opacity(0.16)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(titel), \(unter), \(dauer)")
     }
 }
