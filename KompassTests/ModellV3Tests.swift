@@ -14,10 +14,18 @@ struct ModellV3Tests {
         z.meilensteine["serie-7"] = Date(timeIntervalSince1970: 1_800_000_000)
         z.tageswerte["2026-11-26"] = 72
         z.proAbo = ProAbo(produkt: "kompass.pro.monat", seit: Date(timeIntervalSince1970: 1_800_000_000))
-        let daten = try JSONEncoder.kompass.encode(z)
-        let zurueck = try JSONDecoder.kompass.decode(Zustand.self, from: daten)
-        #expect(zurueck == z)
-        #expect(zurueck.version == 3)
+        // Datumswerte werden sekundengenau gespeichert (ISO 8601) – daher: einmal speichern, dann stabil
+        let einmal = try JSONDecoder.kompass.decode(Zustand.self, from: JSONEncoder.kompass.encode(z))
+        let zweimal = try JSONDecoder.kompass.decode(Zustand.self, from: JSONEncoder.kompass.encode(einmal))
+        #expect(zweimal == einmal)
+        #expect(einmal.version == 3)
+        #expect(einmal.profil == z.profil)
+        #expect(einmal.journal == z.journal)
+        #expect(einmal.bildschirmzeit == z.bildschirmzeit)
+        #expect(einmal.urlaub == z.urlaub)
+        #expect(einmal.meilensteine == z.meilensteine)
+        #expect(einmal.tageswerte == z.tageswerte)
+        #expect(einmal.proAbo == z.proAbo)
     }
 
     @Test func versionZweiOhneNeueFelderLaedtMitStandardwerten() throws {
