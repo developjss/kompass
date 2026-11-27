@@ -7,6 +7,8 @@ struct HabitsDetail: View {
     @Environment(\.dismiss) private var dismiss
     /// Wie weit gescrollt ist – der Kopf wird erst beim Scrollen dunkel/unscharf, oben leuchtet das Licht frei hinter der Insel
     @State private var versatz: CGFloat = 0
+    /// Bild etwa 15 % höher als Name + Balken zusammen (Name ≈ 22 pt + 8 pt Abstand + Balken 7 pt ≈ 37 pt → 42 pt)
+    static let bildGroesse: CGFloat = 42
 
     private let heute: [Zeile] = [
         Zeile(name: "Lernen", bild: "habit-4", wert: "45m", anteil: 1),
@@ -99,7 +101,7 @@ private struct ZeitAbschnitt: View {
             VStack(alignment: .leading, spacing: 19) {
                 ForEach(Array(zeilen.enumerated()), id: \.element.id) { i, z in
                     HStack(alignment: .center, spacing: 18) {
-                        HabitBild(bild: z.bild, groesse: 38)
+                        HabitBild(bild: z.bild, groesse: HabitsDetail.bildGroesse)
                         VStack(alignment: .leading, spacing: 8) {
                             Text(z.name).font(.system(size: 17))
                             EinfahrBalken(breite: max(18, maxBalken * z.anteil), hoehe: 7, art: .staub,
@@ -109,7 +111,7 @@ private struct ZeitAbschnitt: View {
                     .accessibilityElement(children: .combine)
                 }
                 HStack(spacing: 18) {
-                    HabitBild(bild: mehr.bild, groesse: 29).frame(width: 38)
+                    HabitBild(bild: mehr.bild, groesse: 32).frame(width: HabitsDetail.bildGroesse)
                     Text("Alle anzeigen").font(.system(size: 17, weight: .semibold))
                     Spacer()
                     Image(systemName: "chevron.down").font(.system(size: 15, weight: .medium)).foregroundStyle(Color(0x8E8E93))
@@ -141,11 +143,11 @@ private struct QuotenAbschnitt: View {
             VStack(alignment: .leading, spacing: 19) {
                 ForEach(Array(zeilen.enumerated()), id: \.element.id) { i, z in
                     HStack(alignment: .center, spacing: 18) {
-                        HabitBild(bild: z.bild, groesse: 38)
+                        HabitBild(bild: z.bild, groesse: HabitsDetail.bildGroesse)
                         VStack(alignment: .leading, spacing: 8) {
                             Text(z.name).font(.system(size: 17))
-                            EinfahrBalken(breite: max(18, maxBalken * z.anteil), hoehe: 4, art: .limette,
-                                          wert: z.wert, wertFarbe: Color(0xDAEEE8), verzoegerung: start + Double(i) * 0.06)
+                            EinfahrBalken(breite: max(18, maxBalken * z.anteil), hoehe: 7, art: .staub,
+                                          wert: z.wert, wertFarbe: Color(0x7FE9E6), verzoegerung: start + Double(i) * 0.06)
                         }
                     }
                     .accessibilityElement(children: .combine)
