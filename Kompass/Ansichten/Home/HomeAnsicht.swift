@@ -11,16 +11,13 @@ struct HomeAnsicht: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                ZStack(alignment: .top) {
-                    HomeBuehne(scroll: scroll)
-                    kopf.padding(.top, 58)
-                }
-                .zIndex(0)
+                HomeBuehne(scroll: scroll).zIndex(0)
                 werte.padding(.top, 9).zIndex(1)
                 VStack(spacing: 17) {
                     ImmerErlaubtKarte().erscheint(da, 0)
                     BildschirmzeitKarte().erscheint(da, 1)
                     SerieKarte().erscheint(da, 2)
+                    ErkenntnisKarte().erscheint(da, 3)
                 }
                 .padding(.horizontal, 17)
                 .padding(.top, 27)
@@ -33,15 +30,19 @@ struct HomeAnsicht: View {
         .background(DFarbe.grund.ignoresSafeArea())
         .foregroundStyle(DFarbe.text)
         .overlay(alignment: .top) {
-            ZStack {
-                Rectangle().fill(.ultraThinMaterial)
-                Rectangle().fill(Color.black.opacity(0.55))
+            ZStack(alignment: .top) {
+                // Inhalt, der unter den Kopf läuft, wird unscharf und dunkel (wie im Vorbild-Video)
+                ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    Rectangle().fill(Color.black.opacity(0.6))
+                }
+                .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.62), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+                .frame(height: 132)
+                .opacity(min(1, max(0, (scroll - 20) / 90)))
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                kopf.padding(.top, 4)
             }
-            .mask(LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom))
-            .frame(height: 96)
-            .opacity(min(1, max(0, (scroll - 40) / 120)))
-            .ignoresSafeArea()
-            .allowsHitTesting(false)
         }
         .onAppear { withAnimation(ruhig ? nil : .easeOut(duration: 1.1)) { da = true } }
         .sheet(isPresented: $serieOffen) { SerieBlatt(serie: 1) }
@@ -216,13 +217,16 @@ private struct ImmerErlaubtKarte: View {
 }
 
 private struct BildschirmzeitKarte: View {
-    private let apps: [(String, String, [Color], Double)] = [
-        ("Fotos teilen", "58 min", [Color(0xF9CE34), Color(0xEE2A7B), Color(0x6228D7)], 0.82),
-        ("Musik", "41 min", [Color(0x1ED760), Color(0x17A84A)], 0.58),
-        ("Nachrichten", "25 min", [Color(0x5BF675), Color(0x25D366)], 0.36),
+    private struct Zeile: Identifiable { var id: String { name }; var name: String; var symbol: String; var farben: [Color]; var minuten: Int; var rund = false }
+    private let zeilen = [
+        Zeile(name: "Fotos teilen", symbol: "camera.fill", farben: [Color(0xF9CE34), Color(0xEE2A7B), Color(0x6228D7)], minuten: 17),
+        Zeile(name: "Fußball-Manager", symbol: "asterisk", farben: [Color(0x1B1D1C), Color(0x0C0D0C)], minuten: 13),
+        Zeile(name: "Nachrichten", symbol: "message.fill", farben: [Color(0x5BF675), Color(0x25D366)], minuten: 10),
+        Zeile(name: "Kalender", symbol: "calendar", farben: [Color(0xF4F4F4), Color(0xD9D9D9)], minuten: 8),
+        Zeile(name: "Store", symbol: "bag.fill", farben: [Color(0x2D9BF7), Color(0x1668E3)], minuten: 6),
     ]
-    private let symbole = ["camera.fill", "music.note", "message.fill"]
-    private let stunden: [Double] = [0, 0, 0, 0, 0, 0, 0.1, 0.35, 0.5, 0.2, 0.15, 0.3, 0.7, 0.45, 0.2, 0.25, 0.4, 0.85, 1, 0.65, 0.5, 0.3, 0.15, 0.05]
+    @State private var da = false
+
     var body: some View {
         HomeGlas(schimmer: Color(0x15302A)) {
             VStack(alignment: .leading, spacing: 0) {
@@ -231,39 +235,57 @@ private struct BildschirmzeitKarte: View {
                     Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Color(0xA3A8A5))
                 }
                 Text("2h 4m").font(.system(size: 26, weight: .semibold)).padding(.top, 10)
-                // Verlauf über den Tag (0–24 Uhr), feste Beispielwerte
-                HStack(alignment: .bottom, spacing: 4) {
-                    ForEach(Array(stunden.enumerated()), id: \.offset) { _, h in
-                        Capsule().fill(h > 0.6 ? AnyShapeStyle(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .bottom, endPoint: .top)) : AnyShapeStyle(Color.white.opacity(0.16)))
-                            .frame(height: max(3, 44 * h))
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 44, alignment: .bottom)
-                .padding(.top, 18)
-                HStack { Text("0"); Spacer(); Text("6"); Spacer(); Text("12"); Spacer(); Text("18"); Spacer(); Text("24") }
-                    .font(.system(size: 11)).foregroundStyle(Color(0x7D8380)).padding(.top, 6)
-                VStack(spacing: 16) {
-                    ForEach(Array(apps.enumerated()), id: \.offset) { i, a in
-                        HStack(spacing: 12) {
-                            AppKachel(symbol: symbole[i], farben: a.2, groesse: 30)
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack { Text(a.0).font(.system(size: 15, weight: .medium)); Spacer(); Text(a.1).font(.system(size: 15)).foregroundStyle(Color(0xA3A8A5)).monospacedDigit() }
-                                GeometryReader { g in
-                                    ZStack(alignment: .leading) {
-                                        Capsule().fill(Color.white.opacity(0.08))
-                                        Capsule().fill(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .leading, endPoint: .trailing)).frame(width: g.size.width * a.3)
-                                    }
+                Text("Heute").font(.system(size: 14)).foregroundStyle(Color(0x7D8380)).padding(.top, 5)
+                VStack(alignment: .leading, spacing: 22) {
+                    ForEach(Array(zeilen.enumerated()), id: \.element.id) { i, z in
+                        HStack(alignment: .center, spacing: 18) {
+                            AppKachel(symbol: z.symbol, farben: z.farben, groesse: 30, symbolFarbe: z.name == "Kalender" ? Color(0xE5484D) : .white)
+                            VStack(alignment: .leading, spacing: 9) {
+                                Text(z.name).font(.system(size: 15))
+                                HStack(spacing: 6) {
+                                    Capsule()
+                                        .fill(i == 0 ? AnyShapeStyle(LinearGradient(colors: [Color(0xE9667A), Color(0xF08A8F)], startPoint: .leading, endPoint: .trailing))
+                                                     : AnyShapeStyle(LinearGradient(colors: [Color(0xE9FBF3), Color(0x8FE9CC)], startPoint: .leading, endPoint: .trailing)))
+                                        .frame(width: da ? CGFloat(z.minuten) / 17 * 218 : 0, height: 3)
+                                    Text("\(z.minuten)m").font(.system(size: 13)).monospacedDigit()
+                                        .foregroundStyle(i == 0 ? Color(0xF08A8F) : Color(0x9EF0CF))
+                                        .opacity(da ? 1 : 0)
                                 }
-                                .frame(height: 5)
                             }
                         }
                     }
                 }
-                .padding(.top, 22)
+                .padding(.top, 38)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 23).padding(.top, 22).padding(.bottom, 24)
+            .padding(.horizontal, 23).padding(.top, 22).padding(.bottom, 26)
+        }
+        .onAppear { withAnimation(.spring(response: 0.9, dampingFraction: 0.85).delay(0.45)) { da = true } }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Erkenntnisse am ersten Tag: verschwommener Platzhalter-Inhalt, davor der Satz.
+private struct ErkenntnisKarte: View {
+    var body: some View {
+        HomeGlas(schimmer: Color(0x15302A)) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Erkenntnisse").font(.system(size: 16)).foregroundStyle(Color(0xA3A8A5))
+                ZStack {
+                    VStack(spacing: 14) {
+                        RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.22)).frame(width: 60, height: 22)
+                        RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.16)).frame(width: 250, height: 54)
+                    }
+                    .blur(radius: 14)
+                    .offset(y: -40)
+                    Text("Deine ersten Erkenntnisse brauchen einen vollen Tag.")
+                        .font(.system(size: 16)).foregroundStyle(Color(0xC9CDCB)).multilineTextAlignment(.center)
+                        .frame(maxWidth: 250).offset(y: 46)
+                }
+                .frame(maxWidth: .infinity).frame(height: 290)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 23).padding(.top, 22).padding(.bottom, 20)
         }
         .accessibilityElement(children: .combine)
     }
@@ -301,8 +323,9 @@ struct AppKachel: View {
     var farben: [Color]
     var groesse: CGFloat
     var rund = false
+    var symbolFarbe: Color = .white
     var body: some View {
-        Image(systemName: symbol).font(.system(size: groesse * 0.5, weight: .bold)).foregroundStyle(.white)
+        Image(systemName: symbol).font(.system(size: groesse * 0.5, weight: .bold)).foregroundStyle(symbolFarbe)
             .frame(width: groesse, height: groesse)
             .background(LinearGradient(colors: farben, startPoint: .bottomLeading, endPoint: .topTrailing),
                         in: RoundedRectangle(cornerRadius: rund ? groesse / 2 : groesse * 0.26, style: .continuous))
