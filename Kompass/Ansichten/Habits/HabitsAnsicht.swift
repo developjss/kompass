@@ -4,11 +4,23 @@ import SwiftUI
 /// Oben die Kreis-Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring,
 /// Bild und Dreieck, Name darunter. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen.
 struct HabitsAnsicht: View {
+    /// Startargument „-habitsDetail“ öffnet die Detailseite direkt (Prüfen im Simulator)
+    @State private var detail = ProcessInfo.processInfo.arguments.contains("-habitsDetail")
+
     var body: some View {
+        NavigationStack {
+            inhalt
+                .navigationDestination(isPresented: $detail) { HabitsDetail() }
+                .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+
+    private var inhalt: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 44) {
                 KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
-                           eintraege: [("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5")])
+                           eintraege: [("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5")],
+                           oeffnen: { detail = true })
                 // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
                            eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
@@ -30,14 +42,21 @@ private struct KreisReihe: View {
     var titel: String
     var text: String
     var eintraege: [(name: String, bild: String)]
+    /// Tipp auf Überschrift oder Pfeil öffnet die Detailseite (nur wo gesetzt)
+    var oeffnen: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(titel).font(.system(size: 19, weight: .semibold))
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                Button { oeffnen?() } label: {
+                    HStack(spacing: 8) {
+                        Text(titel).font(.system(size: 19, weight: .semibold))
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                    }
+                    .frame(minHeight: 44).contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .padding(.vertical, -10)
                 Text(text)
                     .font(.system(size: 17)).foregroundStyle(Color(0x8E8E93)).lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)

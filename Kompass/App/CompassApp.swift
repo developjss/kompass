@@ -36,7 +36,7 @@ enum Bereich: String, CaseIterable, Hashable {
 
 /// Gerüst: Seite, darüber schwebend die laufende Sitzung und die Tab-Kapsel der Vorlage (294 × 60 pt).
 struct Hauptansicht: View {
-    @State private var bereich: Bereich = .home
+    @State private var bereich: Bereich = ProcessInfo.processInfo.arguments.contains("-habitsDetail") ? .habits : .home
 
     var body: some View {
         ZStack(alignment: .bottom) {
