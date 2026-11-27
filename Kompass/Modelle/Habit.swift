@@ -92,22 +92,21 @@ enum Fortschritt {
 }
 
 /// Fokus-Timer eines Habits – fest gerechnet, mit Tests.
-/// - Dauer: bei Zeit-Einheiten das, was vom Tagesziel noch fehlt (aufgerundet auf 5 Minuten, 5–240 min);
-///   ist das Tagesziel schon erreicht, das ganze Tagesziel. Sonst 30 Minuten (frei einstellbar).
+/// - Dauer [ENTSCHEIDUNG – 27.11.2026, Gründer]: Habits mit Zeit-Einheit laufen genau mit ihrer Zeit – was vom
+///   Tagesziel noch fehlt (sekundengenau); ist nichts oder alles erledigt, das ganze Tagesziel. Nicht einstellbar.
+///   Habits ohne Zeit: Dauer frei mit Schnellwahl und Lineal, Vorgabe 30 Minuten.
 /// - Timer läuft ab: Habit gilt als erledigt.
 /// - Früher beendet: Zeit-Einheiten bekommen die fokussierte Zeit gutgeschrieben (ganze Minuten bzw. Sekunden),
 ///   andere Einheiten bleiben, wie sie sind.
 enum Fokus {
-    static let minMinuten = 5
-    static let maxMinuten = 240
+    /// Vorgabe für Habits ohne Zeit-Einheit (einstellbar).
+    static let freieMinuten = 30
 
-    static func startMinuten(einheit: Einheit, ziel: Double, wert: Double) -> Int {
-        guard einheit.art == .zeit else { return 30 }
-        var rest = einheit.sekunden(ziel) - einheit.sekunden(wert)
-        if rest <= 0 { rest = einheit.sekunden(ziel) }
-        let minuten = Int((Double(rest) / 60).rounded(.up))
-        let auf5 = Int((Double(minuten) / 5).rounded(.up)) * 5
-        return min(max(auf5, minMinuten), maxMinuten)
+    /// Feste Dauer in Sekunden für Habits mit Zeit-Einheit; nil = Dauer frei einstellbar.
+    static func festeSekunden(einheit: Einheit, ziel: Double, wert: Double) -> Int? {
+        guard einheit.art == .zeit else { return nil }
+        let rest = einheit.sekunden(ziel) - einheit.sekunden(wert)
+        return rest > 0 ? rest : einheit.sekunden(ziel)
     }
 
     static func ergebnis(wert: Double, einheit: Einheit, ziel: Double, sekunden: Int, fertig: Bool) -> Double {

@@ -3,14 +3,18 @@ import Testing
 
 /// Fokus-Timer: Startdauer, Ergebnis und Uhr-Anzeige.
 struct FokusTests {
-    @Test func startdauer() {
-        #expect(Fokus.startMinuten(einheit: .minuten, ziel: 30, wert: 0) == 30)
-        #expect(Fokus.startMinuten(einheit: .minuten, ziel: 30, wert: 21) == 10)      // 9 fehlen → auf 10 aufgerundet
-        #expect(Fokus.startMinuten(einheit: .minuten, ziel: 30, wert: 30) == 30)      // schon erledigt → ganzes Ziel
-        #expect(Fokus.startMinuten(einheit: .minuten, ziel: 10, wert: 8) == 5)        // mindestens 5
-        #expect(Fokus.startMinuten(einheit: .stunden, ziel: 12, wert: 0) == 240)      // höchstens 240
-        #expect(Fokus.startMinuten(einheit: .sekunden, ziel: 90, wert: 0) == 5)
-        #expect(Fokus.startMinuten(einheit: .seiten, ziel: 20, wert: 5) == 30)        // keine Zeit-Einheit
+    @Test func festeDauerBeiZeitHabits() {
+        #expect(Fokus.festeSekunden(einheit: .minuten, ziel: 45, wert: 0) == 45 * 60)     // genau die Zeit des Habits
+        #expect(Fokus.festeSekunden(einheit: .minuten, ziel: 30, wert: 21) == 9 * 60)     // nur was noch fehlt
+        #expect(Fokus.festeSekunden(einheit: .minuten, ziel: 30, wert: 30) == 30 * 60)    // schon erledigt → ganzes Ziel
+        #expect(Fokus.festeSekunden(einheit: .stunden, ziel: 1.5, wert: 0) == 90 * 60)
+        #expect(Fokus.festeSekunden(einheit: .sekunden, ziel: 90, wert: 0) == 90)
+    }
+
+    @Test func freieDauerOhneZeit() {
+        #expect(Fokus.festeSekunden(einheit: .seiten, ziel: 20, wert: 5) == nil)
+        #expect(Fokus.festeSekunden(einheit: .keine, ziel: 1, wert: 0) == nil)
+        #expect(Fokus.freieMinuten == 30)
     }
 
     @Test func ergebnis() {

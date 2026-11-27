@@ -15,7 +15,10 @@ struct FokusAnsicht: View {
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @Environment(\.scenePhase) private var szene
     @State private var phase: Phase = .einstellen
-    @State private var minuten: Double
+    /// Dauer für Habits ohne Zeit-Einheit (einstellbar)
+    @State private var minuten: Double = Double(Fokus.freieMinuten)
+    /// Feste Dauer bei Habits mit Zeit-Einheit (nil = einstellbar)
+    private let fest: Int?
     /// Ende des laufenden Timers (läuft auch im Hintergrund weiter, weil die Uhr am Datum hängt)
     @State private var ende: Date?
     /// Restzeit beim Pausieren
@@ -26,8 +29,7 @@ struct FokusAnsicht: View {
     init(habit: Habit, wert: Binding<Double>) {
         self.habit = habit
         _wert = wert
-        let start = Fokus.startMinuten(einheit: habit.einheit, ziel: habit.tagesziel, wert: wert.wrappedValue)
-        _minuten = State(initialValue: Double(start))
+        fest = Fokus.festeSekunden(einheit: habit.einheit, ziel: habit.tagesziel, wert: wert.wrappedValue)
         // Für Testbilder: `-fokusSekunden <n>` startet sofort mit kurzer Dauer
         let a = ProcessInfo.processInfo.arguments
         if let i = a.firstIndex(of: "-fokusSekunden"), i + 1 < a.count, let s = Int(a[i + 1]) {
@@ -118,9 +120,19 @@ struct FokusAnsicht: View {
     private func unterUhr(sekunden: Int) -> some View {
         switch phase {
         case .einstellen:
-            LinealWahl(einheit: .minuten, wert: $minuten)
-                .padding(.horizontal, -4)
-                .transition(.opacity)
+            if let fest {
+                // Zeit kommt vom Habit – nichts einzustellen
+                VStack(spacing: 6) {
+                    Text(Einheit.zeit(sekunden: fest)).font(.system(size: 22, weight: .semibold))
+                    Text(fest < habit.einheit.sekunden(habit.tagesziel) ? "Restzeit bis zum Tagesziel" : "Tagesziel")
+                        .font(.system(size: 16)).foregroundStyle(Color.white.opacity(0.6))
+                }
+                .accessibilityElement(children: .combine)
+            } else {
+                LinealWahl(einheit: .minuten, wert: $minuten)
+                    .padding(.horizontal, -4)
+                    .transition(.opacity)
+            }
         case .laeuft, .pause:
             VStack(spacing: 6) {
                 Text(phase == .pause ? "Pausiert" : "Fokus läuft").font(.system(size: 22, weight: .semibold))
@@ -177,7 +189,7 @@ struct FokusAnsicht: View {
 
     private func restSekunden(jetzt: Date) -> Int {
         switch phase {
-        case .einstellen: return Int(minuten) * 60
+        case .einstellen: return fest ?? Int(minuten) * 60
         case .laeuft: return max(Int((ende ?? jetzt).timeIntervalSince(jetzt).rounded(.up)), 0)
         case .pause: return rest
         case .fertig: return 0
@@ -185,7 +197,7 @@ struct FokusAnsicht: View {
     }
 
     private func starten() {
-        gesamt = Int(minuten) * 60
+        gesamt = fest ?? Int(minuten) * 60
         ende = Date().addingTimeInterval(TimeInterval(gesamt))
         withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.85)) { phase = .laeuft }
     }
