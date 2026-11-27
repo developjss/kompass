@@ -12,7 +12,8 @@ struct HabitsAnsicht: View {
     @State private var gewaehlt: Habit? = HabitsAnsicht.startHabit
     /// Fortschritt heute je Habit (nur solange die App offen ist – Speichern kommt mit den Funktionen)
     @State private var fortschritt: [String: Double] = [:]
-    private let habits = Habit.demo
+    /// Habits (Demo; Änderungen über „Bearbeiten“ gelten, solange die App offen ist)
+    @State private var habits = Habit.demo
 
     private static var startHabit: Habit? {
         let a = ProcessInfo.processInfo.arguments
@@ -26,10 +27,11 @@ struct HabitsAnsicht: View {
                 .navigationDestination(isPresented: $detail) { HabitsDetail() }
                 .sheet(isPresented: $neu) { HabitNeuBlatt() }
                 .sheet(item: $gewaehlt) { h in
-                    HabitAuswahlBlatt(habit: h,
+                    HabitAuswahlBlatt(habit: Binding(get: { habits.first { $0.id == h.id } ?? h },
+                                                     set: { neu in if let i = habits.firstIndex(where: { $0.id == neu.id }) { habits[i] = neu } }),
                                       wert: Binding(get: { fortschritt[h.id] ?? 0 }, set: { fortschritt[h.id] = $0 }),
                                       startErledigt: ProcessInfo.processInfo.arguments.contains("-erledigt"),
-                                      bearbeiten: nil, fokus: nil)
+                                      fokus: nil)
                 }
                 .toolbar(.hidden, for: .navigationBar)
         }
@@ -41,6 +43,7 @@ struct HabitsAnsicht: View {
                 KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
                            eintraege: habits.map { ($0.name, $0.bild) },
                            anteile: habits.map { Fortschritt.anteil(wert: fortschritt[$0.id] ?? 0, ziel: $0.tagesziel) },
+                           fotos: habits.map(\.bildDaten),
                            oeffnen: { detail = true }, plus: { neu = true }, tippen: { gewaehlt = habits[$0] })
                 // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
@@ -65,6 +68,8 @@ private struct KreisReihe: View {
     var eintraege: [(name: String, bild: String)]
     /// Fortschritt heute je Kreis (0…1), als Ring gezeigt
     var anteile: [Double] = []
+    /// Eigene Fotos je Kreis (nil = Bild aus den Assets)
+    var fotos: [Data?] = []
     /// Tipp auf Überschrift oder Pfeil öffnet die Detailseite (nur wo gesetzt)
     var oeffnen: (() -> Void)? = nil
     /// Tipp auf das Plus-Feld (nur wo gesetzt)
@@ -95,7 +100,8 @@ private struct KreisReihe: View {
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 11) {
                     ForEach(Array(eintraege.enumerated()), id: \.element.name) { i, e in
-                        let kreis = HabitKreis(name: e.name, bild: e.bild, anteil: anteile.indices.contains(i) ? anteile[i] : 0)
+                        let kreis = HabitKreis(name: e.name, bild: e.bild, foto: fotos.indices.contains(i) ? fotos[i] : nil,
+                                               anteil: anteile.indices.contains(i) ? anteile[i] : 0)
                         if let tippen {
                             Button { tippen(i) } label: { kreis }.buttonStyle(.plain)
                         } else {
@@ -116,13 +122,16 @@ private struct KreisReihe: View {
 private struct HabitKreis: View {
     var name: String
     var bild: String
+    var foto: Data? = nil
     var anteil: Double = 0
     private let durchmesser: CGFloat = 73
 
     var body: some View {
         VStack(spacing: 12) {
             ZStack {
-                Image(bild).resizable().scaledToFill()
+                Group {
+                    if let foto, let b = UIImage(data: foto) { Image(uiImage: b).resizable().scaledToFill() } else { Image(bild).resizable().scaledToFill() }
+                }
                     .frame(width: durchmesser - 8, height: durchmesser - 8)
                     .clipShape(Circle())
                 // Ring: dunkles Grau, innen eine feine helle Kante

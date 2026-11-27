@@ -4,20 +4,22 @@ import SwiftUI
 /// darunter Kacheln (131 × 138 pt im Vorbild, Radius 24, Zeichen im Akzent-Verlauf oben links, Titel und graue Zeile unten).
 /// „Erledigt“ fährt im selben Blatt eine Seite mit dem Compass-Balken herein (wie Opals Schwierigkeits-Seite).
 struct HabitAuswahlBlatt: View {
-    var habit: Habit
+    /// Das Habit; „Bearbeiten“ ändert es direkt (gilt, solange die App offen ist)
+    @Binding var habit: Habit
     /// Gespeicherter Fortschritt heute (nur solange die App offen ist)
     @Binding var wert: Double
     /// nil = kommt im nächsten Schritt (Hinweis statt Aktion)
-    var bearbeiten: (() -> Void)?
     var fokus: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @State private var erledigtSeite: Bool
     @State private var hinweis: String?
+    /// Bearbeiten öffnet das Blatt „Neuer Habit“ – gefüllt mit diesem Habit
+    @State private var bearbeitenOffen = false
 
-    init(habit: Habit, wert: Binding<Double>, startErledigt: Bool = false, bearbeiten: (() -> Void)?, fokus: (() -> Void)?) {
-        self.habit = habit; _wert = wert; self.bearbeiten = bearbeiten; self.fokus = fokus
+    init(habit: Binding<Habit>, wert: Binding<Double>, startErledigt: Bool = false, fokus: (() -> Void)?) {
+        _habit = habit; _wert = wert; self.fokus = fokus
         _erledigtSeite = State(initialValue: startErledigt)
     }
 
@@ -35,6 +37,19 @@ struct HabitAuswahlBlatt: View {
         .alert("\(hinweis ?? "") kommt im nächsten Schritt", isPresented: Binding(get: { hinweis != nil }, set: { if !$0 { hinweis = nil } })) {
             Button("OK", role: .cancel) {}
         }
+        .sheet(isPresented: $bearbeitenOffen) {
+            HabitNeuBlatt(habit: habit) { neu in
+                // andere Einheit: bisheriger Fortschritt passt nicht mehr
+                if neu.einheit != habit.einheit { wert = 0 } else { wert = min(wert, neu.tagesziel) }
+                habit = neu
+            }
+        }
+        .task {
+            // Für Testbilder: `-bearbeiten` öffnet das Bearbeiten-Blatt direkt
+            guard ProcessInfo.processInfo.arguments.contains("-bearbeiten") else { return }
+            try? await Task.sleep(for: .seconds(0.8))
+            bearbeitenOffen = true
+        }
     }
 
     private func wechsel(_ an: Bool) {
@@ -49,7 +64,7 @@ struct HabitAuswahlBlatt: View {
             ZStack(alignment: .top) {
                 HStack { BlattKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }; Spacer() }
                 ZStack {
-                    Image(habit.bild).resizable().scaledToFill()
+                    habit.bildAnsicht.resizable().scaledToFill()
                         .frame(width: 112, height: 112).clipShape(Circle())
                     Circle().strokeBorder(Color(0x2B2B2D), lineWidth: 5).frame(width: 124, height: 124)
                     Circle().strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5).frame(width: 112, height: 112)
@@ -79,16 +94,16 @@ struct HabitAuswahlBlatt: View {
 
             HStack(spacing: 10) {
                 Kachel(symbol: "checkmark", titel: "Erledigt", unter: "Eintragen", hervor: status != .erledigt) { wechsel(true) }
-                // PLATZHALTER: Fokus und Bearbeiten folgen in den nächsten Schritten
+                // PLATZHALTER: Fokus folgt im nächsten Schritt
                 Kachel(symbol: "timer", titel: "Fokus", unter: "Timer starten") { if let fokus { fokus() } else { hinweis = "Fokus" } }
-                Kachel(symbol: "pencil", titel: "Bearbeiten", unter: "Habit ändern") { if let bearbeiten { bearbeiten() } else { hinweis = "Bearbeiten" } }
+                Kachel(symbol: "pencil", titel: "Bearbeiten", unter: "Habit ändern") { bearbeitenOffen = true }
             }
             .padding(.top, 24)
             Spacer(minLength: 0)
         }
         .background(alignment: .top) {
             // Schein in der Farbe des Bilds von oben, wie bei Opals Regel-Blatt
-            Image(habit.bild).resizable().scaledToFill()
+            habit.bildAnsicht.resizable().scaledToFill()
                 .frame(width: 320, height: 220).blur(radius: 60).opacity(0.55)
                 .mask(RadialGradient(colors: [.black, .clear], center: .top, startRadius: 10, endRadius: 230))
                 .offset(y: -60)
@@ -439,5 +454,13 @@ private struct Funkelstaub: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+extension Habit {
+    /// Bild zum Anzeigen: eigenes Foto, sonst das Bild aus den Assets.
+    var bildAnsicht: Image {
+        if let d = bildDaten, let b = UIImage(data: d) { return Image(uiImage: b) }
+        return Image(bild)
     }
 }

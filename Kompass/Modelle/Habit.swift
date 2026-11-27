@@ -9,6 +9,8 @@ struct Habit: Identifiable, Hashable, Sendable {
     var tagesziel: Double
     var tage: Set<Int>
     var zielID: String?
+    /// Eigenes Foto (JPEG, verkleinert); nil = Bild aus den Assets (`bild`)
+    var bildDaten: Data? = nil
 
     var ziel: Ziel? { Ziel.demo.first { $0.id == zielID } }
 

@@ -1,23 +1,68 @@
 import SwiftUI
 import PhotosUI
 
-/// Neuer Habit (über das Plus) – Aussehen 1:1 nach Opals Regel-Blatt („Weekend Limit“), noch ohne Funktion.
-/// Namen und Felder werden im nächsten Schritt angepasst. Maße und Farben aus den Vorlagen (Blatt #2C2C2C, Gruppen #363636).
+/// Neuer Habit (über das Plus) und Habit bearbeiten – dasselbe Blatt, Aussehen nach Opals Regel-Blatt („Weekend Limit“).
+/// Beim Bearbeiten sind alle Felder mit den Daten des Habits gefüllt (wie bei Opal: Bearbeiten = gleiches Blatt wie Anlegen).
+/// Maße und Farben aus den Vorlagen (Blatt #2C2C2C, Gruppen #363636).
 struct HabitNeuBlatt: View {
+    /// Habit, das bearbeitet wird (nil = neu anlegen)
+    private let vorlage: Habit?
+    /// Wird beim Festhalten mit dem geänderten Habit aufgerufen (nur Bearbeiten; gilt, solange die App offen ist)
+    private let speichern: ((Habit) -> Void)?
     @Environment(\.dismiss) private var dismiss
-    @State private var tage: Set<Int> = [6, 7]
+    @State private var tage: Set<Int>
     /// Zähler je Tag fürs Wackeln, wenn der letzte Tag abgewählt werden soll
     @State private var wackeln = [Int](repeating: 0, count: 7)
     @Environment(\.accessibilityReduceMotion) private var ruhig
-    @State private var name = ""
-    /// Eigenes Bild (nil = Standardbild „habit-1“)
+    @State private var name: String
+    /// Eigenes Bild (nil = Standardbild `bildName`)
     @State private var bild: UIImage?
-    /// Einheit und Tagesziel (nur Aussehen, noch nicht gespeichert)
-    @State private var einheit: Einheit = HabitNeuBlatt.startEinheit
-    @State private var ziel: Double = HabitNeuBlatt.startEinheit.standard
+    private let bildName: String
+    /// Einheit und Tagesziel
+    @State private var einheit: Einheit
+    @State private var ziel: Double
     @State private var unterblatt: Unterblatt?
     /// Ziel von „Mein Weg“, zu dem der Habit gehört (nil = kein Ziel)
     @State private var gehoertZu: Ziel?
+
+    init(habit: Habit? = nil, speichern: ((Habit) -> Void)? = nil) {
+        vorlage = habit
+        self.speichern = speichern
+        bildName = habit?.bild ?? "habit-1"
+        _tage = State(initialValue: habit?.tage ?? [6, 7])
+        _name = State(initialValue: habit?.name ?? "")
+        _bild = State(initialValue: habit?.bildDaten.flatMap { UIImage(data: $0) })
+        let e = habit?.einheit ?? HabitNeuBlatt.startEinheit
+        _einheit = State(initialValue: e)
+        _ziel = State(initialValue: habit?.tagesziel ?? e.standard)
+        _gehoertZu = State(initialValue: habit?.ziel)
+    }
+
+    /// Geändertes Habit aus den Feldern (leerer Name behält den alten Namen).
+    private func fertig() {
+        if let vorlage, let speichern {
+            var h = vorlage
+            let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            h.name = n.isEmpty ? vorlage.name : n
+            h.einheit = einheit
+            h.tagesziel = ziel
+            h.tage = tage
+            h.zielID = gehoertZu?.id
+            h.bildDaten = bild.flatMap { HabitNeuBlatt.verkleinert($0) }
+            speichern(h)
+        }
+        dismiss()
+    }
+
+    /// Foto auf höchstens 600 × 600 Pixel verkleinern (wie in der Empfehlung) und als JPEG ablegen.
+    private static func verkleinert(_ b: UIImage) -> Data? {
+        let max: CGFloat = 600
+        let f = min(1, max / Swift.max(b.size.width, b.size.height))
+        let groesse = CGSize(width: b.size.width * f, height: b.size.height * f)
+        let format = UIGraphicsImageRendererFormat(); format.scale = 1
+        return UIGraphicsImageRenderer(size: groesse, format: format).image { _ in b.draw(in: CGRect(origin: .zero, size: groesse)) }
+            .jpegData(compressionQuality: 0.85)
+    }
     /// Seite „Gehört zu“ im selben Blatt (wie Opals Schwierigkeit)
     @State private var zuordnung = ProcessInfo.processInfo.arguments.contains("-gehoertZu")
 
@@ -47,7 +92,7 @@ struct HabitNeuBlatt: View {
         .foregroundStyle(DFarbe.text)
         .sheet(item: $unterblatt) { b in
             switch b {
-            case .bild: BildWahlBlatt(bild: $bild)
+            case .bild: BildWahlBlatt(bild: $bild, standard: bildName)
             case .einheit: EinheitBlatt(einheit: $einheit)
             case .ziel: ZielBlatt(einheit: einheit, wert: $ziel)
             }
@@ -94,7 +139,7 @@ struct HabitNeuBlatt: View {
             BlattGruppe {
                 Button { unterblatt = .bild } label: {
                     BlattZeile(titel: "Bild") {
-                        HabitVorschau(bild: bild, groesse: 26)
+                        HabitVorschau(bild: bild, name: bildName, groesse: 26)
                         Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
                     }
                 }
@@ -171,7 +216,7 @@ struct HabitNeuBlatt: View {
 
             Spacer(minLength: 4)
 
-            HaltenKnopf(titel: "Gedrückt halten zum Festlegen") { dismiss() }
+            HaltenKnopf(titel: vorlage == nil ? "Gedrückt halten zum Festlegen" : "Gedrückt halten zum Speichern") { fertig() }
         }
     }
 }
@@ -241,10 +286,11 @@ struct BlattTrenner: View {
 /// Vorschau des Habit-Bilds: eigenes Bild oder Standardbild, rund wie in der Habit-Reihe.
 private struct HabitVorschau: View {
     var bild: UIImage?
+    var name = "habit-1"
     var groesse: CGFloat
     var body: some View {
         Group {
-            if let bild { Image(uiImage: bild).resizable().scaledToFill() } else { Image("habit-1").resizable().scaledToFill() }
+            if let bild { Image(uiImage: bild).resizable().scaledToFill() } else { Image(name).resizable().scaledToFill() }
         }
         .frame(width: groesse, height: groesse)
         .clipShape(Circle())
@@ -256,6 +302,8 @@ private struct HabitVorschau: View {
 /// Bild wählen: große Vorschau, Empfehlung zur Größe, Fotos öffnen, Standardbild zurück – gleiches Blatt-Design.
 private struct BildWahlBlatt: View {
     @Binding var bild: UIImage?
+    /// Bild aus den Assets, wenn kein eigenes gewählt ist
+    var standard = "habit-1"
     @Environment(\.dismiss) private var dismiss
     @State private var auswahl: PhotosPickerItem?
     @State private var laedt = false
@@ -276,7 +324,7 @@ private struct BildWahlBlatt: View {
             }
 
             ZStack {
-                HabitVorschau(bild: bild, groesse: 120)
+                HabitVorschau(bild: bild, name: standard, groesse: 120)
                 if laedt { ProgressView().tint(.white) }
                 Image(systemName: "play.fill").font(.system(size: 34)).foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.45), radius: 5, y: 1).offset(x: 2).opacity(laedt ? 0 : 1)

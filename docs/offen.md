@@ -23,7 +23,8 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 - Das eigene Bild erscheint noch nicht in der Habit-Reihe. Es wird nicht auf dem Gerät gespeichert und ist nicht verkleinert (Speicher).
 - „Gedrückt halten zum Festlegen“ schließt nur das Blatt.
 - Erledigt und Teilwerte gelten nur, solange die App offen ist (Ring auf „Mein Weg“ zeigt den Stand).
-- Tippen auf „Fokus“ und „Bearbeiten“ im Habit-Blatt zeigt nur „kommt im nächsten Schritt“ (Schritte 2 und 3).
+- Tippen auf „Fokus“ im Habit-Blatt zeigt nur „kommt im nächsten Schritt“ (Schritt 3).
+- Bearbeiten ändert das Habit, aber nur solange die App offen ist. Ein neuer Habit über das Plus wird noch nicht angelegt.
 - Die fünf Demo-Habits haben feste Einheiten und Tagesziele (Lesen 20 Seiten, Sport 45m, Meditieren 10m, Lernen 30m, Wasser 2.000 ml).
 - „Gehört zu“ wird nicht gespeichert, und auf „Mein Weg“ sieht man noch nicht, welche Habits zu einem Ziel gehören.
 - Einheit und Ziel lassen sich wählen, werden aber nicht gespeichert. Eine eigene Einheit gilt nur, solange das Blatt offen ist.
