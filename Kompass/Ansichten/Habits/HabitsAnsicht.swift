@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Habits (Tab statt Timer, 27.11.2026) – nur Aussehen, nichts reagiert auf Antippen.
+/// Mein Weg (dritter Tab, später englisch „Path“; 27.11.2026) – nur Aussehen, nichts reagiert auf Antippen.
 /// Oben die Kreis-Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring,
 /// Bild und Dreieck, Name darunter. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen.
 struct HabitsAnsicht: View {
@@ -34,7 +34,7 @@ struct HabitsAnsicht: View {
                 .padding(.top, 24)
 
                 VStack(spacing: 12) {
-                    Text("Habits").font(DSchrift.grosserTitel)
+                    Text("Mein Weg").font(DSchrift.grosserTitel)
                     Text("Wird neu gebaut.").font(DSchrift.zeile).foregroundStyle(DFarbe.zweitrangig)
                 }
                 .frame(maxWidth: .infinity)
