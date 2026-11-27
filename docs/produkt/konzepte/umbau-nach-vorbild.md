@@ -5,7 +5,7 @@ Grundlage: 121 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeit
 
 **Entscheidungen des Gründers (27.11.2026):** 1 zu 1 nachbauen und fertig machen, passend zu Kompass · nur dunkel (hell = dunkel) · Bildschirmzeit: erst messen, sperren nur im Fokus · Paywall, Anmeldung (Apple, Telefon, E-Mail) und Freunde einladen gehören dazu; was ein Konto oder einen Server braucht, wird ein sichtbarer Platzhalter (§9) · Preis vorerst 4,99 € im Monat, änderbar.
 
-**Bilder** [OFFEN]: Der Gründer möchte Opals Bilder 1 zu 1 und sagt, er habe die Rechte. Claude schneidet keine Bilder, 3D-Figuren, Fotos, Logos oder Texte aus Opals Screenshots aus – die Rechte lassen sich hier nicht prüfen, und am 27.11. hieß es noch, 1 zu 1 kopieren dürfe man nicht. Stattdessen: Jede Bildstelle wird ein **benannter Platz** in exakt Opals Größe und Lage (`Assets.xcassets`, z. B. `vorbild-stein-intro`), gefüllt mit eigenem Inhalt (§4). Liegt eine schriftliche Lizenz von Opal vor, legt der Gründer die Original-Dateien dort ab – ohne Codeänderung. Texte schreiben wir neu auf Deutsch, gleich lang, gleicher Ton.
+**Bilder** [ENTSCHEIDUNG – 27.11.2026, Weg B]: KI-erzeugte Bilder in Opals Bildwelt – gleiche Größe, Lage, Helligkeit und Farbstimmung, aber **eigene Motive und eigener Bildaufbau**; keine Nachbildung einzelner Opal-Bilder und keine Opal-Screenshots als Vorlage. Bewegtes (Licht, Schein, Figur, Konfetti) wird in der App gezeichnet. Jede Bildstelle ist ein benannter Platz (`BildPlatz`, `Assets.xcassets`). Texte schreiben wir neu auf Deutsch, gleich lang, gleicher Ton. [OFFEN – Prüffrage] Rechte an KI-Bildern und Nutzungsbedingungen des Generators vor dem Store prüfen.
 
 ## 1. Was Opal ausmacht (Befund)
 

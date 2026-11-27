@@ -6,6 +6,7 @@ Stand: 27. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 27.11.2026 | [ENTSCHEIDUNG] Bilder: KI-erzeugte Bilder in Opals Bildwelt (dunkler Fels, Licht, Steine, Stimmungsfotos) mit eigenen Motiven und eigenem Bildaufbau – keine Nachbildung einzelner Opal-Bilder, keine Opal-Screenshots als Vorlage für den Generator. Löst „nur echte Fotos, keine erzeugten Bilder“ (25.11.) ab. Werkzeug: bereits verbundener Bild-Generator (Figma bzw. Canva), kein neues Konto (Gründer: „Dann mache B“) | `docs/produkt/konzepte/umbau-nach-vorbild.md` Kopf |
 | 27.11.2026 | [ENTSCHEIDUNG] Umbau nach Vorbild Opal: 1 zu 1 nachbauen und fertig machen, passend zu Kompass; nur dunkel; Bildschirmzeit erst messen, sperren nur im Fokus; Paywall, Anmeldung (Apple, Telefon, E-Mail) und Freunde einladen gehören dazu, Fehlendes als benannter Platzhalter; Pro vorerst 4,99 € im Monat (Gründer im Chat) | `docs/produkt/konzepte/umbau-nach-vorbild.md` |
 | 27.11.2026 | [ENTSCHEIDUNG] Neuer Plan „Journal und Berater“: Der Kalender-Tab fällt weg, an seine Stelle kommt das Journal. Kompass wird Analyse-Werkzeug und Berater – es liest die Kalender, legt selbst keine Termine an (Gründer im Chat: „weil wir jetzt einen neuen Plan haben“). Design wird neu entworfen. | `docs/produkt/konzepte/journal-und-berater.md` |
 | 27.11.2026 | [ENTSCHEIDUNG] Archiv ist Geschichte, keine Grundlage: nichts daraus zurückholen, keine Entscheidung darauf stützen; Überholtes sofort ins Archiv, aktuelle Dokumente umschreiben (Gründer) | `CLAUDE.md`, `docs/team/arbeitsweise.md` §6 |
@@ -49,6 +50,5 @@ Stand: 27. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 | [OFFEN] Aufgaben bleiben in Kompass (kein Abgleich mit Apple Erinnerungen) | ja | `docs/produkt/konzepte/journal-und-berater.md` §8 |
 | [OFFEN] Google zuerst nur über die Konten im iPhone, kein eigenes Google-Login | ja | `docs/produkt/konzepte/journal-und-berater.md` §7 |
 | [OFFEN] Journal standardmäßig nur auf dem Gerät, zum Server nur mit Einwilligung | ja | `docs/produkt/konzepte/journal-und-berater.md` §10 |
-| [OFFEN] Opals Bilder 1 zu 1 – Gründer nennt Rechte; Claude füllt Bildplätze mit eigenem Inhalt, bis eine schriftliche Lizenz und Original-Dateien vorliegen | Lizenz schriftlich ablegen | `docs/produkt/konzepte/umbau-nach-vorbild.md` Kopf |
 | [OFFEN] Rechenregeln §15–§20 (Muster, Handy-Jahre, Bildschirmzeit, Serie und Meilensteine, Tageswert, Onboarding-Vorschläge) | so freigeben | `docs/produkt/rechenregeln.md` §15–§20 |
 | [OFFEN] Jahrespreis Pro | 39,99 € | `docs/produkt/konzepte/umbau-nach-vorbild.md` §3 |
