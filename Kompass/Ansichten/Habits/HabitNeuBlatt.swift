@@ -6,6 +6,9 @@ import PhotosUI
 struct HabitNeuBlatt: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tage: Set<Int> = [6, 7]
+    /// Zähler je Tag fürs Wackeln, wenn der letzte Tag abgewählt werden soll
+    @State private var wackeln = [Int](repeating: 0, count: 7)
+    @Environment(\.accessibilityReduceMotion) private var ruhig
     @State private var name = ""
     /// Eigenes Bild (nil = Standardbild „habit-1“)
     @State private var bild: UIImage?
@@ -82,19 +85,24 @@ struct HabitNeuBlatt: View {
                     HStack {
                         Text("An diesen Tagen").font(.system(size: 17))
                         Spacer()
-                        Text("Wochenende").font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
+                        Text(Wochentage.text(tage)).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
+                            .contentTransition(.opacity)
+                            .animation(.easeInOut(duration: 0.2), value: tage)
                     }
+                    .accessibilityElement(children: .combine)
                     HStack(spacing: 0) {
                         ForEach(0..<7, id: \.self) { i in
-                            let an = tage.contains(i + 1)
-                            Text(["M", "D", "M", "D", "F", "S", "S"][i]).font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(an ? Color.black : DFarbe.text)
-                                .frame(width: 36, height: 36)
-                                .background(an ? Color.white : Color(0x242424), in: Circle())
-                                .overlay { Circle().strokeBorder(Color.white.opacity(an ? 0 : 0.08), lineWidth: 0.5) }
-                                .frame(maxWidth: .infinity)
+                            TagKreis(buchstabe: Wochentage.buchstaben[i], name: Wochentage.namen[i],
+                                     an: tage.contains(i + 1), wackeln: wackeln[i]) {
+                                let geaendert = withAnimation(ruhig ? nil : .spring(response: 0.28, dampingFraction: 0.62)) {
+                                    Wochentage.umschalten(i + 1, in: &tage)
+                                }
+                                if !geaendert, !ruhig { withAnimation(.linear(duration: 0.36)) { wackeln[i] += 1 } }
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                     }
+                    .sensoryFeedback(.selection, trigger: tage)
                 }
                 .padding(.horizontal, 18).padding(.vertical, 14)
             }
@@ -301,5 +309,50 @@ private struct BildWahlBlatt: View {
         .presentationCornerRadius(Dunkel.blattRadius)
         .presentationDragIndicator(.visible)
         .preferredColorScheme(.dark)
+    }
+}
+
+/// Ein Tag im Blatt: weißer Kreis = gewählt. Antippen schaltet um, beim letzten Tag wackelt der Kreis.
+private struct TagKreis: View {
+    var buchstabe: String
+    var name: String
+    var an: Bool
+    var wackeln: Int
+    var tippen: () -> Void
+
+    var body: some View {
+        Button(action: tippen) {
+            Text(buchstabe).font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(an ? Color.black : DFarbe.text)
+                .frame(width: 36, height: 36)
+                .background {
+                    ZStack {
+                        Circle().fill(Color(0x242424))
+                        Circle().fill(.white).scaleEffect(an ? 1 : 0.4).opacity(an ? 1 : 0)
+                    }
+                }
+                .overlay { Circle().strokeBorder(Color.white.opacity(an ? 0 : 0.08), lineWidth: 0.5) }
+                .scaleEffect(an ? 1 : 0.96)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+                .padding(.vertical, -4)   // größere Tippfläche, Zeile bleibt 36 pt hoch wie im Vorbild
+        }
+        .buttonStyle(.plain)
+        .modifier(Wackeln(anzahl: CGFloat(wackeln)))
+        .accessibilityLabel(name)
+        .accessibilityAddTraits(an ? .isSelected : [])
+        .accessibilityHint(an ? "Tippen zum Abwählen" : "Tippen zum Auswählen")
+    }
+}
+
+/// Kurzes Wackeln zur Seite (3 Ausschläge je Auslösung).
+private struct Wackeln: GeometryEffect {
+    var anzahl: CGFloat
+    var animatableData: CGFloat {
+        get { anzahl }
+        set { anzahl = newValue }
+    }
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: 4 * sin(anzahl * .pi * 6), y: 0))
     }
 }
