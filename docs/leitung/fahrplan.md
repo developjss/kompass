@@ -1,35 +1,33 @@
 # Fahrplan – Phasen und Bausteine
 
-Stand: 23. November 2026. Einzelne Aufgaben, Pflichten und Termine stehen in `docs/leitung/aufgaben/aufgaben.json` (`/fahrplan`); hier stehen Phasen, Reihenfolge und Begründung.
+Stand: 27. November 2026. Einzelne Aufgaben, Pflichten und Termine stehen in `docs/leitung/aufgaben/aufgaben.json` (`/fahrplan`); hier stehen Phasen, Reihenfolge und Begründung.
 
 ## 1. Ziel
 
-Kompass veröffentlichen: zuerst iPhone und Mac (App Store), danach Windows und Android. [OFFEN] Nur für den Gründer oder als Produkt mit Abo – das entscheidet, wie früh Konto, Sync und Bezahlung kommen.
+Kompass veröffentlichen, zuerst iPhone (App Store), danach Mac, später Android und Windows. [OFFEN] Nur für den Gründer oder als Produkt mit Abo.
 
 ## 2. Phasen
 
 | Phase | Inhalt | Ende, wenn … |
 |---|---|---|
-| **0 Klick-Dummy** ✓ | HTML-Prototyp (Desktop + iPhone), Rechenregeln, Personen-Test | erledigt 23.11.2026 |
-| **1 Entscheiden & testen** | Name, Technik-Weg, Sprache, Geschäftsmodell; Gründer nutzt den Klick-Dummy eine Woche | alle [OFFEN] aus `entscheidungen.md` Abschnitt 2 entschieden |
-| **2 iPhone-MVP** | Xcode-Projekt `Kompass/`; Rechen-Logik + Tests zuerst; Heute, Habits, Ziele, Fokus-Timer; lokale Speicherung (SwiftData); Apple-Kalender lesen (EventKit) | Personen-Test als Swift-Test grün, Gründer nutzt die App täglich |
-| **3 Version 1 Apple** | Mac-App, Google-Kalender (OAuth), Rückblick, Widgets („Jetzt dran“, Habits heute), Erinnerungen, Vorschläge mit KI | TestFlight mit Freunden |
-| **4 Sync & weitere Plattformen** | Konto und Server (z. B. Supabase), Web-App für Windows/Android, Outlook | Daten auf allen Geräten gleich |
+| **0–1 Klick-Dummy, Entscheiden** ✓ | HTML-Prototyp, Rechenregeln, Technik SwiftUI | erledigt 23.11.2026 |
+| **2 iPhone-MVP** (läuft) | SwiftUI-App mit Home, Habits, Ziele, Assistent; **neu:** Journal statt Kalender-Tab, Berater mit gelesenen Kalendern, Muster; neues Design | Personen-Test grün, Gründer nutzt die App täglich |
+| **3 Version 1 Apple** | Onboarding mit Kalender-Zugriff, Widgets, Erinnerungen, Pro (StoreKit), Mac-App | TestFlight mit Freunden |
+| **4 Sync & weitere Plattformen** | Konto und Abgleich (Supabase EU), eigenes Google-Login, Android/Windows | Daten auf allen Geräten gleich |
 | **5 Store** | Store-Texte, Datenschutz, Preis/Abo, Review | App im Store |
-| **6 Lernen über alle Nutzer** | anonyme Zusammenfassung von Zeitfaktoren und Vorschlags-Quoten | `konzepte/lernen-ueber-alle-nutzer.md` umgesetzt |
+| **6 Lernen über alle Nutzer** | anonyme Zusammenfassung mit Einwilligung | `docs/produkt/konzepte/lernen-ueber-alle-nutzer.md` umgesetzt |
 
-## 3. Technik-Weg [OFFEN – Gründer entscheidet]
+## 3. Reihenfolge in Phase 2 [VORSCHLAG]
 
-- **Weg A (Vorschlag Claude):** iPhone und Mac zuerst in **SwiftUI** – gleiche Werkzeuge wie Gapless, Apple-Kalender über EventKit am einfachsten, Widgets nur so richtig. Windows und Android danach als Web-App mit demselben Server.
-- **Weg B:** **Flutter** für alle Plattformen ab Tag 1. Schneller überall, aber Apple-Extras (Widgets, Live Activities) brauchen trotzdem Swift.
+1. Design-Entwurf neu, Entscheidung des Gründers.
+2. Journal-Tab ersetzt den Kalender-Tab (Wochenreflexion zieht um).
+3. Berater: freie Zeit aus allen Kalendern, Termine über Apples Termin-Fenster.
+4. Muster als Rechenregel §15.
+5. Design und Statistiken auf allen Seiten neu.
 
-## 4. Was aus dem Klick-Dummy in die App wandert
+## 4. Risiken
 
-- **1:1:** Rechenregeln (`docs/produkt/rechenregeln.md`), Datenmodell (`docs/technik/plattformen-und-speicherung.md`), Textregeln und Design-Tokens (`docs/produkt/design.md`), Personen-Test-Personas (`prototyp/tests/personas.py`).
-- **Neu bauen:** Oberfläche in SwiftUI (Gapless-Komponenten als Vorbild, kein geteilter Code), echte Kalender-Anbindung, Speicherung, Benachrichtigungen.
-
-## 5. Risiken
-
-- [RISIKO] Google verlangt für Kalender-Zugriff eine Prüfung der App (sensible Bereiche) – früh beantragen (Phase 3).
-- [RISIKO] Kalenderdaten sind persönlich (Geburtstage, Gesundheitstermine) – nur lesen, nur Zuordnung speichern (`docs/recht/recht-und-sicherheit.md`).
-- [RISIKO] Viele starke Wettbewerber im Bereich To-do/Habits. Abgrenzung über Ziel-Rechnung und Kalender-Ergänzung, nicht über Funktionsmenge.
+- [RISIKO] Journaltexte sind womöglich Gesundheitsdaten (DSGVO Art. 9) – Prüffrage in `docs/recht/recht-und-sicherheit.md`.
+- [RISIKO] Viele Journal-Apps mit KI. Abgrenzung nur über die Verbindung von Journal, Habits, Zielen und Kalender, fest gerechnet.
+- [RISIKO] Muster brauchen ≥ 14 Tage Daten – in den ersten Wochen müssen Berater und Habits tragen.
+- [RISIKO] Google verlangt für eigenes Kalender-Login eine Prüfung der App – deshalb zuerst über die Konten im iPhone.

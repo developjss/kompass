@@ -11,8 +11,8 @@ from docx_bau import Doc
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 B = lambda n: os.path.join(HERE, "bilder", n)
-STAND = "25. November 2026"
-VERSION = "5"
+STAND = "27. November 2026"
+VERSION = "5.1"
 SECTIONS = []          # (Kapitel-Anker, Seiten-Anker, Titel) – für Inhalt und Prüfung
 NR = {}
 GH = "https://github.com/developjss/kompass/blob/main/"
@@ -212,7 +212,7 @@ seite(K3, "Kalender", "kalender", "Kurze Bühne mit dem Wort („Um 15:00 Zahnar
       klicks=["Freie Stunde antippen → „Was um 14:00?“: neuer Termin (geführt) oder Offenes hierhin legen", "Termin antippen → Termin-Seite", "„+ Neu“ → Termin: Titel, Zeit, zählt für Ziel (mit Meilenstein) oder erfüllt Habit", "Aufgabe/Habit halten und in die Zeitleiste ziehen → bekommt diese Uhrzeit",
               "Monat: Tag antippen, nochmal → Tagesansicht", "Jahr: Tage nach Auslastung eingefärbt"],
       gespeichert=LOKAL + " Apple-Termine werden nur gelesen (EventKit, nach Zustimmung).",
-      kommt=["Google-Anmeldung (OAuth) – " + doc("docs/produkt/konzepte/kalender-anbindung.md")])
+      kommt=["Fällt weg: An die Stelle des Kalender-Tabs kommt das Journal (neuer Plan 27.11.2026, " + doc("docs/produkt/konzepte/journal-und-berater.md") + ")"])
 seite(K3, "Termin zuordnen", "termin", "Ein Termin aus Google oder Apple kann einem Ziel oder Habit zugeordnet werden – für die ganze Serie, ab heute.",
       bilder=[("termin.jpg", "Termin")],
       klicks=["Ziel wählen → Zeit jeder stattgefundenen Fahrstunde zählt fürs Ziel", "Habit wählen → wird an Termintagen abgehakt", "„Aufgabe daraus machen“ → Vorbereitung"],
@@ -280,15 +280,17 @@ seite(K7, "Auf Kurs, Prognose, Lernen", "kurs", "",
           "**Wochenwort (§11):** sieben feste Regeln, die erste passende gewinnt – Neue Woche · Volle Woche (Auslastung ab 75 %) · Starke Woche · Kurs halten · Luft holen · Gut dabei · Im Fluss.",
           "**Timer:** an Mitternacht geteilt, höchstens 4 Stunden am Stück. **Wiederholung:** ohne Abrutschen (31. bleibt Monatsende).",
       ]))
-seite(K7, "Wie geprüft wird", "test", "Vier erfundene Personen über zwei Jahre, Tag für Tag, mit zufälligen Eingriffen – jede Zahl gegen eine zweite, unabhängig geschriebene Rechnung.",
+seite(K7, "Wie geprüft wird", "test", "Sechs erfundene Personen benutzen die App 3,5 Jahre lang Tag für Tag, unterschiedlich geschickt – nach jedem Tag rechnet der Test jede Zahl unabhängig nach.",
       extra=lambda: d.table([
-          ["Person", "Vermögen / Ziele", "Tagesablauf"],
-          ["Lena", "12.000 € Schulden, Bachelor", "unregelmäßig, vergisst den Timer"],
-          ["Markus", "ETF-Depot, Halbmarathon", "9–17 Uhr, liest 730 Tage am Stück"],
-          ["Aylin", "Krypto + Firma, schwankt stark", "arbeitet nachts über Mitternacht"],
-          ["Jonas", "Eigenkapital in Sprüngen, LAPL, Führerschein", "Schichtarbeit, wechselnde Lerntage"],
-      ], [1400, 4200, 4038]),
-      gespeichert="Bericht " + doc("docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md") + " · Test " + doc("prototyp/tests/run.py") + ". Ergebnis 23.11.2026: grün, 13 Fehler vorher behoben.")
+          ["Person", "Geschick", "So nutzt sie die App"],
+          ["Lena · Studentin", "hoch", "3 Ziele, 3 Habits mit Uhrzeit, Termine, Timer"],
+          ["Tom · Azubi", "niedrig", "viel Unsinn, löscht, schaltet hin und her"],
+          ["Erika · Rentnerin", "niedrig", "jeden 3. Tag, ein Habit, nie Uhrzeiten"],
+          ["Jonas · Gewohnheitstier", "mittel", "6 Habits, Teilmengen"],
+          ["Mia · Planerin", "hoch", "14 Termine je Woche, viele Überschneidungen"],
+          ["Ahmet · Gründer", "sehr hoch", "alles, inkl. Wiederholungen und Zahl-Meilensteine"],
+      ], [3000, 1600, 5038]),
+      gespeichert="Test " + doc("KompassTests/PersonenTests.swift") + " · Bericht " + doc("docs/technik/berichte/personen-test-struktur-v3-2026-11-23.md") + ". Ergebnis 23.11.2026: grün, 7 Befunde vorher behoben.")
 
 # =============================================================== 8 Über dieses Dokument
 K8 = kapitel("Über dieses Dokument", "kap8", ["Wie es aktuell bleibt und was sich geändert hat."], [("Pflege und /roterfaden", "pflege"), ("Änderungsverlauf", "verlauf")])
@@ -302,6 +304,7 @@ seite(K8, "Pflege und /roterfaden", "pflege", "Damit hier nie etwas fehlt oder v
 seite(K8, "Änderungsverlauf", "verlauf", "Neueste oben.",
       extra=lambda: d.table([
           ["Datum", "Fassung", "Was sich geändert hat"],
+          ["27.11.2026", "5.1", "Neuer Plan „Journal und Berater“ angekündigt (Kalender-Seite), Personen-Test jetzt der Swift-Test mit sechs Personen. Die App-Seiten selbst folgen mit dem Journal-Block."],
           ["25.11.2026", "5", "Rückblick neu: Wochenwort (§11) und vier Kacheln, Zeitraum erst auf der Statistik-Seite, nichts mehr zum Herausziehen. Fortschritt: Umschalter „Ziele | Habits“, Zurück auf Ziel- und Habit-Seite, Seiten entschlackt; Analyse behält den Rückweg. Fünf Bilder neu."],
           ["25.11.2026", "4", "Nachtblau: alle Hauptseiten in drei Ebenen (Bühne mit Wort, Karte vorn), Farben Nachtblau · Creme · Schwarz, Fliegerei nur noch als drei Easter Eggs (Überflug, Fokus-Timer, Bordkarte zum Herausziehen). Bilder jetzt aus der App statt aus dem Klick-Dummy (noch alt: Termin, (i), Tagesabschluss, Rechnung, Schritt, Vorschläge, Erster Start)."],
           ["24.11.2026", "3", "Ziele neu: Filter-Kacheln, Sortieren nach Jahr u. a., Zielkarten mit Lichtrand, Ziel-Seite mit Einstellungs-Kacheln, Meilensteine geführt und als Karten."],

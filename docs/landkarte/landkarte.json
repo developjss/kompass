@@ -1,7 +1,7 @@
 {
  "meta": {
   "title": "Landkarte",
-  "stand": "23.11.2026 · Kompass: Rechnung Fassung 2, Tabs Fortschritt + Lotse",
+  "stand": "27.11.2026 · Kompass: neuer Plan Journal und Berater, Archiv aufgeräumt",
   "hinweis": "Ein Baum für App und Projekt. Felder: t Titel, k Art, s Status (built|partial|planned|idea), o wer (founder|ai|ext|later), who, when, f Datei, n Notiz, to Querverweise, c Kinder. Gleiches Format wie Gapless."
  },
  "root": {
@@ -119,76 +119,76 @@
       "t": "Die App",
       "k": "app",
       "s": "partial",
-      "n": "Klick-Dummy fertig; erste SwiftUI-Fassung (grob) in Kompass/.",
+      "n": "SwiftUI-App in Kompass/; neuer Plan Journal und Berater (27.11.2026).",
       "c": [
        {
         "id": "heute",
-        "t": "Heute",
+        "t": "Home",
         "k": "tab",
-        "s": "partial",
-        "f": "prototyp/index.html",
-        "n": "Jetzt dran, Wichtig, Weitere, Geschafft, Habits, Termine, Ziele, Tagesabschluss"
+        "s": "built",
+        "f": "Kompass/Ansichten/Heute/",
+        "n": "Karte vorn, Signale (§12), Rückblick als Karten (§14), Als Nächstes"
        },
        {
         "id": "kalender",
-        "t": "Kalender (Planen + Kalender)",
+        "t": "Journal (statt Kalender-Tab)",
         "k": "tab",
-        "s": "partial",
-        "f": "prototyp/index.html",
-        "n": "Tag/Woche, Eingang, Ziehen auf Tag/Uhrzeit, Termine zuordnen"
+        "s": "planned",
+        "f": "docs/produkt/konzepte/journal-und-berater.md",
+        "n": "Stimmung 1–5 und ein Satz täglich, Wochenfragen, Muster; Kalender-Tab fällt weg [ENTSCHEIDUNG 27.11.2026]"
        },
        {
         "id": "habits",
         "t": "Habits",
         "k": "tab",
-        "s": "partial",
-        "f": "prototyp/index.html",
+        "s": "built",
+        "f": "Kompass/Ansichten/Habits/",
         "n": "Im Tab „Fortschritt“ (Umschalter Ziele · Habits)."
        },
        {
         "id": "ziele",
         "t": "Ziele",
         "k": "tab",
-        "s": "partial",
-        "f": "prototyp/index.html",
+        "s": "built",
+        "f": "Kompass/Ansichten/Ziele/",
         "n": "Zeitachse, Verlaufskarten, Schritte, So wird gerechnet, Vorschläge Im Tab „Fortschritt“ (Umschalter Ziele · Habits)."
        },
        {
         "id": "rueckblick",
-        "t": "Rückblick",
+        "t": "Rückblick (auf Home)",
         "k": "tab",
-        "s": "partial",
-        "f": "prototyp/index.html",
+        "s": "built",
+        "f": "Kompass/Ansichten/Rueckblick/",
         "n": "Fokuszeit, Zeit pro Ziel, Habits, Reflexion"
        },
        {
         "id": "fokus",
         "t": "Fokus-Modus",
         "k": "page",
-        "s": "partial",
-        "f": "prototyp/index.html"
+        "s": "built",
+        "f": "Kompass/Ansichten/Fokus/"
        },
        {
         "id": "neu",
-        "t": "+ Neu (Aufgabe, Habit, Ziel, Idee)",
+        "t": "Hinzufügen (Aufgabe, Habit, Ziel)",
         "k": "sheet",
-        "s": "partial",
-        "f": "prototyp/index.html"
+        "s": "built",
+        "f": "Kompass/Ansichten/Neu/"
        },
        {
         "id": "settings",
-        "t": "Einstellungen & Kalender verbinden",
+        "t": "Einstellungen & Kalender-Zugriff",
         "k": "sheet",
         "s": "partial",
-        "f": "prototyp/index.html"
+        "f": "Kompass/Ansichten/Einstellungen/"
        },
        {
         "id": "lotse",
-        "t": "Lotse (Assistent)",
+        "t": "Assistent (Berater)",
         "k": "tab",
         "s": "partial",
         "f": "Kompass/Lotse/ · docs/produkt/konzepte/lotse.md",
-        "n": "Chat: App-Wissen aus dem Code, Werkzeuge, Regeln offline; freie Fragen über den Kompass-Server (Claude, gestuft). Server noch nicht bereitgestellt."
+        "n": "wird Berater: freie Zeit aus allen Kalendern, Termine über Apples Fenster"
        }
       ]
      },
@@ -210,9 +210,9 @@
      },
      {
       "id": "design",
-      "t": "Design (Harbor 2 nach Gapless)",
+      "t": "Design (Nachtblau, Neuentwurf läuft)",
       "k": "area",
-      "s": "built",
+      "s": "partial",
       "f": "docs/produkt/design.md"
      },
      {
@@ -231,18 +231,11 @@
     "s": "partial",
     "c": [
      {
-      "id": "proto",
-      "t": "Klick-Dummy (HTML)",
-      "k": "area",
-      "s": "built",
-      "f": "prototyp/index.html · prototyp/phone.html"
-     },
-     {
       "id": "swift",
       "t": "SwiftUI-App",
       "k": "area",
       "s": "partial",
-      "n": "Kompass.xcodeproj: Schemes Kompass (Debug) und Kompass Beta; fünf Bereiche grob wie im Klick-Dummy.",
+      "n": "Kompass.xcodeproj (iOS 26): Home, Kalender, Assistent, Habits, Ziele; Kalender-Tab wird Journal.",
       "f": "Kompass/ · docs/technik/app.md"
      },
      {
@@ -262,17 +255,18 @@
      },
      {
       "id": "cal",
-      "t": "Kalender-Anbindung (Apple, Google)",
+      "t": "Kalender lesen (Apple; Google/Outlook über das iPhone)",
       "k": "area",
-      "s": "planned",
-      "f": "docs/produkt/konzepte/kalender-anbindung.md"
+      "s": "partial",
+      "f": "docs/produkt/konzepte/journal-und-berater.md",
+      "n": "EventKit lesen gebaut; Termine nur über Apples Termin-Fenster"
      },
      {
       "id": "qa",
       "t": "Tests (Personen-Test)",
       "k": "area",
       "s": "built",
-      "f": "prototyp/tests/run.py · docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md"
+      "f": "KompassTests/PersonenTests.swift · docs/technik/berichte/personen-test-struktur-v3-2026-11-23.md"
      },
      {
       "id": "lotse-server",

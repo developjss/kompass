@@ -1,6 +1,6 @@
 # Rechenregeln – so rechnet Kompass
 
-Stand: 23. November 2026 · **Fassung 2** (Meilensteine) [ENTSCHEIDUNG – 23.11.2026]. Quelle der Wahrheit für jede Zahl in der App. Umgesetzt in Swift (`Kompass/Rechnung/`, Tests in `KompassTests/`); der Klick-Dummy rechnet noch Fassung 1. Analyse und Begründung: `docs/produkt/konzepte/ziele-und-rechnung.md`. Jede Änderung hier braucht „Ja, mergen“ des Gründers.
+Stand: 27. November 2026 · **Fassung 2** (Meilensteine) [ENTSCHEIDUNG – 23.11.2026]. Quelle der Wahrheit für jede Zahl in der App. Umgesetzt in Swift (`Kompass/Rechnung/`, Tests in `KompassTests/`). Jede Änderung hier braucht „Ja, mergen“ des Gründers.
 
 Grundsatz [ENTSCHEIDUNG – 23.11.2026]: Egal ob Vorschlag übernommen, geändert oder selbst angelegt – es wird immer gleich gerechnet. KI schlägt nur vor.
 
@@ -93,7 +93,7 @@ Aus dem täglichen Verlauf des Fortschritts (ein Wert pro Tag): Tempo = (heute �
 - Farben: nach Ziel (Standard) oder Kategorie (Einstellung).
 - Swift: `Kompass/Rechnung/Tagesplan.swift`, Tests `KompassTests/TagesplanTests.swift`.
 
-### 9.1 Empfehlung im Kalender [ENTSCHEIDUNG – 23.11.2026, Gründer: „Ja, mergen“]
+### 9.1 Empfehlung im Kalender [ENTSCHEIDUNG – 23.11.2026, Gründer: „Ja, mergen“; entfällt mit dem Kalender-Tab, die Rechnung wird zum Berater (`docs/produkt/konzepte/journal-und-berater.md` §6)]
 
 - **Was:** offene Aufgaben ohne Uhrzeit, die überfällig, im Zeitraum der Ansicht fällig oder ohne Tag (Eingang) sind; in der Tagesansicht zusätzlich Habits, die an dem Tag geplant, ohne Uhrzeit und noch nicht voll sind.
 - **Punkte:** überfällig 100 + Tage (max. 30) · im Zeitraum fällig 80 − Tage bis fällig · Eingang 30 · Habit 60 (+20 mit Ziel) · Aufgabe des nächsten Schritts eines Ziels (§1) +40 · Ziel hinterher/überfällig +20 · wichtig +25. Sortiert nach Punkten, dann Titel. Ein Grund je Karte (der stärkste).
@@ -137,7 +137,7 @@ Home zeigt unter der Karte, was gerade wichtig ist – höchstens drei Zeilen, j
 - **Je Art höchstens ein Signal:** der früheste Tag, das Ziel mit dem größten Rückstand (erwartet − Fortschritt), die früheste Frist, die längste Serie.
 - **Home zeigt die drei mit dem höchsten Rang.**
 - **„Passt nicht“** stellt die Art 56 Tage stumm (nur auf dem Gerät, `lernen.signaleStumm`). Gelernt wird nur, was gezeigt wird – nie die Rechnung.
-- Noch nicht gebaut: Anlässe aus dem Kalender (Geburtstag, Prüfung …) und Wochenstart – Konzept `konzepte/home-intelligent.md`.
+- Noch nicht gebaut: Anlässe aus dem Kalender (Geburtstag, Prüfung …) und Wochenstart.
 - Swift: `Kompass/Rechnung/Signale.swift`, Tests `KompassTests/SignaleTests.swift`.
 ## 13. Rückblick konkret: Listen, Auslastung, Vorschläge, Erkenntnis [ENTSCHEIDUNG – 26.11.2026, PR #57, „Ja, mergen“]
 
@@ -184,4 +184,4 @@ Der Rückblick ist kein eigener Tab mehr. Home zeigt vier Karten zum Wischen (Er
 
 ## 10. Prüfung
 
-Swift: `KompassTests/RechnungTests.swift` (Randfälle aus `unit.py` und Fassung 2) muss grün sein. Klick-Dummy (Fassung 1): `prototyp/tests/run.py` und `unit.py`; letzter Lauf `docs/technik/berichte/personen-zwei-jahres-test-2026-11-23.md`. [OFFEN] Personen-Test für Fassung 2 als Swift-Test (`s-personentest`).
+Swift: alle Tests in `KompassTests/` müssen grün sein, dazu der Personen-Test `KompassTests/PersonenTests.swift` (sechs Personen × 3,5 Jahre, Bericht `docs/technik/berichte/personen-test-struktur-v3-2026-11-23.md`).

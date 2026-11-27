@@ -1,6 +1,6 @@
 # Die App (SwiftUI)
 
-Stand: 23. November 2026 · erste, grobe Fassung. Design und Rechnung wie im Klick-Dummy; Funktionen und Design ändern sich noch stark.
+Stand: 27. November 2026. Neuer Plan „Journal und Berater“: Der Kalender-Tab wird zum Journal (`docs/produkt/konzepte/journal-und-berater.md`), das Design wird neu entworfen.
 
 ## Öffnen und starten
 
@@ -26,14 +26,14 @@ xcodebuild -project Kompass.xcodeproj -scheme Kompass -destination 'platform=iOS
 
 | Ordner | Was |
 |---|---|
-| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag` (Kalendertag, sommerzeitfest), Fortschritt, Auf Kurs, Prognose, Habits, Erinnerungen (welche Mitteilungen anstehen), Ziel-Vorlagen aus dem Titel, Wiederholung, Fokus-Timer, Lernen, Aktionen |
+| `Kompass/Rechnung/` | Rechen-Logik als reine Funktionen (= `docs/produkt/rechenregeln.md`): `Tag`, Fortschritt, Kurs, Habits, Tagesplan, Zeitfenster, Signale, Wochenwort, Rückschau, Erinnerungen, Vorlagen, Aktionen |
 | `Kompass/Modell/` | Datenmodell (Ziel, Schritt, Habit, Aufgabe, Fokus-Sitzung, Zustand) |
 | `Kompass/App/` | Start, Navigation, Speicher (Laden/Speichern, Lade- und Fehlerzustand) |
 | `Kompass/Design/` | Farben, Maße, Schrift, Bausteine (Seitenkopf, gruppierte Liste, Verlaufskarte, Haken …) nach `docs/produkt/design.md` |
-| `Kompass/Ansichten/` | Heute, Kalender, Fortschritt (Ziele · Habits), Ziel-Detail, Habit-Seite (`Habits/HabitDetail.swift`, Editor je Zeile), Lotse (Chat), Rückblick, Fokus, Neu, Aufgabe, Einstellungen |
+| `Kompass/Ansichten/` | Heute (Home), Kalender (fällt weg), Habits, Ziele, Lotse (Assistent), Rückblick (auf Home), Fokus, Neu, Einstellungen |
 | `Kompass/Lotse/` | Assistent: `AppWissen` (aus dem Code), `Werkzeuge`, `Verstehen` (Regeln), `Sprachmodell` (Schnittstelle), `Lotse` (Steuerung) – `docs/produkt/konzepte/lotse.md` |
 | `Kompass/Demo/` | Demo-Daten (fester Zufall) und Beispieltermine |
-| `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle aus `prototyp/tests/unit.py` und mehr), Personen-Test |
+| `KompassTests/` | Swift-Tests der Rechen-Logik (Randfälle und mehr), Personen-Test |
 | `KompassUITests/` | UI-Tests: Rundgang, Kalender-Ansichten, Termin/Aufgabe anlegen, Habit-/Ziel-Seite, Lotse, große Schrift |
 
 Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner) – keine Projektdatei anfassen.
@@ -43,11 +43,9 @@ Neue Dateien in diesen Ordnern erkennt Xcode automatisch (synchronisierte Ordner
 - Gerechnet wird nur in `Kompass/Rechnung/` – Ansichten zeigen nur an. Jede Rechenänderung zuerst in `rechenregeln.md`, dann hier, dann Test.
 - `heute` und `jetzt` werden übergeben, nie im Rechen-Code gelesen – so ist jede Lage testbar.
 - Speicherung vorläufig als JSON-Datei auf dem Gerät (Application Support, Dateischutz). [OFFEN] SwiftData (`s-speicher`), danach Sync.
-- Kalender: noch Beispieltermine. [OFFEN] EventKit (`s-eventkit`), Google.
+- Kalender: Apple-Kalender wird nach Zustimmung gelesen (EventKit), dazu Beispieltermine. Termine anlegen künftig nur über Apples Termin-Fenster; Google über die Konten im iPhone.
 - Lotse: Regeln auf dem Gerät zuerst; freie Formulierungen gehen an den Kompass-Server (`ClaudeServer`, URL in `LotseKonfiguration`). Kein Schlüssel, kein Modellname in der App. Jeder neue Screen/Werkzeug muss ins `AppWissen` (Test erzwingt es). Betrieb: `lotse-server.md`.
 
-## Noch nicht drin (gegenüber dem Klick-Dummy)
+## Als Nächstes
 
-Stundenraster mit Ziehen & Ablegen im Kalender, Zeitachse auf der Ziele-Seite, Vorschläge (Vorlagen + KI) beim Anlegen eines Ziels, Termine direkt im Kalender zuordnen, Hochzählen der Zahlen. Personen-Test als Swift-Test (`s-personentest`).
-
-Seit Rechnung Fassung 2: Meilensteine, Aufgaben, Habits und Termine lassen sich im Ziel hinzufügen, abhaken und lösen (`Kompass/Ansichten/Ziele/ZielDetail.swift`, `ZielBlaetter.swift`). Gespeicherte Daten der Fassung 1 werden beim Start durch die neue Demo ersetzt (es gab nur Demo-Daten).
+Journal-Tab statt Kalender-Tab, Berater mit freier Zeit aus allen Kalendern, Muster (Rechenregel §15), neues Design – Reihenfolge in `docs/stand.md` §3.

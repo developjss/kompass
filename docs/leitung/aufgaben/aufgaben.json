@@ -1,7 +1,7 @@
 {
   "meta": {
     "titel": "Fahrplan – Aufgaben",
-    "stand": "2026-11-23",
+    "stand": "2026-11-27",
     "phase": 2,
     "hinweis": "Eine Quelle für alle Aufgaben: Bausteine, Rhythmus, Stichtage, Ereignisse. Felder: id, titel, wer (Team-id), helfer, status (offen|laeuft|wartet|erledigt), prio (1 hoch – 3), faellig (JJJJ-MM-TT), phase (ab wann), wiederholung {art: woechentlich (tag 1=Mo) | monatlich (tag) | quartal (monate, tag) | jaehrlich (monat, tag)}, ausloeser (wartet auf Ereignis), seit (wiederkehrend: zählt erst ab diesem Tag), nach (erst nach diesen ids), warum, quelle, landkarte (Knoten-id; daraus folgt der Bereich wie in der Landkarte), erledigtAm. Prüfen: python3 scripts/fahrplan.py check"
   },
@@ -21,12 +21,81 @@
   ],
   "aufgaben": [
     {
+      "id": "j-design",
+      "titel": "Design neu entwerfen (Artefakt), Gründer entscheidet",
+      "wer": "claude",
+      "status": "laeuft",
+      "prio": 1,
+      "phase": 2,
+      "landkarte": "design"
+    },
+    {
+      "id": "j-entscheiden",
+      "titel": "Entscheiden: Aufgaben in Kompass, Google über iPhone, Journal nur auf dem Gerät",
+      "wer": "ceo",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §13",
+      "landkarte": "decide"
+    },
+    {
+      "id": "j-personentest",
+      "titel": "Personen-Test Journal: 4 Personen × 3 Wochen",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §11",
+      "landkarte": "qa"
+    },
+    {
+      "id": "j-journal",
+      "titel": "Journal-Tab statt Kalender-Tab (Stimmung, ein Satz, Wochenreflexion)",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "nach": [
+        "j-design",
+        "j-personentest"
+      ],
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §4",
+      "landkarte": "kalender"
+    },
+    {
+      "id": "j-berater",
+      "titel": "Berater: freie Zeit aus allen Kalendern, Onboarding-Schritt Kalender",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "nach": [
+        "j-journal"
+      ],
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §6",
+      "landkarte": "lotse"
+    },
+    {
+      "id": "j-muster",
+      "titel": "Muster als Rechenregel §15 (Freigabe des Gründers)",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 2,
+      "phase": 2,
+      "nach": [
+        "j-journal"
+      ],
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §5",
+      "landkarte": "engine"
+    },
+    {
       "id": "p0-klickdummy",
       "titel": "Klick-Dummy Desktop + iPhone",
       "wer": "claude",
       "status": "erledigt",
       "prio": 2,
-      "landkarte": "proto",
+      "landkarte": "swift",
       "erledigtAm": "2026-11-23"
     },
     {
@@ -142,16 +211,15 @@
       "prio": 1,
       "landkarte": "engine",
       "phase": 1,
-      "quelle": "docs/produkt/konzepte/ziele-und-rechnung.md",
       "erledigtAm": "2026-11-23"
     },
     {
       "id": "t-nutzen",
-      "titel": "Klick-Dummy eine Woche selbst nutzen, Funde notieren",
+      "titel": "App eine Woche selbst nutzen, Funde notieren",
       "wer": "ceo",
       "status": "offen",
       "prio": 1,
-      "landkarte": "proto",
+      "landkarte": "swift",
       "faellig": "2026-11-30"
     },
     {
@@ -160,7 +228,7 @@
       "wer": "claude",
       "status": "offen",
       "prio": 2,
-      "landkarte": "proto",
+      "landkarte": "swift",
       "nach": [
         "t-nutzen"
       ]
@@ -219,13 +287,14 @@
       "id": "s-heute",
       "titel": "Heute-Ansicht in SwiftUI",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "landkarte": "heute",
       "phase": 2,
       "nach": [
         "s-rechnung"
-      ]
+      ],
+      "erledigtAm": "2026-11-26"
     },
     {
       "id": "s-habits",
@@ -257,13 +326,14 @@
       "id": "s-fokus",
       "titel": "Fokus-Timer (Segmente, Mitternacht, 4-h-Grenze)",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "landkarte": "fokus",
       "phase": 2,
       "nach": [
         "s-rechnung"
-      ]
+      ],
+      "erledigtAm": "2026-11-26"
     },
     {
       "id": "s-speicher",
@@ -429,7 +499,7 @@
     },
     {
       "id": "r-roterfaden",
-      "titel": "/roterfaden: Roten Faden gegen Klick-Dummy/Code prüfen",
+      "titel": "/roterfaden: Roten Faden gegen den Code prüfen",
       "wer": "claude",
       "status": "offen",
       "prio": 3,
@@ -586,7 +656,6 @@
       "status": "erledigt",
       "prio": 1,
       "phase": 2,
-      "quelle": "docs/produkt/konzepte/habits-v2.md §7",
       "landkarte": "habits",
       "erledigtAm": "2026-11-23"
     },
@@ -600,7 +669,6 @@
       "nach": [
         "h-detail"
       ],
-      "quelle": "docs/produkt/konzepte/habits-v2.md §8",
       "landkarte": "habits",
       "erledigtAm": "2026-11-23"
     },
@@ -614,28 +682,27 @@
       "nach": [
         "h-detail"
       ],
-      "quelle": "docs/produkt/konzepte/habits-v2.md §9",
       "landkarte": "ziele",
       "erledigtAm": "2026-11-23"
     },
     {
       "id": "k-google",
-      "titel": "Google-Kalender anbinden (OAuth, Google-Cloud-Projekt mit Prüfung)",
+      "titel": "Eigenes Google-Login (OAuth) – erst wenn der Personen-Test zeigt, dass Google im iPhone oft fehlt",
       "wer": "ceo",
       "status": "offen",
-      "prio": 2,
-      "phase": 2,
-      "quelle": "docs/produkt/konzepte/struktur-v3.md §7",
+      "prio": 3,
+      "phase": 4,
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §7",
       "landkarte": "cal"
     },
     {
       "id": "k-schreiben",
-      "titel": "Kompass-Termine und Habits auf Wunsch in den Apple-Kalender schreiben",
+      "titel": "Berater: Termine über Apples Termin-Fenster anlegen (vorbefüllt), Kompass speichert keine Termine",
       "wer": "claude",
       "status": "offen",
-      "prio": 3,
+      "prio": 2,
       "phase": 2,
-      "quelle": "docs/produkt/konzepte/struktur-v3.md §7",
+      "quelle": "docs/produkt/konzepte/journal-und-berater.md §6",
       "landkarte": "cal"
     }
   ]

@@ -1,1 +1,2 @@
 # Ansichten/Fenster ohne eigene Seite | Grund
+fenster:pro | Kompass Pro (Kauf) – Seite folgt mit StoreKit (l-storekit)

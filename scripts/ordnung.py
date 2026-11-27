@@ -17,7 +17,7 @@ ALT_KONZEPT_TAGE = 45        # Konzept so lange ungebaut → noch aktuell?
 ERLEDIGT_ARCHIV_TAGE = 90    # erledigte Aufgaben so lange her → aus der Liste nehmen?
 HISTORIE = ("docs/archiv/", "docs/technik/bauprotokoll.md")   # alte Pfade dort sind Geschichte, kein Fehler
 GEWOLLT_FEHLEND = ("Kompass/", "KompassTests/", ".claude/settings.local.json", ".claude/settings.json",
-                   ".claude/worktrees", "prototyp/tests/ergebnis.json")   # nur lokal, Test-Ausgabe oder noch nicht angelegt – darf fehlen
+                   ".claude/worktrees", "docs/archiv/prototyp/tests/ergebnis.json")   # nur lokal, Test-Ausgabe oder noch nicht angelegt – darf fehlen
 PATH_RE = re.compile(r"(?<![\w/.-])((?:docs|scripts|prototyp|Kompass|KompassTests|KompassUITests|\.claude)/[\w./-]*[\w/])")
 MONATE = {m: i + 1 for i, m in enumerate(["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"])}
 
@@ -46,8 +46,30 @@ def broken_refs(files):
             if any(ch in p for ch in "*<>{}") or p.endswith("/…") or p in GEWOLLT_FEHLEND or s[m.end():m.end() + 2].startswith((".{", "{")):
                 continue
             if not os.path.exists(os.path.join(ROOT, p)):
-                (warns if f.startswith(HISTORIE) and not f.endswith("archiv/README.md") else errs).append(f"{f}: Verweis auf `{p}` – gibt es nicht")
+                if f.startswith("docs/archiv/") and not f.endswith("archiv/README.md"):
+                    continue   # Archiv ist Geschichte: alte Pfade dort nicht melden
+                (warns if f.startswith(HISTORIE) else errs).append(f"{f}: Verweis auf `{p}` – gibt es nicht")
     return errs, sorted(set(warns))
+
+
+# Dokumente, die das Archiv nennen dürfen: Wegweiser, Register und Protokolle (Geschichte)
+DARF_ARCHIV = ("docs/archiv/", ".gitignore", "docs/README.md", "docs/leitung/entscheidungen.md", "docs/technik/bauprotokoll.md", "scripts/ordnung.py")
+
+
+def archive_as_basis(files):
+    """Archiv ist Geschichte, keine Grundlage (arbeitsweise.md §6): aktuelle Dokumente und Code verweisen nicht ins Archiv."""
+    hints = []
+    for f in text_files(files):
+        if f.startswith(DARF_ARCHIV):
+            continue
+        try:
+            s = open(os.path.join(ROOT, f), encoding="utf-8").read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        n = len(re.findall(r"(?:docs/)?archiv/[\w-]+[./]", s))
+        if n:
+            hints.append(f"{f}: {n} Verweis(e) ins Archiv – Archiv ist keine Grundlage; Inhalt hier aktuell beschreiben oder Verweis streichen")
+    return hints
 
 
 def outside_signpost(files):
@@ -125,6 +147,7 @@ def report(today):
     errs += archive_index(files)
     e, h = tasks(today); errs += e; hints += h
     hints += old_docs(files, today)
+    hints += archive_as_basis(files)
     hints += loose_files()
     return errs, hints
 

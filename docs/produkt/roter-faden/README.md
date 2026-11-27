@@ -9,7 +9,7 @@ Das zentrale Dokument des Gründers: wie Kompass funktioniert. **Eine Seite der 
 | Datei | Inhalt |
 |---|---|
 | `roter_faden.py` | der Text: `kapitel(...)` und `seite(...)` |
-| `bilder/` | Bildschirmfotos aus dem Klick-Dummy (nur Demo-Daten, JPG 420 px), erzeugt mit `python3 scripts/bilder.py` |
+| `bilder/` | Bildschirmfotos aus dem Simulator (nur Demo-Daten, JPG 420 px breit) |
 | `abdeckung-ausnahmen.txt` | Ansichten/Fenster, die bewusst keine eigene Seite haben (mit Grund) |
 | `pruefen.py`, `seiten.swift` | die Prüfung |
 | `docx_bau.py` | Werkzeug (nur Python-Standard), aus Gapless übernommen |
@@ -24,7 +24,6 @@ Das zentrale Dokument des Gründers: wie Kompass funktioniert. **Eine Seite der 
 | Vor TestFlight/Store | volle Prüfung mit PDF (Mac) |
 
 ```bash
-python3 scripts/bilder.py                          # Bilder (Playwright)
 python3 docs/produkt/roter-faden/roter_faden.py    # bauen
 python3 docs/produkt/roter-faden/pruefen.py        # schnelle Prüfung
 python3 docs/produkt/roter-faden/pruefen.py --pdf  # volle Prüfung (Mac mit Pages)

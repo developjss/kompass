@@ -4,7 +4,7 @@ import Testing
 
 typealias Tag = Kompass.Tag
 
-// Randfälle aus prototyp/tests/unit.py (gleiche Erwartungen) und weitere Fälle aus rechenregeln.md.
+// Randfälle (übernommen aus dem archivierten Klick-Dummy-Test) und weitere Fälle aus rechenregeln.md.
 
 private let berlin: Calendar = {
     var k = Calendar.kompass

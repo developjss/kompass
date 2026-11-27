@@ -1,6 +1,6 @@
 import Foundation
 
-// Demo-Daten wie im Klick-Dummy (`seed()` in prototyp/index.html). Nur erfundene Beispiele – keine echten Daten.
+// Demo-Daten (ursprünglich aus dem archivierten Klick-Dummy). Nur erfundene Beispiele – keine echten Daten.
 // Zufall mit festem Startwert: gleiche Demo bei jedem Start (wichtig für Screenshots und Tests).
 
 struct Zufall: RandomNumberGenerator {

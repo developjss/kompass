@@ -15,7 +15,7 @@ Gemessen 23.11.2026 (iPhone, Wörter je Bildschirm): Gapless Insights 32, Net wo
 
 ## 1a. Hick’s Law [VORSCHLAG – 24.11.2026]
 
-Höchstens 3–5 Wahlmöglichkeiten je Entscheidung, eine Hauptaktion je Bildschirm, Voreinstellung statt Frage, Stufen statt Listen („Mehr“, „Details“). Analyse je Bereich und Plan: `konzepte/hicks-law.md`.
+Höchstens 3–5 Wahlmöglichkeiten je Entscheidung, eine Hauptaktion je Bildschirm, Voreinstellung statt Frage, Stufen statt Listen („Mehr“, „Details“).
 
 ## 2. Farben „Nachtblau“ (hell / dunkel) [ENTSCHEIDUNG – 25.11.2026, Gründer: „Ja, in die App“]
 

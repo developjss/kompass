@@ -1,6 +1,6 @@
 # Konzept: Lernen über alle Nutzer
 
-Stand: 23. November 2026 · noch nicht gebaut (im Klick-Dummy lernt die App nur aus den eigenen Daten).
+Stand: 27. November 2026 · noch nicht gebaut (die App lernt nur aus den eigenen Daten, `docs/produkt/rechenregeln.md` §7).
 
 - Gleiche Formeln wie `docs/produkt/rechenregeln.md` §7, aber mit Summen über alle Nutzer, die zugestimmt haben.
 - Übertragen werden nur **Zahlen ohne Personenbezug**: Vorlage, Schritt-Name (normalisiert), geplant/tatsächlich, gezeigt/übernommen. Keine Ziel-Titel im Freitext, keine Termine, keine Notizen.

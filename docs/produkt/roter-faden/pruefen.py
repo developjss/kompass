@@ -1,4 +1,4 @@
-"""Prüft den Roten Faden. Schnell (immer): Links, Bilder, Abdeckung gegen den Klick-Dummy (später: Swift-Code).
+"""Prüft den Roten Faden. Schnell (immer): Links, Bilder, Abdeckung gegen den Swift-Code (Tabs und Fenster).
 Voll (mit --pdf, nur Mac mit Pages): rendert zu PDF und prüft jede Seite (jeder Abschnitt genau eine Seite).
 
     python3 docs/produkt/roter-faden/pruefen.py          # schnell
@@ -20,21 +20,26 @@ for p in rf.d.images:
     if not os.path.exists(p): fehler.append(f"Bild fehlt: {p}")
 if len(set(rf.d.anchors)) != len(rf.d.anchors): fehler.append("Sprungmarke doppelt")
 
-# 2 Abdeckung: jede Ansicht und jedes Fenster des Klick-Dummys hat eine Seite (Anker) im Dokument
+# 2# 2 Abdeckung: jeder Tab (`enum Bereich`) und jedes Fenster (`enum Blatt`) der App hat eine Seite (Anker) im Dokument
 xml = zipfile.ZipFile(os.path.join(HERE, "kompass-roter-faden.docx")).read("word/document.xml").decode()
 text = re.sub(r"<[^>]+>", "", xml)
 ausnahmen = {l.split("|")[0].strip() for l in open(os.path.join(HERE, "abdeckung-ausnahmen.txt"), encoding="utf-8") if l.strip() and not l.startswith("#")}
-app = open(os.path.join(ROOT, "prototyp", "index.html"), encoding="utf-8").read()
-ansichten = set(re.findall(r"\['(\w+)','[^']+','\w+'\]", app[app.index("const ROUTES="):app.index("const ROUTES=") + 400]))
-fenster = set(re.findall(r"function sheet(\w+)\(", app))
+swift = open(os.path.join(ROOT, "Kompass", "App", "KompassApp.swift"), encoding="utf-8").read()
+bereich = swift[swift.index("enum Bereich"):]
+ansichten = set(re.findall(r"\b(\w+)\b", bereich[bereich.index("case ") + 5:bereich.index("\n", bereich.index("case "))]))
+blatt = swift[swift.index("enum Blatt"):]
+blatt = blatt[:blatt.index("var id")]
+fenster = set(re.findall(r"^\s*case (\w+)", blatt, re.M))
 gebraucht = {"ansicht:" + a for a in ansichten} | {"fenster:" + f for f in fenster}
-ANKER = {"ansicht:heute": "heute", "ansicht:kalender": "kalender", "ansicht:habits": "habits", "ansicht:ziele": "ziele", "ansicht:rueckblick": "rueckblick",
-         "fenster:Goal": "ziel", "fenster:Step": "schritt", "fenster:Suggest": "vorschlaege", "fenster:Task": "neu-aufgabe", "fenster:Habit": "habit",
-         "fenster:Event": "termin", "fenster:Settings": "einstellungen", "fenster:New": "neu-aufgabe", "fenster:Chooser": "neu",
-         "fenster:Reflect": "reflexion", "fenster:Info": "info"}
+ANKER = {"ansicht:heute": "heute", "ansicht:kalender": "kalender", "ansicht:lotse": "assistent", "ansicht:habits": "habits", "ansicht:ziele": "ziele",
+         "fenster:neu": "neu", "fenster:info": "info", "fenster:einstellungen": "einstellungen", "fenster:aufgabe": "neu-aufgabe", "fenster:fokus": "fokus",
+         "fenster:rechnung": "rechnung", "fenster:reflexion": "reflexion", "fenster:meilenstein": "schritt", "fenster:habitZuZiel": "ziel",
+         "fenster:aufgabeZuZiel": "ziel", "fenster:terminZuZiel": "termin", "fenster:zielBearbeiten": "ziel", "fenster:habitMenge": "habit",
+         "fenster:habitBearbeiten": "habit", "fenster:chats": "assistent", "fenster:termin": "termin", "fenster:terminSeite": "termin",
+         "fenster:stunde": "kalender", "fenster:neuTermin": "termin", "fenster:externTermin": "termin"}
 for g in sorted(gebraucht - ausnahmen):
     if ANKER.get(g) not in rf.d.anchors:
-        fehler.append(f"Fehlt im Dokument: {g} (steht im Klick-Dummy) – Seite anlegen oder in ANKER/abdeckung-ausnahmen.txt eintragen")
+        fehler.append(f"Fehlt im Dokument: {g} (steht im Swift-Code) – Seite anlegen oder in ANKER/abdeckung-ausnahmen.txt eintragen")
 
 # 3 Seiten (nur mit --pdf, Mac)
 if "--pdf" in sys.argv:
@@ -57,7 +62,7 @@ if "--pdf" in sys.argv:
     if len(body) != len(rf.SECTIONS): fehler.append(f"Seiten: {len(body)} statt {len(rf.SECTIONS)} – ein Abschnitt passt nicht auf eine Seite")
     print(f"PDF: {len(pages)} Seiten, gespeichert in {pdf}")
 
-print(f"{len(rf.SECTIONS)} Abschnitte, {len(set(rf.d.links))} Link-Ziele, {len(rf.d.images)} Bilder, {len(gebraucht - ausnahmen)} Ansichten/Fenster aus dem Klick-Dummy geprüft")
+print(f"{len(rf.SECTIONS)} Abschnitte, {len(set(rf.d.links))} Link-Ziele, {len(rf.d.images)} Bilder, {len(gebraucht - ausnahmen)} Tabs/Fenster aus dem Swift-Code geprüft")
 if fehler:
     print("FEHLER:"); [print(" -", f) for f in fehler]; sys.exit(1)
 print("OK")

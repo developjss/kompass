@@ -1,4 +1,4 @@
-# Journal und Berater – Kompass rechnet und berät, Apple und Google planen [VORSCHLAG – 27.11.2026, Entscheidung des Gründers offen]
+# Journal und Berater – Kompass rechnet und berät, Apple und Google planen [ENTSCHEIDUNG – 27.11.2026: Richtung; Einzelheiten VORSCHLAG]
 
 Idee des Gründers (27.11.2026): Den Kalender-Tab streichen. An seine Stelle kommt ein Journal (täglich, wöchentlich). Kompass wird ein Analyse-Werkzeug und Berater: Es liest die Kalender, legt aber selbst keine Termine an. Aus Journal, Habits und Zielen entsteht ein Bild der Person.
 
@@ -95,7 +95,7 @@ Vor Schritt 1 der **Personen-Test**: 4 Personen × 3 Wochen. Trägt man täglich
 
 ## 13. Entscheidungen des Gründers
 
-1. Kalender-Tab streichen und Journal an seine Stelle – ja?
+1. ~~Kalender-Tab streichen und Journal an seine Stelle~~ – [ENTSCHEIDUNG – 27.11.2026]
 2. Aufgaben bleiben in Kompass (§8) – ja?
 3. Google zuerst nur über das iPhone (§7) – ja?
 4. Journal standardmäßig nur auf dem Gerät, Server nur mit Einwilligung (§10) – ja?

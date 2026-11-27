@@ -15,6 +15,6 @@ Quelle: `docs/produkt/roter-faden/roter_faden.py` (Text), `bilder/` (Bildschirmf
    - `python3 docs/produkt/roter-faden/pruefen.py` – Links, Bilder und ob jede Ansicht und jedes Fenster aus dem Klick-Dummy (später: jede Seite aus dem Swift-Code) im Dokument steht.
    - Was sich seit der letzten Änderung am Dokument geändert hat: `git log --oneline $(git log -1 --format=%H -- docs/produkt/roter-faden/roter_faden.py)..HEAD -- prototyp Kompass docs/produkt/rechenregeln.md`.
 3. **Ergebnis kurz melden:** „aktuell“ oder die Liste, was fehlt.
-4. **Wenn nicht aktuell:** Bilder neu (`python3 scripts/bilder.py`), Text in `roter_faden.py` anpassen, neue Fassung im Änderungsverlauf, bauen mit `python3 docs/produkt/roter-faden/roter_faden.py`, prüfen. Dann wie jeder Block: Branch, PR, Merge.
+4. **Wenn nicht aktuell:** Bilder neu aus dem Simulator (nur Demo-Daten, JPG 420 px breit), Text in `roter_faden.py` anpassen, neue Fassung im Änderungsverlauf, bauen mit `python3 docs/produkt/roter-faden/roter_faden.py`, prüfen. Dann wie jeder Block: Branch, PR, Merge.
 
 Regeln: kürzen statt anhängen; nur Demo-Daten in Bildern; nichts erfinden (Fakten aus dem Code); Rechtliches nur als Prüffrage.

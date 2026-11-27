@@ -29,21 +29,13 @@ Stand: 23. November 2026 · Gilt für jede Sitzung. Die Kurzfassung steht in `CL
 
 ## 3. Bauen und testen
 
-Phase 0–1: Klick-Dummy (`prototyp/`, HTML). Ab Phase 2: SwiftUI-App `Kompass/` (Xcode), gleiche Schleife wie Gapless:
+SwiftUI-App `Kompass/` (Xcode). Der Klick-Dummy der Phasen 0–1 liegt im Archiv und gilt nicht mehr.
 1. Ein Auftrag = ein Screen oder Baustein.
 2. Branch von `main`, umsetzen, **selbst bauen und Tests laufen lassen**, Fehler beheben.
 3. UI-Tests selten (Abschnitt 4).
 4. Commit, Push, PR, Merge (Abschnitt 5).
 
-Befehle Klick-Dummy:
-```
-python3 prototyp/tests/run.py prototyp/index.html 730     # Personen-Test, 4 Personen × 2 Jahre
-python3 prototyp/tests/unit.py                            # Randfälle (Datum, Wiederholung, Fortschritt)
-python3 scripts/bilder.py                                 # Bildschirmfotos für den Roten Faden
-```
-(Brauchen Python 3 und Playwright: `pip install playwright && playwright install chromium`.)
-
-**Rechen-Logik zuerst:** Jede Formel aus `docs/produkt/rechenregeln.md` bekommt in Swift eine eigene, reine Funktion mit Tests; der Personen-Test wird als Swift-Test nachgebaut (zweite, unabhängige Referenz-Rechnung wie in `prototyp/tests/sim.js`).
+**Rechen-Logik zuerst:** Jede Formel aus `docs/produkt/rechenregeln.md` bekommt in Swift eine eigene, reine Funktion mit Tests. Der Personen-Test (`KompassTests/PersonenTests.swift`) rechnet unabhängig nach.
 
 **Ehrlichkeit:** Nie behaupten, etwas sei gebaut oder getestet, wenn es nicht wirklich gelaufen ist.
 
@@ -51,7 +43,7 @@ python3 scripts/bilder.py                                 # Bildschirmfotos für
 
 - **Jeder Block:** bauen + Unit-Tests + Prüfen per Simulator-Screenshot; dann sofort auf das iPhone des Gründers (wenn erreichbar) und den Simulator installieren. Im Bericht sagen, was lief und was nicht. [ENTSCHEIDUNG – 24.11.2026]
 - **Voller UI-Lauf (Full)** nur auf Ansage des Gründers oder nach Rückfrage etwa alle 9–10 Builds und vor jedem Phasen-Abschluss (dauert ~5 Min).
-- **Personen-Test** (4 Personen × 2 Jahre mit zufälligen Eingriffen) vor jedem größeren Schritt und nach jeder Änderung an `rechenregeln.md`; Bericht in `docs/technik/berichte/`.
+- **Personen-Test** (`KompassTests/PersonenTests.swift`, sechs Personen × 3,5 Jahre mit zufälligen Eingriffen) vor jedem größeren Schritt und nach jeder Änderung an `rechenregeln.md`; Bericht in `docs/technik/berichte/`.
 - **Textmenge** prüfen (≤ ~35 Wörter je Bildschirmhöhe, Messung per Texterkennung wie im Design-Abgleich vom 23.11.2026).
 
 ## 5. Pull Requests und Merge
@@ -67,7 +59,8 @@ python3 scripts/bilder.py                                 # Bildschirmfotos für
 ## 6. Dokumente pflegen
 
 - **Gebündelt** [ENTSCHEIDUNG – 24.11.2026]: Stand, Bauprotokoll, Entscheidungen und Roter Faden alle 3–4 gemergten Blöcke gemeinsam nachziehen. Rechenregeln und Fachdokumente weiter mit der Änderung selbst.
-- Übersicht und Ablage-Regeln: `docs/README.md`. Stand → `docs/stand.md`, Entscheidung → `docs/leitung/entscheidungen.md` + Fachdokument, gebauter Block → `docs/technik/bauprotokoll.md`, Erledigtes → `docs/archiv/` (nie löschen).
+- Übersicht und Ablage-Regeln: `docs/README.md`. Stand → `docs/stand.md`, Entscheidung → `docs/leitung/entscheidungen.md` + Fachdokument, gebauter Block → `docs/technik/bauprotokoll.md`, Erledigtes und Überholtes → `docs/archiv/` (nie löschen).
+- **Archiv ist Geschichte, keine Grundlage** [ENTSCHEIDUNG – 27.11.2026, Gründer]: Was im Archiv liegt, gilt nicht mehr. Nichts daraus zurückholen, keine Entscheidung darauf stützen, nur auf ausdrücklichen Wunsch des Gründers lesen. Ändert sich der Plan, wandert Überholtes sofort ins Archiv, und die aktuellen Dokumente werden umgeschrieben – nicht ergänzt.
 - **Aufräumen:** monatlich (Aufgabe `r-aufraeumen`) und vor jedem PR mit Doku-Änderungen `python3 scripts/ordnung.py`.
 - Neue Aufgaben, Pflichten und Stichtage → `docs/leitung/aufgaben/aufgaben.json` (`/fahrplan`).
 - Bei neuen Screens, Speicherorten oder Rollen die Landkarte (`docs/landkarte/`); bei sichtbaren Änderungen den Roten Faden (`docs/produkt/roter-faden/`, `/roterfaden`).
