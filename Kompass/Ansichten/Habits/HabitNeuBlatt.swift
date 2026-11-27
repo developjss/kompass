@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 /// Neuer Habit (über das Plus) – Aussehen 1:1 nach Opals Regel-Blatt („Weekend Limit“), noch ohne Funktion.
 /// Namen und Felder werden im nächsten Schritt angepasst. Maße und Farben aus den Vorlagen (Blatt #2C2C2C, Gruppen #363636).
@@ -6,6 +7,9 @@ struct HabitNeuBlatt: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tage: Set<Int> = [6, 7]
     @State private var name = ""
+    /// Eigenes Bild (nil = Standardbild „habit-1“)
+    @State private var bild: UIImage?
+    @State private var bildWahl = false
     @FocusState private var schreibt: Bool
 
     var body: some View {
@@ -33,11 +37,13 @@ struct HabitNeuBlatt: View {
             .padding(.bottom, 8)
 
             BlattGruppe {
-                BlattZeile(titel: "Apps") {
-                    Image("habit-1").resizable().scaledToFill().frame(width: 20, height: 20)
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                    Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
+                Button { bildWahl = true } label: {
+                    BlattZeile(titel: "Bild") {
+                        HabitVorschau(bild: bild, groesse: 26)
+                        Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
+                    }
                 }
+                .buttonStyle(.plain)
             }
 
             BlattGruppe {
@@ -90,6 +96,7 @@ struct HabitNeuBlatt: View {
         .padding(.top, 18)
         .padding(.bottom, 20)
         .foregroundStyle(DFarbe.text)
+        .sheet(isPresented: $bildWahl) { BildWahlBlatt(bild: $bild) }
         .presentationDetents([.height(612)])
         .presentationBackground { ZStack { Rectangle().fill(.ultraThinMaterial); Color(0x2C2C2C).opacity(0.62) } }
         .presentationCornerRadius(Dunkel.blattRadius)
@@ -158,4 +165,102 @@ private struct BlattWert: View {
 
 private struct BlattTrenner: View {
     var body: some View { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, 18) }
+}
+
+/// Vorschau des Habit-Bilds: eigenes Bild oder Standardbild, rund wie in der Habit-Reihe.
+private struct HabitVorschau: View {
+    var bild: UIImage?
+    var groesse: CGFloat
+    var body: some View {
+        Group {
+            if let bild { Image(uiImage: bild).resizable().scaledToFill() } else { Image("habit-1").resizable().scaledToFill() }
+        }
+        .frame(width: groesse, height: groesse)
+        .clipShape(Circle())
+        .overlay { Circle().strokeBorder(Color(0x2B2B2D), lineWidth: max(1, groesse * 0.055)) }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Bild wählen: große Vorschau, Empfehlung zur Größe, Fotos öffnen, Standardbild zurück – gleiches Blatt-Design.
+private struct BildWahlBlatt: View {
+    @Binding var bild: UIImage?
+    @Environment(\.dismiss) private var dismiss
+    @State private var auswahl: PhotosPickerItem?
+    @State private var laedt = false
+    @State private var fehler = false
+
+    var body: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                Text("Bild").font(.system(size: 18, weight: .semibold))
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").font(.system(size: 16, weight: .semibold))
+                            .frame(width: 44, height: 44).background(Color(0x3F3F3F), in: Circle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel("Schließen")
+                    Spacer()
+                }
+            }
+
+            ZStack {
+                HabitVorschau(bild: bild, groesse: 120)
+                if laedt { ProgressView().tint(.white) }
+                Image(systemName: "play.fill").font(.system(size: 34)).foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.45), radius: 5, y: 1).offset(x: 2).opacity(laedt ? 0 : 1)
+            }
+            .padding(.top, 4)
+
+            // Empfehlung zur Bildgröße
+            VStack(spacing: 4) {
+                Text("Empfehlung").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(0x9EF0CF))
+                Text("Quadratisch, mindestens 600 × 600 Pixel. Das Motiv in die Mitte – der Rand wird rund abgeschnitten.")
+                    .font(.system(size: 15)).foregroundStyle(Color(0x9A9A9E)).multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 18).padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(Color(0x3A3A3A).opacity(0.75), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+
+            if fehler {
+                Text("Das Bild konnte nicht geladen werden. Bitte ein anderes wählen.").font(.system(size: 13)).foregroundStyle(DFarbe.rot)
+            }
+
+            PhotosPicker(selection: $auswahl, matching: .images) {
+                Label("Aus Fotos wählen", systemImage: "photo.on.rectangle")
+                    .font(.system(size: 17, weight: .medium))
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                    .background(Color.white, in: Capsule())
+                    .foregroundStyle(.black)
+            }
+            .buttonStyle(.plain)
+
+            Button { bild = nil; dismiss() } label: {
+                Text("Standardbild verwenden").font(.system(size: 15, weight: .medium)).foregroundStyle(Color(0x9A9A9E))
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .opacity(bild == nil ? 0.4 : 1)
+            .disabled(bild == nil)
+        }
+        .padding(.horizontal, 16).padding(.top, 18).padding(.bottom, 16)
+        .foregroundStyle(DFarbe.text)
+        .onChange(of: auswahl) { _, neu in
+            guard let neu else { return }
+            laedt = true; fehler = false
+            Task {
+                let daten = try? await neu.loadTransferable(type: Data.self)
+                await MainActor.run {
+                    laedt = false
+                    if let d = daten, let b = UIImage(data: d) { bild = b; dismiss() } else { fehler = true }
+                }
+            }
+        }
+        .presentationDetents([.height(450)])
+        .presentationBackground { ZStack { Rectangle().fill(.ultraThinMaterial); Color(0x2C2C2C).opacity(0.62) } }
+        .presentationCornerRadius(Dunkel.blattRadius)
+        .presentationDragIndicator(.visible)
+        .preferredColorScheme(.dark)
+    }
 }
