@@ -7,6 +7,8 @@ struct HabitsDetail: View {
     @Environment(\.dismiss) private var dismiss
     /// Wie weit gescrollt ist – der Kopf wird erst beim Scrollen dunkel/unscharf, oben leuchtet das Licht frei hinter der Insel
     @State private var versatz: CGFloat = 0
+    /// Plus oben rechts: neuer Habit (gleiches Blatt wie das Plus bei den runden Habits)
+    @State private var neu = false
     /// Bild etwa 15 % höher als Name + Balken zusammen (Name ≈ 22 pt + 8 pt Abstand + Balken 7 pt ≈ 37 pt → 42 pt)
     static let bildGroesse: CGFloat = 42
 
@@ -50,13 +52,28 @@ struct HabitsDetail: View {
         .overlay(alignment: .top) { kopf }
         .strahlenGrund()
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $neu) { HabitNeuBlatt() }
         .accessibilityIdentifier("seite.habits.detail")
     }
 
     private var kopf: some View {
         ZStack {
-            Text("Habits").font(.system(size: 17, weight: .semibold))
-            HStack { RundKnopf(symbol: "chevron.left", beschriftung: "Zurück") { dismiss() }; Spacer() }
+            Text("Habits").font(.system(size: 22, weight: .bold)).accessibilityAddTraits(.isHeader)
+            HStack {
+                RundKnopf(symbol: "chevron.left", beschriftung: "Zurück") { dismiss() }
+                Spacer()
+                // Wie Opals Plus oben rechts auf „Apps“: runder Knopf im Akzent-Verlauf, dunkles Plus
+                Button { neu = true } label: {
+                    Image(systemName: "plus").font(.system(size: 17, weight: .bold)).foregroundStyle(.black)
+                        .frame(width: 36, height: 36)
+                        .background(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
+                        .shadow(color: Color(Dunkel.akzentB).opacity(0.35), radius: 8)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Neuer Habit")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 6)
