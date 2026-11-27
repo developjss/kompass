@@ -380,7 +380,7 @@ private struct NadelForm: Shape {
 private struct Funkelstaub: View {
     @Environment(\.accessibilityReduceMotion) private var ruhig
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15, paused: ruhig)) { k in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: ruhig)) { k in
             let t = ruhig ? 0 : k.date.timeIntervalSinceReferenceDate
             Canvas { ctx, g in
                 var s: UInt64 = 0xC0FF_EE11
@@ -391,11 +391,18 @@ private struct Funkelstaub: View {
                     z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
                     return Double(z ^ (z >> 31)) / Double(UInt64.max)
                 }
-                let n = Int(g.width / 2.4)
+                // Staub wandert langsam nach rechts zum Kompass (wie beim Aufladen), schwebt leicht auf und ab und funkelt.
+                // Feste Breite fürs Wandern, damit die Punkte beim Ziehen nicht springen.
+                let bahn: CGFloat = 400
+                let n = Int(bahn / 2.4)
                 for _ in 0..<n {
-                    let x = zufall() * g.width, y = zufall() * g.height
+                    let x0 = zufall() * bahn, y0 = zufall() * g.height
+                    let tempo = 5 + zufall() * 13
                     let r = 0.3 + zufall() * 0.6
                     let p = zufall() * 6.28
+                    let x = (x0 + t * tempo).truncatingRemainder(dividingBy: bahn) - (bahn - g.width)
+                    guard x > -2 else { continue }
+                    let y = y0 + sin(t * 0.9 + p) * 2.2
                     let a = 0.3 + 0.55 * (0.5 + 0.5 * sin(t * 1.4 + p))
                     ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r * 2, height: r * 2)), with: .color(Color(0x9FFFFF).opacity(a)))
                 }
