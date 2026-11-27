@@ -26,6 +26,14 @@ struct FokusTests {
         #expect(Fokus.ergebnis(wert: 0, einheit: .minuten, ziel: 30, sekunden: 59, fertig: false) == 0)
     }
 
+    @Test func abfrageNurOhneZeit() {
+        #expect(Fokus.fragtNach(.seiten))
+        #expect(Fokus.fragtNach(.ml))
+        #expect(Fokus.fragtNach(.keine))
+        #expect(!Fokus.fragtNach(.minuten))
+        #expect(!Fokus.fragtNach(.stunden))
+    }
+
     @Test func uhr() {
         #expect(Fokus.uhr(1797) == "29:57")
         #expect(Fokus.uhr(0) == "00:00")

@@ -95,9 +95,11 @@ enum Fortschritt {
 /// - Dauer [ENTSCHEIDUNG – 27.11.2026, Gründer]: Habits mit Zeit-Einheit laufen genau mit ihrer Zeit – was vom
 ///   Tagesziel noch fehlt (sekundengenau); ist nichts oder alles erledigt, das ganze Tagesziel. Nicht einstellbar.
 ///   Habits ohne Zeit: Dauer frei mit Schnellwahl und Lineal, Vorgabe 30 Minuten.
-/// - Timer läuft ab: Habit gilt als erledigt.
-/// - Früher beendet: Zeit-Einheiten bekommen die fokussierte Zeit gutgeschrieben (ganze Minuten bzw. Sekunden),
-///   andere Einheiten bleiben, wie sie sind.
+/// [ENTSCHEIDUNG – 27.11.2026, Gründer: „ja“]
+/// - Timer läuft ab: Habit mit Zeit-Einheit gilt als erledigt (ohne Abfrage).
+/// - Habit ohne Zeit-Einheit: nach Ablauf oder Beenden wird mit dem Compass-Balken abgefragt, wie viel geschafft ist.
+/// - Früher beendet: Zeit-Einheiten bekommen die fokussierte Zeit gutgeschrieben (ganze Minuten bzw. Sekunden).
+/// - Zurücksetzen: nichts wird gutgeschrieben, der Timer beginnt von vorn.
 enum Fokus {
     /// Vorgabe für Habits ohne Zeit-Einheit (einstellbar).
     static let freieMinuten = 30
@@ -121,6 +123,9 @@ enum Fokus {
         let neu = wert + dazu
         return neu >= ziel ? ziel : (neu * 1_000_000).rounded() / 1_000_000
     }
+
+    /// Muss nach dem Fokus gefragt werden, wie viel geschafft ist? (nur Habits ohne Zeit-Einheit)
+    static func fragtNach(_ einheit: Einheit) -> Bool { einheit.art != .zeit }
 
     /// Anzeige der Uhr: „29:57“, ab einer Stunde „1:05:00“.
     static func uhr(_ sekunden: Int) -> String {

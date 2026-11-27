@@ -9,7 +9,7 @@ struct FokusAnsicht: View {
     /// Fortschritt heute – wird am Ende nach der Regel `Fokus.ergebnis` gesetzt
     @Binding var wert: Double
 
-    enum Phase: Equatable { case einstellen, laeuft, pause, fertig }
+    enum Phase: Equatable { case einstellen, laeuft, pause, abfrage, fertig }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var ruhig
@@ -25,6 +25,8 @@ struct FokusAnsicht: View {
     @State private var rest: Int = 0
     @State private var gesamt: Int = 0
     @State private var feier = 0
+    /// Abfrage nach dem Fokus (Habits ohne Zeit): Stand am Compass-Balken
+    @State private var abfrageAnteil: Double = 0
 
     init(habit: Habit, wert: Binding<Double>) {
         self.habit = habit
@@ -48,9 +50,13 @@ struct FokusAnsicht: View {
                 VStack(spacing: 0) {
                     kopf
                     Spacer(minLength: 0)
-                    VStack(spacing: 18) {
-                        FokusUhr(text: Fokus.uhr(sekunden), leuchtet: phase != .pause, feier: feier)
-                        unterUhr(sekunden: sekunden)
+                    if phase == .abfrage {
+                        abfrage.transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    } else {
+                        VStack(spacing: 18) {
+                            FokusUhr(text: Fokus.uhr(sekunden), leuchtet: phase != .pause, feier: feier)
+                            unterUhr(sekunden: sekunden)
+                        }
                     }
                     Spacer(minLength: 0)
                     unten
@@ -69,9 +75,12 @@ struct FokusAnsicht: View {
         .onChange(of: phase) { _, p in UIApplication.shared.isIdleTimerDisabled = (p == .laeuft || p == .pause) }
         .onAppear {
             // Knöpfe auf dem Sperrbildschirm steuern diesen Bildschirm
-            FokusBefehle.empfaenger = { pausieren in
-                if pausieren, phase == .laeuft { self.pausieren() }
-                if !pausieren, phase == .pause { self.weiter() }
+            FokusBefehle.empfaenger = { befehl in
+                switch befehl {
+                case .pause: if phase == .laeuft { self.pausieren() }
+                case .weiter: if phase == .pause { self.weiter() }
+                case .zuruecksetzen: if phase == .pause || phase == .laeuft { self.zuruecksetzen() }
+                }
             }
             UIApplication.shared.isIdleTimerDisabled = (phase == .laeuft)
             if phase == .laeuft { FokusLive.starten(name: habit.name, gesamt: gesamt, rest: gesamt) }
@@ -79,7 +88,7 @@ struct FokusAnsicht: View {
         .onDisappear {
             FokusBefehle.empfaenger = nil
             UIApplication.shared.isIdleTimerDisabled = false
-            if phase != .fertig { FokusLive.beendenSofort() }
+            if phase != .fertig && phase != .abfrage { FokusLive.beendenSofort() }
         }
         .sensoryFeedback(.success, trigger: feier)
         .sensoryFeedback(.impact(weight: .medium), trigger: phase)
@@ -110,7 +119,7 @@ struct FokusAnsicht: View {
         ZStack {
             VerlaufEtikett(text: habit.name, groesse: 15)
             HStack {
-                if phase == .einstellen || phase == .fertig {
+                if phase == .einstellen || phase == .fertig || phase == .abfrage {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark").font(.system(size: 17, weight: .semibold))
                             .frame(width: 46, height: 46)
@@ -152,6 +161,8 @@ struct FokusAnsicht: View {
             }
             .contentTransition(.opacity)
             .accessibilityElement(children: .combine)
+        case .abfrage:
+            EmptyView()
         case .fertig:
             VStack(spacing: 6) {
                 Text("Geschafft").font(.system(size: 30, weight: .bold))
@@ -178,7 +189,32 @@ struct FokusAnsicht: View {
             VStack(spacing: 14) {
                 weisseKapsel(titel: "Weiter", symbol: "play.fill") { weiter() }
                 BeendenBalken { abschliessen(fertig: false) }
+                // Zurücksetzen: Timer von vorn, nichts wird gutgeschrieben
+                Button { zuruecksetzen() } label: {
+                    Label("Zurücksetzen", systemImage: "arrow.counterclockwise")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
             }
+        case .abfrage:
+            let entwurf = Fortschritt.wert(anteil: abfrageAnteil, einheit: habit.einheit, ziel: habit.tagesziel)
+            VStack(spacing: 6) {
+                if abs(entwurf - wert) > 0.000_001 && entwurf < habit.tagesziel {
+                    weisseKapsel(titel: Fortschritt.speichernText(wert: entwurf, einheit: habit.einheit, ziel: habit.tagesziel), symbol: nil) {
+                        wert = entwurf
+                        dismiss()
+                    }
+                    .transition(.opacity)
+                }
+                Button { dismiss() } label: {
+                    Text("Überspringen").font(.system(size: 16, weight: .medium)).foregroundStyle(Color.white.opacity(0.7))
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+            }
+            .animation(.snappy(duration: 0.25), value: entwurf)
         case .fertig:
             weisseKapsel(titel: "Fertig", symbol: nil) { dismiss() }
         }
@@ -204,7 +240,7 @@ struct FokusAnsicht: View {
         case .einstellen: return fest ?? Int(minuten) * 60
         case .laeuft: return max(Int((ende ?? jetzt).timeIntervalSince(jetzt).rounded(.up)), 0)
         case .pause: return rest
-        case .fertig: return 0
+        case .abfrage, .fertig: return 0
         }
     }
 
@@ -230,17 +266,68 @@ struct FokusAnsicht: View {
     /// Timer abgelaufen (erledigt) oder früher beendet (Zeit wird gutgeschrieben).
     private func abschliessen(fertig: Bool) {
         let fokussiert = max(gesamt - (fertig ? 0 : restSekunden(jetzt: Date())), 0)
-        wert = Fokus.ergebnis(wert: wert, einheit: habit.einheit, ziel: habit.tagesziel, sekunden: fokussiert, fertig: fertig)
         if fertig {
             // Zweimal vibrieren – nur wenn das Ende gerade eben war (nicht beim späteren Zurückkommen in die App)
             if let ende, Date().timeIntervalSince(ende) < 3 { FokusLive.doppeltVibrieren() }
             FokusLive.fertig(gesamt: gesamt)
+        } else {
+            FokusLive.beendenSofort()
+        }
+        // Habits ohne Zeit: nachfragen, wie viel geschafft ist
+        if Fokus.fragtNach(habit.einheit) {
+            abfrageAnteil = Fortschritt.anteil(wert: wert, ziel: habit.tagesziel)
+            withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.85)) { phase = .abfrage }
+            return
+        }
+        wert = Fokus.ergebnis(wert: wert, einheit: habit.einheit, ziel: habit.tagesziel, sekunden: fokussiert, fertig: fertig)
+        if fertig {
             feier += 1
             withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.75)) { phase = .fertig }
         } else {
-            FokusLive.beendenSofort()
             dismiss()
         }
+    }
+
+    /// Timer zurück auf den Anfang, nichts wird gutgeschrieben.
+    private func zuruecksetzen() {
+        FokusLive.beendenSofort()
+        ende = nil
+        rest = 0
+        gesamt = 0
+        withAnimation(ruhig ? nil : .spring(response: 0.45, dampingFraction: 0.85)) { phase = .einstellen }
+    }
+
+    /// Abfrage nach dem Fokus: Compass-Balken wie bei „Erledigt“.
+    private var abfrage: some View {
+        let entwurf = Fortschritt.wert(anteil: abfrageAnteil, einheit: habit.einheit, ziel: habit.tagesziel)
+        return VStack(spacing: 10) {
+            Text("Wie viel hast du geschafft?").font(.system(size: 28, weight: .bold)).multilineTextAlignment(.center)
+            Text("Zieh den Kompass – ganz nach rechts heißt erledigt.")
+                .font(.system(size: 16)).foregroundStyle(Color.white.opacity(0.65)).multilineTextAlignment(.center)
+            CompassBalken(anteil: $abfrageAnteil,
+                          wertText: Fortschritt.text(wert: entwurf, einheit: habit.einheit, ziel: habit.tagesziel),
+                          stufen: habit.einheit.auswahl == .keine ? 1 : max(1, Int((habit.tagesziel / Fortschritt.schritt(habit.einheit)).rounded())),
+                          feier: feier) { ende in
+                abfrageAnteil = Fortschritt.anteil(wert: Fortschritt.wert(anteil: ende, einheit: habit.einheit, ziel: habit.tagesziel), ziel: habit.tagesziel)
+                if abfrageAnteil >= 1 {
+                    wert = habit.tagesziel
+                    feier += 1
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(900))
+                        withAnimation(ruhig ? nil : .spring(response: 0.5, dampingFraction: 0.75)) { phase = .fertig }
+                    }
+                }
+            }
+            .padding(.top, 52)
+            .padding(.horizontal, 4)
+        }
+        .padding(.vertical, 24).padding(.horizontal, 18)
+        .background {
+            RoundedRectangle(cornerRadius: 32, style: .continuous).fill(.ultraThinMaterial)
+                .overlay { RoundedRectangle(cornerRadius: 32, style: .continuous).fill(Color.black.opacity(0.35)) }
+                .overlay { RoundedRectangle(cornerRadius: 32, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.75) }
+        }
+        .environment(\.colorScheme, .dark)
     }
 }
 

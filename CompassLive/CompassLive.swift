@@ -99,7 +99,7 @@ private struct SperrAnsicht: View {
                         .shadow(color: tuerkis.opacity(0.5), radius: 10)
                     PauseKnopf(stand: stand, abgelaufen: abgelaufen)
                 }
-                .frame(width: 112)
+                .frame(width: 128)
             }
             Balken(stand: stand, abgelaufen: abgelaufen)
         }
@@ -171,7 +171,17 @@ private struct PauseKnopf: View {
         if !(abgelaufen || (!stand.pausiert && stand.ende <= .now)) {
             Group {
                 if stand.pausiert {
-                    Button(intent: FokusWeiterIntent()) { knopf(symbol: "play.fill", titel: "Weiter") }
+                    HStack(spacing: 6) {
+                        Button(intent: FokusZuruecksetzenIntent()) {
+                            Image(systemName: "arrow.counterclockwise").font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 30, height: 30)
+                                .background(Circle().fill(.white.opacity(0.18)))
+                                .overlay { Circle().strokeBorder(.white.opacity(0.3), lineWidth: 0.5) }
+                        }
+                        .accessibilityLabel("Zurücksetzen")
+                        Button(intent: FokusWeiterIntent()) { knopf(symbol: "play.fill", titel: "Weiter") }
+                    }
                 } else {
                     Button(intent: FokusPausierenIntent()) { knopf(symbol: "pause.fill", titel: "Pause") }
                 }

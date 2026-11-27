@@ -6,17 +6,27 @@ import UserNotifications
 /// Pause und Weiter direkt auf dem Sperrbildschirm / in der Dynamic Island.
 /// Die Befehle laufen im Prozess der App (LiveActivityIntent). Ist der Fokus-Bildschirm offen, übernimmt er
 /// (Uhr, Mitteilung, Live-Aktivität bleiben gleich). Sonst wird die Live-Aktivität direkt umgestellt.
+enum FokusBefehl: Sendable { case pause, weiter, zuruecksetzen }
+
 @MainActor
 enum FokusBefehle {
-    /// Vom Fokus-Bildschirm gesetzt: true = pausieren, false = weiter
-    static var empfaenger: ((Bool) -> Void)?
+    /// Vom Fokus-Bildschirm gesetzt
+    static var empfaenger: ((FokusBefehl) -> Void)?
 
-    static func ausfuehren(pausieren: Bool) async {
+    static func ausfuehren(_ befehl: FokusBefehl) async {
         if let empfaenger {
-            empfaenger(pausieren)
+            empfaenger(befehl)
+        } else if befehl == .zuruecksetzen {
+            await zuruecksetzenDirekt()
         } else {
-            await direkt(pausieren: pausieren)
+            await direkt(pausieren: befehl == .pause)
         }
+    }
+
+    /// Ohne offenen Fokus-Bildschirm: Live-Aktivität beenden, nichts gutschreiben.
+    nonisolated static func zuruecksetzenDirekt() async {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [mitteilungID])
+        for a in Activity<FokusAktivitaet>.activities { await a.end(nil, dismissalPolicy: .immediate) }
     }
 
     /// Ohne offenen Fokus-Bildschirm: Live-Aktivität selbst umstellen und die Mitteilung zum Ende anpassen.
@@ -61,7 +71,7 @@ struct FokusPausierenIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Fokus pausieren"
     init() {}
     func perform() async throws -> some IntentResult {
-        await FokusBefehle.ausfuehren(pausieren: true)
+        await FokusBefehle.ausfuehren(.pause)
         return .result()
     }
 }
@@ -70,7 +80,16 @@ struct FokusWeiterIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Fokus fortsetzen"
     init() {}
     func perform() async throws -> some IntentResult {
-        await FokusBefehle.ausfuehren(pausieren: false)
+        await FokusBefehle.ausfuehren(.weiter)
+        return .result()
+    }
+}
+
+struct FokusZuruecksetzenIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Fokus zurücksetzen"
+    init() {}
+    func perform() async throws -> some IntentResult {
+        await FokusBefehle.ausfuehren(.zuruecksetzen)
         return .result()
     }
 }
