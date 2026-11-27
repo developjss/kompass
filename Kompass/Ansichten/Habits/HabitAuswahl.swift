@@ -180,10 +180,11 @@ struct ErledigtSeite: View {
             HStack { BlattKnopf(symbol: "chevron.left", beschriftung: "Zurück", aktion: zurueck); Spacer() }
 
             VStack(spacing: 8) {
-                VerlaufEtikett(text: "\(habit.name) · Heute")
+                VerlaufEtikett(text: habit.name, groesse: 17)
                 Text(titel).font(.system(size: 30, weight: .bold)).monospacedDigit()
                     .contentTransition(.numericText())
-                Text(unterzeile).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
+                // leere Zeile behält ihren Platz, damit der Balken beim Ziehen nicht springt
+                Text(unterzeile.isEmpty ? " " : unterzeile).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
                     .multilineTextAlignment(.center)
             }
             .animation(.snappy(duration: 0.25), value: titel)
@@ -245,7 +246,7 @@ struct ErledigtSeite: View {
     private var unterzeile: String {
         switch status {
         case .offen: "Zieh den Kompass nach rechts."
-        case .teilweise: ungespeichert ? "Noch nicht gespeichert." : "Gespeichert – du kannst jederzeit weitermachen."
+        case .teilweise: ungespeichert ? "" : "Gespeichert – du kannst jederzeit weitermachen."
         case .erledigt: "Tagesziel geschafft. Zurückziehen korrigiert."
         }
     }
@@ -280,7 +281,6 @@ struct CompassBalken: View {
                 Capsule().fill(LinearGradient(colors: [Color(0x1A2B2B).opacity(0.55), Color(0x1B352E).opacity(0.55)], startPoint: .leading, endPoint: .trailing))
                     .overlay { Capsule().strokeBorder(Color.white.opacity(0.22), lineWidth: 0.75) }
                     .frame(height: spur)
-                Circle().fill(Color(0x90DAD8)).frame(width: 5, height: 5).offset(x: w - 21)
 
                 // gefüllter Teil
                 ZStack {
@@ -293,7 +293,6 @@ struct CompassBalken: View {
                 }
                 .frame(width: x + knopf / 2 + spur / 2, height: spur)
                 .shadow(color: Color(0x2FD0D1).opacity(0.55), radius: 12)
-                .overlay(alignment: .leading) { Circle().fill(Color(0x90DAD8)).frame(width: 5, height: 5).padding(.leading, 16) }
 
                 // Funken bei „erledigt“
                 ForEach(0..<14, id: \.self) { i in

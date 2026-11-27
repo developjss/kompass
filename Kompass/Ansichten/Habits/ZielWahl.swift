@@ -54,8 +54,9 @@ struct HakenKopf: View {
 /// Etikett mit Akzent-Verlauf („SCHWIERIGKEIT“ im Vorbild).
 struct VerlaufEtikett: View {
     var text: String
+    var groesse: CGFloat = 13
     var body: some View {
-        Text(text.uppercased()).font(.system(size: 13, weight: .semibold)).tracking(0.6)
+        Text(text.uppercased()).font(.system(size: groesse, weight: .semibold)).tracking(groesse * 0.05)
             .foregroundStyle(DFarbe.akzent)
     }
 }
