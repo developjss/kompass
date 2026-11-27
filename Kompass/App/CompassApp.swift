@@ -163,13 +163,7 @@ struct LeereSeite: View {
             Text("Wird neu gebaut.").font(DSchrift.zeile).foregroundStyle(DFarbe.zweitrangig)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(alignment: .top) {
-            // Sternenhimmel der Bühne: oben dicht, nach unten ausgeblendet
-            Sterne().frame(height: 420)
-                .mask(LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom))
-                .ignoresSafeArea()
-        }
-        .dunkelGrund()
+        .strahlenGrund()
         .accessibilityIdentifier("seite.\(bereich.rawValue)")
     }
 }

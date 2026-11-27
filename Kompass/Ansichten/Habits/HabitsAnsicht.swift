@@ -45,7 +45,7 @@ struct HabitsAnsicht: View {
         }
         .scrollIndicators(.hidden)
         .foregroundStyle(DFarbe.text)
-        .dunkelGrund()
+        .strahlenGrund()
         .accessibilityIdentifier("seite.habits")
     }
 }

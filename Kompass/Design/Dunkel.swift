@@ -591,3 +591,109 @@ struct Sterne: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Lichtstrahlen von oben wie im Vorbild (Seite „Apps“): kein Kreis, sondern ein Fächer aus weichen Strahlen,
+/// der von einem Punkt über dem oberen Rand (leicht rechts der Mitte) nach unten aufgeht und langsam schimmert.
+struct LichtStrahlen: View {
+    var art: LichtArt = .gruen
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+
+    /// Strahlen: Winkel (Grad, 0 = senkrecht nach unten), halbe Breite (Grad), Stärke, Länge (Anteil), Phase
+    private let strahlen: [(Double, Double, Double, Double, Double)] = [
+        (-38, 5, 0.10, 0.80, 0.0), (-25, 7, 0.16, 0.95, 1.3), (-13, 4, 0.11, 0.85, 2.1), (-4, 8, 0.22, 1.0, 0.6),
+        (7, 5, 0.14, 0.9, 3.0), (17, 8, 0.19, 0.95, 1.9), (29, 5, 0.11, 0.85, 4.2), (41, 6, 0.08, 0.75, 2.6),
+    ]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: ruhig)) { k in
+            let t = ruhig ? 0 : k.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, g in
+                // Grundschein: breit und flach, damit auch die Ränder oben nicht schwarz sind (Vorbild: Rand ≈ ein Viertel der Lichtfarbe)
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: g.width, height: 300)), with: .radialGradient(Gradient(stops: [
+                    .init(color: art.farbe.opacity(0.34), location: 0), .init(color: art.farbe.opacity(0.2), location: 0.5), .init(color: .clear, location: 1),
+                ]), center: CGPoint(x: g.width * 0.56, y: -40), startRadius: 0, endRadius: 400))
+                let quelle = CGPoint(x: g.width * 0.56, y: -70)
+                let laenge = 520.0
+                for s in strahlen {
+                    let wink = (s.0 + (ruhig ? 0 : 1.2 * sin(t * 0.12 + s.4))) * .pi / 180
+                    let halb = s.1 * .pi / 180
+                    let l = laenge * s.3
+                    func punkt(_ w: Double) -> CGPoint { CGPoint(x: quelle.x + sin(w) * l, y: quelle.y + cos(w) * l) }
+                    var p = Path()
+                    p.move(to: quelle); p.addLine(to: punkt(wink - halb)); p.addLine(to: punkt(wink + halb)); p.closeSubpath()
+                    let staerke = s.2 * 2.1 * (ruhig ? 1 : 0.8 + 0.2 * sin(t * 0.35 + s.4))
+                    ctx.fill(p, with: .linearGradient(Gradient(stops: [
+                        .init(color: art.farbe.opacity(staerke * 2.6), location: 0),
+                        .init(color: art.farbe.opacity(staerke * 1.5), location: 0.16),
+                        .init(color: art.farbe.opacity(staerke * 0.5), location: 0.42),
+                        .init(color: .clear, location: 1),
+                    ]), startPoint: quelle, endPoint: punkt(wink)))
+                }
+            }
+            .blur(radius: 16)
+        }
+        .frame(height: 470)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Lichterstaub im Lichtkegel: wenige weiche, unscharfe Punkte, die langsam treiben (keine scharfen Sterne).
+struct Lichterstaub: View {
+    var anzahl = 34
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: ruhig)) { k in
+            let t = ruhig ? 0 : k.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, g in
+                var s: UInt64 = 0xA11C_E5ED
+                func zufall() -> Double {
+                    s &+= 0x9E37_79B9_7F4A_7C15
+                    var z = s
+                    z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+                    z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+                    return Double((z ^ (z >> 31)) >> 11) / Double(1 << 53)
+                }
+                for i in 0..<anzahl {
+                    let x0 = zufall(), y0 = zufall(), r = 0.9 + zufall() * 1.6, hell = 0.14 + zufall() * 0.34, tempo = 0.4 + zufall()
+                    let x = (x0 + 0.012 * sin(t * 0.21 * tempo + Double(i))) * g.width
+                    let y = (y0 * 0.92 + 0.02 * cos(t * 0.17 * tempo + Double(i) * 1.7)) * g.height
+                    // nach unten ausblenden
+                    let d = hell * (1 - y / g.height) * (ruhig ? 1 : 0.75 + 0.25 * sin(t * 0.5 + Double(i)))
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(.white.opacity(max(0, d))))
+                }
+            }
+            .blur(radius: 0.9)
+        }
+        .frame(height: 400)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Grund der Übersichtsseiten: Schwarz, Lichtstrahlen von oben, Lichterstaub.
+struct StrahlenGrund: ViewModifier {
+    var licht: LichtArt = .gruen
+    func body(content: Content) -> some View {
+        content
+            .background {
+                ZStack(alignment: .top) {
+                    DFarbe.grund
+                    LichtStrahlen(art: licht)
+                    Lichterstaub()
+                }
+                .ignoresSafeArea()
+            }
+            .foregroundStyle(DFarbe.text)
+            .preferredColorScheme(.dark)
+    }
+}
+
+extension View {
+    func strahlenGrund(_ licht: LichtArt = .gruen) -> some View { modifier(StrahlenGrund(licht: licht)) }
+}
