@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Die Kompass-Figur: eine leuchtende Kugel aus bewegtem Farbnetz – eigene Zeichnung statt des Vorbild-Steins
-/// (`docs/produkt/konzepte/umbau-nach-vorbild.md` §4). Kein Bild, keine Lizenz.
+/// Die Compass-Figur: eine leuchtende Kugel aus bewegtem Farbnetz – eigene Zeichnung statt des Vorbild-Steins. Kein Bild, keine Lizenz.
 struct Figur: View {
     enum Zustand: Sendable, Equatable {
         /// Matt grau – wie der Stein vor dem Aufbrechen (Intro, Meilenstein nicht erreicht)

@@ -1,6 +1,0 @@
-# Supabase-Projekt für den Lotse-Server. Lokal: `supabase start`, dann `supabase functions serve lotse`.
-project_id = "kompass"
-
-[functions.lotse]
-# Die App schickt keinen Supabase-JWT; Schutz über LOTSE_APP_SCHLUESSEL und das Kontingent.
-verify_jwt = false

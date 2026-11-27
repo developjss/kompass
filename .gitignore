@@ -9,19 +9,8 @@ xcuserdata/
 .claude/settings.local.json
 .claude/worktrees
 
-# Python
-__pycache__/
-*.pyc
-
-# Test-Ausgaben des Personen-Tests
-docs/archiv/prototyp/tests/ergebnis.json
-docs/archiv/prototyp/tests/*.png
-
 # Xcode legt das beim Öffnen an
 Kompass.xcodeproj/project.xcworkspace/
 
-# Supabase lokal
-supabase/.temp/
-supabase/.branches/
 .env
 .env.local

@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Designsystem „Dunkel“ (Umbau nach Vorbild, `docs/produkt/konzepte/umbau-nach-vorbild.md` §2).
-/// Kompass ist nur dunkel [ENTSCHEIDUNG – 27.11.2026]. Werte aus den Vorbild-Bildern gemessen (393 × 852 pt).
+/// Designsystem „Dunkel“ (`docs/plan.md`). Compass ist nur dunkel [ENTSCHEIDUNG – 27.11.2026]. Werte aus den Vorbild-Bildern gemessen (393 × 852 pt).
 enum Dunkel {
     // MARK: Farben (Hex)
     static let grund: UInt32 = 0x000000
@@ -535,4 +534,27 @@ struct AkzentZahl: View {
     var text: String
     var font: Font = DSchrift.walze
     var body: some View { Text(text).font(font).foregroundStyle(DFarbe.akzent).monospacedDigit() }
+}
+
+/// Gerade Linie (waagerecht oder senkrecht), z. B. für gestrichelte Verbinder.
+struct Line: Shape {
+    var senkrecht = false
+    func path(in r: CGRect) -> Path {
+        Path { p in
+            if senkrecht { p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.midX, y: r.maxY)) }
+            else { p.move(to: CGPoint(x: r.minX, y: r.midY)); p.addLine(to: CGPoint(x: r.maxX, y: r.midY)) }
+        }
+    }
+}
+
+extension Dunkel {
+    /// Kontrast zweier Farben nach WCAG (1…21) – für Tests.
+    nonisolated static func kontrast(_ a: UInt32, _ b: UInt32) -> Double {
+        func leucht(_ v: UInt32) -> Double {
+            func k(_ c: Double) -> Double { c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
+            return 0.2126 * k(Double((v >> 16) & 0xFF) / 255) + 0.7152 * k(Double((v >> 8) & 0xFF) / 255) + 0.0722 * k(Double(v & 0xFF) / 255)
+        }
+        let x = max(leucht(a), leucht(b)), y = min(leucht(a), leucht(b))
+        return (x + 0.05) / (y + 0.05)
+    }
 }

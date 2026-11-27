@@ -348,7 +348,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Dev";
+				INFOPLIST_KEY_CFBundleDisplayName = "Compass Dev";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -377,7 +377,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Beta";
+				INFOPLIST_KEY_CFBundleDisplayName = "Compass Beta";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -406,7 +406,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Kompass;
+				INFOPLIST_KEY_CFBundleDisplayName = Compass;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
