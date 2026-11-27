@@ -5,7 +5,7 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 ## 1. Design – noch nicht gebaut
 
 - **Tab „Compass“:** Die Seite ist leer („Wird neu gebaut.“).
-- **Neuer Habit (Blatt):** Die Felder heißen noch wie bei Opals Regel-Blatt („Erlaubte Zeit“, „Dann sperren bis“, „Schwierigkeit“, Hinweis zur Bildschirmzeit). Sie sollen umbenannt und angepasst werden (Gründer).
+- **Neuer Habit (Blatt):** „Schwierigkeit“ und der Hinweis zur Bildschirmzeit stammen noch aus Opals Regel-Blatt. Sie sollen umbenannt und angepasst werden (Gründer).
 - **Neuer Habit (Blatt):** Hinter dem Stift-Knopf oben rechts ist noch nichts.
 - **Bild wählen:** Es gibt kein Zuschneiden, also kein Verschieben oder Zoomen. Das Bild wird einfach mittig rund abgeschnitten.
 - **Mein Weg:** Hinter „Aufgaben ›“, „Ziele ›“, den Aufgaben und den Ziel-Karten liegt noch keine eigene Seite.
@@ -21,7 +21,9 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 - Neuer Habit speichert nichts: Name, Bild, Tage und Werte gehen beim Schließen verloren.
 - Das eigene Bild erscheint noch nicht in der Habit-Reihe. Es wird nicht auf dem Gerät gespeichert und ist nicht verkleinert (Speicher).
 - „Gedrückt halten zum Festlegen“ schließt nur das Blatt.
-- Tage, „Erlaubte Zeit“, „Dann sperren bis“ und „Schwierigkeit“ lassen sich nicht ändern.
+- Tage und „Schwierigkeit“ lassen sich nicht ändern.
+- Einheit und Ziel lassen sich wählen, werden aber nicht gespeichert. Eine eigene Einheit gilt nur, solange das Blatt offen ist.
+- Mit einer Zeit-Einheit soll später ein Timer mitlaufen (Hinweis im Blatt „Einheit“).
 - „Mehr dazu“ führt nirgends hin.
 - Habits abhaken, Erfolgsquote berechnen und die Werte auf der Habits-Seite (Habits heute, Weitere Habits, Erfolgsquote) sind feste Demo-Werte.
 

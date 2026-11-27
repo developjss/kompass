@@ -9,7 +9,19 @@ struct HabitNeuBlatt: View {
     @State private var name = ""
     /// Eigenes Bild (nil = Standardbild „habit-1“)
     @State private var bild: UIImage?
-    @State private var bildWahl = false
+    /// Einheit und Tagesziel (nur Aussehen, noch nicht gespeichert)
+    @State private var einheit: Einheit = HabitNeuBlatt.startEinheit
+    @State private var ziel: Double = HabitNeuBlatt.startEinheit.standard
+    @State private var unterblatt: Unterblatt?
+
+    enum Unterblatt: String, Identifiable { case bild, einheit, ziel; var id: String { rawValue } }
+
+    /// Für Testbilder: `-einheit <id>` wählt die Einheit vor.
+    static var startEinheit: Einheit {
+        let a = ProcessInfo.processInfo.arguments
+        if let i = a.firstIndex(of: "-einheit"), i + 1 < a.count, let e = Einheit.alle.first(where: { $0.id == a[i + 1] }) { return e }
+        return .minuten
+    }
     @FocusState private var schreibt: Bool
 
     var body: some View {
@@ -37,7 +49,7 @@ struct HabitNeuBlatt: View {
             .padding(.bottom, 8)
 
             BlattGruppe {
-                Button { bildWahl = true } label: {
+                Button { unterblatt = .bild } label: {
                     BlattZeile(titel: "Bild") {
                         HabitVorschau(bild: bild, groesse: 26)
                         Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
@@ -47,9 +59,22 @@ struct HabitNeuBlatt: View {
             }
 
             BlattGruppe {
-                BlattZeile(titel: "Erlaubte Zeit", unter: "Täglich") { BlattWert("1 h") }
+                Button { unterblatt = .einheit } label: {
+                    BlattZeile(titel: "Einheit") { BlattWert(einheit.name) }
+                }
+                .buttonStyle(.plain)
                 BlattTrenner()
-                BlattZeile(titel: "Dann sperren bis") { BlattWert("Morgen") }
+                Button { unterblatt = .ziel } label: {
+                    BlattZeile(titel: "Ziel", unter: "Täglich") {
+                        if einheit.auswahl == .keine {
+                            Text(einheit.text(ziel)).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
+                        } else {
+                            BlattWert(einheit.text(ziel))
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(einheit.auswahl == .keine)
             }
 
             BlattGruppe {
@@ -96,7 +121,21 @@ struct HabitNeuBlatt: View {
         .padding(.top, 18)
         .padding(.bottom, 20)
         .foregroundStyle(DFarbe.text)
-        .sheet(isPresented: $bildWahl) { BildWahlBlatt(bild: $bild) }
+        .sheet(item: $unterblatt) { b in
+            switch b {
+            case .bild: BildWahlBlatt(bild: $bild)
+            case .einheit: EinheitBlatt(einheit: $einheit)
+            case .ziel: ZielBlatt(einheit: einheit, wert: $ziel)
+            }
+        }
+        .onChange(of: einheit) { _, neu in ziel = neu.standard }
+        .task {
+            // Für Testbilder: `-einheitWahl` / `-zielWahl` öffnet das Unterblatt direkt
+            let a = ProcessInfo.processInfo.arguments
+            guard a.contains("-einheitWahl") || a.contains("-zielWahl") else { return }
+            try? await Task.sleep(for: .seconds(0.8))
+            unterblatt = a.contains("-einheitWahl") ? .einheit : .ziel
+        }
         .presentationDetents([.height(612)])
         .presentationBackground { ZStack { Rectangle().fill(.ultraThinMaterial); Color(0x2C2C2C).opacity(0.62) } }
         .presentationCornerRadius(Dunkel.blattRadius)
@@ -106,7 +145,7 @@ struct HabitNeuBlatt: View {
 }
 
 /// Runder Knopf im Blattkopf (Ø 44, etwas heller als das Blatt).
-private struct BlattKnopf: View {
+struct BlattKnopf: View {
     var symbol: String
     var beschriftung: String
     var aktion: () -> Void
@@ -122,7 +161,7 @@ private struct BlattKnopf: View {
     }
 }
 
-private struct BlattGruppe<Inhalt: View>: View {
+struct BlattGruppe<Inhalt: View>: View {
     @ViewBuilder var inhalt: Inhalt
     var body: some View {
         VStack(spacing: 0) { inhalt }
@@ -131,7 +170,7 @@ private struct BlattGruppe<Inhalt: View>: View {
     }
 }
 
-private struct BlattZeile<Rechts: View>: View {
+struct BlattZeile<Rechts: View>: View {
     var titel: String
     var unter: String?
     @ViewBuilder var rechts: Rechts
@@ -152,7 +191,7 @@ private struct BlattZeile<Rechts: View>: View {
 }
 
 /// BlattWert mit Auf-/Ab-Pfeilen (Auswahl-Rad folgt mit der Funktion).
-private struct BlattWert: View {
+struct BlattWert: View {
     var text: String
     init(_ text: String) { self.text = text }
     var body: some View {
@@ -163,7 +202,7 @@ private struct BlattWert: View {
     }
 }
 
-private struct BlattTrenner: View {
+struct BlattTrenner: View {
     var body: some View { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, 18) }
 }
 
