@@ -15,13 +15,13 @@ struct CompassApp: App {
 
 /// Die drei Bereiche des Vorbilds.
 enum Bereich: String, CaseIterable, Hashable {
-    case home, apps, timer
+    case home, apps, habits
 
     var titel: String {
         switch self {
         case .home: "Home"
         case .apps: "Meine Apps"
-        case .timer: "Timer"
+        case .habits: "Habits"
         }
     }
 
@@ -29,7 +29,7 @@ enum Bereich: String, CaseIterable, Hashable {
         switch self {
         case .home: "pentagon"
         case .apps: "square.grid.2x2.fill"
-        case .timer: "play.fill"
+        case .habits: "play.fill"
         }
     }
 }
@@ -43,7 +43,8 @@ struct Hauptansicht: View {
             Group {
                 switch bereich {
                 case .home: HomeAnsicht()
-                default: LeereSeite(bereich: bereich)
+                case .habits: HabitsAnsicht()
+                case .apps: LeereSeite(bereich: bereich)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
