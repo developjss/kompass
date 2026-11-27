@@ -1,4 +1,5 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -45,7 +46,11 @@ struct FokusLiveAktivitaet: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Balken(stand: k.state, abgelaufen: k.isStale).padding(.horizontal, 6).padding(.top, 4)
+                    HStack(spacing: 12) {
+                        Balken(stand: k.state, abgelaufen: k.isStale)
+                        PauseKnopf(stand: k.state, abgelaufen: k.isStale)
+                    }
+                    .padding(.horizontal, 6).padding(.top, 4)
                 }
             } compactLeading: {
                 Image("live-kugel").resizable().scaledToFill()
@@ -81,15 +86,20 @@ private struct SperrAnsicht: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Compass").font(.system(size: 24, weight: .semibold))
                     Text(untertitel(name, stand, abgelaufen)).font(.system(size: 14)).foregroundStyle(.white.opacity(0.65))
-                    Zeit(stand: stand, abgelaufen: abgelaufen)
+                    Zeit(stand: stand, abgelaufen: abgelaufen, klein: false)
                         .font(.system(size: 40, weight: .medium))
+                        .frame(width: 150, alignment: .leading)
                         .padding(.top, 4)
                 }
                 Spacer(minLength: 8)
-                Image("live-kompass").resizable().scaledToFit()
-                    .frame(height: 96)
-                    .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: 58))
-                    .shadow(color: tuerkis.opacity(0.5), radius: 10)
+                VStack(spacing: 6) {
+                    Image("live-kompass").resizable().scaledToFit()
+                        .frame(height: 80)
+                        .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: 48))
+                        .shadow(color: tuerkis.opacity(0.5), radius: 10)
+                    PauseKnopf(stand: stand, abgelaufen: abgelaufen)
+                }
+                .frame(width: 112)
             }
             Balken(stand: stand, abgelaufen: abgelaufen)
         }
@@ -113,6 +123,8 @@ private struct SperrAnsicht: View {
 private struct Zeit: View {
     var stand: FokusAktivitaet.ContentState
     var abgelaufen: Bool
+    /// Kleine Plätze (Dynamic Island) dürfen die Zeit verkleinern, der Sperrbildschirm nicht
+    var klein = true
     var body: some View {
         Group {
             if abgelaufen || (!stand.pausiert && stand.ende <= .now) {
@@ -125,7 +137,7 @@ private struct Zeit: View {
         }
         .monospacedDigit()
         .lineLimit(1)
-        .minimumScaleFactor(0.6)
+        .minimumScaleFactor(klein ? 0.6 : 1)
         .multilineTextAlignment(.leading)
     }
 }
@@ -148,5 +160,33 @@ private struct Balken: View {
         .progressViewStyle(.linear)
         .tint(tuerkis)
         .shadow(color: tuerkis.opacity(0.8), radius: 4)
+    }
+}
+
+/// Pause / Weiter direkt auf dem Sperrbildschirm (läuft in der App über einen LiveActivityIntent).
+private struct PauseKnopf: View {
+    var stand: FokusAktivitaet.ContentState
+    var abgelaufen: Bool
+    var body: some View {
+        if !(abgelaufen || (!stand.pausiert && stand.ende <= .now)) {
+            Group {
+                if stand.pausiert {
+                    Button(intent: FokusWeiterIntent()) { knopf(symbol: "play.fill", titel: "Weiter") }
+                } else {
+                    Button(intent: FokusPausierenIntent()) { knopf(symbol: "pause.fill", titel: "Pause") }
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func knopf(symbol: String, titel: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: symbol).font(.system(size: 11, weight: .bold))
+            Text(titel).font(.system(size: 14, weight: .semibold))
+        }
+        .foregroundStyle(.black)
+        .padding(.horizontal, 12).frame(height: 30)
+        .background(Capsule().fill(.white))
     }
 }

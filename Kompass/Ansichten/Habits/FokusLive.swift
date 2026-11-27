@@ -10,7 +10,7 @@ import UserNotifications
 enum FokusLive {
     /// Kennung der laufenden Aktivität (die Aktivität selbst wird je Aufruf frisch geholt – sicher für Swift 6)
     private static var aktivID: String?
-    private static let mitteilungID = "fokus-ende"
+    private static let mitteilungID = FokusBefehle.mitteilungID
 
     // MARK: Live-Aktivität
 

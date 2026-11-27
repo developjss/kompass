@@ -68,10 +68,16 @@ struct FokusAnsicht: View {
         .statusBarHidden(phase == .laeuft)
         .onChange(of: phase) { _, p in UIApplication.shared.isIdleTimerDisabled = (p == .laeuft || p == .pause) }
         .onAppear {
+            // Knöpfe auf dem Sperrbildschirm steuern diesen Bildschirm
+            FokusBefehle.empfaenger = { pausieren in
+                if pausieren, phase == .laeuft { self.pausieren() }
+                if !pausieren, phase == .pause { self.weiter() }
+            }
             UIApplication.shared.isIdleTimerDisabled = (phase == .laeuft)
             if phase == .laeuft { FokusLive.starten(name: habit.name, gesamt: gesamt, rest: gesamt) }
         }
         .onDisappear {
+            FokusBefehle.empfaenger = nil
             UIApplication.shared.isIdleTimerDisabled = false
             if phase != .fertig { FokusLive.beendenSofort() }
         }
