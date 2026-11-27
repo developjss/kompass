@@ -31,7 +31,7 @@ struct HabitAuswahlBlatt: View {
             }
         }
         .padding(.horizontal, 16).padding(.top, 18).padding(.bottom, 16)
-        .habitBlatt(hoehe: erledigtSeite ? 420 : 352)
+        .habitBlatt(hoehe: erledigtSeite ? 420 : 384)
         .alert("\(hinweis ?? "") kommt im nächsten Schritt", isPresented: Binding(get: { hinweis != nil }, set: { if !$0 { hinweis = nil } })) {
             Button("OK", role: .cancel) {}
         }
@@ -42,71 +42,102 @@ struct HabitAuswahlBlatt: View {
     }
 
     private var auswahl: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                Text(habit.name).font(.system(size: 20, weight: .semibold)).accessibilityAddTraits(.isHeader)
+        let status = Fortschritt.status(wert: wert, ziel: habit.tagesziel)
+        let anteil = Fortschritt.anteil(wert: wert, ziel: habit.tagesziel)
+        return VStack(spacing: 0) {
+            // Kopf wie Opals Timer-Blatt: Schließen links, großes Bild mittig, Name darunter
+            ZStack(alignment: .top) {
                 HStack { BlattKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }; Spacer() }
+                ZStack {
+                    Image(habit.bild).resizable().scaledToFill()
+                        .frame(width: 112, height: 112).clipShape(Circle())
+                    Circle().strokeBorder(Color(0x2B2B2D), lineWidth: 5).frame(width: 124, height: 124)
+                    Circle().strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5).frame(width: 112, height: 112)
+                    // heutiger Fortschritt als türkiser Bogen
+                    Circle().trim(from: 0, to: anteil)
+                        .stroke(LinearGradient(colors: [Color(0x39DAD7), Color(0xA7FFFF)], startPoint: .top, endPoint: .bottom),
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 119, height: 119)
+                        .shadow(color: Color(0x2FD0D1).opacity(0.7), radius: 4)
+                        .opacity(anteil > 0 ? 1 : 0)
+                }
+                .frame(width: 124, height: 124)
+                .shadow(color: .black.opacity(0.45), radius: 18, y: 8)
+                .accessibilityHidden(true)
+                .padding(.top, 4)
             }
 
-            // Bild und heutiger Stand
-            HStack(spacing: 14) {
-                Image(habit.bild).resizable().scaledToFill().frame(width: 52, height: 52).clipShape(Circle())
-                    .overlay { Circle().strokeBorder(Color(0x2B2B2D), lineWidth: 3) }
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Heute").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(0x8E8E93))
-                    Text(Fortschritt.text(wert: wert, einheit: habit.einheit, ziel: habit.tagesziel))
-                        .font(.system(size: 17, weight: .medium)).monospacedDigit()
-                }
-                Spacer()
-                if Fortschritt.status(wert: wert, ziel: habit.tagesziel) == .erledigt {
-                    Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.black)
-                        .frame(width: 26, height: 26)
-                        .background(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
-                        .accessibilityLabel("Erledigt")
-                }
+            VStack(spacing: 4) {
+                Text(status == .erledigt ? "Heute erledigt" : "Heute · \(Fortschritt.text(wert: wert, einheit: habit.einheit, ziel: habit.tagesziel))")
+                    .font(.system(size: 15, weight: .semibold)).monospacedDigit()
+                    .foregroundStyle(DFarbe.akzent)
+                Text(habit.name).font(.system(size: 28, weight: .semibold)).accessibilityAddTraits(.isHeader)
             }
-            .padding(.horizontal, 4)
-            .padding(.top, 22)
+            .padding(.top, 16)
             .accessibilityElement(children: .combine)
 
-            HStack(spacing: 12) {
-                Kachel(symbol: "checkmark.circle", titel: "Erledigt", unter: "Fortschritt eintragen") { wechsel(true) }
+            HStack(spacing: 10) {
+                Kachel(symbol: "checkmark", titel: "Erledigt", unter: "Eintragen", hervor: status != .erledigt) { wechsel(true) }
                 // PLATZHALTER: Fokus und Bearbeiten folgen in den nächsten Schritten
                 Kachel(symbol: "timer", titel: "Fokus", unter: "Timer starten") { if let fokus { fokus() } else { hinweis = "Fokus" } }
                 Kachel(symbol: "pencil", titel: "Bearbeiten", unter: "Habit ändern") { if let bearbeiten { bearbeiten() } else { hinweis = "Bearbeiten" } }
             }
-            .padding(.top, 22)
+            .padding(.top, 24)
             Spacer(minLength: 0)
+        }
+        .background(alignment: .top) {
+            // Schein in der Farbe des Bilds von oben, wie bei Opals Regel-Blatt
+            Image(habit.bild).resizable().scaledToFill()
+                .frame(width: 320, height: 220).blur(radius: 60).opacity(0.55)
+                .mask(RadialGradient(colors: [.black, .clear], center: .top, startRadius: 10, endRadius: 230))
+                .offset(y: -60)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
     }
 }
 
-/// Kachel wie im Vorbild: dunkles Feld, feine Kante, Zeichen im Akzent-Verlauf oben links, Titel und graue Zeile unten.
+/// Kachel im Aufbau von Opals „New Rule“-Kacheln, verfeinert: Glas mit heller Oberkante, Zeichen im getönten Kreis,
+/// Titel und eine graue Zeile unten. Die wichtigste Kachel leuchtet leicht im Akzent.
 private struct Kachel: View {
     var symbol: String
     var titel: String
     var unter: String
+    var hervor = false
     var aktion: () -> Void
 
     var body: some View {
         Button(action: aktion) {
             VStack(alignment: .leading, spacing: 0) {
-                Image(systemName: symbol).font(.system(size: 22, weight: .semibold))
+                Image(systemName: symbol).font(.system(size: 17, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .topLeading, endPoint: .bottomTrailing))
-                Spacer(minLength: 12)
-                Text(titel).font(.system(size: 17, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
-                Text(unter).font(.system(size: 13)).foregroundStyle(Color(0x8E8E93))
-                    .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    .frame(width: 38, height: 38)
+                    .background {
+                        Circle().fill(LinearGradient(colors: [Color(Dunkel.akzentA).opacity(0.16), Color(Dunkel.akzentB).opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    }
+                    .overlay { Circle().strokeBorder(Color(Dunkel.akzentB).opacity(0.22), lineWidth: 0.5) }
+                Spacer(minLength: 10)
+                Text(titel).font(.system(size: 17, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.75)
+                Text(unter).font(.system(size: 13)).foregroundStyle(Color(0x8E8E93)).lineLimit(1).minimumScaleFactor(0.8)
                     .padding(.top, 2)
             }
-            .padding(.horizontal, 14).padding(.top, 16).padding(.bottom, 15)
+            .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 15)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 138)
-            .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .frame(height: 128)
+            .background {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(LinearGradient(colors: [Color.white.opacity(0.11), Color.white.opacity(0.05)], startPoint: .top, endPoint: .bottom))
+                    if hervor {
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(RadialGradient(colors: [Color(Dunkel.akzentB).opacity(0.16), .clear], center: .topLeading, startRadius: 0, endRadius: 140))
+                    }
+                }
+            }
             .overlay {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.12), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom), lineWidth: 0.75)
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(hervor ? 0.28 : 0.18), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
             }
             .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
