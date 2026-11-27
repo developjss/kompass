@@ -426,7 +426,7 @@ private struct NadelForm: Shape {
 }
 
 /// Feiner türkiser Staub im gefüllten Balken, leicht funkelnd (ruht bei „Bewegung reduzieren“).
-private struct Funkelstaub: View {
+struct Funkelstaub: View {
     @Environment(\.accessibilityReduceMotion) private var ruhig
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: ruhig)) { k in
