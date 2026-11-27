@@ -16,6 +16,10 @@ struct HabitNeuBlatt: View {
     @State private var einheit: Einheit = HabitNeuBlatt.startEinheit
     @State private var ziel: Double = HabitNeuBlatt.startEinheit.standard
     @State private var unterblatt: Unterblatt?
+    /// Ziel von „Mein Weg“, zu dem der Habit gehört (nil = kein Ziel)
+    @State private var gehoertZu: Ziel?
+    /// Seite „Gehört zu“ im selben Blatt (wie Opals Schwierigkeit)
+    @State private var zuordnung = ProcessInfo.processInfo.arguments.contains("-gehoertZu")
 
     enum Unterblatt: String, Identifiable { case bild, einheit, ziel; var id: String { rawValue } }
 
@@ -28,6 +32,42 @@ struct HabitNeuBlatt: View {
     @FocusState private var schreibt: Bool
 
     var body: some View {
+        ZStack {
+            if zuordnung {
+                ZielZuordnung(ziel: $gehoertZu) { withAnimation(ruhig ? nil : .spring(response: 0.42, dampingFraction: 0.86)) { zuordnung = false } }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else {
+                hauptSeite
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 20)
+        .foregroundStyle(DFarbe.text)
+        .sheet(item: $unterblatt) { b in
+            switch b {
+            case .bild: BildWahlBlatt(bild: $bild)
+            case .einheit: EinheitBlatt(einheit: $einheit)
+            case .ziel: ZielBlatt(einheit: einheit, wert: $ziel)
+            }
+        }
+        .onChange(of: einheit) { _, neu in ziel = neu.standard }
+        .task {
+            // Für Testbilder: `-einheitWahl` / `-zielWahl` öffnet das Unterblatt direkt
+            let a = ProcessInfo.processInfo.arguments
+            guard a.contains("-einheitWahl") || a.contains("-zielWahl") else { return }
+            try? await Task.sleep(for: .seconds(0.8))
+            unterblatt = a.contains("-einheitWahl") ? .einheit : .ziel
+        }
+        .presentationDetents([.height(612)])
+        .presentationBackground { ZStack { Rectangle().fill(.ultraThinMaterial); Color(0x2C2C2C).opacity(0.62) } }
+        .presentationCornerRadius(Dunkel.blattRadius)
+        .presentationDragIndicator(.visible)
+        .preferredColorScheme(.dark)
+    }
+
+    private var hauptSeite: some View {
         VStack(spacing: 12) {
             // Kopf: Schließen · Titel · Bearbeiten
             ZStack {
@@ -68,7 +108,7 @@ struct HabitNeuBlatt: View {
                 .buttonStyle(.plain)
                 BlattTrenner()
                 Button { unterblatt = .ziel } label: {
-                    BlattZeile(titel: "Ziel", unter: "Täglich") {
+                    BlattZeile(titel: "Tagesziel", unter: "Täglich") {
                         if einheit.auswahl == .keine {
                             Text(einheit.text(ziel)).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
                         } else {
@@ -108,10 +148,18 @@ struct HabitNeuBlatt: View {
             }
 
             BlattGruppe {
-                BlattZeile(titel: "Schwierigkeit") {
-                    Text("Leicht").font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E))
-                    Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
+                Button { withAnimation(ruhig ? nil : .spring(response: 0.42, dampingFraction: 0.86)) { zuordnung = true } } label: {
+                    BlattZeile(titel: "Gehört zu") {
+                        if let z = gehoertZu {
+                            Image(z.bild).resizable().scaledToFill().frame(width: 22, height: 22).clipShape(Circle())
+                                .overlay { Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5) }
+                                .accessibilityHidden(true)
+                        }
+                        Text(Ziel.zeilenText(gehoertZu)).font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E)).lineLimit(1)
+                        Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(0x9A9A9E))
+                    }
                 }
+                .buttonStyle(.plain)
             }
             .padding(.top, 10)
 
@@ -125,30 +173,6 @@ struct HabitNeuBlatt: View {
 
             HaltenKnopf(titel: "Gedrückt halten zum Festlegen") { dismiss() }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 18)
-        .padding(.bottom, 20)
-        .foregroundStyle(DFarbe.text)
-        .sheet(item: $unterblatt) { b in
-            switch b {
-            case .bild: BildWahlBlatt(bild: $bild)
-            case .einheit: EinheitBlatt(einheit: $einheit)
-            case .ziel: ZielBlatt(einheit: einheit, wert: $ziel)
-            }
-        }
-        .onChange(of: einheit) { _, neu in ziel = neu.standard }
-        .task {
-            // Für Testbilder: `-einheitWahl` / `-zielWahl` öffnet das Unterblatt direkt
-            let a = ProcessInfo.processInfo.arguments
-            guard a.contains("-einheitWahl") || a.contains("-zielWahl") else { return }
-            try? await Task.sleep(for: .seconds(0.8))
-            unterblatt = a.contains("-einheitWahl") ? .einheit : .ziel
-        }
-        .presentationDetents([.height(612)])
-        .presentationBackground { ZStack { Rectangle().fill(.ultraThinMaterial); Color(0x2C2C2C).opacity(0.62) } }
-        .presentationCornerRadius(Dunkel.blattRadius)
-        .presentationDragIndicator(.visible)
-        .preferredColorScheme(.dark)
     }
 }
 

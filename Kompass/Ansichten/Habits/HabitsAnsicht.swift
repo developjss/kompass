@@ -132,10 +132,7 @@ private struct HabitPlus: View {
 /// Ziele – Aufbau 1:1 wie die „Digital Detox“-Reihe des Vorbilds: Überschrift ohne Pfeil, graue Zeile, hohe Bildkarten
 /// (229 × 294 pt, Radius 32), unten unscharf und dunkel, Titel, getönte Unterzeile und eine Glas-Pille mit Dreieck. Noch ohne Funktion.
 private struct ZieleReihe: View {
-    private let ziele: [(titel: String, unter: String, dauer: String, bild: String)] = [
-        ("Pilotenschein", "Theorie und Praxis", "4 Monate", "ziel-1"),
-        ("Erster Alleinflug", "Ohne Fluglehrer", "6 Wochen", "ziel-2"),
-    ]
+    private let ziele = Ziel.demo
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -149,7 +146,7 @@ private struct ZieleReihe: View {
 
             ScrollView(.horizontal) {
                 HStack(spacing: 16) {
-                    ForEach(ziele, id: \.titel) { z in ZielKarte(titel: z.titel, unter: z.unter, dauer: z.dauer, bild: z.bild) }
+                    ForEach(ziele) { z in ZielKarte(titel: z.titel, unter: z.unter, dauer: z.dauer, bild: z.bild) }
                 }
                 .padding(.horizontal, 16)
             }
@@ -159,12 +156,16 @@ private struct ZieleReihe: View {
     }
 }
 
-private struct ZielKarte: View {
+struct ZielKarte: View {
     var titel: String
     var unter: String
     var dauer: String
     var bild: String
-    private let breite: CGFloat = 229, hoehe: CGFloat = 294, radius: CGFloat = 32
+    /// Maßstab (1 = Originalgröße 229 × 294 auf „Mein Weg“)
+    var s: CGFloat = 1
+    private var breite: CGFloat { 229 * s }
+    private var hoehe: CGFloat { 294 * s }
+    private var radius: CGFloat { 32 * s }
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -172,25 +173,25 @@ private struct ZielKarte: View {
             ZStack {
                 Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
                 Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
-                    .blur(radius: 18)
+                    .blur(radius: 18 * s)
                     .mask(LinearGradient(stops: [.init(color: .clear, location: 0.42), .init(color: .black, location: 0.7)], startPoint: .top, endPoint: .bottom))
                 LinearGradient(stops: [.init(color: .clear, location: 0.45), .init(color: .black.opacity(0.55), location: 0.78), .init(color: .black.opacity(0.92), location: 1)],
                                startPoint: .top, endPoint: .bottom)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(titel).font(.system(size: 24, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
-                Text(unter).font(.system(size: 16)).foregroundStyle(.white.opacity(0.42)).lineLimit(1)
+                Text(titel).font(.system(size: 24 * s, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
+                Text(unter).font(.system(size: 16 * s)).foregroundStyle(.white.opacity(0.42)).lineLimit(1)
                 HStack(spacing: 6) {
-                    Image(systemName: "play.fill").font(.system(size: 14))
-                    Text(dauer).font(.system(size: 18, weight: .medium))
+                    Image(systemName: "play.fill").font(.system(size: 14 * s))
+                    Text(dauer).font(.system(size: 18 * s, weight: .medium))
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 14).frame(height: 40)
+                .padding(.horizontal, 14 * s).frame(height: 40 * s)
                 .background { ZStack { Capsule().fill(.ultraThinMaterial); Capsule().fill(Color.black.opacity(0.38)) } }
                 .environment(\.colorScheme, .dark)
-                .padding(.top, 20)
+                .padding(.top, 20 * s)
             }
-            .padding(.leading, 24).padding(.bottom, 23)
+            .padding(.leading, 24 * s).padding(.trailing, 12 * s).padding(.bottom, 23 * s)
         }
         .frame(width: breite, height: hoehe)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))

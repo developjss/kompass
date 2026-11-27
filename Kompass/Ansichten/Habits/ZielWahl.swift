@@ -231,7 +231,7 @@ struct ZielBlatt: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HakenKopf(titel: "Ziel", schliessen: { dismiss() }, fertig: { wert = entwurf; dismiss() })
+            HakenKopf(titel: "Tagesziel", schliessen: { dismiss() }, fertig: { wert = entwurf; dismiss() })
                 .padding(.horizontal, 16).padding(.top, 18)
             VerlaufEtikett(text: "Täglich · \(einheit.name)").padding(.top, 18)
 

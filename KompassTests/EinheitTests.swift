@@ -67,3 +67,16 @@ struct EinheitTests {
         #expect(e.text(12) == "12 Liegestütze")
     }
 }
+
+/// Ziele von „Mein Weg“ und die Zeile „Gehört zu“.
+struct ZielTests {
+    @Test func zeilenText() {
+        #expect(Ziel.zeilenText(nil) == "Kein Ziel")
+        #expect(Ziel.zeilenText(Ziel.demo[0]) == "Pilotenschein")
+    }
+
+    @Test func demoZieleSindEindeutig() {
+        #expect(Set(Ziel.demo.map(\.id)).count == Ziel.demo.count)
+        #expect(Ziel.demo.map(\.titel) == ["Pilotenschein", "Erster Alleinflug"])
+    }
+}
