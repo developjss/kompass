@@ -15,7 +15,8 @@ struct HomeAnsicht: View {
                     HomeBuehne(scroll: scroll)
                     kopf.padding(.top, 58)
                 }
-                werte.padding(.top, 9)
+                .zIndex(0)
+                werte.padding(.top, 9).zIndex(1)
                 VStack(spacing: 17) {
                     ImmerErlaubtKarte().erscheint(da, 0)
                     BildschirmzeitKarte().erscheint(da, 1)
@@ -31,6 +32,17 @@ struct HomeAnsicht: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, neu in scroll = neu }
         .background(DFarbe.grund.ignoresSafeArea())
         .foregroundStyle(DFarbe.text)
+        .overlay(alignment: .top) {
+            ZStack {
+                Rectangle().fill(.ultraThinMaterial)
+                Rectangle().fill(Color.black.opacity(0.55))
+            }
+            .mask(LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom))
+            .frame(height: 96)
+            .opacity(min(1, max(0, (scroll - 40) / 120)))
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+        }
         .onAppear { withAnimation(ruhig ? nil : .easeOut(duration: 1.1)) { da = true } }
         .sheet(isPresented: $serieOffen) { SerieBlatt(serie: 1) }
     }
@@ -139,8 +151,8 @@ private struct HomeBuehne: View {
         .frame(maxWidth: .infinity)
         .clipped()
         .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
-        .offset(y: ruhig ? 0 : max(0, scroll) * 0.35)
-        .opacity(1 - min(0.75, max(0, scroll) / 320))
+        .offset(y: ruhig ? 0 : max(0, scroll) * 0.18)
+        .opacity(1 - min(0.85, max(0, scroll) / 260))
         .scaleEffect(scroll < 0 ? 1 + (-scroll / 400) : 1, anchor: .top)
         .accessibilityHidden(true)
     }
@@ -210,6 +222,7 @@ private struct BildschirmzeitKarte: View {
         ("Nachrichten", "25 min", [Color(0x5BF675), Color(0x25D366)], 0.36),
     ]
     private let symbole = ["camera.fill", "music.note", "message.fill"]
+    private let stunden: [Double] = [0, 0, 0, 0, 0, 0, 0.1, 0.35, 0.5, 0.2, 0.15, 0.3, 0.7, 0.45, 0.2, 0.25, 0.4, 0.85, 1, 0.65, 0.5, 0.3, 0.15, 0.05]
     var body: some View {
         HomeGlas(schimmer: Color(0x15302A)) {
             VStack(alignment: .leading, spacing: 0) {
@@ -218,6 +231,18 @@ private struct BildschirmzeitKarte: View {
                     Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Color(0xA3A8A5))
                 }
                 Text("2h 4m").font(.system(size: 26, weight: .semibold)).padding(.top, 10)
+                // Verlauf über den Tag (0–24 Uhr), feste Beispielwerte
+                HStack(alignment: .bottom, spacing: 4) {
+                    ForEach(Array(stunden.enumerated()), id: \.offset) { _, h in
+                        Capsule().fill(h > 0.6 ? AnyShapeStyle(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .bottom, endPoint: .top)) : AnyShapeStyle(Color.white.opacity(0.16)))
+                            .frame(height: max(3, 44 * h))
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(height: 44, alignment: .bottom)
+                .padding(.top, 18)
+                HStack { Text("0"); Spacer(); Text("6"); Spacer(); Text("12"); Spacer(); Text("18"); Spacer(); Text("24") }
+                    .font(.system(size: 11)).foregroundStyle(Color(0x7D8380)).padding(.top, 6)
                 VStack(spacing: 16) {
                     ForEach(Array(apps.enumerated()), id: \.offset) { i, a in
                         HStack(spacing: 12) {
@@ -235,7 +260,7 @@ private struct BildschirmzeitKarte: View {
                         }
                     }
                 }
-                .padding(.top, 62)
+                .padding(.top, 22)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 23).padding(.top, 22).padding(.bottom, 24)
@@ -255,10 +280,12 @@ private struct SerieKarte: View {
                 }
                 Spacer(minLength: 4)
                 ZStack(alignment: .bottom) {
-                    Flamme(groesse: 46)
-                    Text("1").font(.system(size: 26, weight: .heavy)).foregroundStyle(Color(0xFFE9A8)).shadow(color: Color(0xC77A12), radius: 2).offset(y: 4)
+                    Flamme(groesse: 58)
+                    Text("1").font(.system(size: 34, weight: .heavy)).foregroundStyle(LinearGradient(colors: [Color(0xFFF3C4), Color(0xF5C24C)], startPoint: .top, endPoint: .bottom))
+                        .shadow(color: Color(0x8A4B06), radius: 0, y: 1.5).shadow(color: Color(0xFFB347).opacity(0.8), radius: 6)
+                        .offset(y: 14)
                 }
-                .frame(width: 66)
+                .frame(width: 72).padding(.bottom, 10)
             }
             .padding(.horizontal, 21).padding(.vertical, 20)
         }

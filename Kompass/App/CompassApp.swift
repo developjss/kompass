@@ -49,12 +49,12 @@ struct Hauptansicht: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // Unterkante: Inhalt läuft weich ins Schwarz
             LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)
-                .frame(height: 150).allowsHitTesting(false).ignoresSafeArea()
+                .frame(height: 190).allowsHitTesting(false).ignoresSafeArea()
             VStack(spacing: 16) {
                 if bereich == .home { SitzungsLeiste() }
                 TabKapsel(bereich: $bereich)
             }
-            .padding(.bottom, 22)
+            .padding(.bottom, 52)
         }
         .ignoresSafeArea(edges: .bottom)
         .background(DFarbe.grund.ignoresSafeArea())
