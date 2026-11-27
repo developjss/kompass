@@ -88,22 +88,24 @@ struct HomeAnsicht: View {
     private var werte: some View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 5) {
-                etikett("Wert")
-                HStack(spacing: 8) {
-                    ZaehlZahl(ziel: da ? 79 : 0).font(.system(size: 26, weight: .semibold))
-                    Image(systemName: "triangle.fill").font(.system(size: 10)).foregroundStyle(Color(0x5FE3C0))
+                etikett("Wert", 0xB6F5E6, 0xC6F8E2)
+                HStack(spacing: 7) {
+                    ZaehlZahl(ziel: da ? 79 : 0).font(.system(size: 27, weight: .regular))
+                        .foregroundStyle(LinearGradient(colors: [Color(0xBCFFF5), Color(0xCFFFF6)], startPoint: .leading, endPoint: .trailing))
+                    Image(systemName: "arrowtriangle.up.fill").font(.system(size: 11)).foregroundStyle(Color(0xC1FFF1))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 22)
             trenner
             VStack(alignment: .leading, spacing: 5) {
-                etikett("Bildschirmzeit")
-                Text("2h 4m").font(.system(size: 26, weight: .semibold)).minimumScaleFactor(0.7).lineLimit(1)
+                etikett("Bildschirmzeit", 0xCFF9E0, 0xE5FCE6)
+                Text("2h 4m").font(.system(size: 27, weight: .regular)).minimumScaleFactor(0.7).lineLimit(1)
+                    .foregroundStyle(LinearGradient(colors: [Color(0xD7FFEF), Color(0xE3FFF1)], startPoint: .leading, endPoint: .trailing))
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 30).frame(width: 142, alignment: .leading)
             trenner
             VStack(alignment: .leading, spacing: 7) {
-                etikett("Ablenker")
+                etikett("Ablenker", 0xEBFFDB, 0xE9FFCD)
                 HStack(spacing: 5) {
                     AppKachel(symbol: "camera.fill", farben: [Color(0xF9CE34), Color(0xEE2A7B), Color(0x6228D7)], groesse: 19)
                     AppKachel(symbol: "music.note", farben: [Color(0x1ED760), Color(0x17A84A)], groesse: 19, rund: true)
@@ -117,8 +119,11 @@ struct HomeAnsicht: View {
         .accessibilityLabel("Wert 79, Bildschirmzeit 2 Stunden 4 Minuten, drei Ablenker")
     }
 
-    private func etikett(_ t: String) -> some View {
-        Text(t.uppercased()).font(.system(size: 12, weight: .medium)).tracking(0.3).foregroundStyle(Color(0x9EF0CF)).lineLimit(1).minimumScaleFactor(0.8)
+    /// Etikett in Großbuchstaben; die Farbe läuft über die ganze Zeile von Aqua (links) nach Limette (rechts) – aus dem Vorbild gemessen.
+    private func etikett(_ t: String, _ von: UInt32, _ bis: UInt32) -> some View {
+        Text(t.uppercased()).font(.system(size: 12, weight: .medium)).tracking(0.4)
+            .foregroundStyle(LinearGradient(colors: [Color(von), Color(bis)], startPoint: .leading, endPoint: .trailing))
+            .lineLimit(1).minimumScaleFactor(0.8)
     }
 
     private var trenner: some View { Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 43) }
