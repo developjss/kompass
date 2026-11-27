@@ -6,9 +6,9 @@ final class CompassUITests: XCTestCase {
     func testDreiTabs() {
         let app = XCUIApplication()
         app.launch()
-        for titel in ["Home", "Meine Apps", "Timer"] {
-            let tab = app.tabBars.buttons[titel]
-            XCTAssertTrue(tab.waitForExistence(timeout: 5), "Tab \(titel) fehlt")
+        for kennung in ["tab.home", "tab.apps", "tab.timer"] {
+            let tab = app.buttons[kennung]
+            XCTAssertTrue(tab.waitForExistence(timeout: 5), "Tab \(kennung) fehlt")
             tab.tap()
         }
     }

@@ -27,24 +27,128 @@ enum Bereich: String, CaseIterable, Hashable {
 
     var symbol: String {
         switch self {
-        case .home: "circle"
-        case .apps: "circle.grid.2x2.fill"
+        case .home: "pentagon"
+        case .apps: "square.grid.2x2.fill"
         case .timer: "play.fill"
         }
     }
 }
 
-/// Gerüst: drei Tabs, jede Seite noch leer (Block 1 baut die Tab-Kapsel und den Profil-Knopf).
+/// Gerüst: Seite, darüber schwebend die laufende Sitzung und die Tab-Kapsel der Vorlage (294 × 60 pt).
 struct Hauptansicht: View {
     @State private var bereich: Bereich = .home
 
     var body: some View {
-        TabView(selection: $bereich) {
+        ZStack(alignment: .bottom) {
+            Group {
+                switch bereich {
+                case .home: HomeAnsicht()
+                default: LeereSeite(bereich: bereich)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Unterkante: Inhalt läuft weich ins Schwarz
+            LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)
+                .frame(height: 150).allowsHitTesting(false).ignoresSafeArea()
+            VStack(spacing: 16) {
+                if bereich == .home { SitzungsLeiste() }
+                TabKapsel(bereich: $bereich)
+            }
+            .padding(.bottom, 22)
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .background(DFarbe.grund.ignoresSafeArea())
+    }
+}
+
+/// Tab-Kapsel: dunkles Glas, aktiver Tab hell mit eigener dunkler Fläche und Schimmer.
+struct TabKapsel: View {
+    @Binding var bereich: Bereich
+    @Namespace private var raum
+
+    var body: some View {
+        HStack(spacing: 0) {
             ForEach(Bereich.allCases, id: \.self) { b in
-                Tab(b.titel, systemImage: b.symbol, value: b) { LeereSeite(bereich: b) }
+                let an = b == bereich
+                Button { withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { bereich = b } } label: {
+                    VStack(spacing: 5) {
+                        Image(systemName: b.symbol).font(.system(size: 21, weight: .semibold)).frame(height: 24)
+                        Text(b.titel).font(.system(size: 10, weight: .medium))
+                    }
+                    .foregroundStyle(an ? Color.white : Color(0x8B908D))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background {
+                        if an {
+                            Capsule().fill(LinearGradient(colors: [Color(0x0A0B0A), Color(0x13201B)], startPoint: .top, endPoint: .bottom))
+                                .overlay(alignment: .bottom) { Capsule().fill(Color(0x5FE3C0).opacity(0.28)).frame(width: 46, height: 8).blur(radius: 7) }
+                                .padding(4)
+                                .matchedGeometryEffect(id: "aktiv", in: raum)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("tab.\(b.rawValue)")
+                .accessibilityAddTraits(an ? .isSelected : [])
             }
         }
-        .tint(DFarbe.text)
+        .frame(width: 294, height: 60)
+        .background {
+            ZStack {
+                Capsule().fill(.ultraThinMaterial)
+                Capsule().fill(Color(0x121413).opacity(0.86))
+            }
+        }
+        .overlay { Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(0.2), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+        .shadow(color: .black.opacity(0.6), radius: 16, y: 8)
+    }
+}
+
+/// Laufende Sitzung über der Tab-Kapsel: Glas-Kapsel 355 × 49 pt, Restzeit läuft, Lichtkante unten wandert.
+struct SitzungsLeiste: View {
+    @Environment(\.accessibilityReduceMotion) private var ruhig
+    private let start = Date()
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: ruhig)) { k in
+            let t = k.date.timeIntervalSince(start)
+            let rest = max(0, 4 * 3600 + 18 * 60 + 20 - Int(t))
+            HStack(spacing: 12) {
+                ZStack(alignment: .bottomTrailing) {
+                    AppKachel(symbol: "camera.fill", farben: [Color(0xF9CE34), Color(0xEE2A7B), Color(0x6228D7)], groesse: 26).offset(x: -8, y: -4)
+                    AppKachel(symbol: "graduationcap.fill", farben: [Color(0x3B6FE0), Color(0x23408F)], groesse: 22).offset(x: 6, y: -6)
+                    Text("+2").font(.system(size: 10, weight: .bold)).padding(.horizontal, 4).frame(height: 15)
+                        .background(Color(0x3A3F3C), in: RoundedRectangle(cornerRadius: 5, style: .continuous)).offset(x: 6, y: 5)
+                }
+                .frame(width: 44)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Lernzeit").font(.system(size: 15, weight: .semibold))
+                    Text(String(format: "%d:%02d:%02d", rest / 3600, rest / 60 % 60, rest % 60)).font(.system(size: 14)).foregroundStyle(Color(0xA3A8A5)).monospacedDigit()
+                }
+                Spacer()
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.open.fill").font(.system(size: 12, weight: .bold))
+                    Text("Entsperren").font(.system(size: 15, weight: .semibold))
+                }
+            }
+            .padding(.leading, 16).padding(.trailing, 18)
+            .frame(width: 355, height: 49)
+            .background {
+                ZStack {
+                    Capsule().fill(.ultraThinMaterial)
+                    Capsule().fill(LinearGradient(colors: [Color(0x16211D).opacity(0.9), Color(0x10302A).opacity(0.92)], startPoint: .top, endPoint: .bottom))
+                    // wandernde Lichtkante
+                    Capsule().fill(LinearGradient(colors: [.clear, Color(0x5FE3C0), Color(0xB9FFE9), Color(0x5FE3C0), .clear], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 210, height: 3).blur(radius: 2.5)
+                        .offset(x: ruhig ? 0 : CGFloat(sin(t * 0.9)) * 60, y: 23)
+                }
+                .clipShape(Capsule())
+            }
+            .overlay { Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(0.22), Color(0x5FE3C0).opacity(0.25)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+            .shadow(color: .black.opacity(0.55), radius: 14, y: 6)
+        }
+        .foregroundStyle(DFarbe.text)
+        .accessibilityElement(children: .combine)
     }
 }
 
