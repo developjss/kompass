@@ -153,6 +153,25 @@ enum DemoDaten {
         z.terminVerknuepfen(serie: "google:fahr2", titel: "Fahrstunde (Di)", ziel: auto.id, schritt: fahrstunden, seit: T.plus(tage: -21))
         z.terminVerknuepfen(serie: "google:flug", titel: "Schnupperflug", ziel: flug.id, schritt: nil, seit: T.plus(tage: -30))
         z.termineAbgleichen(heute: T) { Beispieltermine.termine(am: $0, google: true, apple: true, heute: T) }
+        // Umbau (Version 3): Profil, Journal und Ablenkung der letzten 28 Tage – erfunden, fester Zufall
+        z.profil.name = "Lena"
+        z.profil.alter = 23
+        z.profil.lebenslage = .studium
+        z.profil.verbessern = [.gewohnheiten, .wenigerHandy]
+        z.profil.spanne = .drei4
+        z.profil.onboardingFertig = true
+        var zz = Zufall(startwert &+ 7)
+        for i in 1...28 {
+            let tag = T.plus(tage: -i).text
+            let ablenkung = 60 + Int(zz.zahl() * 12) * 15
+            z.bildschirmzeit.ueberwacht.insert(tag)
+            z.bildschirmzeit.ablenkung[tag] = ablenkung
+            if zz.zahl() < 0.8 {
+                // Weniger Ablenkung → im Schnitt bessere Stimmung (damit §15 ein Muster findet)
+                let stimmung = min(5, max(1, 5 - ablenkung / 75 + Int(zz.zahl() * 2)))
+                z.journal[tag] = JournalEintrag(stimmung: stimmung, satz: ["Viel geschafft.", "Zäher Tag.", "Gut gelernt, danach Sport.", "Zu lange am Handy."][Int(zz.zahl() * 4)])
+            }
+        }
         // Demo-Verlauf: wöchentliche Stände von der Anlage bis heute (damit „Auf Kurs“ und Prognose etwas zeigen)
         for g in ziele {
             let jetztP = Fortschritt.ziel(g, in: z, heute: T)

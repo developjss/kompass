@@ -58,6 +58,12 @@ final class Speicher {
             if FileManager.default.fileExists(atPath: datei.path) {
                 let daten = try Data(contentsOf: datei)
                 zustand = try JSONDecoder.kompass.decode(Zustand.self, from: daten)
+                if zustand.version == 2 {
+                    // Version 2 → 3: neue Felder haben Standardwerte; wer schon Daten hat, braucht kein Onboarding.
+                    zustand.version = 3
+                    zustand.profil.onboardingFertig = true
+                    speichernJetzt()
+                }
                 if zustand.version < 2 {
                     // Version 1 kannte „Ziel als Zahl“ noch ohne Meilensteine; bisher gab es nur Demo-Daten → neu aufsetzen.
                     zustand = DemoDaten.zustand(heute: heute, jetzt: jetzt())

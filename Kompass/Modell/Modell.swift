@@ -544,7 +544,7 @@ struct Reflexion: Codable, Sendable, Hashable {
 
 /// Der ganze gespeicherte Zustand. Version hochzählen, wenn sich das Format ändert.
 struct Zustand: Codable, Sendable, Hashable {
-    static let aktuelleVersion = 2
+    static let aktuelleVersion = 3
     var version = Zustand.aktuelleVersion
     var ziele: [Ziel] = []
     var habits: [Habit] = []
@@ -563,6 +563,17 @@ struct Zustand: Codable, Sendable, Hashable {
     var chat: [ChatNachricht] = []
     /// Frühere Chats, neueste zuerst (höchstens 30)
     var chatVerlauf: [Chat] = []
+    // Version 3 (Umbau nach Vorbild)
+    var profil = Profil()
+    /// Journal je Tag („JJJJ-MM-TT“)
+    var journal: [String: JournalEintrag] = [:]
+    var bildschirmzeit = Bildschirmzeit()
+    var urlaub: [Urlaub] = []
+    /// Erreichte Meilensteine (Kennung → wann), §18
+    var meilensteine: [String: Date] = [:]
+    /// Tageswert je Tag (§19), gespeichert nach Tagesende
+    var tageswerte: [String: Int] = [:]
+    var proAbo = ProAbo()
 
     init(ziele: [Ziel] = [], habits: [Habit] = [], aufgaben: [Aufgabe] = [], sitzungen: [FokusSitzung] = []) {
         self.ziele = ziele
@@ -588,6 +599,13 @@ struct Zustand: Codable, Sendable, Hashable {
         chat = try c.decodeIfPresent([ChatNachricht].self, forKey: .chat) ?? []
         eigeneTermine = try c.decodeIfPresent([EigenerTermin].self, forKey: .eigeneTermine) ?? []
         chatVerlauf = try c.decodeIfPresent([Chat].self, forKey: .chatVerlauf) ?? []
+        profil = try c.decodeIfPresent(Profil.self, forKey: .profil) ?? Profil()
+        journal = try c.decodeIfPresent([String: JournalEintrag].self, forKey: .journal) ?? [:]
+        bildschirmzeit = try c.decodeIfPresent(Bildschirmzeit.self, forKey: .bildschirmzeit) ?? Bildschirmzeit()
+        urlaub = try c.decodeIfPresent([Urlaub].self, forKey: .urlaub) ?? []
+        meilensteine = try c.decodeIfPresent([String: Date].self, forKey: .meilensteine) ?? [:]
+        tageswerte = try c.decodeIfPresent([String: Int].self, forKey: .tageswerte) ?? [:]
+        proAbo = try c.decodeIfPresent(ProAbo.self, forKey: .proAbo) ?? ProAbo()
     }
 
     func ziel(_ id: UUID?) -> Ziel? { id.flatMap { i in ziele.first { $0.id == i } } }
