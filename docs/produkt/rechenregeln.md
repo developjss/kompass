@@ -182,6 +182,61 @@ Der Rückblick ist kein eigener Tab mehr. Home zeigt vier Karten zum Wischen (Er
 - Innerhalb einer Stufe wird nicht nach Größe des Abstands gewichtet – bewusst einfach.
 - Swift: `Rueckschau.reels`, `Rueckschau.ordnen`; Tests `KompassTests/RueckschauTests.swift`.
 
+## 15. Muster: Stimmung, Habits, Fokus, Ablenkung [VORSCHLAG – 27.11.2026, Freigabe des Gründers offen]
+
+Grundlage: Journal-Eintrag je Tag mit **Stimmung 1–5**. Betrachtet werden die letzten 56 Tage.
+| Muster | Gruppe A / Gruppe B | Wert |
+|---|---|---|
+| Habit und Stimmung | Tage, an denen Habit H geplant und erledigt war (Tagesanteil = 1) / geplant, nicht erledigt | Ø Stimmung |
+| Fokus und Stimmung | Fokus ≥ 30 Min / < 30 Min | Ø Stimmung |
+| Ablenkung und Stimmung | Ablenkung über Ziel / unter Ziel (§17) | Ø Stimmung |
+| Ablenkung und Habit | Ablenkung über Ziel / unter Ziel | Ø Tagesanteil von Habit H |
+| Auslastung und Stimmung | Auslastung ≥ 75 % / < 75 % (§9, gelesene Kalender) | Ø Stimmung |
+- **Bedingung:** je Gruppe ≥ 5 Tage, insgesamt ≥ 14 Tage mit Wert; Unterschied ≥ 0,5 Stimmungspunkte bzw. ≥ 20 Prozentpunkte.
+- **Rang:** größter Unterschied (in Stimmung: ×20, damit beide Arten vergleichbar sind) zuerst; Gleichstand → mehr Tage. Höchstens 3 sichtbar.
+- **Text:** „An Tagen mit Sport: Stimmung 4,1 statt 3,2“ (eine Nachkommastelle). Hinter (i): „Zusammenhang, keine Ursache. 23 Tage verglichen.“
+- **„Passt nicht“** blendet das Muster 56 Tage aus (nur auf dem Gerät). Die KI darf Muster in Worte fassen, nie selbst finden.
+
+## 16. Handy-Jahre (Onboarding) [VORSCHLAG – 27.11.2026]
+
+- **Stunden je Tag** = Mitte der gewählten Spanne: unter 1 h → 0,5 · 1–3 → 2 · 3–4 → 3,5 · 4–5 → 4,5 · 5–7 → 6 · über 7 → 8 · „weiß nicht“ → kein Zahlen-Bildschirm.
+- **Wache Tage je Jahr** = Stunden × 365 ÷ 16 (16 wache Stunden je Tag), ganzzahlig gerundet.
+- **Wache Jahre bis 80** = Stunden × 365 ÷ 16 × (80 − Alter) ÷ 365, ganzzahlig gerundet; Alter < 10 oder > 79 → nur Tage je Jahr.
+- **„Zurück“** = dieselbe Rechnung mit 30 % der Stunden (Ziel: 30 % weniger, §17).
+- Beispiel: 2 h, 21 Jahre → 46 Tage im Jahr, 7 Jahre bis 80; zurück 2 Jahre. Fußnote zeigt den Rechenweg.
+
+## 17. Bildschirmzeit: Ablenkung, Ziel, Sperre [VORSCHLAG – 27.11.2026]
+
+- **Gemessen** wird nur die Zeit in den Apps und Kategorien, die die Person als Ablenkung gewählt hat. Apple meldet erreichte **Schwellen** (15, 30, 45 … 480 Min je Tag); **Ablenkung heute = höchste erreichte Schwelle** (auf 15 Min genau, eher zu wenig als zu viel). Ohne Erlaubnis oder ohne Überwachung an dem Tag: „keine Daten“, nie 0.
+- **Ziel Ablenkung je Tag** = Stunden aus §16 × 0,7, auf 15 Min gerundet, mindestens 15 Min; frei änderbar. „Über Ziel“ = Ablenkung > Ziel.
+- **Hinweise** (Mitteilung, Häufigkeit wählbar): niedrig bei 100 % des Ziels · mittel bei 50 % und 100 % · hoch bei 25, 50, 75 und 100 %. Höchstens einer je Schwelle und Tag.
+- **Sperre nur im Fokus** [ENTSCHEIDUNG – 27.11.2026, Gründer]: Während einer Fokus-Sitzung mit Sperre sind die gewählten Apps gesperrt; sie endet mit der Sitzung. Vorzeitig beenden: **Leicht** 10 s Warteraum · **Steigend** 10 s + 10 s je weiterem Abbruch am selben Tag · **Durchziehen** (Pro) nicht möglich.
+- **Notfall-Pass:** hebt die Sperre für 60 Min auf, einmal je Kalenderwoche (Mo–So).
+- **Nie gesperrt:** die Apps unter „Immer erlaubt“ (Standard: Telefon, Health, Wallet, Uhr, Einstellungen).
+
+## 18. Serie und Meilensteine [VORSCHLAG – 27.11.2026]
+
+- **Kompass-Serie** (Flamme): Ein Tag zählt, wenn mindestens eines davon geschafft ist: eine Fokus-Sitzung ≥ 10 Min abgeschlossen · alle an dem Tag geplanten Habits erledigt (mindestens einer geplant) · Journal-Eintrag. Heute zählt erst, wenn erfüllt; ein Tag ohne bricht die Serie. **Urlaub:** Tage im Urlaubsmodus zählen nicht und brechen nicht.
+- **Meilensteine** (Sammelstücke): Serie 7 · 30 · 100 · 150 · 300 Tage; Fokusstunden gesamt 10 · 50 · 100 · 500 · 1.000 · 2.000 h. Fortschritt = min(Wert ÷ Schwelle, 1). Einmal erreicht, bleibt erreicht. Prozent anderer Nutzer werden nicht gezeigt (keine Daten).
+
+## 19. Tageswert (0–100) [VORSCHLAG – 27.11.2026]
+
+| Teil | Wert 0–1 | Gewicht |
+|---|---|---|
+| Habits | Ø Tagesanteil der heute geplanten Habits (§6) | 40 |
+| Fokus | Fokusminuten ÷ Fokusziel, höchstens 1. Fokusziel aus der Lebenslage: Schule/Ausbildung/Studium 90, Job/selbstständig 60, sonst 45 Min; änderbar | 25 |
+| Ablenkung | 1 bei ≤ Ziel, 0 bei ≥ 2 × Ziel, dazwischen linear (§17) | 25 |
+| Journal | 1 mit Eintrag heute | 10 |
+- **Fehlt ein Teil** (kein Habit geplant, keine Bildschirmzeit-Erlaubnis), werden die übrigen Gewichte anteilig auf 100 hochgerechnet. Ganzzahlig gerundet.
+- **Erster Tag:** „Wird ausgewertet“ mit Rest bis Mitternacht; der erste Wert erscheint nach dem ersten vollen Tag.
+- Je Tag gespeichert; Verlauf und Wochen-Ø im Rückblick.
+
+## 20. Onboarding: Profil und erste Vorschläge [VORSCHLAG – 27.11.2026]
+
+- **Gespeichert:** Name, Alter, Lebenslage, „Was willst du verbessern?“ (mehrere), Bildschirmzeit-Spanne. Daraus: Ziel Ablenkung (§17), Fokusziel (§19), Handy-Jahre (§16).
+- **Habit-Vorschläge** (höchstens 4 Karten, Reihenfolge der Antworten): Ziele erreichen → „Fokus für dein Ziel“ 30 Min werktags · Gewohnheiten → „Lesen“ 20 Min täglich · Weniger Handy → „Handyfreier Morgen“ Fokus mit Sperre 07–09 Uhr · Besser schlafen → „Handy weg ab 22 Uhr“ täglich · Mehr Ruhe → „Atmen“ 5 Min täglich · Anderes → „Spaziergang“ 20 Min 3× je Woche. Uhrzeit je Lebenslage: Schule/Ausbildung 15–17, Studium 09–11, Job 18–19, sonst 10–11.
+- Keine Erfolgsquoten anderer Nutzer – stattdessen der Grund: „Weil du ‚besser schlafen‘ gewählt hast“.
+
 ## 10. Prüfung
 
 Swift: alle Tests in `KompassTests/` müssen grün sein, dazu der Personen-Test `KompassTests/PersonenTests.swift` (sechs Personen × 3,5 Jahre, Bericht `docs/technik/berichte/personen-test-struktur-v3-2026-11-23.md`).

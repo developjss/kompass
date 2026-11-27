@@ -4,26 +4,21 @@ Stand: 27. November 2026. Einzelne Aufgaben, Pflichten und Termine stehen in `do
 
 ## 1. Ziel
 
-Kompass veröffentlichen, zuerst iPhone (App Store), danach Mac, später Android und Windows. [OFFEN] Nur für den Gründer oder als Produkt mit Abo.
+Kompass veröffentlichen, zuerst iPhone (App Store), danach Mac, später Android und Windows – als Produkt mit Abo (Pro, vorerst 4,99 € im Monat).
 
 ## 2. Phasen
 
 | Phase | Inhalt | Ende, wenn … |
 |---|---|---|
 | **0–1 Klick-Dummy, Entscheiden** ✓ | HTML-Prototyp, Rechenregeln, Technik SwiftUI | erledigt 23.11.2026 |
-| **2 iPhone-MVP** (läuft) | SwiftUI-App mit Home, Habits, Ziele, Assistent; **neu:** Journal statt Kalender-Tab, Berater mit gelesenen Kalendern, Muster; neues Design | Personen-Test grün, Gründer nutzt die App täglich |
-| **3 Version 1 Apple** | Onboarding mit Kalender-Zugriff, Widgets, Erinnerungen, Pro (StoreKit), Mac-App | TestFlight mit Freunden |
-| **4 Sync & weitere Plattformen** | Konto und Abgleich (Supabase EU), eigenes Google-Login, Android/Windows | Daten auf allen Geräten gleich |
-| **5 Store** | Store-Texte, Datenschutz, Preis/Abo, Review | App im Store |
-| **6 Lernen über alle Nutzer** | anonyme Zusammenfassung mit Einwilligung | `docs/produkt/konzepte/lernen-ueber-alle-nutzer.md` umgesetzt |
+| **2 Umbau, fertig bis auf Konten** (läuft) | Umbau nach Vorbild Opal mit Journal, Berater, Bildschirmzeit, Onboarding, Paywall – Blöcke A–P in `docs/produkt/konzepte/umbau-nach-vorbild.md` §9 | App vollständig auf dem iPhone, Platzhalter benannt, Tests grün |
+| **3 Store** | App Store Connect, Apple-Berechtigung Family Controls, Rechtstexte, Bilder-Lizenz, TestFlight | App im Store |
+| **4 Server und Konten** | Konto-Abgleich (Supabase EU), Telefon/E-Mail, Einladungen und Belohnungen, Lernen über alle | Platzhalter leben |
+| **5 Weitere Geräte** | Mac, später Android/Windows | – |
 
-## 3. Reihenfolge in Phase 2 [VORSCHLAG]
+## 3. Reihenfolge in Phase 2
 
-1. Design-Entwurf neu, Entscheidung des Gründers.
-2. Journal-Tab ersetzt den Kalender-Tab (Wochenreflexion zieht um).
-3. Berater: freie Zeit aus allen Kalendern, Termine über Apples Termin-Fenster.
-4. Muster als Rechenregel §15.
-5. Design und Statistiken auf allen Seiten neu.
+Designsystem → Figur → Datenmodell → Rechnung → Bildschirmzeit → Navigation → Onboarding (3 Blöcke) → Home → Habits/Ziele → Editoren → Fokus → Journal/Assistent → Profil/Pro → Abschluss. Begründung: `umbau-nach-vorbild.md` §7.
 
 ## 4. Risiken
 

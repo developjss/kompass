@@ -21,18 +21,224 @@
   ],
   "aufgaben": [
     {
-      "id": "v-entscheiden",
-      "titel": "Entscheiden: Vorbild-Regel, nur dunkel, Bildschirmzeit, Foto-Quelle, Rechenregeln §16–§18",
-      "wer": "ceo",
+      "id": "u-a",
+      "titel": "Umbau Block A: Designsystem nur dunkel",
+      "wer": "claude",
       "status": "offen",
       "prio": 1,
       "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "design"
+    },
+    {
+      "id": "u-b",
+      "titel": "Umbau Block B: Figur und Bildplätze",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "design",
+      "nach": [
+        "u-a"
+      ]
+    },
+    {
+      "id": "u-c",
+      "titel": "Umbau Block C: Datenmodell Version 3",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "store-local",
+      "nach": [
+        "u-b"
+      ]
+    },
+    {
+      "id": "u-d",
+      "titel": "Umbau Block D: Rechnung §15–§20",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "engine",
+      "nach": [
+        "u-c"
+      ]
+    },
+    {
+      "id": "u-e",
+      "titel": "Umbau Block E: Bildschirmzeit-Grundlage",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "swift",
+      "nach": [
+        "u-d"
+      ]
+    },
+    {
+      "id": "u-f",
+      "titel": "Umbau Block F: Navigation: Tab-Kapsel, Profil-Menü, Kalender-Tab weg",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "app",
+      "nach": [
+        "u-e"
+      ]
+    },
+    {
+      "id": "u-g",
+      "titel": "Umbau Block G: Onboarding 1: Gespräch",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "app",
+      "nach": [
+        "u-f"
+      ]
+    },
+    {
+      "id": "u-h",
+      "titel": "Umbau Block H: Onboarding 2: Handy-Jahre, Erlaubnisse, Paywall",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "app",
+      "nach": [
+        "u-g"
+      ]
+    },
+    {
+      "id": "u-i",
+      "titel": "Umbau Block I: Onboarding 3: Vorschläge, Willkommen",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "app",
+      "nach": [
+        "u-h"
+      ]
+    },
+    {
+      "id": "u-j",
+      "titel": "Umbau Block J: Home",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "heute",
+      "nach": [
+        "u-i"
+      ]
+    },
+    {
+      "id": "u-k",
+      "titel": "Umbau Block K: Habits und Ziele",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "habits",
+      "nach": [
+        "u-j"
+      ]
+    },
+    {
+      "id": "u-l",
+      "titel": "Umbau Block L: Editor-Blätter",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "neu",
+      "nach": [
+        "u-k"
+      ]
+    },
+    {
+      "id": "u-m",
+      "titel": "Umbau Block M: Fokus mit Sperre und Warteraum",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "fokus",
+      "nach": [
+        "u-l"
+      ]
+    },
+    {
+      "id": "u-n",
+      "titel": "Umbau Block N: Journal und Assistent",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "kalender",
+      "nach": [
+        "u-m"
+      ]
+    },
+    {
+      "id": "u-o",
+      "titel": "Umbau Block O: Profil, Einstellungen, Pro",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "settings",
+      "nach": [
+        "u-n"
+      ]
+    },
+    {
+      "id": "u-p",
+      "titel": "Umbau Block P: Abschluss: Tests, Roter Faden, Platzhalter",
+      "wer": "claude",
+      "status": "offen",
+      "prio": 1,
+      "phase": 2,
+      "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §9",
+      "landkarte": "qa",
+      "nach": [
+        "u-o"
+      ]
+    },
+    {
+      "id": "v-entscheiden",
+      "titel": "Entscheiden: Vorbild-Regel, nur dunkel, Bildschirmzeit, Foto-Quelle, Rechenregeln §16–§18",
+      "wer": "ceo",
+      "status": "erledigt",
+      "prio": 1,
+      "phase": 2,
       "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §7 Block 0",
-      "landkarte": "decide"
+      "landkarte": "decide",
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "v-bilder",
-      "titel": "Vorbild: Bilder von Opals Haupt-Home und Bildschirmaufnahmen der Animationen nachliefern",
+      "titel": "Vorbild: Bildschirmaufnahmen der Animationen nachliefern; Bilder-Lizenz schriftlich ablegen",
       "wer": "ceo",
       "status": "offen",
       "prio": 2,
@@ -42,16 +248,17 @@
     },
     {
       "id": "j-design",
-      "titel": "Design und Onboarding nach Vorbild Opal (Bauplan Blöcke 1–14)",
+      "titel": "Bauplan Umbau nach Vorbild Opal (A–P) erstellt",
       "wer": "claude",
-      "status": "wartet",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "landkarte": "design",
       "quelle": "docs/produkt/konzepte/umbau-nach-vorbild.md §7",
       "nach": [
         "v-entscheiden"
-      ]
+      ],
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "j-entscheiden",
@@ -65,19 +272,20 @@
     },
     {
       "id": "j-personentest",
-      "titel": "Personen-Test Journal: 4 Personen × 3 Wochen",
+      "titel": "Personen-Test Journal: 4 Personen × 3 Wochen – aufgegangen in Umbau-Blöcken",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "quelle": "docs/produkt/konzepte/journal-und-berater.md §11",
-      "landkarte": "qa"
+      "landkarte": "qa",
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "j-journal",
-      "titel": "Journal-Tab statt Kalender-Tab (Stimmung, ein Satz, Wochenreflexion)",
+      "titel": "Journal-Tab statt Kalender-Tab (Stimmung, ein Satz, Wochenreflexion) – aufgegangen in Umbau-Blöcken",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 1,
       "phase": 2,
       "nach": [
@@ -85,33 +293,36 @@
         "j-personentest"
       ],
       "quelle": "docs/produkt/konzepte/journal-und-berater.md §4",
-      "landkarte": "kalender"
+      "landkarte": "kalender",
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "j-berater",
-      "titel": "Berater: freie Zeit aus allen Kalendern, Onboarding-Schritt Kalender",
+      "titel": "Berater: freie Zeit aus allen Kalendern, Onboarding-Schritt Kalender – aufgegangen in Umbau-Blöcken",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "phase": 2,
       "nach": [
         "j-journal"
       ],
       "quelle": "docs/produkt/konzepte/journal-und-berater.md §6",
-      "landkarte": "lotse"
+      "landkarte": "lotse",
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "j-muster",
-      "titel": "Muster als Rechenregel §15 (Freigabe des Gründers)",
+      "titel": "Muster als Rechenregel §15 (Freigabe des Gründers) – aufgegangen in Umbau-Blöcken",
       "wer": "claude",
-      "status": "offen",
+      "status": "erledigt",
       "prio": 2,
       "phase": 2,
       "nach": [
         "j-journal"
       ],
       "quelle": "docs/produkt/konzepte/journal-und-berater.md §5",
-      "landkarte": "engine"
+      "landkarte": "engine",
+      "erledigtAm": "2026-11-27"
     },
     {
       "id": "p0-klickdummy",

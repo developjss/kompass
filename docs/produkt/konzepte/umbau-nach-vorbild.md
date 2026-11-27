@@ -1,9 +1,11 @@
-# Umbau nach Vorbild „Opal“ – Analyse, Designsystem, Bauplan [VORSCHLAG – 27.11.2026, Freigabe des Gründers offen]
+# Umbau nach Vorbild „Opal“ – Analyse, Designsystem, Bauplan [ENTSCHEIDUNG – 27.11.2026: nachbauen, nur dunkel, Bildschirmzeit; Bilder und Rechenregeln offen]
 
 Auftrag des Gründers (27.11.2026): Kompass im Design der App **Opal** (Bildschirmzeit und Fokus) nachbauen – Aufbau, Abläufe, Abstände, Farben, Helligkeit, Animationen –, mit unseren Inhalten und Anforderungen. Vor dem Store wird das Design eigenständig gemacht.
-Grundlage: 89 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeitlicher Folge, Home 9, Übersichten 6, Fenster 21, Fokus 2. Sie liegen nur lokal beim Gründer (`~/Developer/Kompass-Vorbild`), nicht im Repo.
+Grundlage: 121 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeitlicher Folge, Home 18, Profil 23, Übersichten 6, Fenster 21, Fokus 2. Sie liegen nur lokal beim Gründer (`~/Developer/Kompass-Vorbild`), nicht im Repo.
 
-**Grenze** (vorgeschlagene Regel, `docs/team/arbeitsweise.md` §2): Nachgebaut werden Aufbau, Maße, Schriftgrößen, Farben, Licht und Bewegung. **Nicht** übernommen werden Bilder, 3D-Figuren (Opal-Stein, Fels, Höhle), Fotos, Icons, Logo, Siegel, Markennamen und Texte von Opal – an ihrer Stelle stehen eigene Inhalte in gleicher Größe und Lage. Texte schreiben wir neu, auf Deutsch, gleich lang und im gleichen Ton.
+**Entscheidungen des Gründers (27.11.2026):** 1 zu 1 nachbauen und fertig machen, passend zu Kompass · nur dunkel (hell = dunkel) · Bildschirmzeit: erst messen, sperren nur im Fokus · Paywall, Anmeldung (Apple, Telefon, E-Mail) und Freunde einladen gehören dazu; was ein Konto oder einen Server braucht, wird ein sichtbarer Platzhalter (§9) · Preis vorerst 4,99 € im Monat, änderbar.
+
+**Bilder** [OFFEN]: Der Gründer möchte Opals Bilder 1 zu 1 und sagt, er habe die Rechte. Claude schneidet keine Bilder, 3D-Figuren, Fotos, Logos oder Texte aus Opals Screenshots aus – die Rechte lassen sich hier nicht prüfen, und am 27.11. hieß es noch, 1 zu 1 kopieren dürfe man nicht. Stattdessen: Jede Bildstelle wird ein **benannter Platz** in exakt Opals Größe und Lage (`Assets.xcassets`, z. B. `vorbild-stein-intro`), gefüllt mit eigenem Inhalt (§4). Liegt eine schriftliche Lizenz von Opal vor, legt der Gründer die Original-Dateien dort ab – ohne Codeänderung. Texte schreiben wir neu auf Deutsch, gleich lang, gleicher Ton.
 
 ## 1. Was Opal ausmacht (Befund)
 
@@ -16,6 +18,10 @@ Grundlage: 89 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeitl
 7. **Ein Akzent-Verlauf.** Limette #D3FFA0 → Aqua #A9FBEF für große Zahlen, Fortschritt, leuchtende Ränder, Unterglühen der Knöpfe.
 8. **Große Momente mit Zahlen.** Eine Zahlen-Walze (12 · 13 · 14 · 15 Jahre) rollt und rastet ein; Mitte groß und scharf, Rand klein und unscharf.
 9. **Belohnung als Sammeln.** Meilensteine als Steine auf einem Sockel; Antippen bricht sie auf, darunter der Fortschritt („0/100 Tage“).
+10. **Home = Bühne + Karten.** Oben Logo, rechts Serie (Flamme + Zahl), Pro-Plakette, Profil-Knopf. Darunter die Figur groß im Fels, „Wird ausgewertet · 12:00 übrig“, drei Werte (Wert · Bildschirmzeit · Ablenker). Darunter Karten: Einrichtungs-Hinweis mit Knopf, „Erster Schritt geschafft“ mit Flamme, Erkenntnisse (gesperrt bis ein Tag voll ist). Über der Tab-Leiste schwebt die laufende Sitzung („Study Time 2:08:09 · Entsperren“).
+11. **Entsperren mit Reibung.** „Ich will nutzen …“ → Spiel wählen (Farbwort, Merken) → Merk-Kacheln → Atmen mit Lichtring und „Warte 4 s“ → „Für … 5 Minuten“ als Rad → Entsperren.
+12. **Profil als schwebendes Menü** (oben rechts): Name, Sperrbildschirme, Hinweise, Teilen, Einstellungen. Einstellungen als langes Blatt in Gruppen: Pro-Karte, Konto, Personalisieren, App-Symbole, Hilfe, Integrationen, Berechtigungen, Erweitert, Teilen, Sonstiges, Folgen, Version.
+13. **Kleine Erlebnisse:** Notfall-Pass als Ausweis mit Strichcode und „Halten zum Einlösen“ (rot), Urlaubsmodus, Belohnungen für Einladungen mit Code aus 5 Kacheln.
 
 ## 2. Designsystem (gemessen, @3x → pt)
 
@@ -49,28 +55,35 @@ Grundlage: 89 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeitl
 |---|---|---|
 | Intro: Stein bricht auf, Feuer kommt zum Vorschein | Eigene Figur (siehe §4) zeigt „was in dir steckt“ | **übernehmen** (eigene Figur) |
 | Gespräch: Name, Ziel, Alter, Beruf, Bildschirmzeit | Name, „Was willst du verbessern?“ (Ziele erreichen, Gewohnheiten, weniger Handy, besser schlafen, mehr Ruhe, Anderes), Alter, Lebenslage (Schule, Ausbildung, Studium, Job, selbstständig, Eltern), Bildschirmzeit-Schätzung | **übernehmen** – Profil für Vorschläge und Muster |
-| Anmeldung Apple/Telefon/E-Mail | kein Konto bis Phase 4 | **weglassen** |
+| Anmeldung Apple/Telefon/E-Mail | alle drei Knöpfe; Apple funktioniert auf dem Gerät, Telefon und E-Mail sind Platzhalter bis zum Server | **übernehmen** |
 | „Du verbringst 13 Jahre am Handy“ (Walze) | Fest gerechnet aus der Schätzung: Stunden/Tag × 365 ÷ 16 Wachstunden → Tage/Jahr; × verbleibende Jahre bis 80 → Jahre. Fußnote mit Rechenweg | **übernehmen** – neue Rechenregel §16 |
 | „Opal holt dir 4 Jahre zurück“ | nur mit Annahme im Klartext („wenn du 30 % weniger nutzt“), fest gerechnet | **anpassen** |
 | Erlaubnis Bildschirmzeit, Mitteilungen (Dialog im Leuchtrahmen mit Pfeil) | Bildschirmzeit, Kalender, Mitteilungen – je ein Schritt | **übernehmen** |
 | Zusammenfassung mit drei Nutzen | „Dein Plan“: drei Zeilen aus den Antworten | **übernehmen** |
-| Testphase-Erinnerung, Paywall-Karussell | erst nach Preis-Entscheidung (Pro) | **später** – Recht/Preise brauchen Freigabe |
+| Testphase-Erinnerung, Paywall-Karussell, „Andere Pläne“ | Pro: 4,99 € im Monat mit 7 Tagen gratis, Jahr 39,99 € [VORSCHLAG]; StoreKit 2 mit Test-Konfiguration, echte Produkte in App Store Connect später | **übernehmen** |
 | „Lass uns Regeln festlegen“ + Regel-Karten | „Lass uns deine ersten Habits festlegen“: Vorschläge als Foto-Karten (Lesen 20 Min, Sport 3×/Woche, Handyfreier Morgen …), aus den Antworten nach festen Regeln | **übernehmen** |
 | „Funktioniert für 97 % der Nutzer wie dich“ | Wir haben diese Daten nicht – das wäre erfunden | **weglassen**; später nur mit „Lernen über alle Nutzer“ und Einwilligung |
 | Ablenkungen wählen (Apple-Auswahlliste) | gleiche Apple-Liste: „Welche Apps halten dich ab?“ | **übernehmen** (Bildschirmzeit, §5) |
-| Freunde einladen mit Belohnung | kein Server, rechtlich heikel | **weglassen** |
+| Freunde einladen, Code, Belohnungen, Geschenkkarte | Teilen funktioniert (Link und Code); Zählen der Anmeldungen und Belohnungen brauchen den Server → Platzhalter | **übernehmen** |
 | Willkommen mit Konfetti | ja | **übernehmen** |
 | Meilenstein-Steine sammeln, „Besitzt 27 %“ | Meilensteine für Serien und Fokusstunden (7/30/100/300 Tage, 10/50/100/500/1000 h) als Sammelstücke; ohne Prozent anderer Nutzer | **übernehmen**, Prozent weglassen |
 | Apps-Seite (blockierte Apps, Regeln, Einstellungen als Karten) | Habits-Seite im selben Aufbau: oben heute fällige Habits als Reihe, darunter Habit-Karten, unten Einstellungen-Karten | **übernehmen** |
 | Timer (Digitaluhr, ± , Schnellwahl ∞/15m/30m/1h, Lineal, „Für dich“-Karten) | Fokus-Timer mit Aufgabe/Ziel; „Für dich“ = Fokus-Vorschläge (Lernen, Lesen, Tiefe Arbeit) | **übernehmen** |
 | Hard Mode (nicht vorzeitig beenden) | „Durchziehen“-Schalter im Fokus | **übernehmen** (Pro offen) |
 | Warteraum (Lichtring, „Warte 11 s“, Atemübung) | Pause, bevor man den Fokus abbricht | **übernehmen** |
-| Geräusche und Einschlafgeschichten | eigene Inhalte fehlen | **später** |
+| Geräusche und Einschlafgeschichten | Aufbau fertig, Inhalte als Platzhalter (eigene Aufnahmen fehlen) | **übernehmen, Inhalt später** |
 | Editor-Blätter (Von/Bis, Tage, Schwierigkeit, Hold to Commit, „Ungespeichert“) | Habit-, Ziel-, Aufgaben-Editor | **übernehmen** |
 | Tab-Leiste mit 3 Tabs | 5 Tabs (Home, Journal, Assistent, Habits, Ziele) in derselben Kapsel | **anpassen** |
-| Gesprächs-Oberfläche | auch der Assistent (Berater) spricht so | **übernehmen** |
+| Gesprächs-Oberfläche | auch der Assistent (Berater) und das tägliche Journal sprechen so | **übernehmen** |
+| Home (Figur, drei Werte, Karten, schwebende Sitzung) | Figur · Tageswert (§19) · Ablenkung (§17) · Habits heute; Karten = Signale (§12), Serie, Erkenntnisse = Muster (§15) und Rückblick-Karten (§14); schwebend: laufender Fokus | **übernehmen** |
+| Entsperren mit Spielen, Atmen, Rad | Fokus vorzeitig beenden: Warteraum mit Atmen oder Merk-Spiel, dann „Für … Minuten“ | **übernehmen** |
+| Profil-Menü und Einstellungen | gleiche Gruppen mit Kompass-Inhalten (Konto, Hinweise, Warteraum, Sperrbildschirme, App-Symbole, Hilfe = Assistent, Apple Health, Kalender, Bildschirmzeit, Daten, Teilen, Wiederherstellen, Über) | **übernehmen** |
+| Notfall-Pass, Urlaubsmodus, PIN, Löschschutz | Notfall-Pass (§17), Urlaubsmodus (§18) ja; PIN und Löschschutz als Platzhalter | **übernehmen** |
+| Sperrbildschirm-Themen (Zitate, Witze, Haiku) | eigene Texte, wenige Themen | **übernehmen** |
+| Apple Health (Schritte, Schlaf) | gut für Muster (Schlaf und Stimmung) – neues Framework, Rückfrage | **Platzhalter** |
+| Opal für Mac, QR-Code, Community, Social-Links | Platzhalter-Zeilen | **Platzhalter** |
 
-**Folge:** Opal ist dunkel. Der helle Neuentwurf vom 27.11. (Creme, Glas) und „Nachtblau“ werden damit abgelöst – [OFFEN] Entscheidung des Gründers: Kompass nur dunkel?
+**Folge:** Kompass wird nur dunkel [ENTSCHEIDUNG – 27.11.2026]. Der helle Neuentwurf vom 27.11. und „Nachtblau“ sind abgelöst.
 
 ## 4. Eigene Figur statt Opal-Stein
 
@@ -87,39 +100,72 @@ Grundlage: 89 Bildschirmfotos (iPhone, 393 × 852 pt) – Onboarding 51 in zeitl
 - Daten bleiben auf dem Gerät – gut für Datenschutz, passt zum Journal.
 - Neue Frameworks und Erweiterungen = Rückfrage nach `CLAUDE.md`.
 
-## 6. Neue Rechenregeln (je Freigabe des Gründers)
+## 6. Neue Rechenregeln (ausformuliert in `docs/produkt/rechenregeln.md`, Freigabe des Gründers offen)
 
-- **§15 Muster** (aus `journal-und-berater.md` §5), ergänzt um Bildschirmzeit als Gruppe.
-- **§16 Handy-Jahre:** Stunden je Tag = Mitte der gewählten Spanne (unter 1 h → 0,5; 1–3 → 2; 3–4 → 3,5; 4–5 → 4,5; 5–7 → 6; 7+ → 8; „weiß nicht“ → kein Zahlen-Bildschirm). Wache Tage je Jahr = Stunden × 365 ÷ 16. Wache Jahre bis 80 = wache Tage je Jahr × (80 − Alter) ÷ 365. „Zurück“ = dieselbe Rechnung mit 30 % weniger. Ganze Zahlen, Fußnote mit Rechenweg. Beispiel: 2 h, 21 Jahre → 46 Tage im Jahr, 7 Jahre bis 80; zurück 2 Jahre. (Opal rechnet sichtbar mit der oberen Grenze: 3 h → 68 Tage – wir nehmen die Mitte, das ist ehrlicher.)
-- **§17 Bildschirmzeit-Signale:** Schwellen 30/60/120 Min je gewählter App-Gruppe und Tag; Signal und Muster nur aus gemeldeten Schwellen.
-- **§18 Meilensteine:** Serien 7/30/100/150/300 Tage, Fokusstunden 10/50/100/500/1000/2000.
-- **Habit-Vorschläge im Onboarding:** feste Tabelle Antwort → Vorschlag.
+§15 Muster (Stimmung, Habits, Fokus, Ablenkung, Auslastung) · §16 Handy-Jahre · §17 Bildschirmzeit (Ablenkung, Ziel, Hinweise, Sperre nur im Fokus, Notfall-Pass) · §18 Serie und Meilensteine · §19 Tageswert 0–100 · §20 Onboarding-Profil und erste Vorschläge. Sie greifen ineinander: Die Antworten im Onboarding setzen Ziel Ablenkung (§17) und Fokusziel (§19); Habits (§6), Fokus und Journal speisen Tageswert, Serie und Muster.
 
-## 7. Bauplan in Blöcken
+## 7. Prüfung der Phasen und Blöcke (27.11.2026)
 
-Jeder Block: ein Baustein, Tests, Lotse mitziehen, iPhone und Simulator, eigener PR. Alle Blöcke greifen auf §2 zu – Werte stehen einmal in `Kompass/Design/` (`Opal`-Werte heißen dort neutral, z. B. `Licht`, `Kapsel`).
+Der erste Plan war richtig im Kern (Designsystem zuerst, ein Baustein je Block). Beim Prüfen gegen die neuen Bilder und Entscheidungen fielen acht Dinge auf:
+1. **Reihenfolge Bildschirmzeit:** Das Onboarding fragt schon nach Erlaubnis und Ablenkern. Die Bildschirmzeit-Grundlage muss deshalb **vor** dem Onboarding stehen, nicht am Ende.
+2. **Datenmodell fehlte:** Profil, Journal, Tageswert, Serie, Ablenkung, Pro-Status brauchen einen Block mit Speicher-Version und Umzug alter Daten – vor allen Seiten.
+3. **Rechnung vor Oberfläche:** §15–§20 als reine Funktionen mit Tests in einem eigenen Block, damit jede Seite nur anzeigt.
+4. **Navigation fehlte:** Tab-Kapsel, Profil-Knopf oben rechts, schwebende Sitzung und das Streichen des Kalender-Tabs sind ein eigener Block.
+5. **Paywall und Anmeldung** gehören jetzt in den Bau, nicht nach „später“.
+6. **Kompass-eigene Seiten** (Ziele, Journal, Aufgaben) haben bei Opal kein Gegenstück – sie bekommen Opals Sprache (Bühne, Glas-Blätter, Karten), brauchen aber eigene Entwürfe.
+7. **Phasen passten nicht mehr:** Die alte Phase 3 (Onboarding, Pro, Widgets) und Teile von Phase 4 (Anmeldung) wandern nach vorn. Ziel ist eine App, die nach Phase 2 in den Store **könnte** – mit benannten Platzhaltern.
+8. **Prüfung am Schluss:** UI-Tests, Personen-Test und der Rote Faden müssen nach dem Umbau komplett neu laufen – ein eigener Block.
+
+## 8. Phasen (neu)
+
+| Phase | Inhalt | Ende, wenn … |
+|---|---|---|
+| **2 Umbau, fertig bis auf Konten** | Blöcke A–P unten | App läuft vollständig auf dem iPhone, alle Platzhalter benannt, Tests grün |
+| **3 Store** | App Store Connect (Produkte, Preise, Datenschutz-Angaben), Apple-Berechtigung Family Controls, Rechtstexte (AGB, Datenschutz, Abo-Hinweise), TestFlight, Bilder-Lizenz klären | App im Store |
+| **4 Server und Konten** | Konto-Abgleich (Supabase EU), Telefon- und E-Mail-Anmeldung, Einladungen zählen, Belohnungen, Geschenkkarte, Lernen über alle (mit Einwilligung) | Platzhalter aus §9 leben |
+| **5 Weitere Geräte** | Mac, später Android/Windows | – |
+
+## 9. Bauplan Phase 2 (Blöcke)
+
+Jeder Block: ein Baustein, Tests, Lotse mitziehen, iPhone und Simulator, eigener PR. Alle greifen auf §2 zu – Werte stehen einmal in `Kompass/Design/`.
 
 | # | Block | Fertig, wenn |
 |---|---|---|
-| 0 | Entscheidungen: Regel §2, nur dunkel?, Bildschirmzeit ja/nein, Fotos-Quelle; Rechenregeln §16–§18 freigeben | „Ja“ des Gründers |
-| 1 | **Designsystem:** Farben, Licht oben, Schrift-Stufen (Dynamic Type), Kapsel-Knopf mit Unterglühen, Halten-Knopf, Auswahl-Kapsel, Eingabe, Gruppen-Zeilen, Tage-Wahl, Von/Bis, Regler, Plakette, Seitenpunkte, Glas-Blatt, Tab-Kapsel. Vorschau-Seite mit allen Teilen | Vorschau neben Opal-Bildern deckungsgleich in Maß und Farbe; Kontrast-Tests |
-| 2 | **Figur:** Kugel mit Bewegung, Zuständen und Reduce Motion | Simulator, Ruhe-Modus steht still |
-| 3 | **Onboarding 1 – Gespräch:** Intro (4 Seiten), Gesprächs-Baustein (Schreibmaschine, Verlauf unscharf, Antwort grün), Fragen Name · Ziel · Alter · Lebenslage · Bildschirmzeit, „Ich werte aus …“ | Profil gespeichert, VoiceOver liest ganze Sätze, Tests |
-| 4 | **Onboarding 2 – Zahlen und Erlaubnisse:** Walze (§16), Erlaubnis-Schritte mit Leuchtrahmen und Pfeil (Bildschirmzeit, Kalender, Mitteilungen), „Dein Plan“ | Rechnung getestet, Ablehnen jeder Erlaubnis funktioniert |
-| 5 | **Onboarding 3 – erste Habits:** Vorschlags-Karten-Karussell, Halten zum Festlegen, „Überspringen“, Willkommen mit Konfetti | Habits angelegt, Personen-Test grün |
-| 6 | **Tab-Kapsel und Home** | [OFFEN] Opals Haupt-Home fehlt in den Bildern (nur Meilensteine) – Bilder nachliefern |
-| 7 | **Habits-Seite** im Aufbau der Apps-Seite | Leer-, Lade-, Fehlerzustand |
-| 8 | **Editor-Blätter** für Habit, Ziel, Aufgabe (Glas-Blatt, Zeilen, Tage, Von/Bis, Schwierigkeit, Halten, „Ungespeicherte Änderungen“) | alle Felder wie bisher, UI-Tests |
-| 9 | **Fokus** im Timer-Aufbau (Digitaluhr selbst gezeichnet, Schnellwahl, Lineal, „Für dich“, Durchziehen, Warteraum) | Rechnung Fokus unverändert, Tests |
-| 10 | **Meilensteine** als Sammelstücke (§18) | Tests je Schwelle |
-| 11 | **Bildschirmzeit** Stufe 1 messen (§17, Muster), Stufe 2 sperren im Fokus | nach Apple-Berechtigung; Gerätetest |
-| 12 | **Journal, Ziele, Assistent** im selben Stil (Assistent nutzt den Gesprächs-Baustein) | Lotse-Tests |
-| 13 | **Pro und Paywall** im Aufbau von Opal | nach Preis-Entscheidung, Recht geprüft |
-| 14 | **Eigenständig machen** vor dem Store: Farben, Figur, Texte, Abläufe so weit ändern, dass Kompass nicht mehr als Kopie wirkt | Gründer und Prüfung (§8) |
+| A | **Designsystem:** Farben, Licht oben, Schrift-Stufen (Dynamic Type), Kapsel-Knopf mit Unterglühen, Halten-Knopf, Auswahl-Kapsel, Eingabe, Gruppen-Zeilen, Tage-Wahl, Von/Bis, Regler, Plakette, Seitenpunkte, Glas-Blatt, Rad, Tab-Kapsel; nur dunkel. Vorschau-Seite | Vorschau neben Opal-Bildern deckungsgleich; Kontrast-Tests |
+| B | **Figur und Bildplätze:** eigene Kugel (Bewegung, Zustände, Reduce Motion), Sockel/Fels-Platz, benannte Bildplätze in Opals Größen | Simulator, Ruhe-Modus steht still |
+| C | **Datenmodell:** Profil, Journal-Eintrag (Stimmung, Satz), Tageswert-Verlauf, Serie, Ablenkung je Tag, Ablenker-Auswahl, Fokus-Sperre, Pro, Urlaub, Notfall-Pass; Speicher-Version 3 mit Umzug | Lesen(Schreiben) = gleich, alte Daten bleiben |
+| D | **Rechnung §15–§20** als reine Funktionen | Tests je Regel, Personen-Test erweitert |
+| E | **Bildschirmzeit-Grundlage:** Erlaubnis, Apple-Auswahl der Ablenker, Überwachung mit Schwellen (Erweiterung), Sperre im Fokus (Erweiterung), Sperrbildschirm-Erweiterung | auf dem iPhone getestet; ohne Erlaubnis läuft alles weiter |
+| F | **Navigation:** Tab-Kapsel (Home · Journal · Assistent · Habits · Ziele), Kalender-Tab weg, Profil-Knopf mit Menü, schwebende Sitzung | UI-Test Rundgang |
+| G | **Onboarding 1:** Intro, Gesprächs-Baustein, Name · Anmeldung · Ziel · Alter · Lebenslage · Bildschirmzeit, „Ich werte aus …“ | Profil gespeichert, VoiceOver liest ganze Sätze |
+| H | **Onboarding 2:** Handy-Jahre-Walze (§16), Erlaubnisse (Bildschirmzeit, Kalender, Mitteilungen) mit Leuchtrahmen, „Dein Plan“, Erinnerung vor Testende, Paywall | jede Erlaubnis ablehnbar |
+| I | **Onboarding 3:** „Lass uns festlegen“, Ablenker wählen, Vorschlags-Karten (§20), Einladen, Willkommen mit Konfetti, erster Meilenstein | Personen-Test grün |
+| J | **Home:** Bühne mit Figur, Tageswert/Ablenkung/Habits, Karten (Signale, Serie, Erkenntnisse, Rückblick), Serie-Blatt, Meilenstein-Galerie | Leer-, Lade-, Fehler-, Offline-Zustand |
+| K | **Habits** im Aufbau der Apps-Seite und **Ziele** in derselben Sprache | wie bisher bedienbar |
+| L | **Editor-Blätter** für Habit, Ziel, Aufgabe, Fokus-Plan (Glas-Blatt, Zeilen, Tage, Von/Bis, Schwierigkeit, Halten, „Ungespeichert“) | UI-Tests |
+| M | **Fokus:** Timer (Digitaluhr, Schnellwahl, Lineal, „Für dich“, Durchziehen), Sperre, Warteraum (Atmen, Merk-Spiel, Farbwort-Spiel), „Für … Minuten“, Notfall-Pass | Fokus-Rechnung unverändert |
+| N | **Journal und Assistent** im Gesprächs-Stil, Muster-Karten | Lotse-Tests |
+| O | **Profil, Einstellungen, Pro:** Menü, Einstellungen-Blatt, Konto (Apple-Anmeldung, Abmelden, Löschen), Pro-Vorteile, Wiederherstellen, Einladen mit Code, Urlaubsmodus, Sperrbildschirm-Themen, App-Symbole | StoreKit-Test-Kauf im Simulator |
+| P | **Abschluss:** UI-Tests neu, Personen-Test, Roter Faden neu, Platzhalter-Liste geprüft | Full-Lauf grün (nach Rückfrage) |
 
-## 8. Risiken und Prüffragen
+## 10. Platzhalter (tote Wege, bis Konto oder Server da sind)
 
-- [RISIKO] **Nachahmung:** Je näher am Original, desto größer das Risiko (App-Store-Richtlinie 4.1 „Copycats“, Wettbewerbs- und Designrecht). [OFFEN – Prüffrage] Ab wann ist ein Gesamteindruck geschützt? Block 14 ist Pflicht vor TestFlight mit Fremden.
+| Stelle | Fehlt | Phase |
+|---|---|---|
+| Anmeldung mit Telefon, mit E-Mail; Telefonnummer im Konto | Server-Anmeldung (Supabase Auth, SMS-Anbieter) | 4 |
+| Einladungen zählen, Belohnungsstufen, Code einlösen, Geschenkkarte | Server | 4 |
+| Echte Pro-Produkte und Preise | App Store Connect | 3 |
+| Sperre im Store-Build | Apple-Berechtigung Family Controls (Entwicklung geht ohne) | 3 |
+| Apple Health, Mac-App, QR-Code, Community, Social-Links, Hilfe-Center | Entscheidung bzw. Inhalte | 3–5 |
+| Geräusche, Einschlafgeschichten | eigene Aufnahmen | 3 |
+| Opals Bilder | schriftliche Lizenz | 3 |
+| PIN-Schutz, Löschschutz | Prüfung, ob iOS das erlaubt | 3 |
+
+Jeder Platzhalter trägt im Code die Markierung `// PLATZHALTER(<Phase>): <was fehlt>` und in der App den Hinweis „Kommt bald“; `scripts/platzhalter.py` listet alle.
+
+## 11. Risiken und Prüffragen
+
+- [RISIKO] **Nachahmung:** Je näher am Original, desto größer das Risiko (App-Store-Richtlinie 4.1 „Copycats“, Wettbewerbs- und Designrecht). [OFFEN – Prüffrage] Ab wann ist ein Gesamteindruck geschützt? Vor dem Store eigenständig machen (Phase 3).
 - [RISIKO] **Dunkle Muster:** Schock-Zahlen und Druck („Hold to Commit“) wirken stark. Wir zeigen den Rechenweg und erfinden keine Zahlen.
 - [RISIKO] **Bildschirmzeit:** Apple-Berechtigung kann dauern oder abgelehnt werden; ohne sie fällt §5 weg, der Rest steht.
-- [OFFEN] Bildschirmaufnahmen für Animationen; Bilder von Opals Haupt-Home.
+- [OFFEN] Bildschirmaufnahmen für Animationen.

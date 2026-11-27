@@ -24,7 +24,7 @@ Stand: 23. November 2026 · Gilt für jede Sitzung. Die Kurzfassung steht in `CL
 
 - **Nur Demo-Daten.** Keine echten Kalender, Termine, Kontakte (Geburtstage!), Schlüssel, Zugangsdaten.
 - Die E-Mail-Adresse des Gründers ist privat: nicht in Code, Commits, Texte oder externe Dienste.
-- **Vorbild-Apps** [VORSCHLAG – 27.11.2026, Gründer: „genau so nachbauen“; Freigabe mit PR]: Aufbau, Abläufe, Maße, Schriftgrößen, Farben, Licht und Bewegung dürfen genau nachgebaut werden. Bilder, 3D-Figuren, Fotos, Icons, Logos, Markennamen, Texte und lizenzpflichtige Schriften fremder Apps nie – auch nicht vorübergehend. Screenshots fremder Apps nur lokal, nie ins Repo, nie nach außen. Vor dem Store wird das Design eigenständig gemacht (`docs/produkt/konzepte/umbau-nach-vorbild.md` §7, Block 14).
+- **Vorbild-Apps** [ENTSCHEIDUNG – 27.11.2026, Gründer: „1 zu 1 nachbauen und fertig machen“]: Aufbau, Abläufe, Logik, Maße, Schriftgrößen, Farben, Licht und Bewegung werden genau nachgebaut, passend zu Kompass. Bilder, 3D-Figuren, Fotos, Logos und Texte fremder Apps schneidet Claude nicht aus Screenshots aus; jede Bildstelle wird ein benannter Platz in Originalgröße, den der Gründer mit lizenzierten Original-Dateien füllen kann [OFFEN – Lizenz]. Screenshots fremder Apps nur lokal, nie ins Repo, nie nach außen. Vor dem Store wird das Design eigenständig gemacht (`docs/produkt/konzepte/umbau-nach-vorbild.md` §7, Block 14).
 - Echte Schlüssel und Passwörter nie in den Chat und nie ins Repo. Der Gründer legt Konten bei Diensten selbst an.
 
 ## 3. Bauen und testen

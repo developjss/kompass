@@ -28,7 +28,7 @@ SwiftUI-App `Kompass.xcodeproj` (iOS 26), Speicherung als Datei auf dem Gerät, 
 
 ## 3. Nächste Schritte
 
-1. **Design und Onboarding nach Vorbild Opal** (`docs/produkt/konzepte/umbau-nach-vorbild.md`): 89 Bilder ausgewertet, Designsystem gemessen, Bauplan in 15 Blöcken – Entscheidungen des Gründers offen (Block 0). Der helle Entwurf vom 27.11. (https://claude.ai/artifact/2dKAvMBcFbtiXpxn3tKHcf) wäre damit abgelöst.
+1. **Umbau nach Vorbild Opal** [ENTSCHEIDUNG – 27.11.2026] (`docs/produkt/konzepte/umbau-nach-vorbild.md`): 121 Bilder ausgewertet, nur dunkel, Bildschirmzeit, Paywall und Anmeldung mit Platzhaltern. Phase 2 = Blöcke A–P. Offen: Bilder-Lizenz, Rechenregeln §15–§20, Jahrespreis.
 2. **Entscheidungen** zu Aufgaben, Google und Journal-Datenschutz (`docs/leitung/entscheidungen.md` §2).
 3. **Personen-Test Journal:** 4 Personen × 3 Wochen – trägt man täglich ein, ab wann entsteht ein Muster?
 4. **Bauen** in vier Blöcken: Journal-Tab statt Kalender → Berater (freie Zeit, Apples Termin-Fenster) → Muster (Rechenregel §15, Freigabe) → Design und Statistiken neu.

@@ -6,6 +6,7 @@ Stand: 27. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 
 | Datum | Entscheidung | Fachdokument |
 |---|---|---|
+| 27.11.2026 | [ENTSCHEIDUNG] Umbau nach Vorbild Opal: 1 zu 1 nachbauen und fertig machen, passend zu Kompass; nur dunkel; Bildschirmzeit erst messen, sperren nur im Fokus; Paywall, Anmeldung (Apple, Telefon, E-Mail) und Freunde einladen gehören dazu, Fehlendes als benannter Platzhalter; Pro vorerst 4,99 € im Monat (Gründer im Chat) | `docs/produkt/konzepte/umbau-nach-vorbild.md` |
 | 27.11.2026 | [ENTSCHEIDUNG] Neuer Plan „Journal und Berater“: Der Kalender-Tab fällt weg, an seine Stelle kommt das Journal. Kompass wird Analyse-Werkzeug und Berater – es liest die Kalender, legt selbst keine Termine an (Gründer im Chat: „weil wir jetzt einen neuen Plan haben“). Design wird neu entworfen. | `docs/produkt/konzepte/journal-und-berater.md` |
 | 27.11.2026 | [ENTSCHEIDUNG] Archiv ist Geschichte, keine Grundlage: nichts daraus zurückholen, keine Entscheidung darauf stützen; Überholtes sofort ins Archiv, aktuelle Dokumente umschreiben (Gründer) | `CLAUDE.md`, `docs/team/arbeitsweise.md` §6 |
 | 25.11.2026 | [ENTSCHEIDUNG] Design „Nachtblau“ löst Blattwerk ab: Nachtblau, Creme, Schwarz in hell und dunkel, Messing nur als „jetzt“-Marke. Kompass bleibt auf den ersten Blick eine Kalender-App: keine Flugbilder und keine Flugbegriffe auf den Seiten; die Fliegerei steckt in drei Easter Eggs (Überflug auf Home, 747 im Fokus-Timer, Statistik als Bordkarte zum Herausziehen). Nur echte Fotos, keine erzeugten Bilder. Grund: ein Daily Planner wird von allen benutzt – Fliegerei spricht einen Ausschnitt an. | `docs/produkt/design.md` §2, Prototyp https://claude.ai/artifact/RQGm6b7z7stGnGBBEi8TwT |
@@ -42,12 +43,12 @@ Stand: 27. November 2026. Verbindlich ist nur, was der Gründer entschieden hat.
 |---|---|---|
 | [OFFEN] App-Name (Arbeitstitel „Kompass“) | – | – |
 | [OFFEN] Ort des Lotse-Servers: Supabase Edge Functions (auch für späteren Abgleich) oder anderer Host | Supabase, Region EU | `docs/technik/lotse-server.md` |
-| [OFFEN] Kontingent: 5 freie Server-Fragen/Tag, Pro bis 300; Preis von Pro | so starten, Preis offen | `docs/technik/lotse-server.md` §5 |
+| [OFFEN] Kontingent: 5 freie Server-Fragen/Tag, Pro bis 300 | so starten | `docs/technik/lotse-server.md` §5 |
 | [OFFEN] Sprache der App-Texte | Deutsch zuerst, Englisch zusätzlich ab Phase 3 | `CLAUDE.md` |
 | [OFFEN] Nur für dich oder Produkt mit Abo | Produkt mit Abo (B2C, passt zu deinen Ideen-Kriterien) | `fahrplan.md` §1 |
 | [OFFEN] Aufgaben bleiben in Kompass (kein Abgleich mit Apple Erinnerungen) | ja | `docs/produkt/konzepte/journal-und-berater.md` §8 |
 | [OFFEN] Google zuerst nur über die Konten im iPhone, kein eigenes Google-Login | ja | `docs/produkt/konzepte/journal-und-berater.md` §7 |
 | [OFFEN] Journal standardmäßig nur auf dem Gerät, zum Server nur mit Einwilligung | ja | `docs/produkt/konzepte/journal-und-berater.md` §10 |
-| [OFFEN] Design und Onboarding nach Vorbild Opal nachbauen (Aufbau, Maße, Farben, Bewegung – keine fremden Bilder, Texte, Logos); Kompass nur dunkel; löst Nachtblau und den hellen Entwurf vom 27.11. ab | ja, mit Block 14 „eigenständig machen“ vor dem Store | `docs/produkt/konzepte/umbau-nach-vorbild.md` |
-| [OFFEN] Bildschirmzeit (Apple FamilyControls): messen über Schwellen, später Apps sperren im Fokus; Berechtigung beantragt der Gründer | ja, Stufe 1 zuerst | `docs/produkt/konzepte/umbau-nach-vorbild.md` §5 |
-| [OFFEN] Rechenregeln §16 Handy-Jahre, §17 Bildschirmzeit-Signale, §18 Meilensteine | so freigeben | `docs/produkt/konzepte/umbau-nach-vorbild.md` §6 |
+| [OFFEN] Opals Bilder 1 zu 1 – Gründer nennt Rechte; Claude füllt Bildplätze mit eigenem Inhalt, bis eine schriftliche Lizenz und Original-Dateien vorliegen | Lizenz schriftlich ablegen | `docs/produkt/konzepte/umbau-nach-vorbild.md` Kopf |
+| [OFFEN] Rechenregeln §15–§20 (Muster, Handy-Jahre, Bildschirmzeit, Serie und Meilensteine, Tageswert, Onboarding-Vorschläge) | so freigeben | `docs/produkt/rechenregeln.md` §15–§20 |
+| [OFFEN] Jahrespreis Pro | 39,99 € | `docs/produkt/konzepte/umbau-nach-vorbild.md` §3 |
