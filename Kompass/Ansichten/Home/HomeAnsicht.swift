@@ -23,7 +23,7 @@ struct HomeAnsicht: View {
                     SerieKarte().erscheint(da, 2)
                 }
                 .padding(.horizontal, 17)
-                .padding(.top, 29)
+                .padding(.top, 27)
                 .padding(.bottom, 170)
             }
         }
@@ -147,7 +147,7 @@ private struct HomeBuehne: View {
                 }
             }
         }
-        .frame(height: 400)
+        .frame(height: 390)
         .frame(maxWidth: .infinity)
         .clipped()
         .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
