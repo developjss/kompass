@@ -20,7 +20,7 @@ enum Bereich: String, CaseIterable, Hashable {
     var titel: String {
         switch self {
         case .home: "Home"
-        case .apps: "Meine Apps"
+        case .apps: "Compass"
         case .habits: "Mein Weg"   // später englisch „Path“
         }
     }
@@ -75,6 +75,7 @@ struct TabKapsel: View {
                     VStack(spacing: 5) {
                         Group {
                             if b == .habits { WegSymbol().frame(width: 28, height: 28) }
+                            else if b == .apps { CompassSymbol().frame(width: 26, height: 26) }
                             else { Image(systemName: b.symbol).font(.system(size: 21, weight: .semibold)) }
                         }
                         .frame(height: 24)
@@ -194,6 +195,30 @@ struct WegSymbol: View {
             pfeil.move(to: p(15.9, 8.6)); pfeil.addLine(to: p(8.3, 12.6)); pfeil.addLine(to: p(11.5, 13.1)); pfeil.addLine(to: p(12.8, 16.0)); pfeil.closeSubpath()
             ctx.fill(pfeil, with: farbe)
             ctx.stroke(pfeil, with: farbe, style: StrokeStyle(lineWidth: 0.7 * s, lineJoin: .round))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Zeichen für den Tab „Compass“ (Vorlage des Gründers): Sprechblase mit Spitze unten links, darin eine Kompassnadel
+/// mit ausgespartem Mittelpunkt – einfarbig in der Farbe des Tabs.
+struct CompassSymbol: View {
+    var body: some View {
+        Canvas { ctx, g in
+            let s = min(g.width, g.height) / 24
+            func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * s, y: y * s) }
+            let farbe = GraphicsContext.Shading.foreground
+            // Sprechblase: Kreis mit Spitze unten links (Maße aus der Vorlage umgerechnet)
+            var blase = Path()
+            blase.addArc(center: p(12.1, 11.6), radius: 8.4 * s, startAngle: .degrees(118), endAngle: .degrees(137), clockwise: true)
+            blase.addLine(to: p(3.8, 20.9))
+            blase.closeSubpath()
+            ctx.stroke(blase, with: farbe, style: StrokeStyle(lineWidth: 1.7 * s, lineCap: .round, lineJoin: .round))
+            // Nadel (Raute) mit ausgespartem Mittelpunkt
+            var nadel = Path()
+            nadel.move(to: p(16.9, 7.0)); nadel.addLine(to: p(13.9, 13.4)); nadel.addLine(to: p(7.4, 16.0)); nadel.addLine(to: p(10.4, 9.9)); nadel.closeSubpath()
+            nadel.addEllipse(in: CGRect(x: 11.0 * s, y: 10.6 * s, width: 2.2 * s, height: 2.2 * s))
+            ctx.fill(nadel, with: farbe, style: FillStyle(eoFill: true))
         }
         .accessibilityHidden(true)
     }

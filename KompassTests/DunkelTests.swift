@@ -25,6 +25,6 @@ struct DunkelTests {
 /// Gerüst: die drei Bereiche des Vorbilds in fester Reihenfolge.
 struct GeruestTests {
     @Test func dreiBereicheInReihenfolge() {
-        #expect(Bereich.allCases.map(\.titel) == ["Home", "Meine Apps", "Mein Weg"])
+        #expect(Bereich.allCases.map(\.titel) == ["Home", "Compass", "Mein Weg"])
     }
 }
