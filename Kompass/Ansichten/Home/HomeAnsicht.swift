@@ -11,8 +11,9 @@ struct HomeAnsicht: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                HomeBuehne(scroll: scroll).zIndex(0)
-                werte.padding(.top, 9).zIndex(1)
+                // Platz für die Bühne: sie steht fest dahinter (wie im Vorbild-Video), die Werte liegen auf dem Fels
+                Color.clear.frame(height: 384)
+                werte
                 VStack(spacing: 17) {
                     ImmerErlaubtKarte().erscheint(da, 0)
                     BildschirmzeitKarte().erscheint(da, 1)
@@ -27,7 +28,13 @@ struct HomeAnsicht: View {
         .ignoresSafeArea(edges: .top)
         .scrollIndicators(.hidden)
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, neu in scroll = neu }
-        .background(DFarbe.grund.ignoresSafeArea())
+        .background(alignment: .top) {
+            ZStack(alignment: .top) {
+                DFarbe.grund
+                HomeBuehne(scroll: scroll)
+            }
+            .ignoresSafeArea()
+        }
         .foregroundStyle(DFarbe.text)
         .overlay(alignment: .top) {
             ZStack(alignment: .top) {
@@ -143,23 +150,28 @@ private struct HomeBuehne: View {
             ZStack {
                 Image("home-buehne").resizable().scaledToFill()
                     .scaleEffect(1.03 + 0.012 * sin(t * 0.35))
+                    .offset(y: -34)
                 // Schein am Kompass (liegt bei 51 % der Breite, 55 % der Höhe)
                 GeometryReader { g in
                     Circle()
                         .fill(RadialGradient(colors: [Color(0x66FFE6).opacity(0.33 + 0.12 * sin(t * 1.1)), .clear], center: .center, startRadius: 4, endRadius: 96))
                         .frame(width: 200, height: 200)
-                        .position(x: g.size.width * 0.5, y: g.size.height * 0.55)
+                        .position(x: g.size.width * 0.5, y: g.size.height * 0.55 - 34)
                         .blendMode(.screen)
                 }
             }
         }
-        .frame(height: 390)
+        .frame(height: 500)
         .frame(maxWidth: .infinity)
         .clipped()
-        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
-        .offset(y: ruhig ? 0 : max(0, scroll) * 0.18)
-        .opacity(1 - min(0.85, max(0, scroll) / 260))
-        .scaleEffect(scroll < 0 ? 1 + (-scroll / 400) : 1, anchor: .top)
+        // Der Fels läuft unter den Werten weiter und erst darunter ins Schwarz
+        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.74), .init(color: .clear, location: 0.97)], startPoint: .top, endPoint: .bottom))
+        // Hochscrollen (Video 0,6–1,4 s): Bühne bleibt stehen, wird kleiner, unscharf und dunkel, während der Inhalt darüberläuft.
+        // Herunterziehen (Video 15,2–15,5 s): Bühne wächst von oben.
+        .scaleEffect(scroll < 0 ? 1 + min(0.35, -scroll / 380) : 1 - min(0.08, scroll / 1600), anchor: .top)
+        .blur(radius: ruhig ? 0 : min(9, max(0, scroll) / 16))
+        .opacity(1 - min(1, max(0, scroll) / 165))
+        .offset(y: scroll > 0 ? -min(30, scroll * 0.12) : 0)
         .accessibilityHidden(true)
     }
 }
