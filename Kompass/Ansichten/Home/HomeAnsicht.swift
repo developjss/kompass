@@ -12,7 +12,7 @@ struct HomeAnsicht: View {
         ScrollView {
             VStack(spacing: 0) {
                 // Platz für die Bühne: sie steht fest dahinter (wie im Vorbild-Video), die Werte liegen auf dem Fels
-                Color.clear.frame(height: 384)
+                Color.clear.frame(height: 398)
                 werte
                 VStack(spacing: 17) {
                     ImmerErlaubtKarte().erscheint(da, 0)
@@ -147,16 +147,21 @@ private struct HomeBuehne: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: ruhig)) { k in
             let t = ruhig ? 0 : k.date.timeIntervalSinceReferenceDate
-            ZStack {
+            ZStack(alignment: .top) {
+                // Mehr Himmel über dem Flugzeug (Vorlage des Gründers): Sterne oben, das Bild beginnt 36 pt tiefer und blendet weich ein
+                Sterne(anzahl: 120).frame(height: 190)
+                    .mask(LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom))
                 Image("home-buehne").resizable().scaledToFill()
-                    .scaleEffect(1.03 + 0.012 * sin(t * 0.35))
-                    .offset(y: -34)
+                    .frame(height: 430)
+                    .scaleEffect(1.02 + 0.012 * sin(t * 0.35))
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .top, endPoint: .bottom))
+                    .offset(y: 36)
                 // Schein am Kompass (liegt bei 51 % der Breite, 55 % der Höhe)
                 GeometryReader { g in
                     Circle()
                         .fill(RadialGradient(colors: [Color(0x66FFE6).opacity(0.33 + 0.12 * sin(t * 1.1)), .clear], center: .center, startRadius: 4, endRadius: 96))
                         .frame(width: 200, height: 200)
-                        .position(x: g.size.width * 0.5, y: g.size.height * 0.55 - 34)
+                        .position(x: g.size.width * 0.5, y: 430 * 0.55 + 36)
                         .blendMode(.screen)
                 }
             }
@@ -165,7 +170,7 @@ private struct HomeBuehne: View {
         .frame(maxWidth: .infinity)
         .clipped()
         // Der Fels läuft unter den Werten weiter und erst darunter ins Schwarz
-        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.74), .init(color: .clear, location: 0.97)], startPoint: .top, endPoint: .bottom))
+        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.76), .init(color: .clear, location: 0.96)], startPoint: .top, endPoint: .bottom))
         // Hochscrollen (Video 0,6–1,4 s): Bühne bleibt stehen, wird kleiner, unscharf und dunkel, während der Inhalt darüberläuft.
         // Herunterziehen (Video 15,2–15,5 s): Bühne wächst von oben.
         .scaleEffect(scroll < 0 ? 1 + min(0.35, -scroll / 380) : 1 - min(0.08, scroll / 1600), anchor: .top)
