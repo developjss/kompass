@@ -7,7 +7,6 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 - **Tab „Compass“:** Die Seite ist leer („Wird neu gebaut.“).
 - **Neuer Habit (Blatt):** Der Hinweis zur Bildschirmzeit („Geräteübergreifend teilen“) stammt noch aus Opals Regel-Blatt.
 - **Gehört zu:** Die Karte „Neues Ziel“ ist nur ein Platzhalter („Kommt bald“).
-- **Neuer Habit (Blatt):** Hinter dem Stift-Knopf oben rechts ist noch nichts.
 - **Bild wählen:** Es gibt kein Zuschneiden, also kein Verschieben oder Zoomen. Das Bild wird einfach mittig rund abgeschnitten.
 - **Mein Weg:** Hinter „Aufgaben ›“, „Ziele ›“, den Aufgaben und den Ziel-Karten liegt noch keine eigene Seite.
 - **Home:** Hinter Bildschirmzeit, Erkenntnis, „Immer erlaubt? – Einrichten“, dem PRO-Schild und dem Profil-Schild liegt noch keine eigene Seite.
@@ -25,7 +24,7 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 - Erledigt und Teilwerte gelten nur, solange die App offen ist (Ring auf „Mein Weg“ zeigt den Stand).
 - Fokus gilt nur, solange die App offen ist; wird die App beendet, ist der laufende Timer weg.
 - [OFFEN] Fokus auf dem Sperrbildschirm geht nicht als ganzer Bildschirm (iOS erlaubt das keiner App). Möglich: Live-Aktivität (Sperrbildschirm + Dynamic Island) – neues Ziel-Paket, braucht „Ja“ des Gründers. Andere Apps während Fokus sperren: Family Controls (Block 2).
-- Bearbeiten ändert das Habit, aber nur solange die App offen ist. Ein neuer Habit über das Plus wird noch nicht angelegt.
+- Bearbeiten und Löschen ändern die Habits nur, solange die App offen ist. Ein neuer Habit über das Plus wird noch nicht angelegt.
 - Die fünf Demo-Habits haben feste Einheiten und Tagesziele (Lesen 20 Seiten, Sport 45m, Meditieren 10m, Lernen 30m, Wasser 2.000 ml).
 - „Gehört zu“ wird nicht gespeichert, und auf „Mein Weg“ sieht man noch nicht, welche Habits zu einem Ziel gehören.
 - Einheit und Ziel lassen sich wählen, werden aber nicht gespeichert. Eine eigene Einheit gilt nur, solange das Blatt offen ist.

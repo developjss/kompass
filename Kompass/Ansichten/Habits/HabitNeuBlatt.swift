@@ -9,6 +9,10 @@ struct HabitNeuBlatt: View {
     private let vorlage: Habit?
     /// Wird beim Festhalten mit dem geänderten Habit aufgerufen (nur Bearbeiten; gilt, solange die App offen ist)
     private let speichern: ((Habit) -> Void)?
+    /// Löscht das Habit (nur Bearbeiten) – erst nach der Rückfrage mit dem Compass-Balken
+    private let loeschen: (() -> Void)?
+    /// Rückfrage-Seite „Löschen?“ im selben Blatt
+    @State private var loeschSeite = ProcessInfo.processInfo.arguments.contains("-loeschen")
     @Environment(\.dismiss) private var dismiss
     @State private var tage: Set<Int>
     /// Zähler je Tag fürs Wackeln, wenn der letzte Tag abgewählt werden soll
@@ -25,9 +29,10 @@ struct HabitNeuBlatt: View {
     /// Ziel von „Mein Weg“, zu dem der Habit gehört (nil = kein Ziel)
     @State private var gehoertZu: Ziel?
 
-    init(habit: Habit? = nil, speichern: ((Habit) -> Void)? = nil) {
+    init(habit: Habit? = nil, speichern: ((Habit) -> Void)? = nil, loeschen: (() -> Void)? = nil) {
         vorlage = habit
         self.speichern = speichern
+        self.loeschen = loeschen
         bildName = habit?.bild ?? "habit-1"
         _tage = State(initialValue: habit?.tage ?? [6, 7])
         _name = State(initialValue: habit?.name ?? "")
@@ -78,7 +83,12 @@ struct HabitNeuBlatt: View {
 
     var body: some View {
         ZStack {
-            if zuordnung {
+            if loeschSeite, let vorlage, let loeschen {
+                LoeschenSeite(name: vorlage.name, loeschen: loeschen) {
+                    withAnimation(ruhig ? nil : .spring(response: 0.42, dampingFraction: 0.86)) { loeschSeite = false }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if zuordnung {
                 ZielZuordnung(ziel: $gehoertZu) { withAnimation(ruhig ? nil : .spring(response: 0.42, dampingFraction: 0.86)) { zuordnung = false } }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             } else {
@@ -131,7 +141,19 @@ struct HabitNeuBlatt: View {
                 HStack {
                     BlattKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }
                     Spacer()
-                    BlattKnopf(symbol: "pencil", beschriftung: "Bearbeiten") {}
+                    // Beim Bearbeiten: Löschen (mit Rückfrage). Beim Anlegen: kein Knopf.
+                    if vorlage != nil, loeschen != nil {
+                        Button {
+                            withAnimation(ruhig ? nil : .spring(response: 0.42, dampingFraction: 0.86)) { loeschSeite = true }
+                        } label: {
+                            Image(systemName: "trash").font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(DFarbe.rot)
+                                .frame(width: 44, height: 44)
+                                .background(Color(0x3F3F3F), in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Habit löschen")
+                    }
                 }
             }
             .padding(.bottom, 8)
@@ -426,5 +448,48 @@ private struct Wackeln: GeometryEffect {
     }
     func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX: 4 * sin(anzahl * .pi * 6), y: 0))
+    }
+}
+
+/// Rückfrage vor dem Löschen – Aufbau wie die Erledigt-Seite: Zurück, Etikett, großer Titel, Erklärung, und derselbe
+/// Compass-Balken. Erst ganz nach rechts gezogen wird gelöscht; sonst springt der Kompass zurück.
+private struct LoeschenSeite: View {
+    var name: String
+    var loeschen: () -> Void
+    var zurueck: () -> Void
+    @State private var anteil: Double = 0
+    @State private var geloescht = 0
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack { BlattKnopf(symbol: "chevron.left", beschriftung: "Zurück", aktion: zurueck); Spacer() }
+            VStack(spacing: 8) {
+                Text("LÖSCHEN").font(.system(size: 15, weight: .semibold)).tracking(0.75).foregroundStyle(DFarbe.rot)
+                Text("„\(name)“ löschen?").font(.system(size: 30, weight: .bold)).multilineTextAlignment(.center)
+                    .lineLimit(2).minimumScaleFactor(0.7)
+                Text("Das Habit und sein Fortschritt werden entfernt. Das lässt sich nicht rückgängig machen.")
+                    .font(.system(size: 17)).foregroundStyle(Color(0x9A9A9E)).multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 10)
+            .accessibilityElement(children: .combine)
+
+            CompassBalken(anteil: $anteil, wertText: "Zum Löschen ganz nach rechts", stufen: 10, feier: geloescht) { ende in
+                if ende >= 0.97 {
+                    anteil = 1
+                    geloescht += 1
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(650))
+                        loeschen()
+                    }
+                } else {
+                    anteil = 0
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.top, 70)
+            Spacer(minLength: 0)
+        }
+        .sensoryFeedback(.warning, trigger: geloescht)
     }
 }

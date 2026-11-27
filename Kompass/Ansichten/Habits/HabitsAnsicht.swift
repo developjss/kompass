@@ -30,7 +30,14 @@ struct HabitsAnsicht: View {
                     HabitAuswahlBlatt(habit: Binding(get: { habits.first { $0.id == h.id } ?? h },
                                                      set: { neu in if let i = habits.firstIndex(where: { $0.id == neu.id }) { habits[i] = neu } }),
                                       wert: Binding(get: { fortschritt[h.id] ?? 0 }, set: { fortschritt[h.id] = $0 }),
-                                      startErledigt: ProcessInfo.processInfo.arguments.contains("-erledigt"))
+                                      startErledigt: ProcessInfo.processInfo.arguments.contains("-erledigt"),
+                                      loeschen: {
+                                          gewaehlt = nil
+                                          withAnimation(.easeInOut(duration: 0.35)) {
+                                              habits.removeAll { $0.id == h.id }
+                                              fortschritt[h.id] = nil
+                                          }
+                                      })
                 }
                 .toolbar(.hidden, for: .navigationBar)
         }

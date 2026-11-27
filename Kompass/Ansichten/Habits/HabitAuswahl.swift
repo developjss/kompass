@@ -8,6 +8,8 @@ struct HabitAuswahlBlatt: View {
     @Binding var habit: Habit
     /// Gespeicherter Fortschritt heute (nur solange die App offen ist)
     @Binding var wert: Double
+    /// Entfernt das Habit (nach der Rückfrage im Bearbeiten-Blatt)
+    var loeschen: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var ruhig
@@ -17,8 +19,8 @@ struct HabitAuswahlBlatt: View {
     /// Bearbeiten öffnet das Blatt „Neuer Habit“ – gefüllt mit diesem Habit
     @State private var bearbeitenOffen = false
 
-    init(habit: Binding<Habit>, wert: Binding<Double>, startErledigt: Bool = false) {
-        _habit = habit; _wert = wert
+    init(habit: Binding<Habit>, wert: Binding<Double>, startErledigt: Bool = false, loeschen: @escaping () -> Void = {}) {
+        _habit = habit; _wert = wert; self.loeschen = loeschen
         _erledigtSeite = State(initialValue: startErledigt)
     }
 
@@ -35,11 +37,14 @@ struct HabitAuswahlBlatt: View {
         .habitBlatt(hoehe: erledigtSeite ? 420 : 384)
         .fullScreenCover(isPresented: $fokusOffen) { FokusAnsicht(habit: habit, wert: $wert) }
         .sheet(isPresented: $bearbeitenOffen) {
-            HabitNeuBlatt(habit: habit) { neu in
+            HabitNeuBlatt(habit: habit, speichern: { neu in
                 // andere Einheit: bisheriger Fortschritt passt nicht mehr
                 if neu.einheit != habit.einheit { wert = 0 } else { wert = min(wert, neu.tagesziel) }
                 habit = neu
-            }
+            }, loeschen: {
+                bearbeitenOffen = false
+                loeschen()
+            })
         }
         .task {
             // Für Testbilder: `-bearbeiten` / `-fokus` öffnet das Blatt bzw. den Fokus direkt
@@ -280,6 +285,8 @@ struct CompassBalken: View {
     @State private var drehung: Double = 0
     @State private var blitz = false
     @State private var funken = true
+    /// Breite der Wert-Beschriftung, damit sie am Rand nie abgeschnitten wird
+    @State private var etikettBreite: CGFloat = 120
 
     private let spur: CGFloat = 35
     private let knopf: CGFloat = 48
@@ -326,8 +333,8 @@ struct CompassBalken: View {
                     .padding(.horizontal, 10).frame(height: 26)
                     .background(Color.black.opacity(0.35), in: Capsule())
                     .overlay { Capsule().strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5) }
-                    .frame(width: 200)
-                    .position(x: min(max(x + knopf / 2, 70), w - 70), y: -24)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { etikettBreite = $0 }
+                    .position(x: min(max(x + knopf / 2, etikettBreite / 2), w - etikettBreite / 2), y: -24)
                     .animation(.snappy(duration: 0.15), value: wertText)
             }
             .frame(height: knopf)
