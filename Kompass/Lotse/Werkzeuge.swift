@@ -339,7 +339,7 @@ enum Werkzeuge {
         let bereichText = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") } ?? 0
         if let f = fenster, fensterPunkte > bereichText { return LotseAntwort(text: f, werkzeug: .hilfe) }
         if let b = bereich, bereichPunkte > 0 { return LotseAntwort(text: AppWissen.bereiche[b] ?? "", werkzeug: .hilfe, aktion: .bereich(b.rawValue)) }
-        return LotseAntwort(text: "Kompass hat fünf Bereiche:\n" + Bereich.allCases.map { "• \(AppWissen.bereiche[$0] ?? $0.titel)" }.joined(separator: "\n"), werkzeug: .hilfe)
+        return LotseAntwort(text: "Kompass hat fünf Tabs:\n" + Bereich.tabs.map { "• \(AppWissen.bereiche[$0] ?? $0.titel)" }.joined(separator: "\n"), werkzeug: .hilfe)
     }
 
     /// Empfehlung ohne Sprachmodell: deterministische Reihenfolge – Liegengebliebenes, Ziel hinterher mit größtem Hebel, wichtigste Aufgabe heute, offene Habits.

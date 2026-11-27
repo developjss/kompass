@@ -182,7 +182,7 @@ struct StundeBlatt: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     (Text("Was um ") + Text("\(Tagesplan.uhr(start))?").foregroundStyle(Farbe.handlung))
-                        .font(.system(size: 40, weight: .regular, design: .serif)).foregroundStyle(Farbe.text)
+                        .font(.system(size: 40, weight: .regular, design: .default)).foregroundStyle(Farbe.text)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()
                     RahmenKnopf(symbol: "xmark", beschriftung: "Schließen") { dismiss() }.foregroundStyle(Farbe.text)

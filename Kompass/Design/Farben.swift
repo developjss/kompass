@@ -43,17 +43,17 @@ enum Nachtblau {
     static let linieHell: UInt32 = 0xD6D5CD
     static let weichHell: UInt32 = 0xDCDDD6
     // Dunkel
-    static let nacht: UInt32 = 0x0F141B
-    static let nachtKarte: UInt32 = 0x182029
-    static let nachtPapier: UInt32 = 0x1F2935
-    static let blauDunkel: UInt32 = 0x141C27
-    static let blauDunkelOben: UInt32 = 0x0B1017
-    static let blauDunkelUnten: UInt32 = 0x1E2A39
-    static let zweitrangigDunkel: UInt32 = 0x9AA8B9
-    static let linieDunkel: UInt32 = 0x2F3337
-    static let weichDunkel: UInt32 = 0x262A2F
+    static let nacht: UInt32 = 0x000000          // Umbau 27.11.: Grund schwarz wie das Vorbild
+    static let nachtKarte: UInt32 = 0x1C1C1E
+    static let nachtPapier: UInt32 = 0x2B2B2B
+    static let blauDunkel: UInt32 = 0x000000
+    static let blauDunkelOben: UInt32 = 0x2A3829
+    static let blauDunkelUnten: UInt32 = 0x000000
+    static let zweitrangigDunkel: UInt32 = 0x96969B
+    static let linieDunkel: UInt32 = 0x2C2C2E
+    static let weichDunkel: UInt32 = 0x2C2C2E
     // Beide
-    static let dunst: UInt32 = 0x9FBAD6
+    static let dunst: UInt32 = 0xD3FFA0          // Akzent dunkel = Limette des Vorbilds
     static let messing: UInt32 = 0xC9A227
 
     /// Kontrastverhältnis zweier Farben (1 … 21) nach WCAG 2.1
@@ -77,21 +77,21 @@ enum Farbe {
                                 Color(hell: Nachtblau.blauUnten, dunkel: Nachtblau.blauDunkelUnten)]
     static let grundOben = buehne
     /// Lichtkegel hinter dem Wort (Ebene 1a) – mit Deckkraft verwenden
-    static let schein = Color(hell: 0x9EBCDC, dunkel: 0x6084B0)
+    static let schein = Color(hell: 0x9EBCDC, dunkel: 0x779373)
     static let karte = Color(hell: Nachtblau.cremeKarte, dunkel: Nachtblau.nachtKarte)
     /// Die Bordkarte (Statistik): einen Hauch wärmer als die Karte
     static let papier = Color(hell: Nachtblau.papier, dunkel: Nachtblau.nachtPapier)
-    static let text = Color(hell: Nachtblau.schwarz, dunkel: Nachtblau.creme)
+    static let text = Color(hell: Nachtblau.schwarz, dunkel: 0xFFFFFF)
     /// Das große Wort auf der Bühne, die Marke, die Statusleiste: immer Creme
-    static let wort = Color(roh: "#F3F1E6")
+    static let wort = Color(roh: "#FFFFFF")
     /// Das letzte Wort auf der Bühne: Dunst
-    static let wortAkzent = Color(roh: "#9FBAD6")
+    static let wortAkzent = Color(roh: "#A9FBEF")
     static let zweitrangig = Color(hell: Nachtblau.zweitrangigHell, dunkel: Nachtblau.zweitrangigDunkel)
     static let pfeil = Color(hell: 0x8C98A8, dunkel: 0x6F7C8C)
     /// Handlung als Text und Zeichen (lesbar auf dem Grund): hell Nachtblau, dunkel Dunst
     static let akzent = Color(hell: Nachtblau.akzentHell, dunkel: Nachtblau.dunst)
     /// Handlung als Fläche (Hauptknopf, Ring, Haken, gewählter Tag): hell Schwarz, dunkel Creme – Schrift darauf `aufFarbe`
-    static let handlung = Color(hell: Nachtblau.schwarz, dunkel: Nachtblau.creme)
+    static let handlung = Color(hell: Nachtblau.schwarz, dunkel: 0xFFFFFF)
     /// Die eine warme Marke: Punkt am heutigen Tag, Zeitlinie, Strecke im Fokus – sonst nirgends
     static let jetzt = Color(roh: "#C9A227")
     /// Pille, Vorschläge, „dein Normal“, Tab-Pille
@@ -180,24 +180,24 @@ enum Mass {
 extension Font {
     /// SF Pro Rounded mit Dynamic Type
     static func kompass(_ stil: Font.TextStyle, _ gewicht: Font.Weight = .regular) -> Font {
-        .system(stil, design: .rounded, weight: gewicht)
+        .system(stil, design: .default, weight: gewicht)
     }
     /// Seitentitel und große Zahlen in Serif (New York), Bedienung bleibt SF Pro Rounded
-    static let seitenTitel = Font.system(.largeTitle, design: .serif, weight: .medium)
-    static let abschnitt = Font.system(.title2, design: .serif, weight: .regular)
+    static let seitenTitel = Font.system(.largeTitle, design: .default, weight: .bold)
+    static let abschnitt = Font.system(.title3, design: .default, weight: .semibold)
     static let zeile = Font.kompass(.body, .semibold)
     static let unterzeile = Font.kompass(.subheadline, .medium)
     static let klein = Font.kompass(.footnote, .semibold)
-    static let grosseZahl = Font.system(.largeTitle, design: .serif, weight: .semibold)
+    static let grosseZahl = Font.system(.largeTitle, design: .default, weight: .bold)
     /// Das Wort auf der Bühne (New York, Großbuchstaben), feste Größe mit Mindestskalierung
-    static func wort(_ groesse: CGFloat) -> Font { .system(size: groesse, weight: .regular, design: .serif) }
+    static func wort(_ groesse: CGFloat) -> Font { .system(size: groesse * 0.62, weight: .semibold, design: .default) }
     /// Titel in der Karte vorn (die eine Sache)
-    static let karteTitel = Font.system(size: 26, weight: .regular, design: .serif)
+    static let karteTitel = Font.system(size: 22, weight: .semibold, design: .default)
     /// Kennzahl (28) und Uhrzeit rechts in Zeilen (21)
-    static let zahl = Font.system(size: 28, weight: .regular, design: .serif)
-    static let zahlKlein = Font.system(size: 21, weight: .regular, design: .serif)
+    static let zahl = Font.system(size: 28, weight: .bold, design: .default)
+    static let zahlKlein = Font.system(size: 21, weight: .semibold, design: .default)
     /// Kleines Etikett in Versalien (12, heavy, Laufweite)
     static let etikett = Font.kompass(.caption, .heavy)
     /// Marke oben auf der Bühne (New York 17, Versalien, Laufweite)
-    static let marke = Font.system(size: 17, weight: .regular, design: .serif)
+    static let marke = Font.system(size: 22, weight: .semibold, design: .default)
 }

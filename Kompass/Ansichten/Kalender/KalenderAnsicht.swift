@@ -226,7 +226,7 @@ struct Wochenleiste: View {
                 Button { waehlen(d) } label: {
                     VStack(spacing: 4) {
                         Text(namen[i]).font(.klein).foregroundStyle(an ? Farbe.aufFarbe.opacity(0.8) : Farbe.zweitrangig)
-                        Text("\(d.tag)").font(.system(.title3, design: .serif, weight: .regular)).foregroundStyle(an ? Farbe.aufFarbe : (d == heute ? Farbe.akzent : Farbe.text))
+                        Text("\(d.tag)").font(.system(.title3, design: .default, weight: .regular)).foregroundStyle(an ? Farbe.aufFarbe : (d == heute ? Farbe.akzent : Farbe.text))
                             .lineLimit(1).minimumScaleFactor(0.6)
                         HStack(spacing: 2) {
                             ForEach(Array(b.prefix(3).enumerated()), id: \.offset) { _, x in
@@ -441,8 +441,8 @@ struct BlockKachel: View {
             RoundedRectangle(cornerRadius: 2).fill(c).frame(width: 3)
             VStack(alignment: .leading, spacing: 1) {
                 Text(block.titel)
-                    .font(mini ? .system(size: 10, weight: .semibold, design: .rounded)
-                          : schmal ? .system(size: 11, weight: .bold, design: .rounded) : .kompass(.subheadline, .bold))
+                    .font(mini ? .system(size: 10, weight: .semibold, design: .default)
+                          : schmal ? .system(size: 11, weight: .bold, design: .default) : .kompass(.subheadline, .bold))
                     .foregroundStyle(Farbe.text).strikethrough(block.erledigt)
                     .lineLimit(mini ? 1 : schmal ? (kompakt ? 2 : 4) : (kompakt ? 1 : 2))
                     .truncationMode(.tail)
@@ -695,7 +695,7 @@ private struct MonatsZelle: View {
                     .frame(width: 22, height: 22)
                     .background(heute ? Farbe.akzent : .clear, in: Circle())
                 ForEach(Array(eintraege.prefix(3).enumerated()), id: \.offset) { _, e in
-                    Text(e.0).font(.system(size: 9, weight: .semibold, design: .rounded)).lineLimit(1)
+                    Text(e.0).font(.system(size: 9, weight: .semibold, design: .default)).lineLimit(1)
                         .padding(.horizontal, 3).frame(maxWidth: .infinity, alignment: .leading).frame(height: 14)
                         .background(Color(hex: e.1).opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
                         .foregroundStyle(Farbe.text)

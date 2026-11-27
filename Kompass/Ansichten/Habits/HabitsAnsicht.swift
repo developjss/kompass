@@ -215,7 +215,7 @@ struct HabitMengeBlatt: View {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             TextField("0", value: $wert, format: .number.precision(.fractionLength(0...1)))
                                 .keyboardType(.decimalPad).focused($fokus)
-                                .font(.system(size: 56, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                                .font(.system(size: 56, weight: .heavy, design: .default)).multilineTextAlignment(.center)
                                 .fixedSize().foregroundStyle(Farbe.text)
                             Text(h.einheit?.kurz ?? "×").font(.kompass(.title2, .bold)).foregroundStyle(Farbe.zweitrangig)
                         }

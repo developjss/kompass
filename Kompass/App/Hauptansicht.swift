@@ -46,12 +46,12 @@ private struct Bereiche: View {
         @Bindable var nav = nav
         TabView(selection: $nav.bereich) {
             Tab(Bereich.heute.titel, systemImage: Bereich.heute.symbol, value: Bereich.heute) { NavigationStack(path: $nav.heutePfad) { HeuteAnsicht().zielZiel() } }
-            Tab(Bereich.kalender.titel, systemImage: Bereich.kalender.symbol, value: Bereich.kalender) { NavigationStack { KalenderAnsicht() } }
+            Tab(Bereich.journal.titel, systemImage: Bereich.journal.symbol, value: Bereich.journal) { NavigationStack { JournalAnsicht() } }
             Tab(Bereich.lotse.titel, systemImage: Bereich.lotse.symbol, value: Bereich.lotse) { NavigationStack { LotseAnsicht().zielZiel() } }
             Tab(Bereich.habits.titel, systemImage: Bereich.habits.symbol, value: Bereich.habits) { NavigationStack(path: $nav.habitsPfad) { HabitsAnsicht().zielZiel() } }
             Tab(Bereich.ziele.titel, systemImage: Bereich.ziele.symbol, value: Bereich.ziele) { NavigationStack(path: $nav.zielePfad) { ZieleAnsicht().zielZiel() } }
         }
-        .tint(Farbe.akzent)
+        .tint(DFarbe.text)
         .sheet(item: $nav.blatt) { blatt in
             BlattInhalt(blatt: blatt)
         }
@@ -66,6 +66,7 @@ private extension View {
             .navigationDestination(for: ZielTeilAuswahl.self) { ZielTeilSeite(id: $0.id, teil: $0.teil) }
             .navigationDestination(for: AnalyseAuswahl.self) { AnalyseSeite(auswahl: $0) }
             .navigationDestination(for: StatistikAuswahl.self) { StatistikSeite(auswahl: $0) }
+            .navigationDestination(for: KalenderSeite.self) { _ in KalenderAnsicht() }
     }
 }
 

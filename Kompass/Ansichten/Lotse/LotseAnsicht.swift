@@ -353,7 +353,7 @@ private struct Blase: View {
         case .ziel(let id): nav.oeffneZiel(id)
         case .aufgabe(let id): nav.blatt = .aufgabe(id)
         case .habit(let id): nav.oeffneHabit(id)
-        case .bereich(let b): if let x = Bereich.aus(b) { nav.bereich = x }
+        case .bereich(let b): if let x = Bereich.aus(b) { nav.zeige(x) }
         case .pro: nav.blatt = .pro
         }
     }

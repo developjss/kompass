@@ -110,14 +110,15 @@ struct Saum: View {
 struct WortText: View {
     var wort: Wort
     var body: some View {
-        VStack(alignment: .leading, spacing: -wort.groesse * 0.34) {
-            ForEach(Array(wort.zeilen.enumerated()), id: \.offset) { _, z in
-                Text(z.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.wort)
-            }
-            Text(wort.akzent.uppercased()).font(.wort(wort.groesse)).foregroundStyle(Farbe.wortAkzent)
+        // Vorbild: ein Satz in Satzschreibung, der Akzent im Limette-Aqua-Verlauf
+        VStack(alignment: .leading, spacing: 0) {
+            (Text(wort.zeilen.joined(separator: " ") + (wort.zeilen.isEmpty ? "" : " ")).foregroundStyle(Farbe.wort)
+             + Text(wort.akzent).foregroundStyle(LinearGradient(colors: DFarbe.akzentFarben, startPoint: .leading, endPoint: .trailing)))
+                .font(.wort(wort.groesse))
+                .lineLimit(2)
             if let k = wort.klein {
-                Text(k.uppercased()).font(.etikett).tracking(1).foregroundStyle(Farbe.wort.opacity(0.85))
-                    .padding(.top, 12 + wort.groesse * 0.34).frame(maxWidth: 250, alignment: .leading).lineLimit(2)
+                Text(k).font(DSchrift.unterzeile).foregroundStyle(DFarbe.zweitrangig)
+                    .padding(.top, 8).frame(maxWidth: 300, alignment: .leading).lineLimit(2)
             }
         }
         .lineLimit(1)
@@ -255,7 +256,7 @@ struct Etikett: View {
 struct MarkenTitel: View {
     var text: String
     var body: some View {
-        Text(text.uppercased()).font(.marke).tracking(2.4).lineLimit(1).minimumScaleFactor(0.7).accessibilityAddTraits(.isHeader)
+        Text(text.prefix(1).uppercased() + text.dropFirst().lowercased()).font(.marke).lineLimit(1).minimumScaleFactor(0.7).accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -415,7 +416,7 @@ struct FrageWort: View {
     var body: some View {
         let frage = text.hasSuffix("?")
         (Text(frage ? String(text.dropLast()) : text) + Text(frage ? "?" : "").foregroundStyle(Farbe.akzent))
-            .font(.system(size: 40, weight: .regular, design: .serif))
+            .font(.system(size: 40, weight: .regular, design: .default))
             .foregroundStyle(Farbe.text)
             .lineLimit(2)
             .minimumScaleFactor(0.7)

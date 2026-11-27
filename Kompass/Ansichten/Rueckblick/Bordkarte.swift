@@ -81,7 +81,7 @@ struct Bordkarte<Inhalt: View>: View {
                 }
             }
         }
-        .font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.3)
+        .font(.system(size: 11, weight: .heavy, design: .default)).tracking(1.3)
         .foregroundStyle(Farbe.zweitrangig)
         .padding(EdgeInsets(top: draussen ? 0 : 6, leading: 16, bottom: 15, trailing: 16))
         .frame(maxWidth: .infinity, minHeight: draussen ? nil : Self.abriss, alignment: .bottom)

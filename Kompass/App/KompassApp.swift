@@ -32,7 +32,10 @@ struct KompassApp: App {
 
 /// Die fünf Tabs in Reihenfolge; der Lotse steht in der Mitte. Ziele und Habits teilen sich „Fortschritt“ (Umschalter oben).
 enum Bereich: String, Hashable, CaseIterable {
-    case heute, kalender, lotse, habits, ziele
+    case heute, journal, lotse, habits, ziele, kalender
+
+    /// Die fünf Tabs [ENTSCHEIDUNG – 27.11.2026: Journal statt Kalender]. Der Kalender ist kein Tab mehr, er öffnet sich als Seite über Home.
+    static let tabs: [Bereich] = [.heute, .journal, .lotse, .habits, .ziele]
 
     /// Aus gespeicherten Chats: alte Namen (bis 26.11.2026) führen weiter – Fortschritt → Ziele, Rückblick → Home.
     static func aus(_ roh: String) -> Bereich? {
@@ -46,6 +49,7 @@ enum Bereich: String, Hashable, CaseIterable {
     var titel: String {
         switch self {
         case .heute: "Home"
+        case .journal: "Journal"
         case .kalender: "Kalender"
         case .lotse: "Assistent"
         case .habits: "Habits"
@@ -56,6 +60,7 @@ enum Bereich: String, Hashable, CaseIterable {
     var symbol: String {
         switch self {
         case .heute: "house"
+        case .journal: "book.closed"
         case .kalender: "calendar"
         case .lotse: "sparkles"
         case .habits: "repeat"
@@ -192,7 +197,13 @@ final class Navigation {
     func oeffneKalender(_ tag: Tag?, modus: KalenderModus = .tag) {
         kalenderTag = tag
         kalenderModus = modus
-        bereich = .kalender
+        bereich = .heute
+        heutePfad.append(KalenderSeite())
+    }
+
+    /// Bereich wechseln – der Kalender ist kein Tab, er öffnet sich über Home.
+    func zeige(_ b: Bereich) {
+        if b == .kalender { oeffneKalender(nil) } else { bereich = b }
     }
     var blatt: Blatt?
     /// Stapel je Tab: Home (Rückblick-Karten, Analysen), Habits, Ziele – der Assistent öffnet darüber
@@ -264,3 +275,6 @@ final class Navigation {
 struct ZielAuswahl: Hashable { var id: UUID }
 /// Für NavigationLink(value:) auf einen Habit
 struct HabitAuswahl: Hashable { var id: UUID }
+
+/// Kalender als Seite im Home-Stapel (seit 27.11.2026 kein eigener Tab).
+struct KalenderSeite: Hashable {}

@@ -159,7 +159,7 @@ struct AppWissenTests {
     }
 
     @Test func habitsUndZieleSindEigeneTabsUndDerRueckblickLiegtAufHome() {
-        #expect(Bereich.allCases.map(\.titel) == ["Home", "Kalender", "Assistent", "Habits", "Ziele"])
+        #expect(Bereich.tabs.map(\.titel) == ["Home", "Journal", "Assistent", "Habits", "Ziele"])
         #expect((AppWissen.bereiche[.heute] ?? "").contains("Rückblick"))
         #expect((AppWissen.fenster["rueckblick"] ?? "").contains("Auffälligste"))
         let a = Werkzeuge.hilfe("Wo finde ich den Rückblick?")

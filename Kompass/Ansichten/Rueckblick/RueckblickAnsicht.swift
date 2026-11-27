@@ -59,7 +59,7 @@ private struct ReelKarte: View {
                 Image(systemName: "chevron.right").font(.caption2.weight(.bold))
             }
             .foregroundStyle(vorn ? Farbe.wort.opacity(0.7) : Farbe.zweitrangig)
-            Text(reel.zahl).font(.system(size: 40, weight: .regular, design: .serif)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text(reel.zahl).font(.system(size: 40, weight: .regular, design: .default)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 .foregroundStyle(vorn ? Farbe.wort : Farbe.text)
             Text(reel.erkenntnis.titel).font(.kompass(.subheadline, .bold)).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(vorn ? Farbe.wort : Farbe.text)

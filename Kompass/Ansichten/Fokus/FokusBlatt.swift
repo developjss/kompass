@@ -67,7 +67,7 @@ private struct FlugAnzeige: View {
         VStack(spacing: 16) {
             kopf
             himmel
-            Text(uhr(sekunden)).font(.system(size: 56, weight: .semibold, design: .serif)).monospacedDigit()
+            Text(uhr(sekunden)).font(.system(size: 56, weight: .semibold, design: .default)).monospacedDigit()
                 .accessibilityLabel("Fokuszeit " + uhr(sekunden))
             Text(phase.text).font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.wortAkzent)
             instrumente
@@ -192,8 +192,8 @@ struct FlugHimmel: View {
                     .shadow(color: Farbe.jetzt.opacity(0.7), radius: 4)
                 Circle().fill(Farbe.wortAkzent).frame(width: 8, height: 8).position(p0)
                 Circle().fill(Farbe.jetzt).frame(width: 8, height: 8).position(p3)
-                Text(von.uppercased()).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1).foregroundStyle(Farbe.wortAkzent).position(x: p0.x + 8, y: p0.y + 24)
-                Text(nach.uppercased()).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1).foregroundStyle(Farbe.jetzt).position(x: p3.x - 6, y: p3.y + 24)
+                Text(von.uppercased()).font(.system(size: 10, weight: .heavy, design: .default)).tracking(1).foregroundStyle(Farbe.wortAkzent).position(x: p0.x + 8, y: p0.y + 24)
+                Text(nach.uppercased()).font(.system(size: 10, weight: .heavy, design: .default)).tracking(1).foregroundStyle(Farbe.jetzt).position(x: p3.x - 6, y: p3.y + 24)
                 Objekt.b747Abflug.bild.resizable().scaledToFit()
                     .frame(width: 64)
                     .shadow(color: .black.opacity(0.45), radius: 8, y: 8)
