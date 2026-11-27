@@ -28,7 +28,7 @@ SwiftUI-App `Kompass.xcodeproj` (iOS 26), Speicherung als Datei auf dem Gerät, 
 
 ## 3. Nächste Schritte
 
-1. **Design neu:** Entwurf als Artefakt (27.11.2026) – der Gründer entscheidet.
+1. **Design neu:** Entwurf https://claude.ai/artifact/2dKAvMBcFbtiXpxn3tKHcf (27.11.2026: Home, Journal, Assistent, Habits, Ziele, Bausteine; Hintergrund in Bewegung, Glaskarten, Nunito) – der Gründer entscheidet.
 2. **Entscheidungen** zu Aufgaben, Google und Journal-Datenschutz (`docs/leitung/entscheidungen.md` §2).
 3. **Personen-Test Journal:** 4 Personen × 3 Wochen – trägt man täglich ein, ab wann entsteht ein Muster?
 4. **Bauen** in vier Blöcken: Journal-Tab statt Kalender → Berater (freie Zeit, Apples Termin-Fenster) → Muster (Rechenregel §15, Freigabe) → Design und Statistiken neu.
