@@ -8,12 +8,29 @@ struct HabitsAnsicht: View {
     @State private var detail = ProcessInfo.processInfo.arguments.contains("-habitsDetail")
     /// Startargument „-habitNeu“ öffnet das Blatt direkt (Prüfen im Simulator)
     @State private var neu = ProcessInfo.processInfo.arguments.contains("-habitNeu")
+    /// Angetipptes Habit (Startargument „-habitWahl <n>“ öffnet es direkt)
+    @State private var gewaehlt: Habit? = HabitsAnsicht.startHabit
+    /// Fortschritt heute je Habit (nur solange die App offen ist – Speichern kommt mit den Funktionen)
+    @State private var fortschritt: [String: Double] = [:]
+    private let habits = Habit.demo
+
+    private static var startHabit: Habit? {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "-habitWahl"), i + 1 < a.count, let n = Int(a[i + 1]), Habit.demo.indices.contains(n) else { return nil }
+        return Habit.demo[n]
+    }
 
     var body: some View {
         NavigationStack {
             inhalt
                 .navigationDestination(isPresented: $detail) { HabitsDetail() }
                 .sheet(isPresented: $neu) { HabitNeuBlatt() }
+                .sheet(item: $gewaehlt) { h in
+                    HabitAuswahlBlatt(habit: h,
+                                      wert: Binding(get: { fortschritt[h.id] ?? 0 }, set: { fortschritt[h.id] = $0 }),
+                                      startErledigt: ProcessInfo.processInfo.arguments.contains("-erledigt"),
+                                      bearbeiten: nil, fokus: nil)
+                }
                 .toolbar(.hidden, for: .navigationBar)
         }
     }
@@ -22,8 +39,9 @@ struct HabitsAnsicht: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 44) {
                 KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
-                           eintraege: [("Lesen", "habit-1"), ("Sport", "habit-2"), ("Meditieren", "habit-3"), ("Lernen", "habit-4"), ("Wasser", "habit-5")],
-                           oeffnen: { detail = true }, plus: { neu = true })
+                           eintraege: habits.map { ($0.name, $0.bild) },
+                           anteile: habits.map { Fortschritt.anteil(wert: fortschritt[$0.id] ?? 0, ziel: $0.tagesziel) },
+                           oeffnen: { detail = true }, plus: { neu = true }, tippen: { gewaehlt = habits[$0] })
                 // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
                            eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
@@ -45,10 +63,14 @@ private struct KreisReihe: View {
     var titel: String
     var text: String
     var eintraege: [(name: String, bild: String)]
+    /// Fortschritt heute je Kreis (0…1), als Ring gezeigt
+    var anteile: [Double] = []
     /// Tipp auf Überschrift oder Pfeil öffnet die Detailseite (nur wo gesetzt)
     var oeffnen: (() -> Void)? = nil
     /// Tipp auf das Plus-Feld (nur wo gesetzt)
     var plus: (() -> Void)? = nil
+    /// Tipp auf einen Kreis (nur wo gesetzt)
+    var tippen: ((Int) -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -72,7 +94,14 @@ private struct KreisReihe: View {
 
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 11) {
-                    ForEach(eintraege, id: \.name) { e in HabitKreis(name: e.name, bild: e.bild) }
+                    ForEach(Array(eintraege.enumerated()), id: \.element.name) { i, e in
+                        let kreis = HabitKreis(name: e.name, bild: e.bild, anteil: anteile.indices.contains(i) ? anteile[i] : 0)
+                        if let tippen {
+                            Button { tippen(i) } label: { kreis }.buttonStyle(.plain)
+                        } else {
+                            kreis
+                        }
+                    }
                     Button { plus?() } label: { HabitPlus() }.buttonStyle(.plain)
                 }
                 .padding(.horizontal, 17)
@@ -87,6 +116,7 @@ private struct KreisReihe: View {
 private struct HabitKreis: View {
     var name: String
     var bild: String
+    var anteil: Double = 0
     private let durchmesser: CGFloat = 73
 
     var body: some View {
@@ -98,6 +128,15 @@ private struct HabitKreis: View {
                 // Ring: dunkles Grau, innen eine feine helle Kante
                 Circle().strokeBorder(Color(0x2B2B2D), lineWidth: 4).frame(width: durchmesser, height: durchmesser)
                 Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5).frame(width: durchmesser - 8, height: durchmesser - 8)
+                // Fortschritt heute: türkiser Bogen im Ring
+                Circle().trim(from: 0, to: anteil)
+                    .stroke(LinearGradient(colors: [Color(0x39DAD7), Color(0xA7FFFF)], startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: durchmesser - 4, height: durchmesser - 4)
+                    .shadow(color: Color(0x2FD0D1).opacity(0.6), radius: 3)
+                    .opacity(anteil > 0 ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.5), value: anteil)
                 Image(systemName: "play.fill").font(.system(size: durchmesser * 0.3))
                     .foregroundStyle(.white).shadow(color: .black.opacity(0.45), radius: 5, y: 1)
                     .offset(x: 1.5)
@@ -107,6 +146,7 @@ private struct HabitKreis: View {
         .frame(width: durchmesser)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
+        .accessibilityValue(anteil >= 1 ? "Heute erledigt" : anteil > 0 ? "\(Int(anteil * 100)) Prozent" : "")
     }
 }
 
