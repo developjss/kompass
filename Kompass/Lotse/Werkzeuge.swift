@@ -331,7 +331,9 @@ enum Werkzeuge {
         // Bereich oder Fenster – was besser passt; bei Gleichstand der Bereich (Einstieg), ein Fenster nur, wenn es klar mehr trifft.
         let bereich = Bereich.allCases.max { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 < treffer(AppWissen.bereiche[$1] ?? "") + treffer($1.titel) * 2 }
         let bereichPunkte = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") + treffer($0.titel) * 2 } ?? 0
-        let fenster = AppWissen.fenster.values.max { treffer($0) < treffer($1) }
+        // Gleichstand: der kürzere (genauere) Text gewinnt, dann der Name – feste Reihenfolge statt zufälliger Wörterbuch-Folge
+        let fenster = AppWissen.fenster.sorted { $0.key < $1.key }.map(\.value).max { a, b in
+            treffer(a) != treffer(b) ? treffer(a) < treffer(b) : a.count > b.count }
         let fensterPunkte = fenster.map(treffer) ?? 0
         // Fenster gegen Bereich: nur Treffer im Text vergleichen – der Tab-Titel („Habits“) darf ein genaueres Fenster nicht verdrängen.
         let bereichText = bereich.map { treffer(AppWissen.bereiche[$0] ?? "") } ?? 0
