@@ -8,18 +8,17 @@ struct HabitAuswahlBlatt: View {
     @Binding var habit: Habit
     /// Gespeicherter Fortschritt heute (nur solange die App offen ist)
     @Binding var wert: Double
-    /// nil = kommt im nächsten Schritt (Hinweis statt Aktion)
-    var fokus: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var ruhig
     @State private var erledigtSeite: Bool
-    @State private var hinweis: String?
+    /// Fokus: ganzer Bildschirm mit Timer
+    @State private var fokusOffen = false
     /// Bearbeiten öffnet das Blatt „Neuer Habit“ – gefüllt mit diesem Habit
     @State private var bearbeitenOffen = false
 
-    init(habit: Binding<Habit>, wert: Binding<Double>, startErledigt: Bool = false, fokus: (() -> Void)?) {
-        _habit = habit; _wert = wert; self.fokus = fokus
+    init(habit: Binding<Habit>, wert: Binding<Double>, startErledigt: Bool = false) {
+        _habit = habit; _wert = wert
         _erledigtSeite = State(initialValue: startErledigt)
     }
 
@@ -34,9 +33,7 @@ struct HabitAuswahlBlatt: View {
         }
         .padding(.horizontal, 16).padding(.top, 18).padding(.bottom, 16)
         .habitBlatt(hoehe: erledigtSeite ? 420 : 384)
-        .alert("\(hinweis ?? "") kommt im nächsten Schritt", isPresented: Binding(get: { hinweis != nil }, set: { if !$0 { hinweis = nil } })) {
-            Button("OK", role: .cancel) {}
-        }
+        .fullScreenCover(isPresented: $fokusOffen) { FokusAnsicht(habit: habit, wert: $wert) }
         .sheet(isPresented: $bearbeitenOffen) {
             HabitNeuBlatt(habit: habit) { neu in
                 // andere Einheit: bisheriger Fortschritt passt nicht mehr
@@ -45,10 +42,11 @@ struct HabitAuswahlBlatt: View {
             }
         }
         .task {
-            // Für Testbilder: `-bearbeiten` öffnet das Bearbeiten-Blatt direkt
-            guard ProcessInfo.processInfo.arguments.contains("-bearbeiten") else { return }
+            // Für Testbilder: `-bearbeiten` / `-fokus` öffnet das Blatt bzw. den Fokus direkt
+            let a = ProcessInfo.processInfo.arguments
+            guard a.contains("-bearbeiten") || a.contains("-fokus") else { return }
             try? await Task.sleep(for: .seconds(0.8))
-            bearbeitenOffen = true
+            if a.contains("-fokus") { fokusOffen = true } else { bearbeitenOffen = true }
         }
     }
 
@@ -94,8 +92,7 @@ struct HabitAuswahlBlatt: View {
 
             HStack(spacing: 10) {
                 Kachel(symbol: "checkmark", titel: "Erledigt", unter: "Eintragen", hervor: status != .erledigt) { wechsel(true) }
-                // PLATZHALTER: Fokus folgt im nächsten Schritt
-                Kachel(symbol: "timer", titel: "Fokus", unter: "Timer starten") { if let fokus { fokus() } else { hinweis = "Fokus" } }
+                Kachel(symbol: "timer", titel: "Fokus", unter: "Timer starten") { fokusOffen = true }
                 Kachel(symbol: "pencil", titel: "Bearbeiten", unter: "Habit ändern") { bearbeitenOffen = true }
             }
             .padding(.top, 24)

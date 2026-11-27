@@ -90,3 +90,43 @@ enum Fortschritt {
 
     private static func runde(_ x: Double) -> Double { (x * 1_000_000).rounded() / 1_000_000 }
 }
+
+/// Fokus-Timer eines Habits – fest gerechnet, mit Tests.
+/// - Dauer: bei Zeit-Einheiten das, was vom Tagesziel noch fehlt (aufgerundet auf 5 Minuten, 5–240 min);
+///   ist das Tagesziel schon erreicht, das ganze Tagesziel. Sonst 30 Minuten (frei einstellbar).
+/// - Timer läuft ab: Habit gilt als erledigt.
+/// - Früher beendet: Zeit-Einheiten bekommen die fokussierte Zeit gutgeschrieben (ganze Minuten bzw. Sekunden),
+///   andere Einheiten bleiben, wie sie sind.
+enum Fokus {
+    static let minMinuten = 5
+    static let maxMinuten = 240
+
+    static func startMinuten(einheit: Einheit, ziel: Double, wert: Double) -> Int {
+        guard einheit.art == .zeit else { return 30 }
+        var rest = einheit.sekunden(ziel) - einheit.sekunden(wert)
+        if rest <= 0 { rest = einheit.sekunden(ziel) }
+        let minuten = Int((Double(rest) / 60).rounded(.up))
+        let auf5 = Int((Double(minuten) / 5).rounded(.up)) * 5
+        return min(max(auf5, minMinuten), maxMinuten)
+    }
+
+    static func ergebnis(wert: Double, einheit: Einheit, ziel: Double, sekunden: Int, fertig: Bool) -> Double {
+        if fertig { return ziel }
+        guard einheit.art == .zeit, sekunden > 0 else { return wert }
+        let dazu: Double
+        switch einheit.id {
+        case "sek": dazu = Double(sekunden)
+        case "std": dazu = Double(sekunden / 60) / 60
+        default: dazu = Double(sekunden / 60)
+        }
+        let neu = wert + dazu
+        return neu >= ziel ? ziel : (neu * 1_000_000).rounded() / 1_000_000
+    }
+
+    /// Anzeige der Uhr: „29:57“, ab einer Stunde „1:05:00“.
+    static func uhr(_ sekunden: Int) -> String {
+        let s = max(sekunden, 0)
+        let h = s / 3600, m = (s % 3600) / 60, r = s % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, r) : String(format: "%02d:%02d", m, r)
+    }
+}
