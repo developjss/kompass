@@ -1,269 +1,294 @@
 import SwiftUI
 
-/// Habits (eigener Tab, Blattwerk): Bühne mit dem Wort „x von y heute“ und der Bordkarte, Karte vorn mit den
-/// heutigen Habits (ein Haken je Zeile, ein grüner Knopf für den offenen), darunter „Diese Woche“.
+/// Mein Weg (dritter Tab, später englisch „Path“; 27.11.2026) – nur Aussehen, nichts reagiert auf Antippen.
+/// Oben die Kreis-Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring,
+/// Bild und Dreieck, Name darunter. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen.
 struct HabitsAnsicht: View {
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-    @Environment(\.accessibilityReduceMotion) private var ruhig
-    @State private var erledigteZeigen = false
+    /// Startargument „-habitsDetail“ öffnet die Detailseite direkt (Prüfen im Simulator)
+    @State private var detail = ProcessInfo.processInfo.arguments.contains("-habitsDetail")
+    /// Startargument „-habitNeu“ öffnet das Blatt direkt (Prüfen im Simulator)
+    @State private var neu = ProcessInfo.processInfo.arguments.contains("-habitNeu")
+    /// Angetipptes Habit (Startargument „-habitWahl <n>“ öffnet es direkt)
+    @State private var gewaehlt: Habit? = HabitsAnsicht.startHabit
+    /// Fortschritt heute je Habit (nur solange die App offen ist – Speichern kommt mit den Funktionen)
+    @State private var fortschritt: [String: Double] = ProcessInfo.processInfo.arguments.contains("-demoStand")
+        ? ["lernen": 21, "sport": 45, "wasser": 1_000] : [:]   // Startargument nur für Testbilder
+    /// Habits (Demo; Änderungen über „Bearbeiten“ gelten, solange die App offen ist)
+    @State private var habits = Habit.demo
+    /// Aufgaben (Demo; Abhaken gilt, solange die App offen ist)
+    @State private var aufgaben = Aufgabe.demo()
+    /// Angetippte Aufgabe (Startargument „-aufgabeWahl <n>“ öffnet sie direkt)
+    @State private var gewaehlteAufgabe: Aufgabe? = {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "-aufgabeWahl"), i + 1 < a.count, let n = Int(a[i + 1]) else { return nil }
+        let d = Aufgabe.demo()
+        return d.indices.contains(n) ? d[n] : nil
+    }()
 
-    var body: some View {
-        let z = speicher.zustand
-        let T = speicher.heute
-        let heute = z.habits.filter { HabitRechnung.geplant($0, am: T) }
-        let offen = heute.filter { !$0.voll(am: T) }
-        let geschafft = heute.filter { $0.voll(am: T) }
-
-        BuehnenSeite(hoehe: Mass.buehneKurz, wort: Self.wort(geschafft: geschafft.count, geplant: heute.count), marke: {
-            MarkenTitel(text: "Habits")
-            Spacer(minLength: 8)
-            RahmenKnopf(symbol: "info", beschriftung: "Erklärung") { nav.blatt = .info(.habits) }
-        }) {
-            VornKarte(abstand: 0) {
-                if z.habits.isEmpty {
-                    Etikett(text: "Heute")
-                    Text("Noch keine Habits.").font(.karteTitel).foregroundStyle(Farbe.text)
-                    Text("Zum Beispiel „20 Minuten lesen“.").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                    Button { nav.blatt = .neu(.habit) } label: { Label("Habit anlegen", systemImage: "plus") }.buttonStyle(.haupt).padding(.top, 8)
-                } else if heute.isEmpty {
-                    Etikett(text: "Heute")
-                    Text("Heute ist kein Habit geplant.").font(.karteTitel).foregroundStyle(Farbe.text)
-                } else {
-                    ForEach(offen) { HeuteZeile(habit: $0) }
-                    if !geschafft.isEmpty {
-                        if !offen.isEmpty { Rectangle().fill(Farbe.linie).frame(height: 1) }
-                        Button { withAnimation(ruhig ? nil : .snappy(duration: 0.2)) { erledigteZeigen.toggle() } } label: {
-                            HStack {
-                                Text("\(geschafft.count) erledigt").font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                                Spacer()
-                                Image(systemName: erledigteZeigen ? "chevron.up" : "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(Farbe.pfeil)
-                            }
-                            .frame(minHeight: 44).contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(erledigteZeigen ? "Erledigte ausblenden" : "\(geschafft.count) erledigte zeigen")
-                        if erledigteZeigen { ForEach(geschafft) { HeuteZeile(habit: $0) } }
-                    }
-                }
-            }
-
-            if !z.habits.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Diese Woche").font(.abschnitt).foregroundStyle(Farbe.text).accessibilityAddTraits(.isHeader)
-                        Spacer()
-                        Text("\(z.habits.count) Habit\(z.habits.count == 1 ? "" : "s")").font(.kompass(.subheadline, .bold)).foregroundStyle(Farbe.zweitrangig)
-                    }
-                    .padding(.top, 8)
-                    HinzufuegenKarte(titel: "Habit hinzufügen", unter: "täglich, an Wochentagen oder n-mal pro Woche") { nav.blatt = .neu(.habit) }
-                    GruppierteListe {
-                        ForEach(z.habits.sorted { wochenReihenfolge($0) < wochenReihenfolge($1) }) { WochenZeile(habit: $0) }
-                    }
-                }
-                .padding(.horizontal, Mass.rand).padding(.top, 12)
-            }
-        }
+    private static var startHabit: Habit? {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "-habitWahl"), i + 1 < a.count, let n = Int(a[i + 1]), Habit.demo.indices.contains(n) else { return nil }
+        return Habit.demo[n]
     }
-
-    /// Das Wort: wie viele der heute geplanten Habits schon stehen.
-    nonisolated static func wort(geschafft: Int, geplant: Int) -> Wort {
-        if geplant == 0 { return Wort(zeilen: ["Heute"], akzent: "frei.", groesse: Wort.kleinGroesse) }
-        if geschafft == geplant { return Wort(zeilen: ["Alle \(geplant)"], akzent: "geschafft.", groesse: Wort.kleinGroesse) }
-        return Wort(zeilen: ["\(geschafft) von \(geplant)"], akzent: "heute.", groesse: Wort.kleinGroesse)
-    }
-
-    private func wochenReihenfolge(_ h: Habit) -> Int { if case .proWoche = h.rhythmus { return 0 } else { return 1 } }
-}
-
-// MARK: Zeilen
-
-/// Heute: Kachel · Titel · Stand („12 von 20 min · 21:00“) · Haken rechts. Tipp auf die Zeile = Menge eintragen.
-private struct HeuteZeile: View {
-    var habit: Habit
-    /// Nur der erste offene Habit bekommt den grünen Knopf (Hick: eine Hauptaktion)
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-
-    var body: some View {
-        let T = speicher.heute
-        let voll = habit.voll(am: T)
-        let anteil = habit.anteil(am: T)
-        HStack(spacing: 12) {
-            Button { tippen() } label: {
-                HStack(spacing: 12) {
-                    ZeichenKreis(symbol: habit.symbol, gruen: voll)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(habit.titel).font(.zeile).foregroundStyle(voll ? Farbe.zweitrangig : Farbe.text).lineLimit(1)
-                        Text(stand(T)).font(.unterzeile).foregroundStyle(voll ? Farbe.akzent : Farbe.zweitrangig).lineLimit(1)
-                        if habit.menge != nil, anteil > 0, !voll {
-                            Balken(anteil: anteil, farbe: Farbe.handlung, spur: Farbe.linie, hoehe: 3).padding(.top, 2).padding(.trailing, 8)
-                        }
-                    }
-                    Spacer(minLength: 4)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint(habit.menge == nil ? "Öffnet den Habit" : "Menge eintragen")
-            Haken(an: voll, farbe: Farbe.handlung, beschriftung: habit.titel) {
-                speicher.aendern { $0.habitUmschalten(habit.id, am: T) }
-            }
-        }
-        .frame(minHeight: Mass.zeile)
-    }
-
-    private func stand(_ T: Tag) -> String {
-        var teile: [String] = []
-        if habit.menge != nil { teile.append(HabitRechnung.mengenText(habit, am: T)) }
-        else { teile.append(habit.voll(am: T) ? "erledigt" : "offen") }
-        if !habit.voll(am: T), let e = habit.erinnerung { teile.append(Beispieltermine.uhrzeit(e)) }
-        if habit.voll(am: T) { let s = HabitRechnung.serie(habit, heute: T); if s > 1 { teile.append("Serie \(s)") } }
-        return teile.prefix(2).joined(separator: " · ")
-    }
-
-    private func tippen() {
-        if habit.menge != nil { nav.blatt = .habitMenge(habit.id, tag: speicher.heute.text) } else { nav.oeffneHabit(habit.id) }
-    }
-}
-
-/// Diese Woche: Wochen-Habits mit Segment-Balken („2 von 3 · noch 2 Tage“), Tages-Habits mit sieben Punkten (heute mit Ring).
-private struct WochenZeile: View {
-    var habit: Habit
-    @Environment(Speicher.self) private var speicher
-    @Environment(Navigation.self) private var nav
-    private let kurz = ["M", "D", "M", "D", "F", "S", "S"]
-
-    var body: some View {
-        let T = speicher.heute
-        let c = Farbe.handlung
-        let w = HabitRechnung.woche(habit, montag: T.montag, seit: habit.angelegt, heute: T)
-        Button { nav.oeffneHabit(habit.id) } label: {
-            HStack(spacing: 12) {
-                ZeichenKreis(symbol: habit.symbol).padding(.leading, 8)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(habit.titel).font(.zeile).foregroundStyle(Farbe.text).lineLimit(1)
-                    if case .proWoche(let n) = habit.rhythmus {
-                        HStack(spacing: 10) {
-                            HStack(spacing: 3) {
-                                ForEach(0..<n, id: \.self) { i in
-                                    Capsule().fill(Double(i) < w.erledigt ? c : Farbe.linie).frame(height: 6)
-                                }
-                            }
-                            .frame(maxWidth: 120)
-                            Text(wochenText(w, n: n, T: T)).font(.unterzeile).foregroundStyle(w.erfuellt ? Farbe.akzent : Farbe.zweitrangig).lineLimit(1)
-                        }
-                    } else {
-                        HStack(spacing: 6) {
-                            ForEach(0..<7, id: \.self) { i in
-                                let d = T.montag.plus(tage: i)
-                                let geplant = HabitRechnung.geplant(habit, am: d)
-                                let a = habit.anteil(am: d)
-                                ZStack {
-                                    Circle().fill(a >= 1 ? c : (geplant ? c.opacity(0.14) : Color.clear)).frame(width: 18, height: 18)
-                                    if a > 0, a < 1 { Circle().trim(from: 0, to: a).stroke(c, lineWidth: 2.5).rotationEffect(.degrees(-90)).frame(width: 15, height: 15) }
-                                    if d == T { Circle().strokeBorder(c, lineWidth: 1.5).frame(width: 22, height: 22) }
-                                    Text(kurz[i]).font(.system(size: 9, weight: .bold)).foregroundStyle(a >= 1 ? Farbe.aufFarbe : (geplant ? Farbe.text : Farbe.pfeil))
-                                }
-                                .frame(width: 22, height: 22)
-                                .opacity(d > T && !geplant ? 0.3 : 1)
-                            }
-                            Spacer(minLength: 0)
-                            Text(w.geplant > 0 ? "\(Zahl.text(w.erledigt, stellen: 1)) von \(w.geplant)" : "–")
-                                .font(.unterzeile).foregroundStyle(Farbe.zweitrangig).monospacedDigit()
-                        }
-                    }
-                }
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Farbe.pfeil)
-            }
-            .padding(.trailing, 12)
-            .frame(minHeight: Mass.zeile)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(habit.titel), diese Woche \(Zahl.text(w.erledigt, stellen: 1)) von \(w.geplant)")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    private func wochenText(_ w: (geplant: Int, erledigt: Double, erfuellt: Bool), n: Int, T: Tag) -> String {
-        if w.erfuellt { return "Woche geschafft" }
-        let rest = 7 - T.wochentag
-        return "\(Zahl.text(w.erledigt, stellen: 1)) von \(n)" + (rest > 0 ? " · noch \(rest) Tag\(rest == 1 ? "" : "e")" : "")
-    }
-}
-
-// MARK: Menge eintragen
-
-/// „Wie viel heute?“ – große Zahl, Einheit, Schnellwahl (halb · ganz · mehr), Tastatur. Speichert beim Sichern.
-struct HabitMengeBlatt: View {
-    var habitID: UUID
-    var tag: Tag
-    @Environment(Speicher.self) private var speicher
-    @Environment(\.dismiss) private var dismiss
-    @State private var wert: Double = 0
-    @State private var geladen = false
-    @FocusState private var fokus: Bool
 
     var body: some View {
         NavigationStack {
-            if let h = speicher.zustand.habit(habitID) {
-                let soll = h.menge ?? 1
-                let c = Farbe.handlung
-                ScrollView {
-                    VStack(spacing: 20) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            TextField("0", value: $wert, format: .number.precision(.fractionLength(0...1)))
-                                .keyboardType(.decimalPad).focused($fokus)
-                                .font(.system(size: 56, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-                                .fixedSize().foregroundStyle(Farbe.text)
-                            Text(h.einheit?.kurz ?? "×").font(.kompass(.title2, .bold)).foregroundStyle(Farbe.zweitrangig)
-                        }
-                        .padding(.top, 8)
-                        Text("von \(Zahl.text(soll, stellen: 1)) \(h.einheit?.kurz ?? "") · \(Zahl.prozent(min(1, wert / soll)))")
-                            .font(.unterzeile).foregroundStyle(Farbe.zweitrangig)
-                        Balken(anteil: min(1, wert / soll), farbe: c, spur: Farbe.linie, hoehe: 8).padding(.horizontal, 40)
-                        HStack(spacing: 8) {
-                            ForEach(HabitVorschlag.schnellwahl(soll: soll), id: \.self) { s in
-                                Button { wert = s } label: {
-                                    Text(s == soll ? "ganz" : Zahl.text(s, stellen: 1))
-                                        .font(.kompass(.subheadline, .bold))
-                                        .padding(.horizontal, 14).frame(minHeight: 40)
-                                        .background(wert == s ? c : Farbe.karte, in: Capsule())
-                                        .overlay(Capsule().strokeBorder(wert == s ? .clear : Farbe.linie, lineWidth: 1.5))
-                                        .foregroundStyle(wert == s ? Farbe.aufFarbe : Farbe.text)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        Text(tag == speicher.heute ? "Heute" : tag.datum().formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
-                            .font(.klein).foregroundStyle(Farbe.zweitrangig)
-                    }
-                    .padding(Mass.rand)
+            inhalt
+                .navigationDestination(isPresented: $detail) {
+                    // Stand heute je Habit für die Kreise auf der Habits-Seite
+                    HabitsDetail(anteil: { name in
+                        guard let h = habits.first(where: { $0.name == name }) else { return 0 }
+                        return Fortschritt.anteil(wert: fortschritt[h.id] ?? 0, ziel: h.tagesziel)
+                    })
                 }
-                .background(Farbe.grund.ignoresSafeArea())
-                .navigationTitle(h.titel)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Sichern") {
-                            let w = wert, id = habitID, t = tag
-                            speicher.aendern { $0.habitEintragen(id, menge: w, am: t) }
-                            dismiss()
-                        }
-                    }
+                .sheet(isPresented: $neu) { HabitNeuBlatt() }
+                .sheet(item: $gewaehlteAufgabe) { a in
+                    AufgabeBlatt(aufgabe: Binding(get: { aufgaben.first { $0.id == a.id } ?? a },
+                                                  set: { neu in if let i = aufgaben.firstIndex(where: { $0.id == neu.id }) { aufgaben[i] = neu } }))
                 }
-                .onAppear {
-                    guard !geladen else { return }
-                    geladen = true
-                    wert = h.eintraege[tag] ?? 0
-                    fokus = wert == 0
+                .sheet(item: $gewaehlt) { h in
+                    HabitAuswahlBlatt(habit: Binding(get: { habits.first { $0.id == h.id } ?? h },
+                                                     set: { neu in if let i = habits.firstIndex(where: { $0.id == neu.id }) { habits[i] = neu } }),
+                                      wert: Binding(get: { fortschritt[h.id] ?? 0 }, set: { fortschritt[h.id] = $0 }),
+                                      startErledigt: ProcessInfo.processInfo.arguments.contains("-erledigt"),
+                                      loeschen: {
+                                          gewaehlt = nil
+                                          withAnimation(.easeInOut(duration: 0.35)) {
+                                              habits.removeAll { $0.id == h.id }
+                                              fortschritt[h.id] = nil
+                                          }
+                                      })
                 }
-            } else {
-                ContentUnavailableView("Habit nicht gefunden", systemImage: "questionmark")
-            }
+                .toolbar(.hidden, for: .navigationBar)
         }
-        .presentationDetents([.medium])
+    }
+
+    private var inhalt: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 44) {
+                KreisReihe(titel: "Habits", text: "Deine Gewohnheiten für Fokus, Ruhe und Schlaf – jeden Tag ein Stück.",
+                           eintraege: habits.map { ($0.name, $0.bild) },
+                           anteile: habits.map { Fortschritt.anteil(wert: fortschritt[$0.id] ?? 0, ziel: $0.tagesziel) },
+                           fotos: habits.map(\.bildDaten),
+                           oeffnen: { detail = true }, plus: { neu = true }, tippen: { gewaehlt = habits[$0] })
+                // Aufgaben (englisch später „To-dos“): offene zuerst, erledigte ans Ende
+                let reihe = AufgabenRegel.sortiert(aufgaben)
+                KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
+                           eintraege: reihe.map { ($0.name, $0.bild) },
+                           anteile: reihe.map { AufgabenRegel.anteil($0) },
+                           tippen: { gewaehlteAufgabe = reihe[$0] })
+                    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: reihe.map(\.id))
+                ZieleReihe()
+            }
+            .padding(.top, 28)
+            .padding(.bottom, 170)
+        }
+        .scrollIndicators(.hidden)
+        .foregroundStyle(DFarbe.text)
+        .strahlenGrund()
+        .accessibilityIdentifier("seite.habits")
+    }
+}
+
+/// Reihe im Aufbau der „Mixes“-Reihe des Vorbilds: Überschrift mit Pfeil, graue Zeile, Kreise mit Ring, Bild und Dreieck,
+/// Name darunter, am Ende ein Plus-Feld. Viereinhalb Kreise sichtbar, die Reihe lässt sich wischen. Noch ohne Funktion.
+private struct KreisReihe: View {
+    var titel: String
+    var text: String
+    var eintraege: [(name: String, bild: String)]
+    /// Fortschritt heute je Kreis (0…1), als Ring gezeigt
+    var anteile: [Double] = []
+    /// Eigene Fotos je Kreis (nil = Bild aus den Assets)
+    var fotos: [Data?] = []
+    /// Tipp auf Überschrift oder Pfeil öffnet die Detailseite (nur wo gesetzt)
+    var oeffnen: (() -> Void)? = nil
+    /// Tipp auf das Plus-Feld (nur wo gesetzt)
+    var plus: (() -> Void)? = nil
+    /// Tipp auf einen Kreis (nur wo gesetzt)
+    var tippen: ((Int) -> Void)? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                Button { oeffnen?() } label: {
+                    HStack(spacing: 8) {
+                        Text(titel).font(.system(size: 19, weight: .semibold))
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                    }
+                    .frame(minHeight: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, -10)
+                Text(text)
+                    .font(.system(size: 17)).foregroundStyle(Color(0x8E8E93)).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 30)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: 11) {
+                    ForEach(Array(eintraege.enumerated()), id: \.element.name) { i, e in
+                        let kreis = HabitKreis(name: e.name, bild: e.bild, foto: fotos.indices.contains(i) ? fotos[i] : nil,
+                                               anteil: anteile.indices.contains(i) ? anteile[i] : 0)
+                        if let tippen {
+                            Button { tippen(i) } label: { kreis }.buttonStyle(.plain)
+                        } else {
+                            kreis
+                        }
+                    }
+                    Button { plus?() } label: { HabitPlus() }.buttonStyle(.plain)
+                }
+                .padding(.horizontal, 17)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.top, 24)
+        }
+    }
+}
+
+/// Ein Kreis: dunkler Ring, Bild, weißes Dreieck mit weichem Schatten, Name darunter.
+private struct HabitKreis: View {
+    var name: String
+    var bild: String
+    var foto: Data? = nil
+    var anteil: Double = 0
+    private let durchmesser: CGFloat = 73
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HabitRund(bild: bild, foto: foto, anteil: anteil, durchmesser: durchmesser)
+            Text(name).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(width: durchmesser)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(name)
+        .accessibilityValue(anteil >= 1 ? "Heute erledigt" : anteil > 0 ? "\(Int(anteil * 100)) Prozent" : "")
+    }
+}
+
+/// Rundes Habit-Bild (ohne Play-Zeichen, Gründer 28.11.2026): dunkler Ring, feine helle Kante, heutiger Stand als
+/// türkiser Bogen im Ring (ohne Haken, Gründer 28.11.2026). Für „Mein Weg“ und die Habits-Seite.
+struct HabitRund: View {
+    var bild: String
+    var foto: Data? = nil
+    var anteil: Double
+    var durchmesser: CGFloat
+
+    private var ring: CGFloat { max(3, durchmesser * 0.055) }
+
+    var body: some View {
+        ZStack {
+            Group {
+                if let foto, let b = UIImage(data: foto) { Image(uiImage: b).resizable().scaledToFill() } else { Image(bild).resizable().scaledToFill() }
+            }
+            .frame(width: durchmesser - ring * 2, height: durchmesser - ring * 2)
+            .clipShape(Circle())
+            Circle().strokeBorder(Color(0x2B2B2D), lineWidth: ring).frame(width: durchmesser, height: durchmesser)
+            Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5).frame(width: durchmesser - ring * 2, height: durchmesser - ring * 2)
+            // Stand heute: türkiser Bogen im Ring
+            Circle().trim(from: 0, to: min(max(anteil, 0), 1))
+                .stroke(LinearGradient(colors: [Color(0x39DAD7), Color(0xA7FFFF)], startPoint: .top, endPoint: .bottom),
+                        style: StrokeStyle(lineWidth: ring * 0.75, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: durchmesser - ring, height: durchmesser - ring)
+                .shadow(color: Color(0x2FD0D1).opacity(0.6), radius: 3)
+                .opacity(anteil > 0 ? 1 : 0)
+                .animation(.easeInOut(duration: 0.5), value: anteil)
+        }
+        .frame(width: durchmesser, height: durchmesser)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Plus-Feld am Ende der Reihe (Vorlage: dunkler Kreis mit feiner heller Kante, weißes Plus, graue Beschriftung) – noch ohne Funktion.
+private struct HabitPlus: View {
+    private let durchmesser: CGFloat = 73
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle().fill(LinearGradient(colors: [Color(0x232323), Color(0x1C1C1C)], startPoint: .top, endPoint: .bottom))
+                Circle().strokeBorder(LinearGradient(colors: [.white.opacity(0.05), .white.opacity(0.28)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
+                Image(systemName: "plus").font(.system(size: durchmesser * 0.3, weight: .bold)).foregroundStyle(.white)
+            }
+            .frame(width: durchmesser, height: durchmesser)
+            Text("Neu").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(0x9A9A9A))
+        }
+        .frame(width: durchmesser)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Neuer Habit")
+    }
+}
+
+/// Ziele – Aufbau 1:1 wie die „Digital Detox“-Reihe des Vorbilds: Überschrift ohne Pfeil, graue Zeile, hohe Bildkarten
+/// (229 × 294 pt, Radius 32), unten unscharf und dunkel, Titel, getönte Unterzeile und eine Glas-Pille mit Dreieck. Noch ohne Funktion.
+private struct ZieleReihe: View {
+    private let ziele = Ziel.demo
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Ziele").font(.system(size: 19, weight: .semibold))
+                Text("Wohin du langfristig willst.").font(.system(size: 17)).foregroundStyle(Color(0x8E8E93))
+            }
+            .padding(.horizontal, 32)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal) {
+                HStack(spacing: 16) {
+                    ForEach(ziele) { z in ZielKarte(titel: z.titel, unter: z.unter, dauer: z.dauer, bild: z.bild) }
+                }
+                .padding(.horizontal, 16)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.top, 26)
+        }
+    }
+}
+
+struct ZielKarte: View {
+    var titel: String
+    var unter: String
+    var dauer: String
+    var bild: String
+    /// Maßstab (1 = Originalgröße 229 × 294 auf „Mein Weg“)
+    var s: CGFloat = 1
+    private var breite: CGFloat { 229 * s }
+    private var hoehe: CGFloat { 294 * s }
+    private var radius: CGFloat { 32 * s }
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            // Bild, unten weich unscharf (gleiches Bild unscharf darübergelegt, nach unten eingeblendet)
+            ZStack {
+                Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
+                Image(bild).resizable().scaledToFill().frame(width: breite, height: hoehe).clipped()
+                    .blur(radius: 18 * s)
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0.42), .init(color: .black, location: 0.7)], startPoint: .top, endPoint: .bottom))
+                LinearGradient(stops: [.init(color: .clear, location: 0.45), .init(color: .black.opacity(0.55), location: 0.78), .init(color: .black.opacity(0.92), location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(titel).font(.system(size: 24 * s, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
+                Text(unter).font(.system(size: 16 * s)).foregroundStyle(.white.opacity(0.42)).lineLimit(1)
+                HStack(spacing: 6) {
+                    Image(systemName: "play.fill").font(.system(size: 14 * s))
+                    Text(dauer).font(.system(size: 18 * s, weight: .medium))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14 * s).frame(height: 40 * s)
+                .background { ZStack { Capsule().fill(.ultraThinMaterial); Capsule().fill(Color.black.opacity(0.38)) } }
+                .environment(\.colorScheme, .dark)
+                .padding(.top, 20 * s)
+            }
+            .padding(.leading, 24 * s).padding(.trailing, 12 * s).padding(.bottom, 23 * s)
+        }
+        .frame(width: breite, height: hoehe)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.4), .white.opacity(0.08), .white.opacity(0.16)], startPoint: .top, endPoint: .bottom), lineWidth: 1) }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(titel), \(unter), \(dauer)")
     }
 }

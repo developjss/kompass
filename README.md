@@ -1,9 +1,6 @@
-# Kompass
+# Compass
 
-To-dos, Kalender, Habits und Ziele in einer App – „heute“, „täglich“ und „morgen“ an einem Ort. Ergänzt Google- und Apple-Kalender, ersetzt sie nicht.
+Bildschirmzeit und Fokus fürs iPhone – Neustart am 27.11.2026.
 
-- **Für den Gründer:** `docs/produkt/roter-faden/kompass-roter-faden.docx` – die App Seite für Seite
-- **Stand und nächste Schritte:** `docs/stand.md`
-- **Aufgaben:** `/fahrplan` in Claude Code
-- **Klick-Dummy:** `prototyp/index.html` (Desktop) und `prototyp/phone.html` (iPhone) – im Browser öffnen
-- Wegweiser zu allen Dokumenten: `docs/README.md`
+- Stand: `docs/stand.md` · Plan: `docs/plan.md` · Rückblick: `docs/frueher.md`
+- App: `Kompass.xcodeproj` (SwiftUI, Scheme „Kompass“; der Projektname ist noch der alte, die App heißt Compass)

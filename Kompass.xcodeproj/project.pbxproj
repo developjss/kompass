@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B10000000000000000000043 /* CompassLive.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* CompassLive.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		A10000000000000000000019 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,11 +25,33 @@
 			remoteGlobalIDString = A10000000000000000000010;
 			remoteInfo = Kompass;
 		};
+		B10000000000000000000041 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B10000000000000000000020;
+			remoteInfo = CompassLive;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B10000000000000000000042 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B10000000000000000000043 /* CompassLive.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000006 /* Kompass.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kompass.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000007 /* KompassTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KompassTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000001 /* CompassLive.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CompassLive.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000057 /* KompassUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KompassUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -43,6 +69,16 @@
 		A10000000000000000000055 /* KompassUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = KompassUITests;
+			sourceTree = "<group>";
+		};
+		B10000000000000000000002 /* CompassLive */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CompassLive;
+			sourceTree = "<group>";
+		};
+		B10000000000000000000003 /* Gemeinsam */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Gemeinsam;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +105,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B10000000000000000000010 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +121,8 @@
 				A10000000000000000000004 /* Kompass */,
 				A10000000000000000000005 /* KompassTests */,
 				A10000000000000000000055 /* KompassUITests */,
+				B10000000000000000000003 /* Gemeinsam */,
+				B10000000000000000000002 /* CompassLive */,
 				A10000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +133,7 @@
 				A10000000000000000000006 /* Kompass.app */,
 				A10000000000000000000007 /* KompassTests.xctest */,
 				A10000000000000000000057 /* KompassUITests.xctest */,
+				B10000000000000000000001 /* CompassLive.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,13 +148,16 @@
 				A10000000000000000000012 /* Sources */,
 				A10000000000000000000013 /* Frameworks */,
 				A10000000000000000000014 /* Resources */,
+				B10000000000000000000042 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B10000000000000000000040 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A10000000000000000000004 /* Kompass */,
+				B10000000000000000000003 /* Gemeinsam */,
 			);
 			name = Kompass;
 			packageProductDependencies = (
@@ -163,6 +212,29 @@
 			productReference = A10000000000000000000057 /* KompassUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		B10000000000000000000020 /* CompassLive */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B10000000000000000000030 /* Build configuration list for PBXNativeTarget "CompassLive" */;
+			buildPhases = (
+				B10000000000000000000011 /* Sources */,
+				B10000000000000000000010 /* Frameworks */,
+				B10000000000000000000012 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B10000000000000000000002 /* CompassLive */,
+				B10000000000000000000003 /* Gemeinsam */,
+			);
+			name = CompassLive;
+			packageProductDependencies = (
+			);
+			productName = CompassLive;
+			productReference = B10000000000000000000001 /* CompassLive.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -173,6 +245,9 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					B10000000000000000000020 = {
+						CreatedOnToolsVersion = 27.2;
+					};
 					A10000000000000000000010 = {
 						CreatedOnToolsVersion = 27.2;
 					};
@@ -203,6 +278,7 @@
 				A10000000000000000000010 /* Kompass */,
 				A10000000000000000000011 /* KompassTests */,
 				A10000000000000000000051 /* KompassUITests */,
+				B10000000000000000000020 /* CompassLive */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +299,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A10000000000000000000017 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B10000000000000000000012 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +336,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B10000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +355,11 @@
 			isa = PBXTargetDependency;
 			target = A10000000000000000000010 /* Kompass */;
 			targetProxy = A10000000000000000000019 /* PBXContainerItemProxy */;
+		};
+		B10000000000000000000040 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B10000000000000000000020 /* CompassLive */;
+			targetProxy = B10000000000000000000041 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -348,7 +443,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Dev";
+				INFOPLIST_KEY_CFBundleDisplayName = "Compass Dev";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -377,7 +473,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kompass Beta";
+				INFOPLIST_KEY_CFBundleDisplayName = "Compass Beta";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -406,7 +503,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Kompass;
+				INFOPLIST_KEY_CFBundleDisplayName = Compass;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Kompass zeigt deine Termine neben Aufgaben und Habits, rechnet freie Zeit und lässt dich Termine verschieben, bearbeiten und anlegen. Alles bleibt in deinem Kalender auf dem Gerät – nichts geht an Kompass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -525,6 +623,78 @@
 			};
 			name = Release;
 		};
+		B10000000000000000000031 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CompassLive-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Compass;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kompass.Kompass.dev.Live;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B10000000000000000000032 /* Beta */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CompassLive-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Compass;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kompass.Kompass.beta.Live;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Beta;
+		};
+		B10000000000000000000033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CompassLive-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Compass;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kompass.Kompass.Live;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -564,6 +734,16 @@
 				A10000000000000000000061 /* Debug */,
 				A10000000000000000000062 /* Beta */,
 				A10000000000000000000063 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B10000000000000000000030 /* Build configuration list for PBXNativeTarget "CompassLive" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B10000000000000000000031 /* Debug */,
+				B10000000000000000000032 /* Beta */,
+				B10000000000000000000033 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
