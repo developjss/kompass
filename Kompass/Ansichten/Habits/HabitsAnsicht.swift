@@ -15,6 +15,15 @@ struct HabitsAnsicht: View {
         ? ["lernen": 21, "sport": 45, "wasser": 1_000] : [:]   // Startargument nur für Testbilder
     /// Habits (Demo; Änderungen über „Bearbeiten“ gelten, solange die App offen ist)
     @State private var habits = Habit.demo
+    /// Aufgaben (Demo; Abhaken gilt, solange die App offen ist)
+    @State private var aufgaben = Aufgabe.demo()
+    /// Angetippte Aufgabe (Startargument „-aufgabeWahl <n>“ öffnet sie direkt)
+    @State private var gewaehlteAufgabe: Aufgabe? = {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "-aufgabeWahl"), i + 1 < a.count, let n = Int(a[i + 1]) else { return nil }
+        let d = Aufgabe.demo()
+        return d.indices.contains(n) ? d[n] : nil
+    }()
 
     private static var startHabit: Habit? {
         let a = ProcessInfo.processInfo.arguments
@@ -33,6 +42,10 @@ struct HabitsAnsicht: View {
                     })
                 }
                 .sheet(isPresented: $neu) { HabitNeuBlatt() }
+                .sheet(item: $gewaehlteAufgabe) { a in
+                    AufgabeBlatt(aufgabe: Binding(get: { aufgaben.first { $0.id == a.id } ?? a },
+                                                  set: { neu in if let i = aufgaben.firstIndex(where: { $0.id == neu.id }) { aufgaben[i] = neu } }))
+                }
                 .sheet(item: $gewaehlt) { h in
                     HabitAuswahlBlatt(habit: Binding(get: { habits.first { $0.id == h.id } ?? h },
                                                      set: { neu in if let i = habits.firstIndex(where: { $0.id == neu.id }) { habits[i] = neu } }),
@@ -58,9 +71,13 @@ struct HabitsAnsicht: View {
                            anteile: habits.map { Fortschritt.anteil(wert: fortschritt[$0.id] ?? 0, ziel: $0.tagesziel) },
                            fotos: habits.map(\.bildDaten),
                            oeffnen: { detail = true }, plus: { neu = true }, tippen: { gewaehlt = habits[$0] })
-                // Aufgaben (englisch später „To-dos“) – Aussehen 1:1 wie die Habit-Reihe
+                // Aufgaben (englisch später „To-dos“): offene zuerst, erledigte ans Ende
+                let reihe = AufgabenRegel.sortiert(aufgaben)
                 KreisReihe(titel: "Aufgaben", text: "Was heute erledigt werden will – Schritt für Schritt abhaken.",
-                           eintraege: [("E-Mails", "habit-4"), ("Einkaufen", "habit-1"), ("Anrufen", "habit-3"), ("Lernplan", "habit-2"), ("Steuer", "habit-5")])
+                           eintraege: reihe.map { ($0.name, $0.bild) },
+                           anteile: reihe.map { AufgabenRegel.anteil($0) },
+                           tippen: { gewaehlteAufgabe = reihe[$0] })
+                    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: reihe.map(\.id))
                 ZieleReihe()
             }
             .padding(.top, 28)

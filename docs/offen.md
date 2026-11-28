@@ -34,7 +34,10 @@ Stand: 27. November 2026. [ENTSCHEIDUNG – 27.11.2026, Gründer]: Zuerst wird d
 - Habits abhaken, Erfolgsquote berechnen und die Werte auf der Habits-Seite (Habits heute, Weitere Habits, Erfolgsquote) sind feste Demo-Werte.
 
 **Aufgaben und Ziele**
-- Anlegen, abhaken, löschen, Ziele mit eigenem Bild.
+- Aufgaben-Blatt (Schritte abhaken, Compass-Balken, Fokus) gebaut – gilt nur, solange die App offen ist.
+- Aufgabe bearbeiten und anlegen (Plus „Neu“ in der Aufgaben-Reihe) fehlen noch; „Bearbeiten“ zeigt nur einen Hinweis.
+- Erledigte Aufgaben am nächsten Tag ausblenden, Liste „Erledigt“ über „Aufgaben ›“, Erinnerung bei „Fällig am“.
+- Ziele anlegen und löschen, Ziele mit eigenem Bild.
 
 **Home**
 - Alle Zahlen (Werte-Reihe, Bildschirmzeit „2h 4m“, Balken, Serie „1“) sind feste Demo-Werte.
