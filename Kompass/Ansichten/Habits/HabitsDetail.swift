@@ -4,6 +4,8 @@ import SwiftUI
 /// Aufbau nach Opals Bildschirmzeit-Seite: „Ablenkende Apps“ (Balken rot) → Habits heute und Weitere Habits,
 /// „Andere Apps“ (Balken Limette → Aqua) → Erfolgsquote. Maße aus den Vorlagen gemessen (Zeilenabstand 59 pt, Bild 32 pt).
 struct HabitsDetail: View {
+    /// Stand heute je Habit-Name (0…1) für den Ring um das Bild
+    var anteil: (String) -> Double = { _ in 0 }
     @Environment(\.dismiss) private var dismiss
     /// Wie weit gescrollt ist – der Kopf wird erst beim Scrollen dunkel/unscharf, oben leuchtet das Licht frei hinter der Insel
     @State private var versatz: CGFloat = 0
@@ -37,12 +39,12 @@ struct HabitsDetail: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Habits heute: immer alle sichtbar, daher ohne „Alle anzeigen“
-                ZeitAbschnitt(titel: "Habits heute", summe: "1h 55m", zeilen: heute, mehr: nil)
+                ZeitAbschnitt(titel: "Habits heute", summe: "1h 55m", zeilen: heute, mehr: nil, anteil: anteil)
                 Trennlinie()
                 ZeitAbschnitt(titel: "Weitere Habits", summe: "1h 50m", zeilen: weitere,
-                              mehr: Zeile(name: "Stretching", bild: "habit-3", wert: "", anteil: 0), start: 0.3)
+                              mehr: Zeile(name: "Stretching", bild: "habit-3", wert: "", anteil: 0), start: 0.3, anteil: anteil)
                 Trennlinie()
-                QuotenAbschnitt(titel: "Erfolgsquote", schnitt: "63 %", zeilen: quote, start: 0.5)
+                QuotenAbschnitt(titel: "Erfolgsquote", schnitt: "63 %", zeilen: quote, start: 0.5, anteil: anteil)
             }
             .padding(.top, 70)
             .padding(.bottom, 170)
@@ -106,6 +108,7 @@ private struct ZeitAbschnitt: View {
     var mehr: Zeile?
     /// Verzögerung des ersten Balkens (Abschnitte fahren nacheinander ein)
     var start: Double = 0
+    var anteil: (String) -> Double = { _ in 0 }
     private let maxBalken: CGFloat = 113
 
     var body: some View {
@@ -119,7 +122,7 @@ private struct ZeitAbschnitt: View {
             VStack(alignment: .leading, spacing: 19) {
                 ForEach(Array(zeilen.enumerated()), id: \.element.id) { i, z in
                     HStack(alignment: .center, spacing: 18) {
-                        HabitBild(bild: z.bild, groesse: HabitsDetail.bildGroesse)
+                        HabitRund(bild: z.bild, anteil: anteil(z.name), durchmesser: HabitsDetail.bildGroesse)
                         VStack(alignment: .leading, spacing: 8) {
                             Text(z.name).font(.system(size: 17))
                             EinfahrBalken(breite: max(18, maxBalken * z.anteil), hoehe: 7, art: .staub,
@@ -130,7 +133,7 @@ private struct ZeitAbschnitt: View {
                 }
                 if let mehr {
                     HStack(spacing: 18) {
-                        HabitBild(bild: mehr.bild, groesse: 32).frame(width: HabitsDetail.bildGroesse)
+                        HabitRund(bild: mehr.bild, anteil: 0, durchmesser: 32).frame(width: HabitsDetail.bildGroesse)
                         Text("Alle anzeigen").font(.system(size: 17, weight: .semibold))
                         Spacer()
                         Image(systemName: "chevron.down").font(.system(size: 15, weight: .medium)).foregroundStyle(Color(0x8E8E93))
@@ -150,6 +153,7 @@ private struct QuotenAbschnitt: View {
     var schnitt: String
     var zeilen: [Zeile]
     var start: Double = 0
+    var anteil: (String) -> Double = { _ in 0 }
     private let maxBalken: CGFloat = 230
 
     var body: some View {
@@ -170,7 +174,7 @@ private struct QuotenAbschnitt: View {
             VStack(alignment: .leading, spacing: 19) {
                 ForEach(Array(zeilen.enumerated()), id: \.element.id) { i, z in
                     HStack(alignment: .center, spacing: 18) {
-                        HabitBild(bild: z.bild, groesse: HabitsDetail.bildGroesse)
+                        HabitRund(bild: z.bild, anteil: anteil(z.name), durchmesser: HabitsDetail.bildGroesse)
                         VStack(alignment: .leading, spacing: 8) {
                             Text(z.name).font(.system(size: 17))
                             EinfahrBalken(breite: max(18, maxBalken * z.anteil), hoehe: 7, art: .staub,
@@ -183,18 +187,6 @@ private struct QuotenAbschnitt: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 22)
-    }
-}
-
-private struct HabitBild: View {
-    var bild: String
-    var groesse: CGFloat
-    var body: some View {
-        Image(bild).resizable().scaledToFill()
-            .frame(width: groesse, height: groesse)
-            .clipShape(RoundedRectangle(cornerRadius: groesse * 0.24, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: groesse * 0.24, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 0.5) }
-            .accessibilityHidden(true)
     }
 }
 

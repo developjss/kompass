@@ -11,7 +11,8 @@ struct HabitsAnsicht: View {
     /// Angetipptes Habit (Startargument „-habitWahl <n>“ öffnet es direkt)
     @State private var gewaehlt: Habit? = HabitsAnsicht.startHabit
     /// Fortschritt heute je Habit (nur solange die App offen ist – Speichern kommt mit den Funktionen)
-    @State private var fortschritt: [String: Double] = [:]
+    @State private var fortschritt: [String: Double] = ProcessInfo.processInfo.arguments.contains("-demoStand")
+        ? ["lernen": 21, "sport": 45, "wasser": 1_000] : [:]   // Startargument nur für Testbilder
     /// Habits (Demo; Änderungen über „Bearbeiten“ gelten, solange die App offen ist)
     @State private var habits = Habit.demo
 
@@ -24,7 +25,13 @@ struct HabitsAnsicht: View {
     var body: some View {
         NavigationStack {
             inhalt
-                .navigationDestination(isPresented: $detail) { HabitsDetail() }
+                .navigationDestination(isPresented: $detail) {
+                    // Stand heute je Habit für die Kreise auf der Habits-Seite
+                    HabitsDetail(anteil: { name in
+                        guard let h = habits.first(where: { $0.name == name }) else { return 0 }
+                        return Fortschritt.anteil(wert: fortschritt[h.id] ?? 0, ziel: h.tagesziel)
+                    })
+                }
                 .sheet(isPresented: $neu) { HabitNeuBlatt() }
                 .sheet(item: $gewaehlt) { h in
                     HabitAuswahlBlatt(habit: Binding(get: { habits.first { $0.id == h.id } ?? h },
@@ -134,34 +141,47 @@ private struct HabitKreis: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Group {
-                    if let foto, let b = UIImage(data: foto) { Image(uiImage: b).resizable().scaledToFill() } else { Image(bild).resizable().scaledToFill() }
-                }
-                    .frame(width: durchmesser - 8, height: durchmesser - 8)
-                    .clipShape(Circle())
-                // Ring: dunkles Grau, innen eine feine helle Kante
-                Circle().strokeBorder(Color(0x2B2B2D), lineWidth: 4).frame(width: durchmesser, height: durchmesser)
-                Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5).frame(width: durchmesser - 8, height: durchmesser - 8)
-                // Fortschritt heute: türkiser Bogen im Ring
-                Circle().trim(from: 0, to: anteil)
-                    .stroke(LinearGradient(colors: [Color(0x39DAD7), Color(0xA7FFFF)], startPoint: .top, endPoint: .bottom),
-                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: durchmesser - 4, height: durchmesser - 4)
-                    .shadow(color: Color(0x2FD0D1).opacity(0.6), radius: 3)
-                    .opacity(anteil > 0 ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.5), value: anteil)
-                Image(systemName: "play.fill").font(.system(size: durchmesser * 0.3))
-                    .foregroundStyle(.white).shadow(color: .black.opacity(0.45), radius: 5, y: 1)
-                    .offset(x: 1.5)
-            }
+            HabitRund(bild: bild, foto: foto, anteil: anteil, durchmesser: durchmesser)
             Text(name).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
         }
         .frame(width: durchmesser)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
         .accessibilityValue(anteil >= 1 ? "Heute erledigt" : anteil > 0 ? "\(Int(anteil * 100)) Prozent" : "")
+    }
+}
+
+/// Rundes Habit-Bild (ohne Play-Zeichen, Gründer 28.11.2026): dunkler Ring, feine helle Kante, heutiger Stand als
+/// türkiser Bogen im Ring (ohne Haken, Gründer 28.11.2026). Für „Mein Weg“ und die Habits-Seite.
+struct HabitRund: View {
+    var bild: String
+    var foto: Data? = nil
+    var anteil: Double
+    var durchmesser: CGFloat
+
+    private var ring: CGFloat { max(3, durchmesser * 0.055) }
+
+    var body: some View {
+        ZStack {
+            Group {
+                if let foto, let b = UIImage(data: foto) { Image(uiImage: b).resizable().scaledToFill() } else { Image(bild).resizable().scaledToFill() }
+            }
+            .frame(width: durchmesser - ring * 2, height: durchmesser - ring * 2)
+            .clipShape(Circle())
+            Circle().strokeBorder(Color(0x2B2B2D), lineWidth: ring).frame(width: durchmesser, height: durchmesser)
+            Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5).frame(width: durchmesser - ring * 2, height: durchmesser - ring * 2)
+            // Stand heute: türkiser Bogen im Ring
+            Circle().trim(from: 0, to: min(max(anteil, 0), 1))
+                .stroke(LinearGradient(colors: [Color(0x39DAD7), Color(0xA7FFFF)], startPoint: .top, endPoint: .bottom),
+                        style: StrokeStyle(lineWidth: ring * 0.75, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: durchmesser - ring, height: durchmesser - ring)
+                .shadow(color: Color(0x2FD0D1).opacity(0.6), radius: 3)
+                .opacity(anteil > 0 ? 1 : 0)
+                .animation(.easeInOut(duration: 0.5), value: anteil)
+        }
+        .frame(width: durchmesser, height: durchmesser)
+        .accessibilityHidden(true)
     }
 }
 
